@@ -335,8 +335,8 @@ bh_unicode_properties.cache
 # https://packagecontrol.io/packages/sublime-github
 GitHub.sublime-settings
 
-!/wallet.aar
+wallet.aar
 
-!/wallet-sources.jar
+wallet-sources.jar
 
-!/Wallet.xcframework/
+Wallet.xcframework/
