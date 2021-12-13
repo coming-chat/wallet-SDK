@@ -7,6 +7,7 @@ import (
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/vedhavyas/go-subkey"
 	"github.com/vedhavyas/go-subkey/sr25519"
+	"wallet-SDK/chainxTypes"
 )
 
 var (
@@ -15,23 +16,16 @@ var (
 )
 
 type Wallet struct {
-	metadata *types.Metadata
-	key      *signature.KeyringPair
+	key *signature.KeyringPair
 }
 
-func NewWallet(metadataString, seedOrPhrase string, network int) (*Wallet, error) {
-	var metadata types.Metadata
-	if err := types.DecodeFromHexString(metadataString, &metadata); err != nil {
-		return nil, err
-	}
-
+func NewWallet(seedOrPhrase string, network int) (*Wallet, error) {
 	keyringPair, err := signature.KeyringPairFromSecret(seedOrPhrase, uint8(network))
 	if err != nil {
 		return nil, err
 	}
 	return &Wallet{
-		metadata: &metadata,
-		key:      &keyringPair,
+		key: &keyringPair,
 	}, nil
 }
 
@@ -78,31 +72,47 @@ func (w *Wallet) GetPrivateKey() (string, error) {
 }
 
 func (w *Wallet) SignAndGetSendTx(transaction *Transaction) (string, error) {
+	var tx string
 	signDataByte, err := types.EncodeToBytes(transaction.payload)
 	if err != nil {
 		return "", err
 	}
 
-	signerPubKey := types.NewMultiAddressFromAccountID(w.key.PublicKey)
 	signedDataByte, err := w.sign(signDataByte)
 	if err != nil {
 		return "", err
 	}
 
 	signatureData := types.NewSignature(signedDataByte)
-	extSig := types.ExtrinsicSignatureV4{
-		Signer:    signerPubKey,
-		Signature: types.MultiSignature{IsSr25519: true, AsSr25519: signatureData},
-		Era:       *transaction.extrinsicEra,
-		Nonce:     transaction.signatureOptions.Nonce,
-		Tip:       transaction.signatureOptions.Tip,
+
+	if transaction.extrinsicV3 != nil {
+		extSigV3 := chainxTypes.ExtrinsicSignatureV3{
+			Signer:    types.NewAddressFromAccountID(w.key.PublicKey),
+			Signature: types.MultiSignature{IsSr25519: true, AsSr25519: signatureData},
+			Era:       *transaction.extrinsicEra,
+			Nonce:     transaction.signatureOptions.Nonce,
+			Tip:       transaction.signatureOptions.Tip,
+		}
+		transaction.extrinsicV3.Signature = extSigV3
+
+		// mark the extrinsic as signed
+		transaction.extrinsicV3.Version |= types.ExtrinsicBitSigned
+		tx, err = types.EncodeToHexString(transaction.extrinsicV3)
+	} else {
+		extSigV4 := types.ExtrinsicSignatureV4{
+			Signer:    types.NewMultiAddressFromAccountID(w.key.PublicKey),
+			Signature: types.MultiSignature{IsSr25519: true, AsSr25519: signatureData},
+			Era:       *transaction.extrinsicEra,
+			Nonce:     transaction.signatureOptions.Nonce,
+			Tip:       transaction.signatureOptions.Tip,
+		}
+		transaction.extrinsicV4.Signature = extSigV4
+
+		// mark the extrinsic as signed
+		transaction.extrinsicV4.Version |= types.ExtrinsicBitSigned
+		tx, err = types.EncodeToHexString(transaction.extrinsicV4)
 	}
 
-	transaction.extrinsic.Signature = extSig
-
-	// mark the extrinsic as signed
-	transaction.extrinsic.Version |= types.ExtrinsicBitSigned
-	tx, err := types.EncodeToHexString(transaction.extrinsic)
 	if err != nil {
 		return "", err
 	}
