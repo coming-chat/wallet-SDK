@@ -26,3 +26,11 @@ func AddressToPublicKey(address string) string {
 func PublicKeyToAddress(publicKey string, network int) string {
 	return ss58.Encode(publicKey, network)
 }
+
+func ByteToHex(data []byte) string {
+	return types.HexEncodeToString(data)
+}
+
+func HexToByte(hex string) ([]byte, error) {
+	return types.HexDecodeString(hex)
+}
