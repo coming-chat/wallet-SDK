@@ -5,16 +5,16 @@ import (
 	"wallet-SDK/chainxTypes"
 )
 
-type TxMetadata struct {
+type Tx struct {
 	metadata *types.Metadata
 }
 
-func NewTxMetadata(metadataString string) (*TxMetadata, error) {
+func NewTx(metadataString string) (*Tx, error) {
 	var metadata types.Metadata
 	if err := types.DecodeFromHexString(metadataString, &metadata); err != nil {
 		return nil, err
 	}
-	return &TxMetadata{
+	return &Tx{
 		metadata: &metadata,
 	}, nil
 }
@@ -79,7 +79,7 @@ func (t *Transaction) GetTx() (tx string, err error) {
 	return tx, nil
 }
 
-func (t *TxMetadata) newTx(isChainX bool, genesisHashString string, nonce uint64, specVersion, transVersion uint32, call string, args ...interface{}) (*Transaction, error) {
+func (t *Tx) newTx(isChainX bool, genesisHashString string, nonce uint64, specVersion, transVersion uint32, call string, args ...interface{}) (*Transaction, error) {
 	if t.metadata == nil {
 		return nil, errNilMetadata
 	}
@@ -142,7 +142,7 @@ func (t *TxMetadata) newTx(isChainX bool, genesisHashString string, nonce uint64
 	return transaction, nil
 }
 
-func (t *TxMetadata) NewBalanceTransferTx(dest, genesisHashString string, amount, nonce int64, specVersion, transVersion int32) (*Transaction, error) {
+func (t *Tx) NewBalanceTransferTx(dest, genesisHashString string, amount, nonce int64, specVersion, transVersion int32) (*Transaction, error) {
 	destAccountID, err := addressStringToMultiAddress(dest)
 	if err != nil {
 		return nil, err
@@ -150,7 +150,7 @@ func (t *TxMetadata) NewBalanceTransferTx(dest, genesisHashString string, amount
 	return t.newTx(false, genesisHashString, uint64(nonce), uint32(specVersion), uint32(transVersion), "Balances.transfer", destAccountID, types.NewUCompactFromUInt(uint64(amount)))
 }
 
-func (t *TxMetadata) NewChainXBalanceTransferTx(dest, genesisHashString string, amount, nonce int64, specVersion, transVersion int32) (*Transaction, error) {
+func (t *Tx) NewChainXBalanceTransferTx(dest, genesisHashString string, amount, nonce int64, specVersion, transVersion int32) (*Transaction, error) {
 	destAccountID, err := addressStringToAddress(dest)
 	if err != nil {
 		return nil, err
@@ -158,7 +158,7 @@ func (t *TxMetadata) NewChainXBalanceTransferTx(dest, genesisHashString string, 
 	return t.newTx(true, genesisHashString, uint64(nonce), uint32(specVersion), uint32(transVersion), "Balances.transfer", destAccountID, types.NewUCompactFromUInt(uint64(amount)))
 }
 
-func (t *TxMetadata) NewComingNftTransferTx(dest, genesisHashString string, cid, nonce int64, specVersion, transVersion int32) (*Transaction, error) {
+func (t *Tx) NewComingNftTransferTx(dest, genesisHashString string, cid, nonce int64, specVersion, transVersion int32) (*Transaction, error) {
 	destAccountID, err := addressStringToMultiAddress(dest)
 	if err != nil {
 		return nil, err
@@ -166,7 +166,7 @@ func (t *TxMetadata) NewComingNftTransferTx(dest, genesisHashString string, cid,
 	return t.newTx(false, genesisHashString, uint64(nonce), uint32(specVersion), uint32(transVersion), "ComingNFT.transfer", types.NewU64(uint64(cid)), destAccountID)
 }
 
-func (t *TxMetadata) NewXAssetsTransferTx(dest, genesisHashString string, amount, nonce int64, specVersion, transVersion int32) (*Transaction, error) {
+func (t *Tx) NewXAssetsTransferTx(dest, genesisHashString string, amount, nonce int64, specVersion, transVersion int32) (*Transaction, error) {
 	//LookupSource
 	destAccountID, err := addressStringToAddress(dest)
 	if err != nil {

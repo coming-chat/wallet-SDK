@@ -10,26 +10,22 @@ import (
 )
 
 var (
-	// DEFAULT_PKCS8_DIVIDER ...
-	DEFAULT_PKCS8_DIVIDER = []byte{161, 35, 3, 33, 0}
-	// DEFAULT_PKCS8_HEADER ...
-	DEFAULT_PKCS8_HEADER = []byte{48, 83, 2, 1, 1, 48, 5, 6, 3, 43, 101, 112, 4, 34, 4, 32}
-	// DEFAULT_KEY_LENGTH ...
-	DEFAULT_KEY_LENGTH = 32
-	// DEFAULT_SEED_OFFSET ...
-	DEFAULT_SEED_OFFSET = len(DEFAULT_PKCS8_HEADER)
-	// DEFAULT_DIV_OFFSET ...
-	DEFAULT_DIV_OFFSET = DEFAULT_SEED_OFFSET + SEC_LENGTH
-	// DEFAULT_PUBLIC_OFFSET ...
-	DEFAULT_PUBLIC_OFFSET = DEFAULT_SEED_OFFSET + DEFAULT_KEY_LENGTH + len(DEFAULT_PKCS8_DIVIDER)
+	defaultPkcs8Divider = []byte{161, 35, 3, 33, 0}
+	defaultPkcs8Header  = []byte{48, 83, 2, 1, 1, 48, 5, 6, 3, 43, 101, 112, 4, 34, 4, 32}
+	defaultSeedOffset   = len(defaultPkcs8Header)
+	defaultDivOffset    = defaultSeedOffset + secLength
+	defaultPublicOffset = defaultSeedOffset + defaultKeyLength + len(defaultPkcs8Divider)
+)
 
-	PUB_LENGTH  = 32
-	SALT_LENGTH = 32
-	SEC_LENGTH  = 64
-	SEED_LENGTH = 32
+const (
+	defaultKeyLength = 32
+	pubLength        = 32
+	saltLength       = 32
+	secLength        = 64
+	seedLength       = 32
 
-	SCRYPT_LENGTH = 32 + (3 * 4)
-	NONCE_LENGTH  = 24
+	scryptLength = 32 + (3 * 4)
+	nonceLength  = 24
 
 	defaultN int64 = 1 << 15
 	defaultP int64 = 1
@@ -71,15 +67,15 @@ func Decode(passphrase *string, encrypted []byte) ([]byte, []byte, error) {
 		if err != nil {
 			return nil, nil, err
 		}
-		encrypted = encrypted[SCRYPT_LENGTH:]
+		encrypted = encrypted[scryptLength:]
 		secret := u8util.FixLength(password, 256, true)
 		if len(secret) != 32 {
 			log.Println(secret, len(secret))
 			return naclPub, naclPriv, errors.New("secret length is not 32")
 		}
 		copy(tmpSecret[:], secret)
-		copy(tmpNonce[:], encrypted[0:NONCE_LENGTH])
-		encoded, err = crypto.NaclDecrypt(encrypted[NONCE_LENGTH:], tmpNonce, tmpSecret)
+		copy(tmpNonce[:], encrypted[0:nonceLength])
+		encoded, err = crypto.NaclDecrypt(encrypted[nonceLength:], tmpNonce, tmpSecret)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -88,22 +84,22 @@ func Decode(passphrase *string, encrypted []byte) ([]byte, []byte, error) {
 	if encoded == nil || len(encoded) == 0 {
 		return naclPub, naclPriv, errors.New("unable to decode")
 	}
-	header := encoded[:DEFAULT_SEED_OFFSET]
-	if string(header) != string(DEFAULT_PKCS8_HEADER) {
+	header := encoded[:defaultSeedOffset]
+	if string(header) != string(defaultPkcs8Header) {
 		return naclPub, naclPriv, errors.New("invalid Pkcs8 header found in body")
 	}
 	// note: check encoded lengths?
-	secretKey := encoded[DEFAULT_SEED_OFFSET : DEFAULT_SEED_OFFSET+SEC_LENGTH]
-	divider := encoded[DEFAULT_DIV_OFFSET : DEFAULT_DIV_OFFSET+len(DEFAULT_PKCS8_DIVIDER)]
-	if !bytes.Equal(divider, DEFAULT_PKCS8_DIVIDER) {
-		divOffset := DEFAULT_SEED_OFFSET + SEED_LENGTH
-		secretKey = encoded[DEFAULT_SEED_OFFSET:divOffset]
-		divider = encoded[divOffset : divOffset+len(DEFAULT_PKCS8_DIVIDER)]
-		if !bytes.Equal(divider, DEFAULT_PKCS8_DIVIDER) {
+	secretKey := encoded[defaultSeedOffset : defaultSeedOffset+seedLength]
+	divider := encoded[defaultDivOffset : defaultDivOffset+len(defaultPkcs8Divider)]
+	if !bytes.Equal(divider, defaultPkcs8Divider) {
+		divOffset := defaultSeedOffset + seedLength
+		secretKey = encoded[defaultSeedOffset:divOffset]
+		divider = encoded[divOffset : divOffset+len(defaultPkcs8Divider)]
+		if !bytes.Equal(divider, defaultPkcs8Divider) {
 			return naclPub, naclPriv, errors.New("invalid Pkcs8 divider found in body")
 		}
 	}
-	pubOffset := DEFAULT_DIV_OFFSET + len(DEFAULT_PKCS8_DIVIDER)
-	publicKey := encoded[pubOffset : pubOffset+PUB_LENGTH]
+	pubOffset := defaultDivOffset + len(defaultPkcs8Divider)
+	publicKey := encoded[pubOffset : pubOffset+pubLength]
 	return publicKey, secretKey, nil
 }
