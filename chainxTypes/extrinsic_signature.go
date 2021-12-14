@@ -20,14 +20,14 @@ import "github.com/centrifuge/go-substrate-rpc-client/v4/types"
 
 type ExtrinsicSignatureV3 struct {
 	Signer    types.Address
-	Signature types.MultiSignature
+	Signature types.Signature
 	Era       types.ExtrinsicEra // extra via system::CheckEra
 	Nonce     types.UCompact     // extra via system::CheckNonce (Compact<Index> where Index is u32))
 	Tip       types.UCompact     // extra via balances::TakeFees (Compact<Balance> where Balance is u128))
 }
 
 type ExtrinsicSignatureV4 struct {
-	Signer    types.MultiAddress
+	Signer    types.Address
 	Signature types.MultiSignature
 	Era       types.ExtrinsicEra // extra via system::CheckEra
 	Nonce     types.UCompact     // extra via system::CheckNonce (Compact<Index> where Index is u32))
