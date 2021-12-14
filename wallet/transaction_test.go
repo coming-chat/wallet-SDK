@@ -7,7 +7,7 @@ import (
 )
 
 func TestTransactionPCX(t *testing.T) {
-	txMetadata, err := NewTxMetadata(ChainX)
+	txMetadata, err := NewTx(ChainX)
 	if err != nil {
 		t.Error(err)
 	}
@@ -46,7 +46,7 @@ func TestTransactionPCX(t *testing.T) {
 }
 
 func TestTransactionMini(t *testing.T) {
-	txMetadata, err := NewTxMetadata(Minix)
+	txMetadata, err := NewTx(Minix)
 	if err != nil {
 		t.Error(err)
 	}
