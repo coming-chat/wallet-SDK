@@ -22,7 +22,7 @@ func TestGetPrivateKey(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	privateKey, err := w.GetPrivateKey()
+	privateKey, err := w.GetPrivateKeyHex()
 	if err != nil {
 		t.Error(err)
 	}

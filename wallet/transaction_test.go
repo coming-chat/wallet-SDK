@@ -11,7 +11,7 @@ func TestTransactionPCX(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	tx, err := txMetadata.NewV3BalanceTransferTx(address44, "0x6ac13efb5b368b97b4934cef6edfdd99c2af51ba5109bfb8dacc116f9c584c10", 100000000, 0, 10, 1)
+	tx, err := txMetadata.NewChainXBalanceTransferTx(address44, "0x6ac13efb5b368b97b4934cef6edfdd99c2af51ba5109bfb8dacc116f9c584c10", 100000000, 0, 10, 1)
 	if err != nil {
 		t.Error(err)
 	}
@@ -19,7 +19,21 @@ func TestTransactionPCX(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	sendTx, err := wallet.SignAndGetSendTx(tx)
+	signData, err := tx.GetSignData()
+	if err != nil {
+		t.Error(err)
+	}
+	signed, err := wallet.Sign(signData)
+	if err != nil {
+		t.Error(err)
+	}
+	tx.SignatureData = signed
+	publicKey, err := wallet.GetPublicKey()
+	if err != nil {
+		t.Error(err)
+	}
+	tx.PublicKey = publicKey
+	sendTx, err := tx.GetTx()
 	if err != nil {
 		t.Error(err)
 	}
@@ -36,7 +50,7 @@ func TestTransactionMini(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	tx, err := txMetadata.NewV4BalanceTransferTx(address44, "0xfb58f83706a065ced8f658fafaba97e6e49b772287e332077c499784184eda9f", 100000000, 0, 115, 1)
+	tx, err := txMetadata.NewBalanceTransferTx(address44, "0xfb58f83706a065ced8f658fafaba97e6e49b772287e332077c499784184eda9f", 100000000, 2, 115, 1)
 	if err != nil {
 		t.Error(err)
 	}
@@ -44,7 +58,21 @@ func TestTransactionMini(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	sendTx, err := wallet.SignAndGetSendTx(tx)
+	signData, err := tx.GetSignData()
+	if err != nil {
+		t.Error(err)
+	}
+	signed, err := wallet.Sign(signData)
+	if err != nil {
+		t.Error(err)
+	}
+	tx.SignatureData = signed
+	publicKey, err := wallet.GetPublicKey()
+	if err != nil {
+		t.Error(err)
+	}
+	tx.PublicKey = publicKey
+	sendTx, err := tx.GetTx()
 	if err != nil {
 		t.Error(err)
 	}
