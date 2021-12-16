@@ -104,6 +104,8 @@ Transaction t = tx.NewThreshold(thresholdPublicKey, destAddress, aggSignature, a
 | specVersion        | int32  | specVersion                  | 接口获取                  |
 | transVersion       | int32  | transVersion                 | 接口获取                  |
 
+throw err
+
 
 
 ### Wallet
