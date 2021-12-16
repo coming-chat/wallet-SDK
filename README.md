@@ -18,6 +18,8 @@ Tx tx = Tx.newTx(metadataString);
 
 throw err
 
+
+
 #### 创建Balance转账
 
 ```java
@@ -35,6 +37,8 @@ Transaction t = tx.newBalanceTransferTx(dest, genesisHashString, amount, nonce, 
 
 throw err
 
+
+
 #### 创建ChainX转账
 
 ```java
@@ -44,6 +48,8 @@ Transaction t = tx.newChainXBalanceTransferTx(dest, genesisHashString, amount, n
 参数同上
 
 throw err
+
+
 
 #### 创建NFT转账
 
@@ -62,6 +68,8 @@ Transaction t = tx.newComingNftTransferTx(dest, genesisHashString, cid, nonce, s
 
 throw err
 
+
+
 #### 创建XBTC转账
 
 ```java
@@ -71,6 +79,32 @@ Transaction t = tx.newXAssetsTransferTx(dest, genesisHashString, amount, nonce, 
 参数同上
 
 throw err
+
+
+
+#### 创建mini门限转账
+
+```java
+Transaction t = tx.NewThreshold(thresholdPublicKey, destAddress, aggSignature, aggPublicKey, controlBlock, message, scriptHash, genesisHashString, transferAmount, nonce, blockNumber, specVersion, transVersion);
+```
+
+| 参数               | 类型   | 描述                         | 获取方式                  |
+| :----------------- | ------ | ---------------------------- | ------------------------- |
+| thresholdPublicKey | string | 门限钱包公钥                 | generateThresholdPubkey() |
+| destAddress        | string | 对方地址                     |                           |
+| aggSignature       | string | 聚合签名                     | getAggSignature()         |
+| aggPublicKey       | string | 聚合公钥                     | getAggPubkey()            |
+| controlBlock       | string | controlBlock                 | generateControlBlock()    |
+| message            | string | 576520617265206c6567696f6e21 | 写死                      |
+| scriptHash         | string | scriptHash                   | 接口获取                  |
+| genesisHashString  | string | genesisHash                  | 接口获取                  |
+| transferAmount     | int64  | 转账金额                     | 用户输入                  |
+| nonce              | int64  | nonce                        | 接口获取                  |
+| blockNumber        | int32  | blockNumber                  | 与scriptHash同接口获取    |
+| specVersion        | int32  | specVersion                  | 接口获取                  |
+| transVersion       | int32  | transVersion                 | 接口获取                  |
+
+
 
 ### Wallet
 
