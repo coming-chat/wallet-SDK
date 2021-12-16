@@ -2,6 +2,7 @@ package wallet
 
 import (
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
+	"math/big"
 	"wallet-SDK/chainxTypes"
 )
 
@@ -167,10 +168,60 @@ func (t *Tx) NewComingNftTransferTx(dest, genesisHashString string, cid, nonce i
 }
 
 func (t *Tx) NewXAssetsTransferTx(dest, genesisHashString string, amount, nonce int64, specVersion, transVersion int32) (*Transaction, error) {
-	//LookupSource
 	destAccountID, err := addressStringToAddress(dest)
 	if err != nil {
 		return nil, err
 	}
 	return t.newTx(true, genesisHashString, uint64(nonce), uint32(specVersion), uint32(transVersion), "XAssets.transfer", destAccountID, types.NewUCompactFromUInt(uint64(1)), types.NewUCompactFromUInt(uint64(amount)))
+}
+
+func (t *Tx) NewThreshold(thresholdPublicKey, destAddress, aggSignature, aggPublicKey, controlBlock, message, scriptHash, genesisHashString string, transferAmount, nonce int64, blockNumber, specVersion, transVersion int32) (*Transaction, error) {
+	thresholdPublicKeyByte, err := types.HexDecodeString(thresholdPublicKey)
+	if err != nil {
+		return nil, err
+	}
+
+	destPublicKeyByte, err := types.HexDecodeString(AddressToPublicKey(destAddress))
+	if err != nil {
+		return nil, err
+	}
+
+	aggSignatureByte, err := types.HexDecodeString(aggSignature)
+	if err != nil {
+		return nil, err
+	}
+
+	aggPublicKeyByte, err := types.HexDecodeString(aggPublicKey)
+	if err != nil {
+		return nil, err
+	}
+
+	controlBlockByte, err := types.HexDecodeString(controlBlock)
+	if err != nil {
+		return nil, err
+	}
+
+	messageByte, err := types.HexDecodeString(message)
+	if err != nil {
+		return nil, err
+	}
+
+	scriptHashByte, err := types.HexDecodeString(scriptHash)
+	if err != nil {
+		return nil, err
+	}
+
+	passScriptCall, err := types.NewCall(t.metadata, "ThresholdSignature.pass_script", types.NewAccountID(thresholdPublicKeyByte), types.NewBytes(aggSignatureByte), types.NewBytes(aggPublicKeyByte), types.NewBytes(controlBlockByte), types.NewBytes(messageByte), types.NewBytes(scriptHashByte))
+	if err != nil {
+		return nil, err
+	}
+
+	execScriptCall, err := types.NewCall(t.metadata, "ThresholdSignature.exec_script", types.NewAccountID(destPublicKeyByte), types.NewU8(0), types.NewU128(*big.NewInt(transferAmount)), types.NewU32(uint32(blockNumber)), types.NewU32(uint32(blockNumber))+types.NewU32(1000))
+	if err != nil {
+		return nil, err
+	}
+
+	arg := []types.Call{passScriptCall, execScriptCall}
+
+	return t.newTx(false, genesisHashString, uint64(nonce), uint32(specVersion), uint32(transVersion), "Utility.batch_all", arg)
 }
