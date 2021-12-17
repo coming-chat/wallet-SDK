@@ -2,6 +2,8 @@ package wallet
 
 import (
 	"bytes"
+	"encoding/base64"
+	"encoding/hex"
 	"github.com/ChainSafe/go-schnorrkel"
 	"github.com/coming-chat/merlin"
 	"github.com/gtank/ristretto255"
@@ -32,57 +34,151 @@ const (
 	defaultR int64 = 8
 )
 
-func decodePolkaKeystore(passphrase *string, encrypted []byte) ([]byte, []byte, error) {
+type keystore struct {
+	Encoded  string    `json:"encoded"`
+	Encoding *encoding `json:"encoding"`
+	Address  string    `json:"address"`
+	Meta     *meta     `json:"meta"`
+}
+
+type encoding struct {
+	Content []string `json:"content"`
+	Type    []string `json:"type"`
+	Version string   `json:"version"`
+}
+
+type meta struct {
+	GenesisHash string   `json:"genesisHash"`
+	IsHardware  bool     `json:"isHardware"`
+	Name        string   `json:"name"`
+	Tags        []string `json:"tags"`
+	WhenCreated int64    `json:"whenCreated"`
+}
+
+type keyring struct {
+	privateKey [64]byte
+	PublicKey  [32]byte
+}
+
+func (k *keystore) checkPassword(password string) bool {
+	_, err := decodeKeystore(k, password)
+	if err != nil {
+		return false
+	}
+	return true
+}
+
+func (k *keystore) Sign(password string, msg []byte) ([]byte, error) {
+	kr, err := decodeKeystore(k, password)
+	if err != nil {
+		return nil, err
+	}
+	signature, err := kr.sign(signingContext(msg))
+	if err != nil {
+		return nil, err
+	}
+	return signature, nil
+}
+
+func decodeKeystore(ks *keystore, password string) (*keyring, error) {
 	var (
-		naclPub   []byte
-		naclPriv  []byte
+		privateKey [64]byte
+		publicKey  [32]byte
+	)
+
+	if ks.Encoding.Version != "3" || ks.Encoding.Content[0] != "pkcs8" || ks.Encoding.Content[1] != "sr25519" {
+		return nil, ErrNonPkcs8
+	}
+
+	encrypted, err := base64.RawStdEncoding.DecodeString(ks.Encoded)
+	if err != nil {
+		return nil, err
+	}
+	pubKey, secretKey, err := decodePolkaKeystoreEncoded(&password, encrypted, ks.Encoding)
+	if err != nil {
+		return nil, err
+	}
+
+	copy(publicKey[:], pubKey[:])
+	copy(privateKey[:], secretKey[:])
+
+	if AddressToPublicKey(ks.Address) != hex.EncodeToString(publicKey[:]) {
+		return nil, ErrKeystore
+	}
+
+	return &keyring{
+		privateKey: privateKey,
+		PublicKey:  publicKey,
+	}, nil
+}
+
+func decodePolkaKeystoreEncoded(passphrase *string, encrypted []byte, encodeType *encoding) ([]byte, []byte, error) {
+	var (
 		tmpSecret [32]byte
 		tmpNonce  [24]byte
 		err       error
 		password  []byte
 	)
 
+	if encodeType == nil {
+		return nil, nil, ErrNoEncryptedData
+	}
+
+	if passphrase == nil || encodeType.Type[1] != "xsalsa20-poly1305" {
+		return nil, nil, ErrNilPassword
+	}
+
 	if encrypted == nil || len(encrypted) == 0 {
-		return naclPub, naclPriv, ErrNoEncrypted
+		return nil, nil, ErrNoEncrypted
 	}
 
 	encoded := encrypted
-	if passphrase != nil {
-		if len(encrypted) < 24 {
-			return naclPub, naclPriv, ErrEncryptedLength
-		}
 
+	if len(encrypted) < 24 {
+		return nil, nil, ErrEncryptedLength
+	}
+
+	if encodeType.Type[0] == "scrypt" {
 		salt := encrypted[:saltLength]
 
 		N := u8util.ToBN(encrypted[32+0:32+4], true).Int64()
 		p := u8util.ToBN(encrypted[32+4:32+8], true).Int64()
 		r := u8util.ToBN(encrypted[32+8:32+12], true).Int64()
+
 		if N != defaultN || p != defaultP || r != defaultR {
 			return nil, nil, ErrInvalidParams
 		}
+
 		password, err = scrypt.Key([]byte(*passphrase), salt, int(N), int(r), int(p), 64)
 		if err != nil {
 			return nil, nil, err
 		}
+
 		encrypted = encrypted[scryptLength:]
-		secret := u8util.FixLength(password, 256, true)
-		if len(secret) != 32 {
-			return naclPub, naclPriv, ErrSecretLength
-		}
-		copy(tmpSecret[:], secret)
-		copy(tmpNonce[:], encrypted[0:nonceLength])
-		encoded, err = crypto.NaclDecrypt(encrypted[nonceLength:], tmpNonce, tmpSecret)
-		if err != nil {
-			return nil, nil, err
-		}
+
+	} else {
+		password = []uint8(*passphrase)
+	}
+
+	secret := u8util.FixLength(password, 256, true)
+	if len(secret) != 32 {
+		return nil, nil, ErrSecretLength
+	}
+
+	copy(tmpSecret[:], secret)
+	copy(tmpNonce[:], encrypted[0:nonceLength])
+
+	encoded, err = crypto.NaclDecrypt(encrypted[nonceLength:], tmpNonce, tmpSecret)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	if encoded == nil || len(encoded) == 0 {
-		return naclPub, naclPriv, ErrEncoded
+		return nil, nil, ErrEncoded
 	}
 	header := encoded[:seedOffset]
 	if string(header) != string(pkcs8Header) {
-		return naclPub, naclPriv, ErrPkcs8Header
+		return nil, nil, ErrPkcs8Header
 	}
 	// note: check encoded lengths?
 	secretKey := encoded[seedOffset : seedOffset+secLength]
@@ -92,7 +188,7 @@ func decodePolkaKeystore(passphrase *string, encrypted []byte) ([]byte, []byte, 
 		secretKey = encoded[seedOffset:divOffset]
 		divider = encoded[divOffset : divOffset+len(pkcs8Divider)]
 		if !bytes.Equal(divider, pkcs8Divider) {
-			return naclPub, naclPriv, ErrPkcs8Divider
+			return nil, nil, ErrPkcs8Divider
 		}
 	}
 	pubOffset := divOffset + len(pkcs8Divider)
@@ -107,20 +203,20 @@ func signingContext(msg []byte) *merlin.Transcript {
 	return tml
 }
 
-func Sign(sk []byte, t *merlin.Transcript, publicKey []byte) (*schnorrkel.Signature, error) {
+func (kg *keyring) sign(t *merlin.Transcript) ([]byte, error) {
 	var (
 		pubKey [32]byte
 		rByte  [64]byte
 		sck    [32]byte
 	)
 
-	copy(pubKey[:], publicKey[:])
+	copy(pubKey[:], kg.PublicKey[:])
 	pubByte := schnorrkel.NewPublicKey(pubKey).Compress()
 
 	t.AppendMessage([]byte("proto-name"), []byte("Schnorr-sig"))
 	t.AppendMessage([]byte("sign:pk"), pubByte[:])
 
-	_, err := t.BuildRNG().ReKeyWithWitnessBytes([]byte("signing"), sk[32:]).Read(rByte[:])
+	_, err := t.BuildRNG().ReKeyWithWitnessBytes([]byte("signing"), kg.privateKey[32:]).Read(rByte[:])
 	if err != nil {
 		return nil, err
 	}
@@ -134,7 +230,7 @@ func Sign(sk []byte, t *merlin.Transcript, publicKey []byte) (*schnorrkel.Signat
 	//k.
 
 	// form scalar from secret key x
-	key := divideScalarByCofactor(sk[:32])
+	key := divideScalarByCofactor(kg.privateKey[:32])
 	copy(sck[:], key[:])
 
 	x, err := schnorrkel.ScalarFromBytes(sck)
@@ -145,7 +241,10 @@ func Sign(sk []byte, t *merlin.Transcript, publicKey []byte) (*schnorrkel.Signat
 	// s = kx + r
 	s := x.Multiply(x, k).Add(x, r)
 
-	return &schnorrkel.Signature{R: R, S: s}, nil
+	signature := &schnorrkel.Signature{R: R, S: s}
+	signatureByte := signature.Encode()
+
+	return signatureByte[:], nil
 }
 
 func divideScalarByCofactor(s []byte) []byte {
