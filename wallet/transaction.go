@@ -38,11 +38,11 @@ func (t *Transaction) GetSignData() ([]byte, error) {
 
 func (t *Transaction) GetTx() (tx string, err error) {
 	if t.SignatureData == nil {
-		return "", errNotSigned
+		return "", ErrNotSigned
 	}
 
 	if t.PublicKey == nil {
-		return "", errNoPublicKey
+		return "", ErrNoPublicKey
 	}
 	signatureData := types.NewSignature(t.SignatureData)
 
@@ -82,7 +82,7 @@ func (t *Transaction) GetTx() (tx string, err error) {
 
 func (t *Tx) newTx(isChainX bool, genesisHashString string, nonce uint64, specVersion, transVersion uint32, call string, args ...interface{}) (*Transaction, error) {
 	if t.metadata == nil {
-		return nil, errNilMetadata
+		return nil, ErrNilMetadata
 	}
 	var (
 		transaction = &Transaction{}

@@ -21,37 +21,41 @@ func NewWallet(seedOrPhrase string, network int) (*Wallet, error) {
 	}, nil
 }
 
+func NewWalletByKeyStore(keyStoreJson string) (*Wallet, error) {
+
+}
+
 func (w *Wallet) Sign(message []byte) ([]byte, error) {
 	if w.key == nil {
-		return nil, errNilKey
+		return nil, ErrNilKey
 	}
 	return signature.Sign(message, w.key.URI)
 }
 
 func (w *Wallet) GetPublicKey() ([]byte, error) {
 	if w.key == nil {
-		return nil, errNilKey
+		return nil, ErrNilKey
 	}
 	return w.key.PublicKey, nil
 }
 
 func (w *Wallet) GetPublicKeyHex() (string, error) {
 	if w.key == nil {
-		return "", errNilKey
+		return "", ErrNilKey
 	}
 	return types.HexEncodeToString(w.key.PublicKey), nil
 }
 
 func (w *Wallet) GetAddress() (string, error) {
 	if w.key == nil {
-		return "", errNilKey
+		return "", ErrNilKey
 	}
 	return w.key.Address, nil
 }
 
 func (w *Wallet) GetPrivateKeyHex() (string, error) {
 	if w.key == nil {
-		return "", errNilKey
+		return "", ErrNilKey
 	}
 
 	scheme := sr25519.Scheme{}
