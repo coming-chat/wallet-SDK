@@ -16,7 +16,7 @@ func TestTransactionPCX(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	wallet, err := NewWallet(testSecretPhrase, 44)
+	wallet, err := NewWallet(testSecretPhrase)
 	if err != nil {
 		t.Error(err)
 	}
@@ -24,7 +24,7 @@ func TestTransactionPCX(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	signed, err := wallet.Sign(signData)
+	signed, err := wallet.Sign(signData, "")
 	if err != nil {
 		t.Error(err)
 	}
@@ -55,7 +55,7 @@ func TestTransactionMini(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	wallet, err := NewWallet(testSecretPhrase, 44)
+	wallet, err := NewWallet(testSecretPhrase)
 	if err != nil {
 		t.Error(err)
 	}
@@ -63,7 +63,7 @@ func TestTransactionMini(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	signed, err := wallet.Sign(signData)
+	signed, err := wallet.Sign(signData, "")
 	if err != nil {
 		t.Error(err)
 	}
@@ -95,7 +95,7 @@ func TestThreshold(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	wallet, err := NewWallet("boss mind sauce seek clutch busy boil screen room timber shop same", 44)
+	wallet, err := NewWallet("boss mind sauce seek clutch busy boil screen room timber shop same")
 	if err != nil {
 		t.Error(err)
 	}
@@ -103,7 +103,7 @@ func TestThreshold(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	signed, err := wallet.Sign(signData)
+	signed, err := wallet.Sign(signData, "")
 	if err != nil {
 		t.Error(err)
 	}
