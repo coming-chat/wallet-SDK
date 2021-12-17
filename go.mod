@@ -10,6 +10,7 @@ require (
 
 require (
 	github.com/ChainSafe/go-schnorrkel v0.0.0-20210318173838-ccb5cd955283 // indirect
+	github.com/coming-chat/merlin v0.1.2-0.20211216101619-d46ce5719651 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/decred/base58 v1.0.3 // indirect
 	github.com/decred/dcrd/crypto/blake256 v1.0.0 // indirect
