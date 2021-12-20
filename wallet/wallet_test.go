@@ -10,7 +10,7 @@ const (
 )
 
 func TestNewWallet(t *testing.T) {
-	_, err := NewWallet(testSecretPhrase, 44)
+	_, err := NewWallet(testSecretPhrase)
 	if err != nil {
 		t.Error(err)
 	}
@@ -18,7 +18,7 @@ func TestNewWallet(t *testing.T) {
 }
 
 func TestGetPrivateKey(t *testing.T) {
-	w, err := NewWallet(testSecretPhrase, 44)
+	w, err := NewWallet(testSecretPhrase)
 	if err != nil {
 		t.Error(err)
 	}
