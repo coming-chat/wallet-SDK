@@ -6,216 +6,239 @@ ComingChat substrate wallet SDK
 
 ### Wallet
 
-**Wallet 工具类方法（静态方法）**
+#### **Wallet 工具类方法（静态方法）**
 
-#### 获取助记词：
+* ##### 获取助记词：
 
-```java
-String mnemonicString = Wallet.genMnemonic();
-```
+  ```java
+  String mnemonicString = Wallet.genMnemonic();
+  ```
 
-throw err	
+  throw err	
 
-#### 创建钱包:
 
-1. 从助记词或私钥
-```java
-Wallet wallet = Wallet.newWallet(seedOrPhrase);
-```
 
-| 参数         | 类型   | 描述           | 获取方式 |
-| ------------ | ------ | -------------- | -------- |
-| seedOrPhrase | string | 助记词或者私钥 |          |
-| network      | int    | ss58           |          |
+* ##### 创建钱包:
 
+  1. 从助记词或私钥
+
+    ```java
+    Wallet wallet = Wallet.newWallet(seedOrPhrase);
+    ```
+
+    | 参数         | 类型   | 描述           | 获取方式 |
+    | ------------ | ------ | -------------- | -------- |
+    | seedOrPhrase | string | 助记词或者私钥 |          |
+    | network      | int    | ss58           |          |
+
+    throw err
+
+  
+
+  2. 从keystore
+  
+    ```java
+    Wallet wallet = Wallet.NewWalletFromKeyStore(keyStoreJson, password);
+    ```
+  
+    | 参数         | 类型   | 描述     | 获取方式 |
+    | ------------ | ------ | -------- | -------- |
+    | keyStoreJson | string | keystore |          |
+    | password     | string | 密码     |          |
+  
+    throw err
+
+
+
+* ##### 地址转公钥
+
+  ```java
+  String publicKey = Wallet.addressToPublicKey(address);
+  ```
+
+  | 参数    | 类型   | 描述 | 获取方式 |
+  | ------- | ------ | ---- | -------- |
+  | address | string | 地址 |          |
+
+
+
+* ##### 公钥转地址
+
+    ```java
+    String address = Wallet.publicKeyToAddress(publicKey, network);
+    ```
+
+    | 参数      | 类型   | 描述             | 获取方式 |
+    | --------- | ------ | ---------------- | -------- |
+    | publicKey | string | 公钥16进制字符串 |          |
+    | network   | int    | ss58             |          |
+
+
+
+#### **Wallet类方法**
+
+  * ##### 获取公钥：
+
+    ```java
+    String publicKeyHex = wallet.getPublicKeyHex();
+    byte[] publicKey = wallet.getPublicKey();
+    ```
+
+
+  * ##### 获取私钥：
+
+    ```java
+    String privateKey = wallet.getPrivateKeyHex();
+    ```
+
+    throw err
+
+
+
+  * ##### 签名:
+
+    ```java
+    byte[] signature = wallet.sign(message, password);
+    ```
+
+    | 参数     | 类型   | 描述                                            | 获取方式 |
+    | -------- | ------ | ----------------------------------------------- | -------- |
+    | message  | []byte | 签名内容                                        |          |
+    | password | string | keystore 密码，如果是助记词或者私钥创建则随便填 |          |
+
+    throw err
+    
+    
+    
+  * ##### 检查Keystore密码
+
+    ```java
+    bool isCorrect = wallet.checkPassword(password);
+    ```
+
+    | 参数     | 类型   | 描述 | 获取方式 |
+    | -------- | ------ | ---- | -------- |
+    | password | string |      |          |
+    
 throw err
 
 
 
+  * ##### 获取地址:
 
-2. 从keystore
+    ```java
+    String address = wallet.getAddress(network);
+    ```
 
-```java
-Wallet wallet = Wallet.NewWalletFromKeyStore(keyStoreJson, password);
-```
+    | 参数    | 类型 | 描述 | 获取方式 |
+    | ------- | ---- | ---- | -------- |
+    | network | int  | ss58 |          |
 
-| 参数         | 类型   | 描述     | 获取方式 |
-| ------------ | ------ | -------- | -------- |
-| keyStoreJson | string | keystore |          |
-| password     | string | 密码     |          |
-
-throw err
-
-
-
-#### 地址转公钥
-
-```java
-String publicKey = Wallet.addressToPublicKey(address);
-```
-
-| 参数    | 类型   | 描述 | 获取方式 |
-| ------- | ------ | ---- | -------- |
-| address | string | 地址 |          |
-
-#### 公钥转地址
-
-```java
-String address = Wallet.publicKeyToAddress(publicKey, network);
-```
-
-| 参数      | 类型   | 描述             | 获取方式 |
-| --------- | ------ | ---------------- | -------- |
-| publicKey | string | 公钥16进制字符串 |          |
-| network   | int    | ss58             |          |
-
-
-
-**Wallet类方法**
-
-#### 获取公钥：
-
-```java
-String publicKeyHex = wallet.getPublicKeyHex();
-byte[] publicKey = wallet.getPublicKey();
-```
-
-#### 获取私钥：
-
-```java
-String privateKey = wallet.getPrivateKeyHex();
-```
-
-throw err
-
-#### 签名:
-
-```java
-byte[] signature = wallet.sign(message, password);
-```
-
-| 参数     | 类型   | 描述                                            | 获取方式 |
-| -------- | ------ | ----------------------------------------------- | -------- |
-| message  | []byte | 签名内容                                        |          |
-| password | string | keystore 密码，如果是助记词或者私钥创建则随便填 |          |
-
-throw err
-
-#### 获取地址:
-
-```java
-String address = wallet.getAddress(network);
-```
-
-| 参数    | 类型 | 描述 | 获取方式 |
-| ------- | ---- | ---- | -------- |
-| network | int  | ss58 |          |
-
-throw err
+    throw err
 
 
 
 ### Tx
 
-#### 创建Tx
+  * ##### 创建Tx
 
-```java
-Tx tx = Tx.newTx(metadataString);
-```
+    ```java
+    Tx tx = Tx.newTx(metadataString);
+    ```
 
-| 参数           | 类型   | 描述                   |
-| -------------- | ------ | ---------------------- |
-| metadataString | string | metadata的16进制string |
+    | 参数           | 类型   | 描述                   |
+    | -------------- | ------ | ---------------------- |
+    | metadataString | string | metadata的16进制string |
 
-throw err
-
-
-
-#### 创建Balance转账
-
-```java
-Transaction t = tx.newBalanceTransferTx(dest, genesisHashString, amount, nonce, specVersion, transVersion);
-```
-
-| 参数              | 类型   | 描述         | 获取方式 |
-| ----------------- | ------ | ------------ | -------- |
-| dest              | string | 对方address  | 输入     |
-| genesisHashString | string | 创世哈希     | 接口获取 |
-| amount            | long   | 金额         | 用户输入 |
-| nonce             | long   | nonc         | 接口获取 |
-| specVersion       | int    | specVersion  | 接口获取 |
-| transVersion      | int    | transVersion | 接口获取 |
-
-throw err
+    throw err
 
 
 
-#### 创建ChainX转账
+  * ##### 创建Balance转账
 
-```java
-Transaction t = tx.newChainXBalanceTransferTx(dest, genesisHashString, amount, nonce, specVersion, transVersion);
-```
+    ```java
+    Transaction t = tx.newBalanceTransferTx(dest, genesisHashString, amount, nonce, specVersion, transVersion);
+    ```
 
-参数同上
+    | 参数              | 类型   | 描述         | 获取方式 |
+    | ----------------- | ------ | ------------ | -------- |
+    | dest              | string | 对方address  | 输入     |
+    | genesisHashString | string | 创世哈希     | 接口获取 |
+    | amount            | long   | 金额         | 用户输入 |
+    | nonce             | long   | nonc         | 接口获取 |
+    | specVersion       | int    | specVersion  | 接口获取 |
+    | transVersion      | int    | transVersion | 接口获取 |
 
-throw err
-
-
-
-#### 创建NFT转账
-
-```java
-Transaction t = tx.newComingNftTransferTx(dest, genesisHashString, cid, nonce, specVersion, transVersion);
-```
-
-| 参数              | 类型   | 描述         | 获取方式 |
-| ----------------- | ------ | ------------ | -------- |
-| dest              | string | 对方address  | 输入     |
-| genesisHashString | string | 创世哈希     | 接口获取 |
-| cid               | long   | 金额         | 用户输入 |
-| nonce             | long   | nonc         | 接口获取 |
-| specVersion       | int    | specVersion  | 接口获取 |
-| transVersion      | int    | transVersion | 接口获取 |
-
-throw err
+    throw err
 
 
 
-#### 创建XBTC转账
+  * ##### 创建ChainX转账
 
-```java
-Transaction t = tx.newXAssetsTransferTx(dest, genesisHashString, amount, nonce, specVersion, transVersion);
-```
+    ```java
+    Transaction t = tx.newChainXBalanceTransferTx(dest, genesisHashString, amount, nonce, specVersion, transVersion);
+    ```
 
-参数同上
+    参数同上
 
-throw err
+    throw err
 
 
 
-#### 创建mini门限转账
+  * ##### 创建NFT转账
 
-```java
-Transaction t = tx.NewThreshold(thresholdPublicKey, destAddress, aggSignature, aggPublicKey, controlBlock, message, scriptHash, genesisHashString, transferAmount, nonce, blockNumber, specVersion, transVersion);
-```
+    ```java
+    Transaction t = tx.newComingNftTransferTx(dest, genesisHashString, cid, nonce, specVersion, transVersion);
+    ```
 
-| 参数               | 类型   | 描述                         | 获取方式                  |
-| :----------------- | ------ | ---------------------------- | ------------------------- |
-| thresholdPublicKey | string | 门限钱包公钥                 | generateThresholdPubkey() |
-| destAddress        | string | 对方地址                     |                           |
-| aggSignature       | string | 聚合签名                     | getAggSignature()         |
-| aggPublicKey       | string | 聚合公钥                     | getAggPubkey()            |
-| controlBlock       | string | controlBlock                 | generateControlBlock()    |
-| message            | string | 576520617265206c6567696f6e21 | 写死                      |
-| scriptHash         | string | scriptHash                   | 接口获取                  |
-| genesisHashString  | string | genesisHash                  | 接口获取                  |
-| transferAmount     | int64  | 转账金额                     | 用户输入                  |
-| nonce              | int64  | nonce                        | 接口获取                  |
-| blockNumber        | int32  | blockNumber                  | 与scriptHash同接口获取    |
-| specVersion        | int32  | specVersion                  | 接口获取                  |
-| transVersion       | int32  | transVersion                 | 接口获取                  |
+    | 参数              | 类型   | 描述         | 获取方式 |
+    | ----------------- | ------ | ------------ | -------- |
+    | dest              | string | 对方address  | 输入     |
+    | genesisHashString | string | 创世哈希     | 接口获取 |
+    | cid               | long   | 金额         | 用户输入 |
+    | nonce             | long   | nonc         | 接口获取 |
+    | specVersion       | int    | specVersion  | 接口获取 |
+    | transVersion      | int    | transVersion | 接口获取 |
 
-throw err
+    throw err
+
+
+
+  * ##### 创建XBTC转账
+
+    ```java
+    Transaction t = tx.newXAssetsTransferTx(dest, genesisHashString, amount, nonce, specVersion, transVersion);
+    ```
+
+    参数同上
+
+    throw err
+
+
+
+  * ##### 创建mini门限转账
+
+    ```java
+    Transaction t = tx.NewThreshold(thresholdPublicKey, destAddress, aggSignature, aggPublicKey, controlBlock, message, scriptHash, genesisHashString, transferAmount, nonce, blockNumber, specVersion, transVersion);
+    ```
+
+    | 参数               | 类型   | 描述                         | 获取方式                  |
+    | :----------------- | ------ | ---------------------------- | ------------------------- |
+    | thresholdPublicKey | string | 门限钱包公钥                 | generateThresholdPubkey() |
+    | destAddress        | string | 对方地址                     |                           |
+    | aggSignature       | string | 聚合签名                     | getAggSignature()         |
+    | aggPublicKey       | string | 聚合公钥                     | getAggPubkey()            |
+    | controlBlock       | string | controlBlock                 | generateControlBlock()    |
+    | message            | string | 576520617265206c6567696f6e21 | 写死                      |
+    | scriptHash         | string | scriptHash                   | 接口获取                  |
+    | genesisHashString  | string | genesisHash                  | 接口获取                  |
+    | transferAmount     | int64  | 转账金额                     | 用户输入                  |
+    | nonce              | int64  | nonce                        | 接口获取                  |
+    | blockNumber        | int32  | blockNumber                  | 与scriptHash同接口获取    |
+    | specVersion        | int32  | specVersion                  | 接口获取                  |
+    | transVersion       | int32  | transVersion                 | 接口获取                  |
+
+    throw err
 
 
 
@@ -223,28 +246,32 @@ throw err
 
 ### Transaction
 
-#### 内部成员变量
+  * ##### 内部成员变量
 
-```java
-SignatureData    byte[]
-PublicKey        byte[]
-```
+    ```java
+    SignatureData    byte[]
+    PublicKey        byte[]
+    ```
 
-#### 获取需要签名内容
+  * ##### 获取需要签名内容
 
-```java
-byte[] signData = t.getSignData();
-```
+    ```java
+    byte[] signData = t.getSignData();
+    ```
 
-throw err
+    throw err
 
-#### 获取Tx
+  * ##### 获取Tx
 
-```java
-String sendTx = t.getTx();
-```
+    ```java
+    String sendTx = t.getTx();
+    ```
 
-throw err
+    throw err
+
+
+
+
 
 ## 交易构造流程
 
