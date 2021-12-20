@@ -4,6 +4,117 @@ ComingChat substrate wallet SDK
 
 ## Struct
 
+### Wallet
+
+**Wallet 工具类方法（静态方法）**
+
+#### 获取助记词：
+
+```java
+String mnemonicString = Wallet.genMnemonic();
+```
+
+throw err	
+
+#### 创建钱包:
+
+1. 从助记词或私钥
+```java
+Wallet wallet = Wallet.newWallet(seedOrPhrase);
+```
+
+| 参数         | 类型   | 描述           | 获取方式 |
+| ------------ | ------ | -------------- | -------- |
+| seedOrPhrase | string | 助记词或者私钥 |          |
+| network      | int    | ss58           |          |
+
+throw err
+
+
+
+
+2. 从keystore
+
+```java
+Wallet wallet = Wallet.NewWalletFromKeyStore(keyStoreJson, password);
+```
+
+| 参数         | 类型   | 描述     | 获取方式 |
+| ------------ | ------ | -------- | -------- |
+| keyStoreJson | string | keystore |          |
+| password     | string | 密码     |          |
+
+throw err
+
+
+
+#### 地址转公钥
+
+```java
+String publicKey = Wallet.addressToPublicKey(address);
+```
+
+| 参数    | 类型   | 描述 | 获取方式 |
+| ------- | ------ | ---- | -------- |
+| address | string | 地址 |          |
+
+#### 公钥转地址
+
+```java
+String address = Wallet.publicKeyToAddress(publicKey, network);
+```
+
+| 参数      | 类型   | 描述             | 获取方式 |
+| --------- | ------ | ---------------- | -------- |
+| publicKey | string | 公钥16进制字符串 |          |
+| network   | int    | ss58             |          |
+
+
+
+**Wallet类方法**
+
+#### 获取公钥：
+
+```java
+String publicKeyHex = wallet.getPublicKeyHex();
+byte[] publicKey = wallet.getPublicKey();
+```
+
+#### 获取私钥：
+
+```java
+String privateKey = wallet.getPrivateKeyHex();
+```
+
+throw err
+
+#### 签名:
+
+```java
+byte[] signature = wallet.sign(message, password);
+```
+
+| 参数     | 类型   | 描述                                            | 获取方式 |
+| -------- | ------ | ----------------------------------------------- | -------- |
+| message  | []byte | 签名内容                                        |          |
+| password | string | keystore 密码，如果是助记词或者私钥创建则随便填 |          |
+
+throw err
+
+#### 获取地址:
+
+```java
+String address = wallet.getAddress(network);
+```
+
+| 参数    | 类型 | 描述 | 获取方式 |
+| ------- | ---- | ---- | -------- |
+| network | int  | ss58 |          |
+
+throw err
+
+
+
 ### Tx
 
 #### 创建Tx
@@ -108,89 +219,7 @@ throw err
 
 
 
-### Wallet
 
-**Wallet 工具类方法（静态方法）**
-
-#### 获取助记词：
-
-```java
-String mnemonicString = Wallet.genMnemonic();
-```
-
-throw err	
-
-#### 创建钱包:
-
-```java
-Wallet wallet = Wallet.newWallet(seedOrPhrase , network);
-```
-
-| 参数         | 类型   | 描述           | 获取方式 |
-| ------------ | ------ | -------------- | -------- |
-| seedOrPhrase | string | 助记词或者私钥 |          |
-| network      | int    | ss58           |          |
-
-
-
-
-throw err
-
-#### 地址转公钥
-
-```java
-String publicKey = Wallet.addressToPublicKey(address);
-```
-
-| 参数    | 类型   | 描述 | 获取方式 |
-| ------- | ------ | ---- | -------- |
-| address | string | 地址 |          |
-
-#### 公钥转地址
-
-```java
-String address = Wallet.publicKeyToAddress(publicKey, network);
-```
-
-| 参数      | 类型   | 描述             | 获取方式 |
-| --------- | ------ | ---------------- | -------- |
-| publicKey | string | 公钥16进制字符串 |          |
-| network   | int    | ss58             |          |
-
-
-
-**Wallet类方法**
-
-#### 获取公钥：
-
-```java
-String publicKeyHex = wallet.getPublicKeyHex();
-byte[] publicKey = wallet.getPublicKey();
-```
-
-#### 获取私钥：
-
-```java
-String privateKey = wallet.getPrivateKeyHex();
-```
-
-throw err
-
-#### 签名:
-
-```java
-byte[] signature = wallet.sign(message);
-```
-
-throw err
-
-#### 获取地址:
-
-```java
-String address = wallet.getAddress();
-```
-
-throw err
 
 ### Transaction
 
