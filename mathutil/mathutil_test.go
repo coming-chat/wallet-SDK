@@ -21,7 +21,7 @@ func TestPow(t *testing.T) {
 		t.Run(fmt.Sprintf("%v", i), func(t *testing.T) {
 			result := Pow(tt.in.i, tt.in.e)
 			if result.String() != tt.out.String() {
-				t.Errorf("want %v; got %v", tt.out, result)
+				t.Fatalf("want %v; got %v", tt.out, result)
 			}
 		})
 	}
@@ -40,7 +40,7 @@ func TestToUint8Slice(t *testing.T) {
 		t.Run(fmt.Sprintf("%v", i), func(t *testing.T) {
 			result := ToUint8Slice(tt.val, tt.le, tt.length)
 			if !reflect.DeepEqual(result, tt.ret) {
-				t.Errorf("want %v; got %v", tt.ret, result)
+				t.Fatalf("want %v; got %v", tt.ret, result)
 			}
 		})
 	}

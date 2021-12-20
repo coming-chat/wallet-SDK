@@ -21,7 +21,7 @@ func TestHasPrefix(t *testing.T) {
 		t.Run(fmt.Sprintf("%v", i), func(t *testing.T) {
 			result := HasPrefix(tt.in)
 			if result != tt.out {
-				t.Errorf("want %v; got %v", tt.out, result)
+				t.Fatalf("want %v; got %v", tt.out, result)
 			}
 		})
 	}
@@ -41,7 +41,7 @@ func TestValidHex(t *testing.T) {
 		t.Run(fmt.Sprintf("%v", i), func(t *testing.T) {
 			result := ValidHex(tt.in)
 			if result != tt.out {
-				t.Errorf("want %v; got %v", tt.out, result)
+				t.Fatalf("want %v; got %v", tt.out, result)
 			}
 		})
 	}
@@ -60,7 +60,7 @@ func TestAddPrefix(t *testing.T) {
 		t.Run(fmt.Sprintf("%v", i), func(t *testing.T) {
 			result := AddPrefix(tt.in)
 			if result != tt.out {
-				t.Errorf("want %v; got %v", tt.out, result)
+				t.Fatalf("want %v; got %v", tt.out, result)
 			}
 		})
 	}
@@ -78,7 +78,7 @@ func TestStripPrefix(t *testing.T) {
 		t.Run(fmt.Sprintf("%v", i), func(t *testing.T) {
 			result := StripPrefix(tt.in)
 			if result != tt.out {
-				t.Errorf("want %v; got %v", tt.out, result)
+				t.Fatalf("want %v; got %v", tt.out, result)
 			}
 		})
 	}
@@ -102,7 +102,7 @@ func TestHexFixLength(t *testing.T) {
 		t.Run(fmt.Sprintf("%v", i), func(t *testing.T) {
 			result := HexFixLength(tt.in.hexStr, tt.in.bitLength, tt.in.withPadding)
 			if result != tt.out {
-				t.Errorf("want %v; got %v", tt.out, result)
+				t.Fatalf("want %v; got %v", tt.out, result)
 			}
 		})
 	}
@@ -137,10 +137,10 @@ func TestToBN(t *testing.T) {
 		t.Run(fmt.Sprintf("%v", i), func(t *testing.T) {
 			result, err := ToBN(tt.in.hexStr, tt.in.littleEndian, tt.in.isNegative)
 			if err != nil {
-				t.Error(err)
+				t.Fatal(err)
 			}
 			if result.String() != tt.out.String() {
-				t.Errorf("want %v; got %v", tt.out, result)
+				t.Fatalf("want %v; got %v", tt.out, result)
 			}
 		})
 	}
@@ -163,10 +163,10 @@ func TestToUint8Slice(t *testing.T) {
 		t.Run(fmt.Sprintf("%v", i), func(t *testing.T) {
 			result, err := ToUint8Slice(tt.in.hexStr, tt.in.bitLength)
 			if err != nil {
-				t.Error(err)
+				t.Fatal(err)
 			}
 			if !reflect.DeepEqual(result, tt.out) {
-				t.Errorf("want %v; got %v", tt.out, result)
+				t.Fatalf("want %v; got %v", tt.out, result)
 			}
 		})
 	}

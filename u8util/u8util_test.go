@@ -23,7 +23,7 @@ func TestConcat(t *testing.T) {
 		t.Run(fmt.Sprintf("%v", i), func(t *testing.T) {
 			result := Concat(tt.in...)
 			if !reflect.DeepEqual(result, tt.out) {
-				t.Errorf("want %v; got %v", tt.out, result)
+				t.Fatalf("want %v; got %v", tt.out, result)
 			}
 		})
 	}
@@ -59,7 +59,7 @@ func TestFixLength(t *testing.T) {
 		t.Run(fmt.Sprintf("%v", i), func(t *testing.T) {
 			result := FixLength(tt.in.value, tt.in.bitLength, tt.in.atStart)
 			if !reflect.DeepEqual(result, tt.out) {
-				t.Errorf("want %v; got %v", tt.out, result)
+				t.Fatalf("want %v; got %v", tt.out, result)
 			}
 		})
 	}
@@ -77,7 +77,7 @@ func TestToString(t *testing.T) {
 		t.Run(fmt.Sprintf("%v", i), func(t *testing.T) {
 			result := ToString(tt.in)
 			if result != tt.out {
-				t.Errorf("want %v; got %v", tt.out, result)
+				t.Fatalf("want %v; got %v", tt.out, result)
 			}
 		})
 	}
@@ -102,7 +102,7 @@ func TestToHex(t *testing.T) {
 		t.Run(fmt.Sprintf("%v", i), func(t *testing.T) {
 			result := ToHex(tt.in.value, tt.in.bitLength, tt.in.isPrefixed)
 			if result != tt.out {
-				t.Errorf("want %v; got %v", tt.out, result)
+				t.Fatalf("want %v; got %v", tt.out, result)
 			}
 		})
 	}
@@ -123,7 +123,7 @@ func TestFromHex(t *testing.T) {
 		t.Run(fmt.Sprintf("%v", i), func(t *testing.T) {
 			result := FromHex(tt.in)
 			if !reflect.DeepEqual(result, tt.out) {
-				t.Errorf("want %v; got %v", tt.out, result)
+				t.Fatalf("want %v; got %v", tt.out, result)
 			}
 		})
 	}
@@ -145,7 +145,7 @@ func TestToBN(t *testing.T) {
 		t.Run(fmt.Sprintf("%v", i), func(t *testing.T) {
 			result := ToBN(tt.in.value, tt.in.isLittleEndian)
 			if result.String() != tt.out.String() {
-				t.Errorf("want %v; got %v", tt.out, result)
+				t.Fatalf("want %v; got %v", tt.out, result)
 			}
 		})
 	}

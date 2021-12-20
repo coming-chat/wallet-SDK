@@ -12,7 +12,7 @@ const (
 func TestNewWallet(t *testing.T) {
 	_, err := NewWallet(testSecretPhrase)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 }
@@ -20,11 +20,11 @@ func TestNewWallet(t *testing.T) {
 func TestGetPrivateKey(t *testing.T) {
 	w, err := NewWallet(testSecretPhrase)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	privateKey, err := w.GetPrivateKeyHex()
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	if testSecretSeed != privateKey {
 		t.Fatal(privateKey)

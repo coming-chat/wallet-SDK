@@ -20,7 +20,7 @@ func TestNewSHA256(t *testing.T) {
 		t.Run(fmt.Sprintf("%v", i), func(t *testing.T) {
 			result := NewSHA256(tt.in)
 			if hex.EncodeToString(result[:]) != tt.out {
-				t.Errorf("want %v; got %v", tt.out, hex.EncodeToString(result[:]))
+				t.Fatalf("want %v; got %v", tt.out, hex.EncodeToString(result[:]))
 			}
 		})
 	}
@@ -38,7 +38,7 @@ func TestNewBlake2b256(t *testing.T) {
 		t.Run(fmt.Sprintf("%v", i), func(t *testing.T) {
 			result := NewBlake2b256(tt.in)
 			if hex.EncodeToString(result[:]) != tt.out {
-				t.Errorf("want %v; got %v", tt.out, hex.EncodeToString(result[:]))
+				t.Fatalf("want %v; got %v", tt.out, hex.EncodeToString(result[:]))
 			}
 		})
 	}
@@ -56,7 +56,7 @@ func TestNewBlake2b512(t *testing.T) {
 		t.Run(fmt.Sprintf("%v", i), func(t *testing.T) {
 			result := NewBlake2b512(tt.in)
 			if hex.EncodeToString(result[:]) != tt.out {
-				t.Errorf("want %v; got %v", tt.out, hex.EncodeToString(result[:]))
+				t.Fatalf("want %v; got %v", tt.out, hex.EncodeToString(result[:]))
 			}
 		})
 	}
@@ -74,7 +74,7 @@ func TestNewXXHash(t *testing.T) {
 		t.Run(fmt.Sprintf("%v", i), func(t *testing.T) {
 			result := NewXXHash(tt.in, 64)
 			if hex.EncodeToString(result[:]) != tt.out {
-				t.Errorf("want %v; got %v", tt.out, hex.EncodeToString(result[:]))
+				t.Fatalf("want %v; got %v", tt.out, hex.EncodeToString(result[:]))
 			}
 		})
 	}
@@ -92,7 +92,7 @@ func TestNewXXHash64(t *testing.T) {
 		t.Run(fmt.Sprintf("%v", i), func(t *testing.T) {
 			result := NewXXHash64(tt.in)
 			if hex.EncodeToString(result[:]) != tt.out {
-				t.Errorf("want %v; got %v", tt.out, hex.EncodeToString(result[:]))
+				t.Fatalf("want %v; got %v", tt.out, hex.EncodeToString(result[:]))
 			}
 		})
 	}
@@ -111,10 +111,10 @@ func TestNewBlake2b256Sig(t *testing.T) {
 		t.Run(fmt.Sprintf("%v", i), func(t *testing.T) {
 			result, err := NewBlake2b256Sig(tt.key, tt.data)
 			if err != nil {
-				t.Error(err)
+				t.Fatal(err)
 			}
 			if !reflect.DeepEqual(u8util.ToHex(result[:], 512/8, false), tt.out) {
-				t.Error(u8util.ToHex(result[:], 512/8, false), tt.out)
+				t.Fatal(u8util.ToHex(result[:], 512/8, false), tt.out)
 			}
 		})
 	}
@@ -132,7 +132,7 @@ func TestNewXXHash128(t *testing.T) {
 		t.Run(fmt.Sprintf("%v", i), func(t *testing.T) {
 			result := NewXXHash128(tt.in)
 			if hex.EncodeToString(result[:]) != tt.out {
-				t.Errorf("want %v; got %v", tt.out, hex.EncodeToString(result[:]))
+				t.Fatalf("want %v; got %v", tt.out, hex.EncodeToString(result[:]))
 			}
 		})
 	}
@@ -150,7 +150,7 @@ func TestNewXXHash256(t *testing.T) {
 		t.Run(fmt.Sprintf("%v", i), func(t *testing.T) {
 			result := NewXXHash256(tt.in)
 			if hex.EncodeToString(result[:]) != tt.out {
-				t.Errorf("want %v; got %v", tt.out, hex.EncodeToString(result[:]))
+				t.Fatalf("want %v; got %v", tt.out, hex.EncodeToString(result[:]))
 			}
 		})
 	}
@@ -169,10 +169,10 @@ func TestNewBlake2b512Sig(t *testing.T) {
 		t.Run(fmt.Sprintf("%v", i), func(t *testing.T) {
 			result, err := NewBlake2b512Sig(tt.key, tt.data)
 			if err != nil {
-				t.Error(err)
+				t.Fatal(err)
 			}
 			if !reflect.DeepEqual(u8util.ToHex(result[:], 512/8, false), tt.out) {
-				t.Error(u8util.ToHex(result[:], 512/8, false), tt.out)
+				t.Fatal(u8util.ToHex(result[:], 512/8, false), tt.out)
 			}
 		})
 	}

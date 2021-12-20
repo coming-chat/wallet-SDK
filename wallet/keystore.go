@@ -102,7 +102,7 @@ func decodeKeystore(ks *keystore, password string) (*keyring, error) {
 	copy(publicKey[:], pubKey[:])
 	copy(privateKey[:], secretKey[:])
 
-	if AddressToPublicKey(ks.Address) != hex.EncodeToString(publicKey[:]) {
+	if AddressToPublicKey(ks.Address) != "0x"+hex.EncodeToString(publicKey[:]) {
 		return nil, ErrKeystore
 	}
 
