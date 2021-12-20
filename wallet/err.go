@@ -3,12 +3,13 @@ package wallet
 import "errors"
 
 var (
-	ErrNilKey      = errors.New("no mnemonic or private key")
-	ErrNilWallet   = errors.New("no mnemonic or private key or keystore")
-	ErrNilKeystore = errors.New("no keystore")
-	ErrNilMetadata = errors.New("no metadata")
-	ErrNotSigned   = errors.New("transaction not signed")
-	ErrNoPublicKey = errors.New("transaction no public key")
+	ErrNilKey       = errors.New("no mnemonic or private key")
+	ErrNilWallet    = errors.New("no mnemonic or private key or keystore")
+	ErrNilKeystore  = errors.New("no keystore")
+	ErrNilMetadata  = errors.New("no metadata")
+	ErrNotSigned    = errors.New("transaction not signed")
+	ErrNoPublicKey  = errors.New("transaction no public key")
+	ErrNilextrinsic = errors.New("nil extrinsic")
 
 	ErrNoEncrypted     = errors.New("no encrypted data to decode")
 	ErrEncryptedLength = errors.New("encrypted length is less than 24")

@@ -36,7 +36,16 @@ func (t *Transaction) GetSignData() ([]byte, error) {
 	return types.EncodeToBytes(t.payload)
 }
 
-func (t *Transaction) GetTx() (tx string, err error) {
+func (t *Transaction) GetUnSignTx() (string, error) {
+	if t.extrinsicChainX != nil {
+		return types.EncodeToHexString(t.extrinsicChainX)
+	} else if t.extrinsic != nil {
+		return types.EncodeToHexString(t.extrinsic)
+	}
+	return "", ErrNilextrinsic
+}
+
+func (t *Transaction) GetTx() (string, error) {
 	if t.SignatureData == nil {
 		return "", ErrNotSigned
 	}
@@ -58,7 +67,7 @@ func (t *Transaction) GetTx() (tx string, err error) {
 
 		// mark the extrinsic as signed
 		t.extrinsicChainX.Version |= types.ExtrinsicBitSigned
-		tx, err = types.EncodeToHexString(t.extrinsicChainX)
+		return types.EncodeToHexString(t.extrinsicChainX)
 	} else {
 		extSig := types.ExtrinsicSignatureV4{
 			Signer:    types.NewMultiAddressFromAccountID(t.PublicKey),
@@ -71,13 +80,8 @@ func (t *Transaction) GetTx() (tx string, err error) {
 
 		// mark the extrinsic as signed
 		t.extrinsic.Version |= types.ExtrinsicBitSigned
-		tx, err = types.EncodeToHexString(t.extrinsic)
+		return types.EncodeToHexString(t.extrinsic)
 	}
-
-	if err != nil {
-		return "", err
-	}
-	return tx, nil
 }
 
 func (t *Tx) newTx(isChainX bool, genesisHashString string, nonce uint64, specVersion, transVersion uint32, call string, args ...interface{}) (*Transaction, error) {
