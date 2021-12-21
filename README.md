@@ -253,10 +253,8 @@ throw err
     ```java
     String unSignTx = t.getUnSignTx();
     ```
-
-​		throw err
-
-​		此方法用于预估矿工费使用
+    throw err
+    此方法用于预估矿工费使用
 
 
 
