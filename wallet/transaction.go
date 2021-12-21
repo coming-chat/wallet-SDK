@@ -21,19 +21,62 @@ func NewTx(metadataString string) (*Tx, error) {
 }
 
 type Transaction struct {
-	signatureOptions *types.SignatureOptions
-	extrinsic        *types.Extrinsic
-	extrinsicChainX  *chainxTypes.Extrinsic
-	extrinsicEra     *types.ExtrinsicEra
-	payload          *types.ExtrinsicPayloadV4
-	signature        *types.Signature
-	extSig           *types.ExtrinsicSignatureV4
-	SignatureData    []byte
-	PublicKey        []byte
+	extrinsic       *types.Extrinsic
+	extrinsicChainX *chainxTypes.Extrinsic
 }
 
-func (t *Transaction) GetSignData() ([]byte, error) {
-	return types.EncodeToBytes(t.payload)
+func (t *Transaction) GetSignData(genesisHashString string, nonce int64, specVersion, transVersion int32) ([]byte, error) {
+	var methodBytes []byte
+	genesisHash, err := types.NewHashFromHexString(genesisHashString)
+	if err != nil {
+		return nil, err
+	}
+	if t.extrinsicChainX != nil {
+		t.extrinsicChainX.Signature = chainxTypes.ExtrinsicSignatureV4{
+			Nonce: types.NewUCompactFromUInt(uint64(nonce)),
+			Era:   types.ExtrinsicEra{IsImmortalEra: true},
+			Tip:   types.NewUCompactFromUInt(0),
+		}
+		methodBytes, err = types.EncodeToBytes(t.extrinsicChainX.Method)
+		if err != nil {
+			return nil, err
+		}
+		return types.EncodeToBytes(types.ExtrinsicPayloadV4{
+			ExtrinsicPayloadV3: types.ExtrinsicPayloadV3{
+				Method:      methodBytes,
+				Era:         t.extrinsicChainX.Signature.Era,
+				Nonce:       t.extrinsicChainX.Signature.Nonce,
+				Tip:         t.extrinsicChainX.Signature.Tip,
+				SpecVersion: types.NewU32(uint32(specVersion)),
+				GenesisHash: genesisHash,
+				BlockHash:   genesisHash,
+			},
+			TransactionVersion: types.NewU32(uint32(transVersion)),
+		})
+	} else if t.extrinsic != nil {
+		t.extrinsic.Signature = types.ExtrinsicSignatureV4{
+			Nonce: types.NewUCompactFromUInt(uint64(nonce)),
+			Era:   types.ExtrinsicEra{IsImmortalEra: true},
+			Tip:   types.NewUCompactFromUInt(0),
+		}
+		methodBytes, err = types.EncodeToBytes(t.extrinsic.Method)
+		if err != nil {
+			return nil, err
+		}
+		return types.EncodeToBytes(types.ExtrinsicPayloadV4{
+			ExtrinsicPayloadV3: types.ExtrinsicPayloadV3{
+				Method:      methodBytes,
+				Era:         t.extrinsic.Signature.Era,
+				Nonce:       t.extrinsic.Signature.Nonce,
+				Tip:         t.extrinsic.Signature.Tip,
+				SpecVersion: types.NewU32(uint32(specVersion)),
+				GenesisHash: genesisHash,
+				BlockHash:   genesisHash,
+			},
+			TransactionVersion: types.NewU32(uint32(transVersion)),
+		})
+	}
+	return nil, ErrNilextrinsic
 }
 
 func (t *Transaction) GetUnSignTx() (string, error) {
@@ -45,58 +88,59 @@ func (t *Transaction) GetUnSignTx() (string, error) {
 	return "", ErrNilextrinsic
 }
 
-func (t *Transaction) GetTx() (string, error) {
-	if t.SignatureData == nil {
+func (t *Transaction) GetTx(signerPublicKey []byte, signatureData []byte) (string, error) {
+	if signatureData == nil {
 		return "", ErrNotSigned
 	}
 
-	if t.PublicKey == nil {
+	if signerPublicKey == nil {
 		return "", ErrNoPublicKey
 	}
-	signatureData := types.NewSignature(t.SignatureData)
 
 	if t.extrinsicChainX != nil {
-		extSig := chainxTypes.ExtrinsicSignatureV4{
-			Signer:    types.NewAddressFromAccountID(t.PublicKey),
-			Signature: types.MultiSignature{IsSr25519: true, AsSr25519: signatureData},
-			Era:       *t.extrinsicEra,
-			Nonce:     t.signatureOptions.Nonce,
-			Tip:       t.signatureOptions.Tip,
-		}
-		t.extrinsicChainX.Signature = extSig
-
-		// mark the extrinsic as signed
+		t.extrinsicChainX.Signature.Signer = types.NewAddressFromAccountID(signerPublicKey)
+		t.extrinsicChainX.Signature.Signature = types.MultiSignature{IsSr25519: true, AsSr25519: types.NewSignature(signatureData)}
 		t.extrinsicChainX.Version |= types.ExtrinsicBitSigned
 		return types.EncodeToHexString(t.extrinsicChainX)
 	} else {
-		extSig := types.ExtrinsicSignatureV4{
-			Signer:    types.NewMultiAddressFromAccountID(t.PublicKey),
-			Signature: types.MultiSignature{IsSr25519: true, AsSr25519: signatureData},
-			Era:       *t.extrinsicEra,
-			Nonce:     t.signatureOptions.Nonce,
-			Tip:       t.signatureOptions.Tip,
-		}
-		t.extrinsic.Signature = extSig
-
-		// mark the extrinsic as signed
+		t.extrinsic.Signature.Signer = types.NewMultiAddressFromAccountID(signerPublicKey)
+		t.extrinsic.Signature.Signature = types.MultiSignature{IsSr25519: true, AsSr25519: types.NewSignature(signatureData)}
 		t.extrinsic.Version |= types.ExtrinsicBitSigned
 		return types.EncodeToHexString(t.extrinsic)
 	}
 }
 
-func (t *Tx) newTx(isChainX bool, genesisHashString string, nonce uint64, specVersion, transVersion uint32, call string, args ...interface{}) (*Transaction, error) {
+func (t *Tx) NewTxFromHex(isChainX bool, txHex string) (*Transaction, error) {
+	var (
+		transaction = &Transaction{}
+	)
+
+	if t.metadata == nil {
+		return nil, ErrNilMetadata
+	}
+
+	if isChainX {
+		err := types.DecodeFromHexString(txHex, transaction.extrinsicChainX)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		err := types.DecodeFromHexString(txHex, transaction.extrinsic)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return transaction, nil
+}
+
+func (t *Tx) newTx(isChainX bool, call string, args ...interface{}) (*Transaction, error) {
 	if t.metadata == nil {
 		return nil, ErrNilMetadata
 	}
 	var (
 		transaction = &Transaction{}
-		methodBytes []byte
 	)
-
-	genesisHash, err := types.NewHashFromHexString(genesisHashString)
-	if err != nil {
-		return nil, err
-	}
 
 	callType, err := types.NewCall(t.metadata, call, args...)
 	if err != nil {
@@ -106,80 +150,46 @@ func (t *Tx) newTx(isChainX bool, genesisHashString string, nonce uint64, specVe
 	if isChainX {
 		extrinsic := chainxTypes.NewExtrinsic(callType)
 		transaction.extrinsicChainX = &extrinsic
-		methodBytes, err = types.EncodeToBytes(transaction.extrinsicChainX.Method)
-		if err != nil {
-			return nil, err
-		}
 	} else {
 		extrinsic := types.NewExtrinsic(callType)
 		transaction.extrinsic = &extrinsic
-		methodBytes, err = types.EncodeToBytes(transaction.extrinsic.Method)
-		if err != nil {
-			return nil, err
-		}
 	}
-
-	transaction.signatureOptions = &types.SignatureOptions{
-		BlockHash:          genesisHash,
-		Era:                types.ExtrinsicEra{IsImmortalEra: true},
-		GenesisHash:        genesisHash,
-		Nonce:              types.NewUCompactFromUInt(nonce),
-		SpecVersion:        types.NewU32(specVersion),
-		Tip:                types.NewUCompactFromUInt(0),
-		TransactionVersion: types.NewU32(transVersion),
-	}
-
-	transaction.extrinsicEra = &types.ExtrinsicEra{IsImmortalEra: true}
-
-	transaction.payload = &types.ExtrinsicPayloadV4{
-		ExtrinsicPayloadV3: types.ExtrinsicPayloadV3{
-			Method:      methodBytes,
-			Era:         *transaction.extrinsicEra,
-			Nonce:       transaction.signatureOptions.Nonce,
-			Tip:         transaction.signatureOptions.Tip,
-			SpecVersion: transaction.signatureOptions.SpecVersion,
-			GenesisHash: transaction.signatureOptions.GenesisHash,
-			BlockHash:   transaction.signatureOptions.BlockHash,
-		},
-		TransactionVersion: transaction.signatureOptions.TransactionVersion,
-	}
-
 	return transaction, nil
 }
 
-func (t *Tx) NewBalanceTransferTx(dest, genesisHashString string, amount, nonce int64, specVersion, transVersion int32) (*Transaction, error) {
+func (t *Tx) NewBalanceTransferTx(dest string, amount int64) (*Transaction, error) {
 	destAccountID, err := addressStringToMultiAddress(dest)
 	if err != nil {
 		return nil, err
 	}
-	return t.newTx(false, genesisHashString, uint64(nonce), uint32(specVersion), uint32(transVersion), "Balances.transfer", destAccountID, types.NewUCompactFromUInt(uint64(amount)))
+	return t.newTx(false, "Balances.transfer", destAccountID, types.NewUCompactFromUInt(uint64(amount)))
 }
 
-func (t *Tx) NewChainXBalanceTransferTx(dest, genesisHashString string, amount, nonce int64, specVersion, transVersion int32) (*Transaction, error) {
+func (t *Tx) NewChainXBalanceTransferTx(dest string, amount int64) (*Transaction, error) {
 	destAccountID, err := addressStringToAddress(dest)
 	if err != nil {
 		return nil, err
 	}
-	return t.newTx(true, genesisHashString, uint64(nonce), uint32(specVersion), uint32(transVersion), "Balances.transfer", destAccountID, types.NewUCompactFromUInt(uint64(amount)))
+	return t.newTx(true, "Balances.transfer", destAccountID, types.NewUCompactFromUInt(uint64(amount)))
 }
 
-func (t *Tx) NewComingNftTransferTx(dest, genesisHashString string, cid, nonce int64, specVersion, transVersion int32) (*Transaction, error) {
+func (t *Tx) NewComingNftTransferTx(dest string, cid int64) (*Transaction, error) {
 	destAccountID, err := addressStringToMultiAddress(dest)
 	if err != nil {
 		return nil, err
 	}
-	return t.newTx(false, genesisHashString, uint64(nonce), uint32(specVersion), uint32(transVersion), "ComingNFT.transfer", types.NewU64(uint64(cid)), destAccountID)
+	return t.newTx(false, "ComingNFT.transfer", types.NewU64(uint64(cid)), destAccountID)
 }
 
-func (t *Tx) NewXAssetsTransferTx(dest, genesisHashString string, amount, nonce int64, specVersion, transVersion int32) (*Transaction, error) {
+func (t *Tx) NewXAssetsTransferTx(dest string, amount int64) (*Transaction, error) {
 	destAccountID, err := addressStringToAddress(dest)
 	if err != nil {
 		return nil, err
 	}
-	return t.newTx(true, genesisHashString, uint64(nonce), uint32(specVersion), uint32(transVersion), "XAssets.transfer", destAccountID, types.NewUCompactFromUInt(uint64(1)), types.NewUCompactFromUInt(uint64(amount)))
+	return t.newTx(true, "XAssets.transfer", destAccountID, types.NewUCompactFromUInt(uint64(1)), types.NewUCompactFromUInt(uint64(amount)))
 }
 
-func (t *Tx) NewThreshold(thresholdPublicKey, destAddress, aggSignature, aggPublicKey, controlBlock, message, scriptHash, genesisHashString string, transferAmount, nonce int64, blockNumber, specVersion, transVersion int32) (*Transaction, error) {
+func (t *Tx) NewThreshold(thresholdPublicKey, destAddress, aggSignature, aggPublicKey, controlBlock, message, scriptHash string, transferAmount int64, blockNumber int32) (*Transaction, error) {
 	thresholdPublicKeyByte, err := types.HexDecodeString(thresholdPublicKey)
 	if err != nil {
 		return nil, err
@@ -227,5 +237,5 @@ func (t *Tx) NewThreshold(thresholdPublicKey, destAddress, aggSignature, aggPubl
 
 	arg := []types.Call{passScriptCall, execScriptCall}
 
-	return t.newTx(false, genesisHashString, uint64(nonce), uint32(specVersion), uint32(transVersion), "Utility.batch_all", arg)
+	return t.newTx(false, "Utility.batch_all", arg)
 }
