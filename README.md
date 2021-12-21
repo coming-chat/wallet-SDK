@@ -40,12 +40,12 @@ ComingChat substrate wallet SDK
     ```java
     Wallet wallet = Wallet.NewWalletFromKeyStore(keyStoreJson, password);
     ```
-    
+  
     | 参数         | 类型   | 描述     | 获取方式 |
     | ------------ | ------ | -------- | -------- |
     | keyStoreJson | string | keystore |          |
     | password     | string | 密码     |          |
-    
+  
     throw err
 
 
@@ -147,9 +147,22 @@ throw err
     Tx tx = Tx.NewTx(metadataString);
     ```
 
-    | 参数           | 类型   | 描述                   |
-    | -------------- | ------ | ---------------------- |
-    | metadataString | string | metadata的16进制string |
+    | 参数           | 类型   | 描述                   | 获取方式 |
+    | -------------- | ------ | ---------------------- | -------- |
+    | metadataString | string | metadata的16进制string | 接口获取 |
+
+    throw err
+    
+  * ##### 从Hex创建Transaction
+
+    ```
+    Transaction t = tx.newTxFromHex(isChainX, txHex)
+    ```
+
+    | 参数     | 类型   | 描述           | 获取方式             |
+    | -------- | ------ | -------------- | -------------------- |
+    | isChainX | bool   | 是否是chainx   |                      |
+    | txHex    | string | tx的16进制数据 | 从Wallet Connect获取 |
 
     throw err
 
