@@ -248,15 +248,13 @@ throw err
 
 ### Transaction
 
-* ##### 获取未签名Tx
+  * ##### 获取未签名Tx
 
     ```java
     String unSignTx = t.getUnSignTx();
     ```
     throw err
     此方法用于预估矿工费使用
-
-
 
 
 
