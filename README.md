@@ -40,12 +40,12 @@ ComingChat substrate wallet SDK
     ```java
     Wallet wallet = Wallet.NewWalletFromKeyStore(keyStoreJson, password);
     ```
-  
+    
     | 参数         | 类型   | 描述     | 获取方式 |
     | ------------ | ------ | -------- | -------- |
     | keyStoreJson | string | keystore |          |
     | password     | string | 密码     |          |
-  
+    
     throw err
 
 
@@ -120,6 +120,7 @@ ComingChat substrate wallet SDK
     | -------- | ------ | ---- | -------- |
     | password | string |      |          |
     
+
 throw err
 
 
@@ -143,7 +144,7 @@ throw err
   * ##### 创建Tx
 
     ```java
-    Tx tx = Tx.newTx(metadataString);
+    Tx tx = Tx.NewTx(metadataString);
     ```
 
     | 参数           | 类型   | 描述                   |
@@ -157,18 +158,14 @@ throw err
   * ##### 创建Balance转账
 
     ```java
-    Transaction t = tx.newBalanceTransferTx(dest, genesisHashString, amount, nonce, specVersion, transVersion);
+    Transaction t = tx.newBalanceTransferTx(dest, amount);
     ```
 
-    | 参数              | 类型   | 描述         | 获取方式 |
-    | ----------------- | ------ | ------------ | -------- |
-    | dest              | string | 对方address  | 输入     |
-    | genesisHashString | string | 创世哈希     | 接口获取 |
-    | amount            | long   | 金额         | 用户输入 |
-    | nonce             | long   | nonc         | 接口获取 |
-    | specVersion       | int    | specVersion  | 接口获取 |
-    | transVersion      | int    | transVersion | 接口获取 |
-
+    | 参数   | 类型   | 描述        | 获取方式 |
+    | ------ | ------ | ----------- | -------- |
+    | dest   | string | 对方address | 输入     |
+    | amount | long   | 金额        | 用户输入 |
+    
     throw err
 
 
@@ -176,7 +173,7 @@ throw err
   * ##### 创建ChainX转账
 
     ```java
-    Transaction t = tx.newChainXBalanceTransferTx(dest, genesisHashString, amount, nonce, specVersion, transVersion);
+    Transaction t = tx.newChainXBalanceTransferTx(dest, amount);
     ```
 
     参数同上
@@ -188,18 +185,14 @@ throw err
   * ##### 创建NFT转账
 
     ```java
-    Transaction t = tx.newComingNftTransferTx(dest, genesisHashString, cid, nonce, specVersion, transVersion);
+    Transaction t = tx.newComingNftTransferTx(dest, cid);
     ```
 
-    | 参数              | 类型   | 描述         | 获取方式 |
-    | ----------------- | ------ | ------------ | -------- |
-    | dest              | string | 对方address  | 输入     |
-    | genesisHashString | string | 创世哈希     | 接口获取 |
-    | cid               | long   | 金额         | 用户输入 |
-    | nonce             | long   | nonc         | 接口获取 |
-    | specVersion       | int    | specVersion  | 接口获取 |
-    | transVersion      | int    | transVersion | 接口获取 |
-
+    | 参数 | 类型   | 描述        | 获取方式 |
+    | ---- | ------ | ----------- | -------- |
+    | dest | string | 对方address | 输入     |
+    | cid  | long   | 金额        | 用户输入 |
+    
     throw err
 
 
@@ -207,7 +200,7 @@ throw err
   * ##### 创建XBTC转账
 
     ```java
-    Transaction t = tx.newXAssetsTransferTx(dest, genesisHashString, amount, nonce, specVersion, transVersion);
+    Transaction t = tx.newXAssetsTransferTx(dest, amount);
     ```
 
     参数同上
@@ -219,7 +212,7 @@ throw err
   * ##### 创建mini门限转账
 
     ```java
-    Transaction t = tx.NewThreshold(thresholdPublicKey, destAddress, aggSignature, aggPublicKey, controlBlock, message, scriptHash, genesisHashString, transferAmount, nonce, blockNumber, specVersion, transVersion);
+    Transaction t = tx.NewThreshold(thresholdPublicKey, destAddress, aggSignature, aggPublicKey, controlBlock, message, scriptHash, transferAmount, blockNumber);
     ```
 
     | 参数               | 类型   | 描述                         | 获取方式                  |
@@ -231,13 +224,9 @@ throw err
     | controlBlock       | string | controlBlock                 | generateControlBlock()    |
     | message            | string | 576520617265206c6567696f6e21 | 写死                      |
     | scriptHash         | string | scriptHash                   | 接口获取                  |
-    | genesisHashString  | string | genesisHash                  | 接口获取                  |
     | transferAmount     | int64  | 转账金额                     | 用户输入                  |
-    | nonce              | int64  | nonce                        | 接口获取                  |
     | blockNumber        | int32  | blockNumber                  | 与scriptHash同接口获取    |
-    | specVersion        | int32  | specVersion                  | 接口获取                  |
-    | transVersion       | int32  | transVersion                 | 接口获取                  |
-
+    
     throw err
 
 
@@ -246,26 +235,45 @@ throw err
 
 ### Transaction
 
-  * ##### 内部成员变量
+* ##### 获取未签名Tx
 
     ```java
-    SignatureData    byte[]
-    PublicKey        byte[]
+    String unSignTx = t.getUnSignTx();
     ```
+
+​		throw err
+
+​		此方法用于预估矿工费使用
+
+
+
+
 
   * ##### 获取需要签名内容
 
     ```java
-    byte[] signData = t.getSignData();
+    byte[] signData = t.getSignData(genesisHashString, nonce, specVersion, transVersion);
     ```
+
+    | 参数              | 类型   | 描述        | 获取方式 |
+    | ----------------- | ------ | ----------- | -------- |
+    | genesisHashString | string | genesisHash | 接口获取 |
+    | nonce             | int64  | nonce       | 接口获取 |
+    | specVersion       | int32  |             | 接口获取 |
+    | transVersion      | int32  |             | 接口获取 |
 
     throw err
 
   * ##### 获取Tx
 
     ```java
-    String sendTx = t.getTx();
+    String sendTx = t.getTx(signerPublicKey, signatureData);
     ```
+
+    | 参数            | 类型   | 描述       | 获取方式                                |
+    | --------------- | ------ | ---------- | --------------------------------------- |
+    | signerPublicKey | byte[] | 签名者公钥 | [获取公钥](#获取公钥)的getPublicKey方法 |
+    | signatureData   | byte[] | 签名结果   |                                         |
 
     throw err
 
@@ -289,23 +297,21 @@ throw err
 
 7. 用钱包Sign方法对交易t的内容([获取需要签名内容](#获取需要签名内容))签名
 
-8. 将签名方公钥([获取公钥](#获取公钥))和签名内容放入交易t中
+8. 将签名方公钥([获取公钥](#获取公钥))和签名内容放入GetTx的方法中
 
 9. 交易t调用[获取Tx](#获取Tx)获得SendTx
 
 ```java
 try {
   String mnemonicString = Wallet.genMnemonic();
-	Wallet wallet = Wallet.newWallet(mnemonicString , 44);
-  Tx tx = Tx.newTx(metadataString);
+	Wallet wallet = Wallet.newWallet(mnemonicString);
+  Tx tx = Tx.NewTx(metadataString);
   String dest = "5UczqUVGsoQpZnBCZkDtxvLxJ42KnUfaGTzPkQmZeAAug4s9";
   String genesisHashString = "0xfb58f83706a065ced8f658fafaba97e6e49b772287e332077c499784184eda9f";
   long amount = 100000;
-  Transaction t = tx.newBalanceTransferTx(dest, genesisHashString, amount, 0, 115, 1);
-  byte[] signedMessage = wallet.sign(t.getSignData());
-  t.setSignatureData(signedMessage);
-  t.setPublicKey(wallet.getPublicKey());
-  String sendTx = t.getTx();
+  Transaction t = tx.newBalanceTransferTx(dest, amount);
+  byte[] signedMessage = wallet.sign(t.getSignData(genesisHashString, 0, 115, 1));
+  String sendTx = t.getTx(wallet.getPublicKey(), signedMessage);
 }catch  (Exception e){
   
 }
