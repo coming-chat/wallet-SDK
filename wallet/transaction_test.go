@@ -367,7 +367,20 @@ func TestDecodeTx(t *testing.T) {
 		}
 	}
 	t.Logf("%s.%s", mod.Name, variant.Name)
-	//variant.
+	var arg []interface{}
+	for _, field := range variant.Fields {
+		if field.HasName {
+			t.Log(field.Name)
+		}
+		if field.HasTypeName {
+			t.Log(field.TypeName)
+		}
+		arg = append(arg, field.Type)
+	}
+	err = types.DecodeFromBytes(extSuccess.Method.Args, &arg)
+	if err != nil {
+		t.Fatal(err)
+	}
 	//err = types.DecodeFromHexString("0xed068400c42129c6bed8c7fc85776a7687b250908fde45a3b25365ce5d3432d36d29d459018a677a90cb4c77ea2d2114203763b710c7b7192957d1b4eff43df754b6c24a043a9b6cbd3a2a9727619aeff13055d64bbbe5567d69ac9ddbf474c666c9de2b890000001e00081f0024c5d4ad9a2052bf8535f98b46815fab02ace5eb286951459686229319c495560101f08e6ce7b72b2fb256b1bf1e9186920a8b10d251c38bec9ae167f4964aeefe01b4d77d08f9006900c924756dfb04472ddf21b121d8f6e8f92932649cbb4f658280aa68dced52cfe04e3b7a0457bdcfda00e463044eadac12bada22c192e4f6af5d810144a39dcf13ec8b9427375f3cd6c3552f5941b633092f7bfaee5bc6d8d8b0d03a898d4079480f8326122d60ac1b8747514a8ae6adeaea8dbb758597a2834e27f6c39da7eb29fbc714d0190bf5a29be2da0523ba8f726a8b1c213173d9d568e62638576520617265206c6567696f6e21806ed03482e88c37d015cc44b7fc581209c37caf0a74fc25479ef3a4630eb34b581f0124c5d4ad9a2052bf8535f98b46815fab02ace5eb286951459686229319c4955600e8030000000000000000000000000000389b0900209f0900", &ext)
 	//
 	//sh := extSuccess.Method.Args[248:280]
@@ -379,4 +392,19 @@ func TestDecodeTx(t *testing.T) {
 	//	t.Fatal(err)
 	//}
 	//t.Log(ext)
+}
+
+func TestDecodeTx2(t *testing.T) {
+	var extSuccess chainxTypes.Extrinsic
+	var errExtrinsic chainxTypes.Extrinsic
+	//var ext types.Extrinsic
+	err := types.DecodeFromHexString("0x350284ffc8e8d0473afbe516cb772d504ecb091a139076c9aa4d3e0514aca7837599f861010600ff30f9c1fd8d945474d39ef00547d7f13044dcc05b6a4db7ca8aee0a0062257850025a620200100002000000010000002fd9e861564c428cf16c3d6e0ec80010000600ff30f9c1fd8d945474d39ef00547d7f13044dcc05b6a4db7ca8aee0a0062257850025a6202", &errExtrinsic)
+	err = types.DecodeFromHexString("0x350284ffc8e8d0473afbe516cb772d504ecb091a139076c9aa4d3e0514aca7837599f861013c7f9eda8ee410ffe4436982303c1b603de6b910f1cd96b8cf143ca11aba7672b12792f59696ee7d35ea759c3bcd7e496c1b79907980696239ab03f8dde544810010000600ff30f9c1fd8d945474d39ef00547d7f13044dcc05b6a4db7ca8aee0a00622578500284d717", &extSuccess)
+	pub1, err := types.EncodeToHexString(extSuccess.Signature.Signer.AsAccountID)
+	pub2, err := types.EncodeToHexString(errExtrinsic.Signature.Signer.AsAccountID)
+	t.Log(pub1)
+	t.Log(pub2)
+	if err != nil {
+		t.Fatal(err)
+	}
 }
