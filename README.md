@@ -60,7 +60,7 @@ ComingChat substrate wallet SDK
   | ------- | ------ | ---- | -------- |
   | address | string | 地址 |          |
 
-
+​		throw err
 
 * ##### 公钥转地址
 
@@ -73,7 +73,7 @@ ComingChat substrate wallet SDK
     | publicKey | string | 公钥16进制字符串 |          |
     | network   | int    | ss58             |          |
 
-
+​		throw err
 
 #### **Wallet类方法**
 
