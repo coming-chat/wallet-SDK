@@ -10,6 +10,8 @@ var (
 	ErrNotSigned    = errors.New("transaction not signed")
 	ErrNoPublicKey  = errors.New("transaction no public key")
 	ErrNilextrinsic = errors.New("nil extrinsic")
+	ErrAddress      = errors.New("err address")
+	ErrPublicKey    = errors.New("err publicKey")
 
 	ErrNoEncrypted     = errors.New("no encrypted data to decode")
 	ErrEncryptedLength = errors.New("encrypted length is less than 24")

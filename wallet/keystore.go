@@ -38,21 +38,12 @@ type keystore struct {
 	Encoded  string    `json:"encoded"`
 	Encoding *encoding `json:"encoding"`
 	Address  string    `json:"address"`
-	Meta     *meta     `json:"meta"`
 }
 
 type encoding struct {
 	Content []string `json:"content"`
 	Type    []string `json:"type"`
 	Version string   `json:"version"`
-}
-
-type meta struct {
-	GenesisHash string   `json:"genesisHash"`
-	IsHardware  bool     `json:"isHardware"`
-	Name        string   `json:"name"`
-	Tags        []string `json:"tags"`
-	WhenCreated int64    `json:"whenCreated"`
 }
 
 type keyring struct {
@@ -101,8 +92,11 @@ func decodeKeystore(ks *keystore, password string) (*keyring, error) {
 
 	copy(publicKey[:], pubKey[:])
 	copy(privateKey[:], secretKey[:])
-
-	if AddressToPublicKey(ks.Address) != "0x"+hex.EncodeToString(publicKey[:]) {
+	addrPubKey, err := AddressToPublicKey(ks.Address)
+	if err != nil {
+		return nil, err
+	}
+	if addrPubKey != "0x"+hex.EncodeToString(publicKey[:]) {
 		return nil, ErrKeystore
 	}
 

@@ -60,7 +60,11 @@ func (w *Wallet) GetPublicKey() ([]byte, error) {
 	if w.key != nil {
 		return w.key.PublicKey, nil
 	} else if w.keystore != nil {
-		return types.HexDecodeString(AddressToPublicKey(w.keystore.Address))
+		publicKey, err := AddressToPublicKey(w.keystore.Address)
+		if err != nil {
+			return nil, err
+		}
+		return types.HexDecodeString(publicKey)
 	}
 
 	return nil, ErrNilWallet
@@ -70,7 +74,7 @@ func (w *Wallet) GetPublicKeyHex() (string, error) {
 	if w.key != nil {
 		return types.HexEncodeToString(w.key.PublicKey), nil
 	} else if w.keystore != nil {
-		return AddressToPublicKey(w.keystore.Address), nil
+		return AddressToPublicKey(w.keystore.Address)
 	}
 
 	return "", ErrNilWallet
@@ -78,9 +82,13 @@ func (w *Wallet) GetPublicKeyHex() (string, error) {
 
 func (w *Wallet) GetAddress(network int) (string, error) {
 	if w.key != nil {
-		return PublicKeyToAddress(ByteToHex(w.key.PublicKey), network), nil
+		return PublicKeyToAddress(ByteToHex(w.key.PublicKey), network)
 	} else if w.keystore != nil {
-		return PublicKeyToAddress(AddressToPublicKey(w.keystore.Address), network), nil
+		publicKey, err := AddressToPublicKey(w.keystore.Address)
+		if err != nil {
+			return "", err
+		}
+		return PublicKeyToAddress(publicKey, network)
 	}
 	return "", ErrNilWallet
 }

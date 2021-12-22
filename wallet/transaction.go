@@ -195,7 +195,11 @@ func (t *Tx) NewThreshold(thresholdPublicKey, destAddress, aggSignature, aggPubl
 		return nil, err
 	}
 
-	destPublicKeyByte, err := types.HexDecodeString(AddressToPublicKey(destAddress))
+	destPublicKey, err := AddressToPublicKey(destAddress)
+	if err != nil {
+		return nil, err
+	}
+	destPublicKeyByte, err := types.HexDecodeString(destPublicKey)
 	if err != nil {
 		return nil, err
 	}
