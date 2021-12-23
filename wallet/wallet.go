@@ -15,6 +15,9 @@ type Wallet struct {
 
 func NewWallet(seedOrPhrase string) (*Wallet, error) {
 	network := 44
+	if len(seedOrPhrase) == 0 {
+		return nil, ErrSeedOrPhrase
+	}
 	keyringPair, err := signature.KeyringPairFromSecret(seedOrPhrase, uint8(network))
 	if err != nil {
 		return nil, err

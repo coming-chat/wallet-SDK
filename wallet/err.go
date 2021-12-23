@@ -12,6 +12,7 @@ var (
 	ErrNilextrinsic = errors.New("nil extrinsic")
 	ErrAddress      = errors.New("err address")
 	ErrPublicKey    = errors.New("err publicKey")
+	ErrSeedOrPhrase = errors.New("invalid seed length")
 
 	ErrNoEncrypted     = errors.New("no encrypted data to decode")
 	ErrEncryptedLength = errors.New("encrypted length is less than 24")
