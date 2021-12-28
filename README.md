@@ -156,7 +156,7 @@ throw err
   * ##### 从Hex创建Transaction
 
     ```
-    Transaction t = tx.newTxFromHex(isChainX, txHex)
+    Transaction t = tx.newTransactionFromHex(isChainX, txHex)
     ```
 
     | 参数     | 类型   | 描述           | 获取方式             |
