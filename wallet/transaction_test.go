@@ -326,10 +326,42 @@ func TestThreshold(t *testing.T) {
 	t.Logf("Mini Threshold sendTx: %v", sendTx)
 }
 
+func TestNewTransactionFromHex(t *testing.T) {
+	txMetadata, err := NewTx(Minix)
+	if err != nil {
+		t.Fatal(err)
+	}
+	transaction, err := txMetadata.NewTransactionFromHex(false, "0x6c042a013fb26e2800000000000e2707000000000000000000000000")
+	if err != nil {
+		t.Fatal(err)
+	}
+	signData, err := transaction.GetSignData("0xfb58f83706a065ced8f658fafaba97e6e49b772287e332077c499784184eda9f", 0, 115, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wallet, err := NewWallet("boss mind sauce seek clutch busy boil screen room timber shop same")
+	if err != nil {
+		t.Fatal(err)
+	}
+	signedData, err := wallet.Sign(signData, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	pubkey, err := wallet.GetPublicKey()
+	if err != nil {
+		t.Fatal(err)
+	}
+	sendTx, err := transaction.GetTx(pubkey, signedData)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(sendTx)
+}
+
 func TestDecodeTx(t *testing.T) {
 	var extSuccess types.Extrinsic
 	//var ext types.Extrinsic
-	err := types.DecodeFromHexString("0x6c042a0115cd5b070000000090cc0b54020000000000000000000000", &extSuccess)
+	err := types.DecodeFromHexString("0x6c042a013fb26e2800000000000e2707000000000000000000000000", &extSuccess)
 	if err != nil {
 		t.Fatal(err)
 	}
