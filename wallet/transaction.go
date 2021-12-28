@@ -110,7 +110,7 @@ func (t *Transaction) GetTx(signerPublicKey []byte, signatureData []byte) (strin
 	}
 }
 
-func (t *Tx) NewTxFromHex(isChainX bool, txHex string) (*Transaction, error) {
+func (t *Tx) NewTransactionFromHex(isChainX bool, txHex string) (*Transaction, error) {
 	var (
 		transaction = &Transaction{}
 	)
@@ -120,12 +120,14 @@ func (t *Tx) NewTxFromHex(isChainX bool, txHex string) (*Transaction, error) {
 	}
 
 	if isChainX {
-		err := types.DecodeFromHexString(txHex, transaction.extrinsicChainX)
+		transaction.extrinsicChainX = &chainxTypes.Extrinsic{}
+		err := types.DecodeFromHexString(txHex, &transaction.extrinsicChainX)
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		err := types.DecodeFromHexString(txHex, transaction.extrinsic)
+		transaction.extrinsic = &types.Extrinsic{}
+		err := types.DecodeFromHexString(txHex, &transaction.extrinsic)
 		if err != nil {
 			return nil, err
 		}
