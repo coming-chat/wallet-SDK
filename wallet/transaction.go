@@ -76,7 +76,7 @@ func (t *Transaction) GetSignData(genesisHashString string, nonce int64, specVer
 			TransactionVersion: types.NewU32(uint32(transVersion)),
 		})
 	}
-	return nil, ErrNilextrinsic
+	return nil, ErrNilExtrinsic
 }
 
 func (t *Transaction) GetUnSignTx() (string, error) {
@@ -85,7 +85,7 @@ func (t *Transaction) GetUnSignTx() (string, error) {
 	} else if t.extrinsic != nil {
 		return types.EncodeToHexString(t.extrinsic)
 	}
-	return "", ErrNilextrinsic
+	return "", ErrNilExtrinsic
 }
 
 func (t *Transaction) GetTx(signerPublicKey []byte, signatureData []byte) (string, error) {
