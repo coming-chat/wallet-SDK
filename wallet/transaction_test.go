@@ -10,13 +10,74 @@ import (
 )
 
 var (
-	apiMiniX, _  = gsrc.NewSubstrateAPI("wss://minichain-testnet.coming.chat")
-	apiChainX, _ = gsrc.NewSubstrateAPI("wss://testnet.chainx.org")
-	Minix        = ""
-	ChainX       = ""
-	_            = client.CallWithBlockHash(apiMiniX.Client, &Minix, "state_getMetadata", nil)
-	_            = client.CallWithBlockHash(apiChainX.Client, &ChainX, "state_getMetadata", nil)
+	apiMiniX, _   = gsrc.NewSubstrateAPI("wss://minichain-testnet.coming.chat")
+	apiChainX, _  = gsrc.NewSubstrateAPI("wss://testnet.chainx.org")
+	apiSherpax, _ = gsrc.NewSubstrateAPI("wss://sherpax-testnet.chainx.org")
+	Minix         = ""
+	ChainX        = ""
+	Sherpax       = ""
+	_             = client.CallWithBlockHash(apiSherpax.Client, &Sherpax, "state_getMetadata", nil)
+	_             = client.CallWithBlockHash(apiMiniX.Client, &Minix, "state_getMetadata", nil)
+	_             = client.CallWithBlockHash(apiChainX.Client, &ChainX, "state_getMetadata", nil)
 )
+
+func TestTransactionSherpax(t *testing.T) {
+	txMetadata, err := NewTx(Sherpax)
+	if err != nil {
+		t.Fatal(err)
+	}
+	tx, err := txMetadata.NewBalanceTransferTx(address44, 1000000000000000000)
+	if err != nil {
+		t.Fatal(err)
+	}
+	signData, err := tx.GetSignData("0xbcffcb56cf05eb71e5f59eaf35de2bbe330f925a065d852859b1737ce02342a0", 1, 12, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wallet, err := NewWallet(testSecretPhrase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	publicKey, err := wallet.GetPublicKey()
+	if err != nil {
+		t.Fatal(err)
+	}
+	signed, err := wallet.Sign(signData, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	sendTx, err := tx.GetTx(publicKey, signed)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var ext chainxTypes.Extrinsic
+	err = types.DecodeFromHexString(sendTx, &ext)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("Sherpax sendTx: %v", sendTx)
+}
+
+func TestTransactionSherpaxGetUnSign(t *testing.T) {
+	txMetadata, err := NewTx(Sherpax)
+	if err != nil {
+		t.Fatal(err)
+	}
+	tx, err := txMetadata.NewBalanceTransferTx(address44, 1000000000000000000)
+	if err != nil {
+		t.Fatal(err)
+	}
+	sendTx, err := tx.GetUnSignTx()
+	if err != nil {
+		t.Fatal(err)
+	}
+	var ext chainxTypes.Extrinsic
+	err = types.DecodeFromHexString(sendTx, &ext)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("Sherpax unSign sendTx: %v", sendTx)
+}
 
 func TestTransactionPCX(t *testing.T) {
 	txMetadata, err := NewTx(ChainX)
