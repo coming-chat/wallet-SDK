@@ -54,9 +54,17 @@ func (w *Wallet) Sign(message []byte, password string) ([]byte, error) {
 	if w.key != nil {
 		return signature.Sign(message, w.key.URI)
 	} else if w.keystore != nil {
-		return w.keystore.Sign(password, message)
+		return w.keystore.Sign(message, password)
 	}
 	return nil, ErrNilWallet
+}
+
+func (w *Wallet) SignFromHex(messageHex string, password string) ([]byte, error) {
+	message, err := types.HexDecodeString(messageHex)
+	if err != nil {
+		return nil, err
+	}
+	return w.Sign(message, password)
 }
 
 func (w *Wallet) GetPublicKey() ([]byte, error) {

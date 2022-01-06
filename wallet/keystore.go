@@ -59,7 +59,7 @@ func (k *keystore) checkPassword(password string) bool {
 	return true
 }
 
-func (k *keystore) Sign(password string, msg []byte) ([]byte, error) {
+func (k *keystore) Sign(msg []byte, password string) ([]byte, error) {
 	kr, err := decodeKeystore(k, password)
 	if err != nil {
 		return nil, err

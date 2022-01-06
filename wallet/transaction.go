@@ -88,6 +88,18 @@ func (t *Transaction) GetUnSignTx() (string, error) {
 	return "", ErrNilExtrinsic
 }
 
+func (t *Transaction) GetTxFromHex(signerPublicKeyHex string, signatureDataHex string) (string, error) {
+	signerPublicKey, err := types.HexDecodeString(signerPublicKeyHex)
+	if err != nil {
+		return "", err
+	}
+	signatureData, err := types.HexDecodeString(signatureDataHex)
+	if err != nil {
+		return "", err
+	}
+	return t.GetTx(signerPublicKey, signatureData)
+}
+
 func (t *Transaction) GetTx(signerPublicKey []byte, signatureData []byte) (string, error) {
 	if signatureData == nil {
 		return "", ErrNotSigned
