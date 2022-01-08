@@ -77,7 +77,7 @@ func decodeKeystore(ks *keystore, password string) (*keyring, error) {
 		publicKey  [32]byte
 	)
 
-	if ks.Encoding.Version != "3" || ks.Encoding.Content[0] != "pkcs8" || ks.Encoding.Content[1] != "sr25519" {
+	if ks.Encoding.Version != "3" || len(ks.Encoding.Content) < 2 || ks.Encoding.Content[0] != "pkcs8" || ks.Encoding.Content[1] != "sr25519" {
 		return nil, ErrNonPkcs8
 	}
 
