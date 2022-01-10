@@ -10,15 +10,15 @@ import (
 )
 
 var (
-	apiMiniX, _   = gsrc.NewSubstrateAPI("wss://minichain-testnet.coming.chat")
-	apiChainX, _  = gsrc.NewSubstrateAPI("wss://testnet.chainx.org")
-	apiSherpax, _ = gsrc.NewSubstrateAPI("wss://sherpax-testnet.chainx.org")
-	Minix         = ""
-	ChainX        = ""
-	Sherpax       = ""
-	_             = client.CallWithBlockHash(apiSherpax.Client, &Sherpax, "state_getMetadata", nil)
-	_             = client.CallWithBlockHash(apiMiniX.Client, &Minix, "state_getMetadata", nil)
-	_             = client.CallWithBlockHash(apiChainX.Client, &ChainX, "state_getMetadata", nil)
+	//apiMiniX, _ = gsrc.NewSubstrateAPI("wss://minichain-testnet.coming.chat")
+	apiChainX, _ = gsrc.NewSubstrateAPI("wss://testnet.chainx.org")
+	//apiSherpax, _ = gsrc.NewSubstrateAPI("wss://sherpax-testnet.chainx.org")
+	Minix   = ""
+	ChainX  = ""
+	Sherpax = ""
+	//_             = client.CallWithBlockHash(apiSherpax.Client, &Sherpax, "state_getMetadata", nil)
+	//_             = client.CallWithBlockHash(apiMiniX.Client, &Minix, "state_getMetadata", nil)
+	_ = client.CallWithBlockHash(apiChainX.Client, &ChainX, "state_getMetadata", nil)
 )
 
 func TestTransactionSherpax(t *testing.T) {
@@ -26,7 +26,7 @@ func TestTransactionSherpax(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	tx, err := txMetadata.NewBalanceTransferTx(address44, 1000000000000000000)
+	tx, err := txMetadata.NewBalanceTransferTx(address44, "10000000000000000000000")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -63,7 +63,7 @@ func TestTransactionSherpaxGetUnSign(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	tx, err := txMetadata.NewBalanceTransferTx(address44, 1000000000000000000)
+	tx, err := txMetadata.NewBalanceTransferTx(address44, "1000000000000000000")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -84,7 +84,7 @@ func TestTransactionPCX(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	tx, err := txMetadata.NewChainXBalanceTransferTx(address44, 100000000)
+	tx, err := txMetadata.NewChainXBalanceTransferTx(address44, "100000000")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -121,7 +121,7 @@ func TestTransactionPCXByKeystore(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	tx, err := txMetadata.NewChainXBalanceTransferTx(address44, 100000000)
+	tx, err := txMetadata.NewChainXBalanceTransferTx(address44, "100000000")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -158,7 +158,7 @@ func TestTransactionXBTCByKeystore(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	tx, err := txMetadata.NewXAssetsTransferTx(address44, 10000000)
+	tx, err := txMetadata.NewXAssetsTransferTx(address44, "10000000")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -195,7 +195,7 @@ func TestTransactionMini(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	tx, err := txMetadata.NewBalanceTransferTx(address44, 100000000)
+	tx, err := txMetadata.NewBalanceTransferTx(address44, "100000000")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -232,7 +232,7 @@ func TestTransactionMiniByKeystore(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	tx, err := txMetadata.NewBalanceTransferTx(address44, 100000000)
+	tx, err := txMetadata.NewBalanceTransferTx(address44, "100000000")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -322,7 +322,7 @@ func TestGetUnSignTxPCX(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	tx, err := txMetadata.NewChainXBalanceTransferTx(address44, 10000000)
+	tx, err := txMetadata.NewChainXBalanceTransferTx(address44, "10000000")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -338,7 +338,7 @@ func TestGetUnSignTxXBTC(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	tx, err := txMetadata.NewXAssetsTransferTx(address44, 100000000)
+	tx, err := txMetadata.NewXAssetsTransferTx(address44, "100000000")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -355,7 +355,7 @@ func TestThreshold(t *testing.T) {
 		t.Fatal(err)
 	}
 	tx, err := txMetadata.NewThreshold("0x24c5d4ad9a2052bf8535f98b46815fab02ace5eb286951459686229319c49556", "5QUEsBTRCB5GNGVHo67DrDpNY5y9Y12RpjNpSzrK56fGeS5H", "f08e6ce7b72b2fb256b1bf1e9186920a8b10d251c38bec9ae167f4964aeefe01b4d77d08f9006900c924756dfb04472ddf21b121d8f6e8f92932649cbb4f6582", "aa68dced52cfe04e3b7a0457bdcfda00e463044eadac12bada22c192e4f6af5d", "44a39dcf13ec8b9427375f3cd6c3552f5941b633092f7bfaee5bc6d8d8b0d03a898d4079480f8326122d60ac1b8747514a8ae6adeaea8dbb758597a2834e27f6c39da7eb29fbc714d0190bf5a29be2da0523ba8f726a8b1c213173d9d568e626", "576520617265206c6567696f6e21", "6ed03482e88c37d015cc44b7fc581209c37caf0a74fc25479ef3a4630eb34b58",
-		1000, 629560)
+		"1000", 629560)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -493,10 +493,6 @@ func TestDecodeTx2(t *testing.T) {
 	//var ext types.Extrinsic
 	err := types.DecodeFromHexString("0x350284ffc8e8d0473afbe516cb772d504ecb091a139076c9aa4d3e0514aca7837599f861010600ff30f9c1fd8d945474d39ef00547d7f13044dcc05b6a4db7ca8aee0a0062257850025a620200100002000000010000002fd9e861564c428cf16c3d6e0ec80010000600ff30f9c1fd8d945474d39ef00547d7f13044dcc05b6a4db7ca8aee0a0062257850025a6202", &errExtrinsic)
 	err = types.DecodeFromHexString("0x350284ffc8e8d0473afbe516cb772d504ecb091a139076c9aa4d3e0514aca7837599f861013c7f9eda8ee410ffe4436982303c1b603de6b910f1cd96b8cf143ca11aba7672b12792f59696ee7d35ea759c3bcd7e496c1b79907980696239ab03f8dde544810010000600ff30f9c1fd8d945474d39ef00547d7f13044dcc05b6a4db7ca8aee0a00622578500284d717", &extSuccess)
-	pub1, err := types.EncodeToHexString(extSuccess.Signature.Signer.AsAccountID)
-	pub2, err := types.EncodeToHexString(errExtrinsic.Signature.Signer.AsAccountID)
-	t.Log(pub1)
-	t.Log(pub2)
 	if err != nil {
 		t.Fatal(err)
 	}
