@@ -171,20 +171,28 @@ func (t *Tx) newTx(isChainX bool, call string, args ...interface{}) (*Transactio
 	return transaction, nil
 }
 
-func (t *Tx) NewBalanceTransferTx(dest string, amount int64) (*Transaction, error) {
+func (t *Tx) NewBalanceTransferTx(dest, amount string) (*Transaction, error) {
+	amountBigint, ok := new(big.Int).SetString(amount, 10)
+	if !ok {
+		return nil, ErrNumber
+	}
 	destAccountID, err := addressStringToMultiAddress(dest)
 	if err != nil {
 		return nil, err
 	}
-	return t.newTx(false, "Balances.transfer", destAccountID, types.NewUCompactFromUInt(uint64(amount)))
+	return t.newTx(false, "Balances.transfer", destAccountID, types.NewUCompact(amountBigint))
 }
 
-func (t *Tx) NewChainXBalanceTransferTx(dest string, amount int64) (*Transaction, error) {
+func (t *Tx) NewChainXBalanceTransferTx(dest, amount string) (*Transaction, error) {
+	amountBigint, ok := new(big.Int).SetString(amount, 10)
+	if !ok {
+		return nil, ErrNumber
+	}
 	destAccountID, err := addressStringToAddress(dest)
 	if err != nil {
 		return nil, err
 	}
-	return t.newTx(true, "Balances.transfer", destAccountID, types.NewUCompactFromUInt(uint64(amount)))
+	return t.newTx(true, "Balances.transfer", destAccountID, types.NewUCompact(amountBigint))
 }
 
 func (t *Tx) NewComingNftTransferTx(dest string, cid int64) (*Transaction, error) {
@@ -195,15 +203,19 @@ func (t *Tx) NewComingNftTransferTx(dest string, cid int64) (*Transaction, error
 	return t.newTx(false, "ComingNFT.transfer", types.NewU64(uint64(cid)), destAccountID)
 }
 
-func (t *Tx) NewXAssetsTransferTx(dest string, amount int64) (*Transaction, error) {
+func (t *Tx) NewXAssetsTransferTx(dest, amount string) (*Transaction, error) {
+	amountBigint, ok := new(big.Int).SetString(amount, 10)
+	if !ok {
+		return nil, ErrNumber
+	}
 	destAccountID, err := addressStringToAddress(dest)
 	if err != nil {
 		return nil, err
 	}
-	return t.newTx(true, "XAssets.transfer", destAccountID, types.NewUCompactFromUInt(uint64(1)), types.NewUCompactFromUInt(uint64(amount)))
+	return t.newTx(true, "XAssets.transfer", destAccountID, types.NewUCompactFromUInt(uint64(1)), types.NewUCompact(amountBigint))
 }
 
-func (t *Tx) NewThreshold(thresholdPublicKey, destAddress, aggSignature, aggPublicKey, controlBlock, message, scriptHash string, transferAmount int64, blockNumber int32) (*Transaction, error) {
+func (t *Tx) NewThreshold(thresholdPublicKey, destAddress, aggSignature, aggPublicKey, controlBlock, message, scriptHash, transferAmount string, blockNumber int32) (*Transaction, error) {
 	thresholdPublicKeyByte, err := types.HexDecodeString(thresholdPublicKey)
 	if err != nil {
 		return nil, err
@@ -243,12 +255,17 @@ func (t *Tx) NewThreshold(thresholdPublicKey, destAddress, aggSignature, aggPubl
 		return nil, err
 	}
 
+	amountBig, ok := new(big.Int).SetString(transferAmount, 10)
+	if !ok {
+		return nil, ErrNumber
+	}
+
 	passScriptCall, err := types.NewCall(t.metadata, "ThresholdSignature.pass_script", types.NewAccountID(thresholdPublicKeyByte), types.NewBytes(aggSignatureByte), types.NewBytes(aggPublicKeyByte), types.NewBytes(controlBlockByte), types.NewBytes(messageByte), types.NewBytes(scriptHashByte))
 	if err != nil {
 		return nil, err
 	}
 
-	execScriptCall, err := types.NewCall(t.metadata, "ThresholdSignature.exec_script", types.NewAccountID(destPublicKeyByte), types.NewU8(0), types.NewU128(*big.NewInt(transferAmount)), types.NewU32(uint32(blockNumber)), types.NewU32(uint32(blockNumber))+types.NewU32(1000))
+	execScriptCall, err := types.NewCall(t.metadata, "ThresholdSignature.exec_script", types.NewAccountID(destPublicKeyByte), types.NewU8(0), types.NewU128(*amountBig), types.NewU32(uint32(blockNumber)), types.NewU32(uint32(blockNumber))+types.NewU32(1000))
 	if err != nil {
 		return nil, err
 	}

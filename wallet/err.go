@@ -28,4 +28,6 @@ var (
 	ErrKeystore        = errors.New("decoded public keys are not equal")
 
 	ErrPassword = errors.New("password err")
+
+	ErrNumber = errors.New("illegal number")
 )
