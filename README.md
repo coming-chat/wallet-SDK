@@ -177,7 +177,7 @@ throw err
     | 参数   | 类型   | 描述        | 获取方式 |
     | ------ | ------ | ----------- | -------- |
     | dest   | string | 对方address | 输入     |
-    | amount | long   | 金额        | 用户输入 |
+    | amount | string | 金额        | 用户输入 |
     
     throw err
 
@@ -204,7 +204,7 @@ throw err
     | 参数 | 类型   | 描述        | 获取方式 |
     | ---- | ------ | ----------- | -------- |
     | dest | string | 对方address | 输入     |
-    | cid  | long   | 金额        | 用户输入 |
+    | cid  | long   | cid         | 用户输入 |
     
     throw err
 
@@ -237,7 +237,7 @@ throw err
     | controlBlock       | string | controlBlock                 | generateControlBlock()    |
     | message            | string | 576520617265206c6567696f6e21 | 写死                      |
     | scriptHash         | string | scriptHash                   | 接口获取                  |
-    | transferAmount     | int64  | 转账金额                     | 用户输入                  |
+    | transferAmount     | string | 转账金额                     | 用户输入                  |
     | blockNumber        | int32  | blockNumber                  | 与scriptHash同接口获取    |
     
     throw err
@@ -317,7 +317,7 @@ try {
   Tx tx = Tx.NewTx(metadataString);
   String dest = "5UczqUVGsoQpZnBCZkDtxvLxJ42KnUfaGTzPkQmZeAAug4s9";
   String genesisHashString = "0xfb58f83706a065ced8f658fafaba97e6e49b772287e332077c499784184eda9f";
-  long amount = 100000;
+  long amount = "100000";
   Transaction t = tx.newBalanceTransferTx(dest, amount);
   byte[] signedMessage = wallet.sign(t.getSignData(genesisHashString, 0, 115, 1));
   String sendTx = t.getTx(wallet.getPublicKey(), signedMessage);
