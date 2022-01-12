@@ -10,11 +10,15 @@ const (
 )
 
 func TestNewWallet(t *testing.T) {
-	_, err := NewWallet(testSecretPhrase)
+	wallet, err := NewWallet(testSecretPhrase)
 	if err != nil {
 		t.Fatal(err)
 	}
-
+	sign, err := wallet.Sign([]byte{}, "")
+	if err != nil {
+		t.Fatal(sign)
+	}
+	t.Log(sign)
 }
 
 func TestGetPrivateKey(t *testing.T) {
