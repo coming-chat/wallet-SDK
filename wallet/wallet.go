@@ -2,6 +2,7 @@ package wallet
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/signature"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/vedhavyas/go-subkey"
@@ -50,7 +51,15 @@ func (w *Wallet) CheckPassword(password string) (bool, error) {
 	return w.keystore.checkPassword(password), nil
 }
 
-func (w *Wallet) Sign(message []byte, password string) ([]byte, error) {
+func (w *Wallet) Sign(message []byte, password string) (b []byte, err error) {
+	defer func() {
+		errPanic := recover()
+		if errPanic != nil {
+			err = ErrSign
+			fmt.Println(errPanic)
+			return
+		}
+	}()
 	if w.key != nil {
 		return signature.Sign(message, w.key.URI)
 	} else if w.keystore != nil {

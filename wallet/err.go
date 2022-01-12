@@ -30,4 +30,5 @@ var (
 	ErrPassword = errors.New("password err")
 
 	ErrNumber = errors.New("illegal number")
+	ErrSign   = errors.New("sign panic error")
 )
