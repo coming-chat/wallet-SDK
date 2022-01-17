@@ -35,8 +35,8 @@ func NewWalletFromKeyStore(keyStoreJson string, password string) (*Wallet, error
 		return nil, err
 	}
 
-	if !keyStore.checkPassword(password) {
-		return nil, ErrPassword
+	if err = keyStore.checkPassword(password); err != nil {
+		return nil, err
 	}
 
 	return &Wallet{
@@ -48,7 +48,10 @@ func (w *Wallet) CheckPassword(password string) (bool, error) {
 	if w.keystore == nil {
 		return false, ErrNilKeystore
 	}
-	return w.keystore.checkPassword(password), nil
+	if err := w.keystore.checkPassword(password); err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 func (w *Wallet) Sign(message []byte, password string) (b []byte, err error) {

@@ -51,12 +51,9 @@ type keyring struct {
 	PublicKey  [32]byte
 }
 
-func (k *keystore) checkPassword(password string) bool {
+func (k *keystore) checkPassword(password string) error {
 	_, err := decodeKeystore(k, password)
-	if err != nil {
-		return false
-	}
-	return true
+	return err
 }
 
 func (k *keystore) Sign(msg []byte, password string) ([]byte, error) {
@@ -77,7 +74,7 @@ func decodeKeystore(ks *keystore, password string) (*keyring, error) {
 		publicKey  [32]byte
 	)
 
-	if ks.Encoding.Version != "3" || len(ks.Encoding.Content) < 2 || ks.Encoding.Content[0] != "pkcs8" || ks.Encoding.Content[1] != "sr25519" {
+	if ks.Encoding.Version != "3" || ks.Encoding == nil || len(ks.Encoding.Content) < 2 || ks.Encoding.Content[0] != "pkcs8" || ks.Encoding.Content[1] != "sr25519" {
 		return nil, ErrNonPkcs8
 	}
 
@@ -114,11 +111,11 @@ func decodePolkaKeystoreEncoded(passphrase *string, encrypted []byte, encodeType
 		password  []byte
 	)
 
-	if encodeType == nil {
+	if len(encodeType.Type) < 2 || encodeType.Type[1] != "xsalsa20-poly1305" {
 		return nil, nil, ErrNoEncryptedData
 	}
 
-	if passphrase == nil || encodeType.Type[1] != "xsalsa20-poly1305" {
+	if passphrase == nil {
 		return nil, nil, ErrNilPassword
 	}
 
