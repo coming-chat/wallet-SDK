@@ -10,15 +10,15 @@ import (
 )
 
 var (
-	//apiMiniX, _ = gsrc.NewSubstrateAPI("wss://minichain-testnet.coming.chat")
-	apiChainX, _ = gsrc.NewSubstrateAPI("wss://testnet.chainx.org")
-	//apiSherpax, _ = gsrc.NewSubstrateAPI("wss://sherpax-testnet.chainx.org")
-	Minix   = ""
-	ChainX  = ""
-	Sherpax = ""
-	//_             = client.CallWithBlockHash(apiSherpax.Client, &Sherpax, "state_getMetadata", nil)
-	//_             = client.CallWithBlockHash(apiMiniX.Client, &Minix, "state_getMetadata", nil)
-	_ = client.CallWithBlockHash(apiChainX.Client, &ChainX, "state_getMetadata", nil)
+	apiMiniX, _   = gsrc.NewSubstrateAPI("wss://minichain-testnet.coming.chat")
+	apiSherpax, _ = gsrc.NewSubstrateAPI("wss://sherpax-testnet.chainx.org")
+	apiChainX, _  = gsrc.NewSubstrateAPI("wss://testnet.chainx.org")
+	Minix         = ""
+	ChainX        = ""
+	Sherpax       = ""
+	_             = client.CallWithBlockHash(apiSherpax.Client, &Sherpax, "state_getMetadata", nil)
+	_             = client.CallWithBlockHash(apiMiniX.Client, &Minix, "state_getMetadata", nil)
+	_             = client.CallWithBlockHash(apiChainX.Client, &ChainX, "state_getMetadata", nil)
 )
 
 func TestTransactionSherpax(t *testing.T) {
@@ -493,6 +493,13 @@ func TestDecodeTx2(t *testing.T) {
 	//var ext types.Extrinsic
 	err := types.DecodeFromHexString("0x350284ffc8e8d0473afbe516cb772d504ecb091a139076c9aa4d3e0514aca7837599f861010600ff30f9c1fd8d945474d39ef00547d7f13044dcc05b6a4db7ca8aee0a0062257850025a620200100002000000010000002fd9e861564c428cf16c3d6e0ec80010000600ff30f9c1fd8d945474d39ef00547d7f13044dcc05b6a4db7ca8aee0a0062257850025a6202", &errExtrinsic)
 	err = types.DecodeFromHexString("0x350284ffc8e8d0473afbe516cb772d504ecb091a139076c9aa4d3e0514aca7837599f861013c7f9eda8ee410ffe4436982303c1b603de6b910f1cd96b8cf143ca11aba7672b12792f59696ee7d35ea759c3bcd7e496c1b79907980696239ab03f8dde544810010000600ff30f9c1fd8d945474d39ef00547d7f13044dcc05b6a4db7ca8aee0a00622578500284d717", &extSuccess)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestMetadata(t *testing.T) {
+	_, err := NewTx("")
 	if err != nil {
 		t.Fatal(err)
 	}
