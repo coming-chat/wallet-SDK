@@ -1,14 +1,14 @@
 package customscale
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 )
 
 type CallData struct {
-	Mod     string
-	Variant string
-	Arg     []*CallArg
+	Method string
+	Arg    []*CallArg
 }
 
 type CallArg struct {
@@ -18,33 +18,14 @@ type CallArg struct {
 
 func DecodeCall(metadata *types.Metadata, call *types.Call) (*CallData, error) {
 	variant, mod := GetCallMethodFromMetadata(metadata, call)
-	var (
-		args  []types.Si1LookupTypeID
-		names []string
-	)
 
-	for i, field := range variant.Fields {
-		if field.HasName {
-			names = append(names, string(field.Name))
-		} else {
-			names = append(names, fmt.Sprintf("unknown %d", i))
-		}
-		args = append(args, field.Type)
-	}
-	callArgList, err := ArgDecode(metadata, call.Args, args)
+	arg := NewArgDecoder(bytes.NewReader(call.Args))
+	callArg, err := ArgDecode(metadata, arg, variant.Fields)
 	if err != nil {
 		return nil, err
 	}
-	var callArg []*CallArg
-	for i, v := range callArgList {
-		callArg = append(callArg, &CallArg{
-			FieldName: names[i],
-			Value:     v,
-		})
-	}
 	return &CallData{
-		Mod:     string(mod.Name),
-		Variant: string(variant.Name),
-		Arg:     callArg,
+		Method: fmt.Sprintf("%s.%s", string(mod.Name), string(variant.Name)),
+		Arg:    callArg,
 	}, nil
 }

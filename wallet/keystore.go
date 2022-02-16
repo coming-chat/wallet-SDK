@@ -238,6 +238,39 @@ func (kg *keyring) sign(t *merlin.Transcript) ([]byte, error) {
 	return signatureByte[:], nil
 }
 
+//func (kg *keyring) signEd25519(t *merlin.Transcript, signature, message []byte) {
+//	if l := len(kg.privateKey); l != PrivateKeySize {
+//		panic("ed25519: bad private key length: " + strconv.Itoa(l))
+//	}
+//	seed, publicKey := privateKey[:SeedSize], privateKey[SeedSize:]
+//
+//	h := sha512.Sum512(seed)
+//	s := edwards25519.NewScalar().SetBytesWithClamping(h[:32])
+//	prefix := h[32:]
+//
+//	mh := sha512.New()
+//	mh.Write(prefix)
+//	mh.Write(message)
+//	messageDigest := make([]byte, 0, sha512.Size)
+//	messageDigest = mh.Sum(messageDigest)
+//	r := edwards25519.NewScalar().SetUniformBytes(messageDigest)
+//
+//	R := (&edwards25519.Point{}).ScalarBaseMult(r)
+//
+//	kh := sha512.New()
+//	kh.Write(R.Bytes())
+//	kh.Write(publicKey)
+//	kh.Write(message)
+//	hramDigest := make([]byte, 0, sha512.Size)
+//	hramDigest = kh.Sum(hramDigest)
+//	k := edwards25519.NewScalar().SetUniformBytes(hramDigest)
+//
+//	S := edwards25519.NewScalar().MultiplyAdd(k, s, r)
+//
+//	copy(signature[:32], R.Bytes())
+//	copy(signature[32:], S.Bytes())
+//}
+
 func divideScalarByCofactor(s []byte) []byte {
 	l := len(s) - 1
 	low := byte(0)

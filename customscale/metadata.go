@@ -17,6 +17,7 @@ func GetCallMethodFromMetadata(metadata *types.Metadata, call *types.Call) (vari
 						break
 					}
 				}
+				break
 			}
 
 		}
