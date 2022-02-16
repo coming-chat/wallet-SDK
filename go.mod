@@ -1,4 +1,4 @@
-module wallet-SDK
+module github.com/coming-chat/wallet-SDK
 
 go 1.17
 
