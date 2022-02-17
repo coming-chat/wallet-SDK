@@ -6,10 +6,10 @@ import (
 	"encoding/hex"
 	"github.com/ChainSafe/go-schnorrkel"
 	"github.com/coming-chat/merlin"
+	"github.com/coming-chat/wallet-SDK/crypto"
+	"github.com/coming-chat/wallet-SDK/u8util"
 	"github.com/gtank/ristretto255"
 	"golang.org/x/crypto/scrypt"
-	"wallet-SDK/crypto"
-	"wallet-SDK/u8util"
 )
 
 var (

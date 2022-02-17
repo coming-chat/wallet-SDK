@@ -14,6 +14,11 @@ type ArgDecoder struct {
 	*scale.Decoder
 }
 
+type Variants struct {
+	MethodName string
+	Value      []interface{}
+}
+
 func NewArgDecoder(reader io.Reader) *ArgDecoder {
 	return &ArgDecoder{scale.NewDecoder(reader)}
 }
@@ -196,7 +201,7 @@ func DecodeByTypeID(metadata *types.Metadata, arg *ArgDecoder, typeId types.Si1L
 		}
 		return filed, nil
 	case si1Type.Def.IsVariant:
-		var values []interface{}
+		variants := Variants{}
 		oneByte, err := arg.ReadOneByte()
 		if err != nil {
 			return nil, err
@@ -206,14 +211,15 @@ func DecodeByTypeID(metadata *types.Metadata, arg *ArgDecoder, typeId types.Si1L
 			return nil, errors.New("index out")
 		}
 		internalVariant := si1Type.Def.Variant.Variants[index]
+		variants.MethodName = string(internalVariant.Name)
 		filedList, err := ArgDecode(metadata, arg, internalVariant.Fields)
 		if err != nil {
 			return nil, err
 		}
 		for _, v := range filedList {
-			values = append(values, v.Value)
+			variants.Value = append(variants.Value, v.Value)
 		}
-		return values, nil
+		return variants, nil
 	case si1Type.Def.IsSequence:
 		codedLenUint, err := arg.DecodeUintCompact()
 		if err != nil {
