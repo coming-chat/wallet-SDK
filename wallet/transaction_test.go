@@ -423,7 +423,7 @@ func TestNewTransactionFromHex(t *testing.T) {
 func TestDecodeTx(t *testing.T) {
 	var extSuccess types.Extrinsic
 	//var ext types.Extrinsic
-	err := types.DecodeFromHexString("0x3504010000000000000000000000000000000303000000", &extSuccess.Method)
+	err := types.DecodeFromHexString("0x28020835040100000000000000000000000000000003030000003504010000000000000000000000000000000303000000", &extSuccess.Method)
 	if err != nil {
 		t.Fatal(err)
 	}

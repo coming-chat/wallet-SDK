@@ -206,11 +206,17 @@ func DecodeByTypeID(metadata *types.Metadata, arg *ArgDecoder, typeId types.Si1L
 		if err != nil {
 			return nil, err
 		}
-		index := int(oneByte)
-		if len(si1Type.Def.Variant.Variants)-1 < index {
-			return nil, errors.New("index out")
+		index := types.NewU8(oneByte)
+		var internalVariant *types.Si1Variant
+		for _, variant := range si1Type.Def.Variant.Variants {
+			if variant.Index == index {
+				internalVariant = &variant
+				break
+			}
 		}
-		internalVariant := si1Type.Def.Variant.Variants[index]
+		if internalVariant == nil {
+			return nil, errors.New("cannot find index")
+		}
 		variants.MethodName = string(internalVariant.Name)
 		filedList, err := ArgDecode(metadata, arg, internalVariant.Fields)
 		if err != nil {
@@ -234,7 +240,7 @@ func DecodeByTypeID(metadata *types.Metadata, arg *ArgDecoder, typeId types.Si1L
 		codedLen := int(codedLenUint.Uint64())
 		var filed []interface{}
 		for i := 0; i < codedLen; i++ {
-			singleData, err := DecodeByTypeID(metadata, arg, si1Type.Def.Array.Type)
+			singleData, err := DecodeByTypeID(metadata, arg, si1Type.Def.Sequence.Type)
 			if err != nil {
 				return nil, err
 			}
