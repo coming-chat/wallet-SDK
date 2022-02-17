@@ -3,9 +3,9 @@ package crypto
 import (
 	"encoding/hex"
 	"fmt"
+	"github.com/coming-chat/wallet-SDK/u8util"
 	"reflect"
 	"testing"
-	"wallet-SDK/u8util"
 )
 
 func TestNewSHA256(t *testing.T) {
