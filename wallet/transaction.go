@@ -148,7 +148,7 @@ func (t *Tx) NewTransactionFromHex(isChainX bool, txHex string) (*Transaction, e
 	return transaction, nil
 }
 
-func (t *Tx) newTx(isChainX bool, call string, args ...interface{}) (*Transaction, error) {
+func (t *Tx) NewExtrinsics(isChainX bool, call string, args ...interface{}) (*Transaction, error) {
 	if t.metadata == nil {
 		return nil, ErrNilMetadata
 	}
@@ -180,7 +180,7 @@ func (t *Tx) NewBalanceTransferTx(dest, amount string) (*Transaction, error) {
 	if err != nil {
 		return nil, err
 	}
-	return t.newTx(false, "Balances.transfer", destAccountID, types.NewUCompact(amountBigint))
+	return t.NewExtrinsics(false, "Balances.transfer", destAccountID, types.NewUCompact(amountBigint))
 }
 
 func (t *Tx) NewChainXBalanceTransferTx(dest, amount string) (*Transaction, error) {
@@ -192,7 +192,7 @@ func (t *Tx) NewChainXBalanceTransferTx(dest, amount string) (*Transaction, erro
 	if err != nil {
 		return nil, err
 	}
-	return t.newTx(true, "Balances.transfer", destAccountID, types.NewUCompact(amountBigint))
+	return t.NewExtrinsics(true, "Balances.transfer", destAccountID, types.NewUCompact(amountBigint))
 }
 
 func (t *Tx) NewComingNftTransferTx(dest string, cid int64) (*Transaction, error) {
@@ -200,7 +200,7 @@ func (t *Tx) NewComingNftTransferTx(dest string, cid int64) (*Transaction, error
 	if err != nil {
 		return nil, err
 	}
-	return t.newTx(false, "ComingNFT.transfer", types.NewU64(uint64(cid)), destAccountID)
+	return t.NewExtrinsics(false, "ComingNFT.transfer", types.NewU64(uint64(cid)), destAccountID)
 }
 
 func (t *Tx) NewXAssetsTransferTx(dest, amount string) (*Transaction, error) {
@@ -212,7 +212,7 @@ func (t *Tx) NewXAssetsTransferTx(dest, amount string) (*Transaction, error) {
 	if err != nil {
 		return nil, err
 	}
-	return t.newTx(true, "XAssets.transfer", destAccountID, types.NewUCompactFromUInt(uint64(1)), types.NewUCompact(amountBigint))
+	return t.NewExtrinsics(true, "XAssets.transfer", destAccountID, types.NewUCompactFromUInt(uint64(1)), types.NewUCompact(amountBigint))
 }
 
 func (t *Tx) NewThreshold(thresholdPublicKey, destAddress, aggSignature, aggPublicKey, controlBlock, message, scriptHash, transferAmount string, blockNumber int32) (*Transaction, error) {
@@ -272,5 +272,5 @@ func (t *Tx) NewThreshold(thresholdPublicKey, destAddress, aggSignature, aggPubl
 
 	arg := []types.Call{passScriptCall, execScriptCall}
 
-	return t.newTx(false, "Utility.batch_all", arg)
+	return t.NewExtrinsics(false, "Utility.batch_all", arg)
 }
