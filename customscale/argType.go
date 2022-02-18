@@ -173,7 +173,12 @@ func DecodeByTypeID(metadata *types.Metadata, arg *ArgDecoder, typeId types.Si1L
 		}
 		return filed, nil
 	case si1Type.Def.IsBitSequence:
-		return nil, errors.New("typeId not support IsBitSequence")
+		var filed types.Si1TypeDefBitSequence
+		err := arg.Decode(&filed)
+		if err != nil {
+			return nil, err
+		}
+		return filed, nil
 	case si1Type.Def.IsCompact:
 		var filed types.UCompact
 		err := arg.Decode(&filed)
@@ -192,7 +197,12 @@ func DecodeByTypeID(metadata *types.Metadata, arg *ArgDecoder, typeId types.Si1L
 		}
 		return values, nil
 	case si1Type.Def.IsTuple:
-		return nil, errors.New("typeId not support IsTuple")
+		var filed types.Si1TypeDefTuple
+		err := arg.Decode(&filed)
+		if err != nil {
+			return nil, err
+		}
+		return filed, nil
 	case si1Type.Def.IsHistoricMetaCompat:
 		var filed types.Type
 		err := arg.Decode(&filed)
