@@ -13,7 +13,7 @@ import (
 var (
 	apiMiniX, _   = gsrc.NewSubstrateAPI("wss://minichain-testnet.coming.chat")
 	apiSherpax, _ = gsrc.NewSubstrateAPI("wss://sherpax-testnet.chainx.org")
-	apiChainX, _  = gsrc.NewSubstrateAPI("wss://testnet.chainx.org")
+	apiChainX, _  = gsrc.NewSubstrateAPI("wss://mainnet.chainx.org/ws")
 	Minix         = ""
 	ChainX        = ""
 	Sherpax       = ""
@@ -421,13 +421,13 @@ func TestNewTransactionFromHex(t *testing.T) {
 }
 
 func TestDecodeTx(t *testing.T) {
-	var extSuccess types.Extrinsic
+	var extSuccess chainxTypes.Extrinsic
 	//var ext types.Extrinsic
-	err := types.DecodeFromHexString("0x28020835040100000000000000000000000000000003030000003504010000000000000000000000000000000303000000", &extSuccess.Method)
+	err := types.DecodeFromHexString("0x0603ff58526e07a368f79e61e4e905c2b88f9ca11eaee26e438ca618d98bb751049e1b0700e8764817", &extSuccess.Method)
 	if err != nil {
 		t.Fatal(err)
 	}
-	txMetadata, err := NewTx(Sherpax)
+	txMetadata, err := NewTx(ChainX)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -444,10 +444,10 @@ func TestDecodeTx(t *testing.T) {
 
 func TestDecodeTx2(t *testing.T) {
 	var extSuccess chainxTypes.Extrinsic
-	var errExtrinsic chainxTypes.Extrinsic
+	var errExtrinsic types.Extrinsic
 	//var ext types.Extrinsic
-	err := types.DecodeFromHexString("0x390284ff4826ef96bd5e88fc3e93af37dfea53635e84fed316ccebc7d1bd2f4f259af9490166c731bb120a911038daa472e005e2496a44433fb20eb09b4b0f7a76e434bb4d393dd5a3a14f0820f548bff9cce0132e673f9c14e2c8012b345bac57980e2885250334000600ff4826ef96bd5e88fc3e93af37dfea53635e84fed316ccebc7d1bd2f4f259af9490284d717", &errExtrinsic)
-	errExtrinsic.Signature = chainxTypes.ExtrinsicSignatureV4{}
+	err := types.DecodeFromHexString("0x31058400043790c6e0b1cd20403f321c0532b5ca254d74eadcf3bcdb962f67c7e77caf42019e9efbbc9a91e9053ac2e0722db633bc2b48ea1f9bb21b59b1f54c8f012b8c565f8c6b49d6d00a5113422122278e95d904391cd22906a59d61780bf084fe4c87009501001e02180a00004416e63c59125cb8e946ba248e52bb6f2c06ff0aff71b9e9ba7532d2123ddc660284d7170a00004416e63c59125cb8e946ba248e52bb6f2c06ff0aff71b9e9ba7532d2123ddc66025a62020a00004416e63c59125cb8e946ba248e52bb6f2c06ff0aff71b9e9ba7532d2123ddc66d1070a00004416e63c59125cb8e946ba248e52bb6f2c06ff0aff71b9e9ba7532d2123ddc66d1070a00004416e63c59125cb8e946ba248e52bb6f2c06ff0aff71b9e9ba7532d2123ddc66d1070a00004416e63c59125cb8e946ba248e52bb6f2c06ff0aff71b9e9ba7532d2123ddc66d107", &errExtrinsic)
+	//errExtrinsic.Signature = chainxTypes.ExtrinsicSignatureV4{}
 	hexString, err := types.EncodeToHexString(errExtrinsic)
 	if err != nil {
 		t.Fatal(err)
