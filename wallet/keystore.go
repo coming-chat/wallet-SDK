@@ -10,6 +10,7 @@ import (
 	"github.com/coming-chat/wallet-SDK/u8util"
 	"github.com/gtank/ristretto255"
 	"golang.org/x/crypto/scrypt"
+	"log"
 )
 
 var (
@@ -69,12 +70,18 @@ func (k *keystore) Sign(msg []byte, password string) ([]byte, error) {
 }
 
 func decodeKeystore(ks *keystore, password string) (*keyring, error) {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Println(err)
+			return
+		}
+	}()
 	var (
 		privateKey [64]byte
 		publicKey  [32]byte
 	)
 
-	if ks.Encoding.Version != "3" || ks.Encoding == nil || len(ks.Encoding.Content) < 2 || ks.Encoding.Content[0] != "pkcs8" || ks.Encoding.Content[1] != "sr25519" {
+	if ks.Encoding == nil || ks.Encoding.Version != "3" || len(ks.Encoding.Content) < 2 || ks.Encoding.Content[0] != "pkcs8" || ks.Encoding.Content[1] != "sr25519" {
 		return nil, ErrNonPkcs8
 	}
 
