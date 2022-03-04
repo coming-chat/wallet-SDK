@@ -2,6 +2,11 @@
 
 ComingChat substrate wallet SDK
 
+## build android && ios
+
+* make buildAllAndroid
+* make buildAllIOS
+
 ## Struct
 
 ### Wallet
