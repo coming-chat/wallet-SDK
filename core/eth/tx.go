@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/big"
+	"strconv"
 	"strings"
 
 	"github.com/ethereum/go-ethereum"
@@ -189,8 +190,12 @@ func (e *EthChain) BuildCallMethodTx(
 		if err != nil {
 			return nil, fmt.Errorf("failed to estimate gas: %v", err)
 		}
+		tempGasLimitUint, err := strconv.ParseUint(tempGasLimit, 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("failed parse estimate gas: %v", err)
+		}
 		if gasLimit == 0 {
-			gasLimit = uint64(float64(tempGasLimit) * 1.3)
+			gasLimit = uint64(float64(tempGasLimitUint) * 1.3)
 		}
 	}
 
@@ -247,8 +252,12 @@ func (e *EthChain) BuildCallMethodTxWithPayload(
 		if err != nil {
 			return nil, fmt.Errorf("failed to estimate gas: %v", err)
 		}
+		tempGasLimitUint, err := strconv.ParseUint(tempGasLimit, 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("failed parse estimate gas: %v", err)
+		}
 		if gasLimit == 0 {
-			gasLimit = uint64(float64(tempGasLimit) * 1.3)
+			gasLimit = uint64(float64(tempGasLimitUint) * 1.3)
 		}
 	}
 

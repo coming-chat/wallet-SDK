@@ -2,6 +2,7 @@ package eth
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/ethereum/go-ethereum"
 )
@@ -17,12 +18,13 @@ func (e *EthChain) SuggestGasPrice() (string, error) {
 	return gasPrice.String(), err
 }
 
-func (e *EthChain) EstimateGasLimit(msg ethereum.CallMsg) (int64, error) {
+func (e *EthChain) EstimateGasLimit(msg ethereum.CallMsg) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), e.timeout)
 	defer cancel()
 	gasCount, err := e.RemoteRpcClient.EstimateGas(ctx, msg)
 	if err != nil {
-		return 0, err
+		return "0", err
 	}
-	return int64(gasCount), nil
+	gasLimitStr := strconv.FormatUint(gasCount, 10)
+	return gasLimitStr, nil
 }
