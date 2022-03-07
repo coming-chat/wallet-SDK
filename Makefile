@@ -7,13 +7,18 @@ module=github.com/coming-chat/wallet-SDK
 
 pkgCore = ${module}/core/eth
 
-pkgAll =  $(pkgCore)
+pkgEth =  $(pkgCore)
 #$(pkgCore) $(pkgUtil) $(pkgGasNow) $(pkgConstants)
 
+pkgPolka = ${module}/wallet
+
 buildAllAndroid:
-	gomobile bind -ldflags "-s -w" -target=android -o=${outdir}/ethwalletcore.aar ${pkgAll}
+	gomobile bind -ldflags "-s -w" -target=android -o=${outdir}/ethwalletcore.aar ${pkgEth}
 buildAllIOS:
-	gomobile bind -ldflags "-s -w" -target=ios  -o=${outdir}/ethwalletcore.xcframework ${pkgAll}
+	gomobile bind -ldflags "-s -w" -target=ios  -o=${outdir}/ethwalletcore.xcframework ${pkgEth}
+
+buildAllSDKIOS:
+	gomobile bind -ldflags "-s -w" -target=ios  -o=${outdir}/Wallet.xcframework ${pkgEth} ${pkgPolka}
 
 packageAll:
 	rm -rf ${outdir}/*
