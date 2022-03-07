@@ -25,7 +25,7 @@ func (e *EthChain) buildTx(
 	data []byte,
 	opts *CallMethodOpts) (*BuildTxResult, error) {
 	var rawTx *types.Transaction
-	if opts.MaxPriorityFeePerGas == nil {
+	if opts.MaxPriorityFeePerGas == int64(0) {
 		var gasPrice *big.Int = nil
 		if opts != nil && opts.GasPrice != 0 {
 			gasPrice = big.NewInt(opts.GasPrice)
@@ -53,8 +53,8 @@ func (e *EthChain) buildTx(
 			To:        &toAddressObj,
 			Value:     value,
 			Gas:       gasLimit,
-			GasFeeCap: big.NewInt(opts.GasPrice), // maxFeePerGas 最大的 gasPrice（包含 baseFee），减去 baseFee 就是小费。gasPrice = min(maxFeePerGas, baseFee + maxPriorityFeePerGas)
-			GasTipCap: opts.MaxPriorityFeePerGas, // maxPriorityFeePerGas，也就是最大的小费。GasTipCap 和 gasFeeCap - baseFee 的更小值才是真正的给矿工的，baseFee 是销毁的。
+			GasFeeCap: big.NewInt(opts.GasPrice),             // maxFeePerGas 最大的 gasPrice（包含 baseFee），减去 baseFee 就是小费。gasPrice = min(maxFeePerGas, baseFee + maxPriorityFeePerGas)
+			GasTipCap: big.NewInt(opts.MaxPriorityFeePerGas), // maxPriorityFeePerGas，也就是最大的小费。GasTipCap 和 gasFeeCap - baseFee 的更小值才是真正的给矿工的，baseFee 是销毁的。
 			Data:      data,
 		})
 	}

@@ -26,8 +26,8 @@ func (e *EthChain) TokenBalance(contractAddress, address string) (int64, error) 
 	return result.Int64(), nil
 }
 
-func (e *EthChain) TokenDecimal(contractAddress, address string) (uint8, error) {
-	result := uint8(0)
+func (e *EthChain) TokenDecimal(contractAddress, address string) (int64, error) {
+	result := int64(0)
 	err := e.CallContractConstant(
 		&result,
 		contractAddress,
@@ -35,5 +35,5 @@ func (e *EthChain) TokenDecimal(contractAddress, address string) (uint8, error) 
 		"decimals",
 		nil,
 	)
-	return uint8(result), err
+	return int64(result), err
 }
