@@ -29,3 +29,9 @@ type TransactionByHashResult struct {
 	From      common.Address
 	IsPending bool
 }
+
+type Erc20TxParams struct {
+	ToAddress string `json:"toAddress"`
+	Amount    int64  `json:"amount"`
+	Method    string `json:"method"`
+}

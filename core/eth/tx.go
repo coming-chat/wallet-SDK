@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"math/big"
 	"strings"
@@ -116,7 +117,7 @@ func (e *EthChain) BuildTransferTx(privateKey, toAddress string, opts *CallMetho
 func (e *EthChain) BuildCallMethodTx(
 	privateKey, contractAddress, abiStr, methodName string,
 	opts *CallMethodOpts,
-	params ...interface{}) (*BuildTxResult, error) {
+	erc20JsonParams string) (*BuildTxResult, error) {
 	privateKey = strings.TrimPrefix(privateKey, "0x")
 
 	parsedAbi, err := abi.JSON(strings.NewReader(abiStr))
@@ -154,9 +155,22 @@ func (e *EthChain) BuildCallMethodTx(
 			return nil, fmt.Errorf("failed to retrieve account nonce: %v", err)
 		}
 	}
-	input, err := parsedAbi.Pack(methodName, params...)
-	if err != nil {
+
+	var erc20TxParams Erc20TxParams
+	var input []byte
+
+	// 对交易参数进行格式化
+	if err := json.Unmarshal([]byte(erc20JsonParams), &erc20TxParams); err != nil {
 		return nil, err
+	}
+
+	if methodName == ERC20_METHOD_TRANSFER || methodName == ERC20_METHOD_APPROVE {
+		input, err = parsedAbi.Pack(methodName, erc20TxParams.ToAddress, big.NewInt(erc20TxParams.Amount))
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		return nil, fmt.Errorf("unsupported method name: %s", methodName)
 	}
 	if gasLimit == 0 || isPredictError {
 		msg := ethereum.CallMsg{From: fromAddress, To: &contractAddressObj, GasPrice: new(big.Int).SetInt64(10), Value: value, Data: input}
