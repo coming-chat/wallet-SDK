@@ -11,9 +11,9 @@ pkgAll =  $(pkgCore)
 #$(pkgCore) $(pkgUtil) $(pkgGasNow) $(pkgConstants)
 
 buildAllAndroid:
-	gomobile bind -ldflags "-s -w" -target=android -o=${outdir}/eth-wallet.aar ${pkgAll}
+	gomobile bind -ldflags "-s -w" -target=android -o=${outdir}/ethwalletcore.aar ${pkgAll}
 buildAllIOS:
-	gomobile bind -ldflags "-s -w" -target=ios  -o=${outdir}/eth-wallet.xcframework ${pkgAll}
+	gomobile bind -ldflags "-s -w" -target=ios  -o=${outdir}/ethwalletcore.xcframework ${pkgAll}
 
 packageAll:
 	rm -rf ${outdir}/*
