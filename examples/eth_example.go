@@ -54,14 +54,14 @@ func main() {
 		// 调用的合约方法名
 		"transfer",
 		callMethodOpts,
-
 		// 转账目标地址
 		"{\"toAddress\":\"0x178a8AB44b71858b38Cc68f349A06f397A73bFf5\", \"amount\":\"10000000\", \"method\":\"transfer\"}")
 
 	if err != nil {
-		fmt.Printf("build call method tx error: %v\n", err)
+		fmt.Printf("build erc20 call method tx error: %v\n", err)
 		return
 	}
+
 	// 发送交易
 	sendTxResult, err := wallet.SendRawTransaction(buildTxResult.TxHex)
 	if err != nil {
@@ -69,5 +69,17 @@ func main() {
 	}
 	// 打印交易hash
 	fmt.Printf("sendTxResult: %v\n", sendTxResult)
+	callMethodOpts.Nonce++
+
+	// bnb 转账
+	bnbTxResult, _ := wallet.BuildTransferTx(privateKey, "0x178a8AB44b71858b38Cc68f349A06f397A73bFf5", callMethodOpts)
+
+	sendBnbTxResult, err := wallet.SendRawTransaction(bnbTxResult.TxHex)
+
+	if err != nil {
+		fmt.Printf("send bnb raw transaction error: %v\n", err)
+	}
+	// 打印交易hash
+	fmt.Printf("sendBnbTxResult: %v\n", sendBnbTxResult)
 
 }
