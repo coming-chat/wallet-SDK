@@ -332,6 +332,8 @@ try {
 ```
 ### Eth 交易golang代码，两端调用参考下，具体看sdk打包后源码
 
+#### goland 代码
+
 ```golang
 package main
 
@@ -408,4 +410,38 @@ func main() {
 		big.NewInt(17174691), big.NewInt(17174691), nil)
 	fmt.Printf("eventlogs: %v\n", eventlogs)
 }
+```
+
+#### Android 调用代码 (ERC20 转账)
+
+```
+ // 钱包地址
+ private String walletAddress = "0xB553803EE21b486BB86f2A63Bd682529Aa7FCE8D";
+ // 钱包对应的私钥
+ private String privateKey = "";
+ // busd 测试网合约地址
+ private String busdContractAddress = "0xeD24FC36d5Ee211Ea25A80239Fb8C4Cfd80f12Ee";
+ // bsc测试网rpc 节点
+ bscRpc = "https://eth-rinkeby.alchemyapi.io/v2/oYHKrgZwrX8PV76knF7hVPekQ8b5mCFd"
+
+ EthChain ethChain = new EthChain();
+ ethChain.initRemote(bscRpc);
+ // 查询bnb余额
+ long balance = ethChain.balance(walletAddress);
+ Toast.makeText(getApplicationContext(),String.valueOf(balance),Toast.LENGTH_LONG).show();
+ long Nonce =  ethChain.nonce(walletAddress);
+ CallMethodOpts opts = new CallMethodOpts();
+ // 设置nonce,可选
+ opts.setNonce(Nonce);
+ // 设置 gas 可选
+ BuildTxResult buildTxResult = ethChain.buildCallMethodTx(
+                    privateKey,
+                    busdContractAddress,
+                    Eth.getErc20AbiStr(),
+                    "transfer",
+                    opts,
+                    {\"toAddress\":\"0x178a8AB44b71858b38Cc68f349A06f397A73bFf5\", \"amount\":1000000, \"method\":\"transfer\"}");
+  Log.d("tx hex",buildTxResult.getTxHex());
+  String tx = ethChain.sendRawTransaction(buildTxResult.getTxHex());
+  Log.d("send tx success", tx);
 ```
