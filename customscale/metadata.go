@@ -40,19 +40,37 @@ func FindEventNamesForEventID(metadata *types.Metadata, eventID types.EventID) (
 				continue
 			}
 			eventType := mod.Events.Type.Int64()
-
-			if typ, ok := metadata.AsMetadataV14.EfficientLookup[eventType]; ok {
-				if len(typ.Def.Variant.Variants) > 0 {
-					for _, vars := range typ.Def.Variant.Variants {
-						if uint8(vars.Index) == eventID[1] {
-							return mod.Name, vars.Name, vars.Fields, nil
-						}
-					}
+			typ, ok := metadata.AsMetadataV14.EfficientLookup[eventType]
+			if !ok {
+				continue
+			}
+			if len(typ.Def.Variant.Variants) <= 0 {
+				continue
+			}
+			for _, vars := range typ.Def.Variant.Variants {
+				if uint8(vars.Index) == eventID[1] {
+					return mod.Name, vars.Name, vars.Fields, nil
 				}
 			}
 		}
-	}
+	case 12:
+		for _, mod := range metadata.AsMetadataV12.Modules {
+			if !mod.HasEvents {
+				continue
+			}
+			if mod.Index != eventID[0] {
+				continue
+			}
+			if int(eventID[1]) >= len(mod.Events) {
+				continue
+			}
 
+			event := mod.Events[int(eventID[1])]
+			return mod.Name, event.Name, nil, nil
+		}
+	default:
+		return "", "", nil, fmt.Errorf("module index %v out of range", eventID[0])
+	}
 	return "", "", nil, fmt.Errorf("module index %v out of range", eventID[0])
 }
 

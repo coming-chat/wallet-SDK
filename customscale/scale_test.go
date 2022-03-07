@@ -16,7 +16,7 @@ func TestDecodeEvent(t *testing.T) {
 		log.Printf("get metadata error: %v", err)
 	}
 
-	blockHash, err := api.RPC.Chain.GetBlockHash(507843)
+	blockHash, err := api.RPC.Chain.GetBlockHash(2809362)
 	if err != nil {
 		return
 	}

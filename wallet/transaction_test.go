@@ -89,7 +89,7 @@ func TestTransactionPCX(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	signData, err := tx.GetSignData("0x2fd9e861564c428cf16c3d6e0ec82c5a07ddcd9ec44f37ff4627ab385d1cb597", 1, 2, 1)
+	signData, err := tx.GetSignData("0x6ac13efb5b368b97b4934cef6edfdd99c2af51ba5109bfb8dacc116f9c584c10", 0, 10, 1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -302,6 +302,22 @@ func TestTransactionNFTByKeystore(t *testing.T) {
 	t.Logf("Mini sendTx: %v", sendTx)
 }
 
+func TestGetUnSignTxMINI(t *testing.T) {
+	txMetadata, err := NewTx(Minix)
+	if err != nil {
+		t.Fatal(err)
+	}
+	tx, err := txMetadata.NewBalanceTransferTx("5PjZ58jF72pCz6Y3FkB3jtyWbhhEbWxBz8CkDD7NG3yjL6s1", "10000000")
+	if err != nil {
+		t.Fatal(err)
+	}
+	signTx, err := tx.GetUnSignTx()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("UnSign tx: %s", signTx)
+}
+
 func TestGetUnSignTxNFT(t *testing.T) {
 	txMetadata, err := NewTx(Minix)
 	if err != nil {
@@ -393,7 +409,7 @@ func TestNewTransactionFromHex(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	transaction, err := txMetadata.NewTransactionFromHex(false, "0x6c042a013fb26e2800000000000e2707000000000000000000000000")
+	transaction, err := txMetadata.NewTransactionFromHex(false, "0xb00429021ecb3d110000000000043790c6e0b1cd20403f321c0532b5ca254d74eadcf3bcdb962f67c7e77caf42")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -446,14 +462,12 @@ func TestDecodeTx2(t *testing.T) {
 	var extSuccess chainxTypes.Extrinsic
 	var errExtrinsic types.Extrinsic
 	//var ext types.Extrinsic
-	err := types.DecodeFromHexString("0x31058400043790c6e0b1cd20403f321c0532b5ca254d74eadcf3bcdb962f67c7e77caf42019e9efbbc9a91e9053ac2e0722db633bc2b48ea1f9bb21b59b1f54c8f012b8c565f8c6b49d6d00a5113422122278e95d904391cd22906a59d61780bf084fe4c87009501001e02180a00004416e63c59125cb8e946ba248e52bb6f2c06ff0aff71b9e9ba7532d2123ddc660284d7170a00004416e63c59125cb8e946ba248e52bb6f2c06ff0aff71b9e9ba7532d2123ddc66025a62020a00004416e63c59125cb8e946ba248e52bb6f2c06ff0aff71b9e9ba7532d2123ddc66d1070a00004416e63c59125cb8e946ba248e52bb6f2c06ff0aff71b9e9ba7532d2123ddc66d1070a00004416e63c59125cb8e946ba248e52bb6f2c06ff0aff71b9e9ba7532d2123ddc66d1070a00004416e63c59125cb8e946ba248e52bb6f2c06ff0aff71b9e9ba7532d2123ddc66d107", &errExtrinsic)
+	err := types.DecodeFromHexString("0x4d0284003e3543edb7c9d4c2246b841a14cfe1b9076043de3a219be5a76c97556297463f01d85fc2c1979e9ceaa639082545f041225400a75df50c4a54261913b30a84f83a1725f03e0dc2a425751e98b27f19a32e2716f92f067ab8908fc947dc7283ce88002503001e02040a0000760bc02040cd949016216c067331ee0d333056773f63a3ad5b3d7365e2b3c32f07c0f0172f03", &errExtrinsic)
 	//errExtrinsic.Signature = chainxTypes.ExtrinsicSignatureV4{}
-	hexString, err := types.EncodeToHexString(errExtrinsic)
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Log(hexString)
-	err = types.DecodeFromHexString("0x350284ffc8e8d0473afbe516cb772d504ecb091a139076c9aa4d3e0514aca7837599f861013c7f9eda8ee410ffe4436982303c1b603de6b910f1cd96b8cf143ca11aba7672b12792f59696ee7d35ea759c3bcd7e496c1b79907980696239ab03f8dde544810010000600ff30f9c1fd8d945474d39ef00547d7f13044dcc05b6a4db7ca8aee0a00622578500284d717", &extSuccess)
+	err = types.DecodeFromHexString("0x550284ff4826ef96bd5e88fc3e93af37dfea53635e84fed316ccebc7d1bd2f4f259af94901b2a66398b84b9b92a40b31057bae9decd827371adad7fbc51fe69263ed7baf12b6fef29b5bd535c54791d221ec27aa6a57b12b14c3c86183934428ae220ecc8a550034001602040600ffba84803fe10c358afa418b34a77b99486458e0f021edbef0e02a80c2abef526f0f0000c16ff28623", &extSuccess)
 	if err != nil {
 		t.Fatal(err)
 	}
