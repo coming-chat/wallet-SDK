@@ -158,14 +158,16 @@ func (e *EthChain) BuildCallMethodTx(
 
 	var erc20TxParams Erc20TxParams
 	var input []byte
-
 	// 对交易参数进行格式化
 	if err := json.Unmarshal([]byte(erc20JsonParams), &erc20TxParams); err != nil {
 		return nil, err
 	}
 
 	if methodName == ERC20_METHOD_TRANSFER || methodName == ERC20_METHOD_APPROVE {
-		input, err = parsedAbi.Pack(methodName, erc20TxParams.ToAddress, big.NewInt(erc20TxParams.Amount))
+		// 将string地址类型转化为hex类型
+		input, err = parsedAbi.Pack(methodName,
+			common.HexToAddress(erc20TxParams.ToAddress),
+			big.NewInt(erc20TxParams.Amount))
 		if err != nil {
 			return nil, err
 		}
