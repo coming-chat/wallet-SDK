@@ -26,10 +26,13 @@ func (e *EthChain) buildTx(
 	data []byte,
 	opts *CallMethodOpts) (*BuildTxResult, error) {
 	var rawTx *types.Transaction
-	if opts.MaxPriorityFeePerGas == int64(0) {
+
+	optsBigInt := OptsTobigInt(opts)
+
+	if optsBigInt.MaxPriorityFeePerGas == nil {
 		var gasPrice *big.Int = nil
-		if opts != nil && opts.GasPrice != 0 {
-			gasPrice = big.NewInt(opts.GasPrice)
+		if opts != nil && optsBigInt.GasPrice != nil {
+			gasPrice = optsBigInt.GasPrice
 		}
 		if gasPrice == nil {
 			ctx, cancel := context.WithTimeout(context.Background(), e.timeout)
@@ -54,8 +57,8 @@ func (e *EthChain) buildTx(
 			To:        &toAddressObj,
 			Value:     value,
 			Gas:       gasLimit,
-			GasFeeCap: big.NewInt(opts.GasPrice),             // maxFeePerGas 最大的 gasPrice（包含 baseFee），减去 baseFee 就是小费。gasPrice = min(maxFeePerGas, baseFee + maxPriorityFeePerGas)
-			GasTipCap: big.NewInt(opts.MaxPriorityFeePerGas), // maxPriorityFeePerGas，也就是最大的小费。GasTipCap 和 gasFeeCap - baseFee 的更小值才是真正的给矿工的，baseFee 是销毁的。
+			GasFeeCap: optsBigInt.GasPrice,             // maxFeePerGas 最大的 gasPrice（包含 baseFee），减去 baseFee 就是小费。gasPrice = min(maxFeePerGas, baseFee + maxPriorityFeePerGas)
+			GasTipCap: optsBigInt.MaxPriorityFeePerGas, // maxPriorityFeePerGas，也就是最大的小费。GasTipCap 和 gasFeeCap - baseFee 的更小值才是真正的给矿工的，baseFee 是销毁的。
 			Data:      data,
 		})
 	}
@@ -79,21 +82,23 @@ func (e *EthChain) BuildTransferTx(privateKey, toAddress string, opts *CallMetho
 
 	toAddressObj := common.HexToAddress(toAddress)
 	privateKeyBuf, err := hex.DecodeString(privateKey)
+
+	optsBigInt := OptsTobigInt(opts)
 	if err != nil {
 		return nil, err
 	}
 
 	var value = big.NewInt(0)
 
-	var gasLimit uint64 = 0
+	var gasLimit = uint64(0)
 	var nonce uint64 = 0
 	if opts != nil {
-		value = big.NewInt(opts.Value)
-		gasLimit = uint64(opts.GasLimit)
-		nonce = uint64(opts.Nonce)
+		value = optsBigInt.Value
+		gasLimit = optsBigInt.GasLimit
+		nonce = optsBigInt.Nonce
 	}
 	if gasLimit == 0 {
-		gasLimit = 21000
+		gasLimit = uint64(21000)
 	}
 
 	privateKeyECDSA, err := crypto.ToECDSA(privateKeyBuf)
@@ -130,14 +135,16 @@ func (e *EthChain) BuildCallMethodTx(
 		return nil, err
 	}
 
+	optsBigInt := OptsTobigInt(opts)
+
 	var value = big.NewInt(0)
 	var gasLimit uint64 = 0
 	var nonce uint64 = 0
 	var isPredictError = true
 	if opts != nil {
-		value = big.NewInt(opts.Value)
-		gasLimit = uint64(opts.GasLimit)
-		nonce = uint64(opts.Nonce)
+		value = optsBigInt.Value
+		gasLimit = optsBigInt.GasLimit
+		nonce = optsBigInt.Nonce
 		isPredictError = opts.IsPredictError
 	}
 
@@ -163,11 +170,13 @@ func (e *EthChain) BuildCallMethodTx(
 		return nil, err
 	}
 
+	amountBigInt, _ := new(big.Int).SetString(erc20TxParams.Amount, 10)
+
 	if methodName == ERC20_METHOD_TRANSFER || methodName == ERC20_METHOD_APPROVE {
 		// 将string地址类型转化为hex类型
 		input, err = parsedAbi.Pack(methodName,
 			common.HexToAddress(erc20TxParams.ToAddress),
-			big.NewInt(erc20TxParams.Amount))
+			amountBigInt)
 		if err != nil {
 			return nil, err
 		}
@@ -176,7 +185,7 @@ func (e *EthChain) BuildCallMethodTx(
 	}
 	if gasLimit == 0 || isPredictError {
 		msg := ethereum.CallMsg{From: fromAddress, To: &contractAddressObj, GasPrice: new(big.Int).SetInt64(10), Value: value, Data: input}
-		tempGasLimit, err := e.EstimateGas(msg)
+		tempGasLimit, err := e.EstimateGasLimit(msg)
 		if err != nil {
 			return nil, fmt.Errorf("failed to estimate gas: %v", err)
 		}
@@ -204,15 +213,16 @@ func (e *EthChain) BuildCallMethodTxWithPayload(
 
 	contractAddressObj := common.HexToAddress(contractAddress)
 
+	optsBigInt := OptsTobigInt(opts)
+
 	var value = big.NewInt(0)
 	var gasLimit uint64 = 0
 	var nonce uint64 = 0
 	var isPredictError = true
 	if opts != nil {
-
-		value = big.NewInt(opts.Value)
-		gasLimit = uint64(opts.GasLimit)
-		nonce = uint64(opts.Nonce)
+		value = optsBigInt.Value
+		gasLimit = optsBigInt.GasLimit
+		nonce = optsBigInt.Nonce
 		isPredictError = opts.IsPredictError
 	}
 
@@ -233,7 +243,7 @@ func (e *EthChain) BuildCallMethodTxWithPayload(
 
 	if gasLimit == 0 || isPredictError {
 		msg := ethereum.CallMsg{From: fromAddress, To: &contractAddressObj, GasPrice: new(big.Int).SetInt64(10), Value: value, Data: payloadBuf}
-		tempGasLimit, err := e.EstimateGas(msg)
+		tempGasLimit, err := e.EstimateGasLimit(msg)
 		if err != nil {
 			return nil, fmt.Errorf("failed to estimate gas: %v", err)
 		}

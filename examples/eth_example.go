@@ -56,7 +56,7 @@ func main() {
 		callMethodOpts,
 
 		// 转账目标地址
-		"{\"toAddress\":\"0x178a8AB44b71858b38Cc68f349A06f397A73bFf5\", \"amount\":1000000, \"method\":\"transfer\"}")
+		"{\"toAddress\":\"0x178a8AB44b71858b38Cc68f349A06f397A73bFf5\", \"amount\":\"10000000\", \"method\":\"transfer\"}")
 
 	if err != nil {
 		fmt.Printf("build call method tx error: %v\n", err)

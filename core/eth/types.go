@@ -1,6 +1,8 @@
 package eth
 
 import (
+	"math/big"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 )
@@ -12,11 +14,20 @@ type UrlParam struct {
 
 type CallMethodOpts struct {
 	Nonce                int64
-	Value                int64
-	GasPrice             int64 // MaxFeePerGas
-	GasLimit             int64
+	Value                string
+	GasPrice             string // MaxFeePerGas
+	GasLimit             string
 	IsPredictError       bool
-	MaxPriorityFeePerGas int64
+	MaxPriorityFeePerGas string
+}
+
+type CallMethodOptsBigInt struct {
+	Nonce                uint64
+	Value                *big.Int
+	GasPrice             *big.Int // MaxFeePerGas
+	GasLimit             uint64
+	IsPredictError       bool
+	MaxPriorityFeePerGas *big.Int
 }
 
 type BuildTxResult struct {
@@ -32,6 +43,6 @@ type TransactionByHashResult struct {
 
 type Erc20TxParams struct {
 	ToAddress string `json:"toAddress"`
-	Amount    int64  `json:"amount"`
+	Amount    string `json:"amount"`
 	Method    string `json:"method"`
 }
