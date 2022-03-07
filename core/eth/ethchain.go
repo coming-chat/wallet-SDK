@@ -23,7 +23,7 @@ func NewEthChain() *EthChain {
 	}
 }
 
-func (e *EthChain) InitRemote(rpcUrl string) (*EthChain, error) {
+func (e *EthChain) CreateRemote(rpcUrl string) (*EthChain, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), e.timeout)
 	defer cancel()
 	rpcClient, err := rpc.DialContext(ctx, rpcUrl)

@@ -359,7 +359,7 @@ var (
 
 func main() {
 	wallet := coin.NewEthChain()
-	wallet.InitRemote(rpcUrl)
+	wallet.CreateRemote(rpcUrl)
 
 	// 获取主网代币 BNB 余额
 	balance, _ := wallet.Balance(walletAddress)
@@ -425,7 +425,7 @@ func main() {
  bscRpc = "https://eth-rinkeby.alchemyapi.io/v2/oYHKrgZwrX8PV76knF7hVPekQ8b5mCFd"
 
  EthChain ethChain = new EthChain();
- ethChain.initRemote(bscRpc);
+ ethChain.createRemote(bscRpc);
  // 查询bnb余额
  long balance = ethChain.balance(walletAddress);
  Toast.makeText(getApplicationContext(),String.valueOf(balance),Toast.LENGTH_LONG).show();
