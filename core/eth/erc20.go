@@ -120,5 +120,5 @@ func (e *EthChain) TokenName(contractAddress string) (string, error) {
 		return "", err
 	}
 
-	return tokenSymbol, err
+	return tokenName, err
 }
