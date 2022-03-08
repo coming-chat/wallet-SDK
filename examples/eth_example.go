@@ -29,6 +29,10 @@ func main() {
 	balance, _ := wallet.Balance(walletAddress)
 	fmt.Printf("bnb balance: %v\n", balance)
 
+	tokenSymbol, _ := wallet.TokenSymbol(busdContractAddress)
+
+	fmt.Printf("tokenSymbol: %v\n", tokenSymbol)
+
 	// 获取 Erc20代币 余额
 	busdBalance, _ := wallet.TokenBalance(busdContractAddress, walletAddress)
 

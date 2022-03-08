@@ -22,7 +22,7 @@ type Erc20Token struct {
 	TokenIcon       string // 代币图标
 }
 
-// @title    Erc2o代币基础信息
+// @title    Erc20代币基础信息
 // @description   返回代币基础信息
 // @auth      清欢
 // @param     (contractAddress, walletAddress)     (string,string)  合约名称，钱包地址
@@ -32,10 +32,16 @@ func (e *EthChain) Erc20TokenInfo(contractAddress string, walletAddress string) 
 	token.ContractAddress = contractAddress
 	token.ChainId = e.chainId.String()
 	token.Decimal, _ = e.TokenDecimal(contractAddress)
+	token.Symbol, _ = e.TokenSymbol(contractAddress)
 	token.Balance, _ = e.TokenBalance(contractAddress, walletAddress)
 	return &token, nil
 }
 
+// @title    Erc20代币余额
+// @description   返回代币符号
+// @auth      清欢
+// @param     (contractAddress，walletAddress)     合约地址,钱包地址
+// @return    (string,error)       余额，失败
 func (e *EthChain) TokenBalance(contractAddress, address string) (string, error) {
 	result := new(big.Int)
 	err := e.CallContractConstant(
@@ -53,6 +59,11 @@ func (e *EthChain) TokenBalance(contractAddress, address string) (string, error)
 	return result.String(), err
 }
 
+// @title    Erc20代币精度
+// @description   返回代币精度
+// @auth      清欢
+// @param     (contractAddress)     合约地址
+// @return    (string,error)       代币精度，失败
 func (e *EthChain) TokenDecimal(contractAddress string) (string, error) {
 	result := uint8(0)
 	err := e.CallContractConstant(
@@ -67,4 +78,25 @@ func (e *EthChain) TokenDecimal(contractAddress string) (string, error) {
 	}
 	tokenDecimal := strconv.Itoa(int(result))
 	return tokenDecimal, err
+}
+
+// @title    Erc20代币符号
+// @description   返回代币符号
+// @auth      清欢
+// @param     (contractAddress)     合约地址
+// @return    (string,error)       符号，失败
+func (e *EthChain) TokenSymbol(contractAddress string) (string, error) {
+	tokenSymbol := ""
+	err := e.CallContractConstant(
+		&tokenSymbol,
+		contractAddress,
+		Erc20AbiStr,
+		"symbol",
+		nil,
+	)
+	if err != nil {
+		return "0", err
+	}
+
+	return tokenSymbol, err
 }
