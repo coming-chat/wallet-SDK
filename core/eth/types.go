@@ -36,9 +36,12 @@ type BuildTxResult struct {
 }
 
 type TransactionByHashResult struct {
-	SignedTx  *types.Transaction
-	From      common.Address
-	IsPending bool
+	SignedTx    *types.Transaction
+	From        common.Address
+	IsPending   bool   // 交易是否处于Pending状态
+	Status      string // 0: 交易失败, 1: 交易成功
+	GasUsed     string // 实际花费gas
+	BlockNumber string // 区块高度
 }
 
 type Erc20TxParams struct {
