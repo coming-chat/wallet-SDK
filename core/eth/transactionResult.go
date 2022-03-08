@@ -9,6 +9,7 @@ import (
 )
 
 // 根据交易hash查询交易状态
+// TO-DO  返回更详细的信息，解析交易余额，交易动作
 func (e *EthChain) TransactionByHash(txHash string) (*TransactionByHashResult, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), e.timeout)
 	defer cancel()
