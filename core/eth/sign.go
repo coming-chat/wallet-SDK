@@ -3,9 +3,13 @@ package eth
 import (
 	"encoding/hex"
 	"fmt"
+	"log"
+	"math/big"
 	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 )
 
@@ -30,6 +34,44 @@ func (e *EthChain) SignMsg(privateKey string, data string) (string, error) {
 	}
 	signature[crypto.RecoveryIDOffset] += 27 // Transform V from 0/1 to 27/28 according to the yellow paper
 	return hex.EncodeToString(signature), nil
+}
+
+// @title    SignTransaction
+// @description   对交易进行签名
+// @auth      清欢
+// @param     (tx, privateKey)     (*types.Transaction,string)  合约名称，钱包地址
+// @return    (*BuildTxResult,error)       签名结果，失败
+func (e *EthChain) SignTransaction(tx *types.Transaction, privateKey string) (*BuildTxResult, error) {
+	privateKey = strings.TrimPrefix(privateKey, "0x")
+	privateKeyHex, err := hex.DecodeString(privateKey)
+	if err != nil {
+		return nil, err
+	}
+	privateKeyObj, err := crypto.ToECDSA(privateKeyHex)
+	if err != nil {
+		return nil, err
+	}
+	chainId := e.chainId
+	if chainId == nil {
+		chainId = big.NewInt(1)
+	}
+
+	if err != nil {
+		log.Fatal(err)
+	}
+	signedTx, err := types.SignTx(tx, types.NewEIP155Signer(chainId), privateKeyObj)
+
+	if err != nil {
+		return nil, err
+	}
+	txBytes, err := signedTx.MarshalBinary()
+	if err != nil {
+		return nil, err
+	}
+	return &BuildTxResult{
+		SignedTx: signedTx,
+		TxHex:    hexutil.Encode(txBytes),
+	}, nil
 }
 
 // 以太坊的 hash 专门在数据前面加上了一段话
