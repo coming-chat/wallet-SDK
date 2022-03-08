@@ -33,6 +33,7 @@ func (e *EthChain) Erc20TokenInfo(contractAddress string, walletAddress string) 
 	token.ChainId = e.chainId.String()
 	token.Decimal, _ = e.TokenDecimal(contractAddress)
 	token.Symbol, _ = e.TokenSymbol(contractAddress)
+	token.Name, _ = e.TokenName(contractAddress)
 	token.Balance, _ = e.TokenBalance(contractAddress, walletAddress)
 	return &token, nil
 }
@@ -95,7 +96,28 @@ func (e *EthChain) TokenSymbol(contractAddress string) (string, error) {
 		nil,
 	)
 	if err != nil {
-		return "0", err
+		return "", err
+	}
+
+	return tokenSymbol, err
+}
+
+// @title    Erc20代币名称
+// @description   返回代币名称
+// @auth      清欢
+// @param     (contractAddress)     合约地址
+// @return    (string,error)       名称，失败
+func (e *EthChain) TokenName(contractAddress string) (string, error) {
+	tokenSymbol := ""
+	err := e.CallContractConstant(
+		&tokenSymbol,
+		contractAddress,
+		Erc20AbiStr,
+		"name",
+		nil,
+	)
+	if err != nil {
+		return "", err
 	}
 
 	return tokenSymbol, err
