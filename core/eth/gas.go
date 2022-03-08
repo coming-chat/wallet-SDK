@@ -30,6 +30,10 @@ func (e *EthChain) EstimateErc20GasLimit(toAddress string, amount string) (strin
 	toAddressHex := common.HexToAddress(toAddress)
 	amountBigInt, _ := new(big.Int).SetString(amount, 10)
 
+	// 我们需要找出我们将要调用的智能合约函数名，以及函数将接收的输入。
+	// 然后我们使用函数名的keccak-256哈希来检索 方法ID，它是前8个字符（4个字节）。
+	// 然后，我们附加我们发送的地址，并附加我们打算转账的代币数量。 这些输入需要256位长（32字节）并填充左侧。
+	// 方法ID不需填充
 	transferFnSignature := []byte("transfer(address,uint256)")
 	hash := sha3.NewKeccak256()
 	hash.Write(transferFnSignature)
