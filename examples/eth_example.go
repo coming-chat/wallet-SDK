@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strconv"
 
 	coin "github.com/coming-chat/wallet-SDK/core/eth"
 )
@@ -22,7 +23,7 @@ var (
 
 func main() {
 	wallet := coin.NewEthChain()
-	wallet.InitRemote(rpcUrl)
+	wallet.CreateRemote(rpcUrl)
 
 	// 获取主网代币 BNB 余额
 	balance, _ := wallet.Balance(walletAddress)
@@ -40,10 +41,10 @@ func main() {
 		return
 	}
 	nonce, _ := wallet.Nonce(walletAddress)
-
+	nonceInt, _ := strconv.ParseInt(nonce, 10, 64)
 	// 构造多笔交易则nonce + 1
 	callMethodOpts := &coin.CallMethodOpts{
-		Nonce: nonce,
+		Nonce: nonceInt,
 	}
 
 	// erc20 代币转账
