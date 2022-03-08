@@ -2,13 +2,11 @@ package eth
 
 import (
 	"context"
-	"fmt"
 	"math/big"
 	"strconv"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/itering/scale.go/pkg/go-ethereum/crypto/sha3"
 )
 
@@ -38,7 +36,6 @@ func (e *EthChain) EstimateErc20GasLimit(toAddress string, amount string) (strin
 	hash := sha3.NewKeccak256()
 	hash.Write(transferFnSignature)
 	methodID := hash.Sum(nil)[:4]
-	fmt.Println(hexutil.Encode(methodID)) // 0xa9059cbb
 
 	paddedAddress := common.LeftPadBytes(toAddressHex.Bytes(), 32)
 	paddedAmount := common.LeftPadBytes(amountBigInt.Bytes(), 32)

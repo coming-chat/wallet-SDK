@@ -36,6 +36,9 @@ func main() {
 	// 获取 Erc20代币 余额
 	busdBalance, _ := wallet.TokenBalance(busdContractAddress, walletAddress)
 
+	EstimateErc20GasLimit, _ := wallet.EstimateErc20GasLimit("0x178a8AB44b71858b38Cc68f349A06f397A73bFf5", "1000000000000000000000")
+	fmt.Printf("EstimateErc20GasLimit: %v\n", EstimateErc20GasLimit)
+
 	tokenDecimal, err := wallet.TokenDecimal(busdContractAddress)
 
 	fmt.Printf("busdBalance balance: %v, decimal: %v \n", busdBalance, tokenDecimal)
