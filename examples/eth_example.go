@@ -32,7 +32,7 @@ func main() {
 	// 获取 Erc20代币 余额
 	busdBalance, _ := wallet.TokenBalance(busdContractAddress, walletAddress)
 
-	tokenDecimal, err := wallet.TokenDecimal(busdContractAddress, walletAddress)
+	tokenDecimal, err := wallet.TokenDecimal(busdContractAddress)
 
 	fmt.Printf("busdBalance balance: %v, decimal: %v \n", busdBalance, tokenDecimal)
 

@@ -3,12 +3,13 @@ package hexutil
 import (
 	"errors"
 	"fmt"
-	"github.com/coming-chat/wallet-SDK/mathutil"
 	"math"
 	"math/big"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/coming-chat/wallet-SDK/util/mathutil"
 )
 
 var (

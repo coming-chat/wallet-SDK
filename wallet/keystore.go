@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/hex"
+	"log"
+
 	"github.com/ChainSafe/go-schnorrkel"
 	"github.com/coming-chat/merlin"
 	"github.com/coming-chat/wallet-SDK/crypto"
-	"github.com/coming-chat/wallet-SDK/u8util"
+	"github.com/coming-chat/wallet-SDK/util/u8util"
 	"github.com/gtank/ristretto255"
 	"golang.org/x/crypto/scrypt"
-	"log"
 )
 
 var (
