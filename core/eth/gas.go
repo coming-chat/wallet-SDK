@@ -7,6 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum"
 )
 
+// 获取标准gas价格
 func (e *EthChain) SuggestGasPrice() (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), e.timeout)
 	defer cancel()

@@ -13,6 +13,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 )
 
+// 使用私钥对信息进行签名
 func (e *EthChain) SignMsg(privateKey string, data string) (string, error) {
 	privateKey = strings.TrimPrefix(privateKey, "0x")
 	privateKeyHex, err := hex.DecodeString(privateKey)

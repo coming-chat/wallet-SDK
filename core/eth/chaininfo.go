@@ -4,6 +4,7 @@ import (
 	"context"
 )
 
+// 获取链ID
 func GetChainId(e *EthChain) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), e.timeout)
 	defer cancel()

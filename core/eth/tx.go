@@ -18,6 +18,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 )
 
+// buildTx 创建交易
 func (e *EthChain) buildTx(
 	privateKeyECDSA *ecdsa.PrivateKey,
 	nonce uint64,
@@ -77,6 +78,7 @@ func (e *EthChain) buildTx(
 	}, nil
 }
 
+// 创建ETH转账交易
 func (e *EthChain) BuildTransferTx(privateKey, toAddress string, opts *CallMethodOpts) (*BuildTxResult, error) {
 
 	privateKey = strings.TrimPrefix(privateKey, "0x")
@@ -120,6 +122,7 @@ func (e *EthChain) BuildTransferTx(privateKey, toAddress string, opts *CallMetho
 	return e.buildTx(privateKeyECDSA, nonce, toAddressObj, value, gasLimit, nil, opts)
 }
 
+// 对合约进行调用
 func (e *EthChain) BuildCallMethodTx(
 	privateKey, contractAddress, abiStr, methodName string,
 	opts *CallMethodOpts,

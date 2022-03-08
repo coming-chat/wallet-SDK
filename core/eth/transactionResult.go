@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 )
 
+// 根据交易hash查询交易状态
 func (e *EthChain) TransactionByHash(txHash string) (*TransactionByHashResult, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), e.timeout)
 	defer cancel()

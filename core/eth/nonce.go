@@ -7,6 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
+// 获取账户nonce
 func (e *EthChain) Nonce(spenderAddressHex string) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), e.timeout)
 	defer cancel()

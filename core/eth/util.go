@@ -5,6 +5,7 @@ import (
 	"strconv"
 )
 
+// 将MethodOpts 进行转化，由于端的限制，只能传入string字符
 func OptsTobigInt(opts *CallMethodOpts) *CallMethodOptsBigInt {
 
 	GasPrice, _ := new(big.Int).SetString(opts.GasPrice, 10)
