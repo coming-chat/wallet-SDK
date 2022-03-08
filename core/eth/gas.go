@@ -2,12 +2,15 @@ package eth
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"math/big"
 	"strconv"
+	"strings"
 
 	"github.com/ethereum/go-ethereum"
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/itering/scale.go/pkg/go-ethereum/crypto/sha3"
 )
 
 // 获取标准gas价格
@@ -23,37 +26,51 @@ func (e *EthChain) SuggestGasPrice() (string, error) {
 }
 
 // erc20 代币 Transfer，Approve GasLimit 估计
-func (e *EthChain) EstimateErc20GasLimit(toAddress string, amount string) (string, error) {
+// var erc20TxParams Erc20TxParams
+func (e *EthChain) EstimateContractGasLimit(
+	fromAddress,
+	contractAddress,
+	abiStr,
+	methodName string,
+	erc20JsonParams string) (string, error) {
 
-	toAddressHex := common.HexToAddress(toAddress)
-	amountBigInt, _ := new(big.Int).SetString(amount, 10)
-
-	// 我们需要找出我们将要调用的智能合约函数名，以及函数将接收的输入。
-	// 然后我们使用函数名的keccak-256哈希来检索 方法ID，它是前8个字符（4个字节）。
-	// 然后，我们附加我们发送的地址，并附加我们打算转账的代币数量。 这些输入需要256位长（32字节）并填充左侧。
-	// 方法ID不需填充
-	transferFnSignature := []byte("transfer(address,uint256)")
-	hash := sha3.NewKeccak256()
-	hash.Write(transferFnSignature)
-	methodID := hash.Sum(nil)[:4]
-
-	paddedAddress := common.LeftPadBytes(toAddressHex.Bytes(), 32)
-	paddedAmount := common.LeftPadBytes(amountBigInt.Bytes(), 32)
-
-	var data []byte
-	data = append(data, methodID...)
-	data = append(data, paddedAddress...)
-	data = append(data, paddedAmount...)
-
-	ctx, cancel := context.WithTimeout(context.Background(), e.timeout)
-	defer cancel()
-	gasLimit, err := e.RemoteRpcClient.EstimateGas(ctx, ethereum.CallMsg{
-		To:   &toAddressHex,
-		Data: data,
-	})
+	parsedAbi, err := abi.JSON(strings.NewReader(abiStr))
 	if err != nil {
 		return "0", err
 	}
+	contractAddressObj := common.HexToAddress(contractAddress)
+
+	var erc20TxParams Erc20TxParams
+	var input []byte
+	// 对交易参数进行格式化
+	if err := json.Unmarshal([]byte(erc20JsonParams), &erc20TxParams); err != nil {
+		return "0", err
+	}
+
+	amountBigInt, _ := new(big.Int).SetString(erc20TxParams.Amount, 10)
+
+	if methodName == ERC20_METHOD_TRANSFER || methodName == ERC20_METHOD_APPROVE {
+		// 将string地址类型转化为hex类型
+		input, err = parsedAbi.Pack(methodName,
+			common.HexToAddress(erc20TxParams.ToAddress),
+			amountBigInt)
+		if err != nil {
+			return "0", err
+		}
+	} else {
+		return "0", fmt.Errorf("unsupported method name: %s", methodName)
+	}
+	value := big.NewInt(0)
+
+	msg := ethereum.CallMsg{From: common.HexToAddress(fromAddress), To: &contractAddressObj, GasPrice: new(big.Int).SetInt64(10), Value: value, Data: input}
+
+	ctx, cancel := context.WithTimeout(context.Background(), e.timeout)
+	defer cancel()
+	tempGasLimitUint, err := e.RemoteRpcClient.EstimateGas(ctx, msg)
+	if err != nil {
+		return "0", err
+	}
+	gasLimit := uint64(float64(tempGasLimitUint) * 1.3)
 	gasLimitStr := strconv.FormatUint(gasLimit, 10)
 	return gasLimitStr, nil
 }
