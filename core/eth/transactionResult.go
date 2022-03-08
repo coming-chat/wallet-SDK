@@ -26,7 +26,7 @@ func (e *EthChain) TransactionByHash(txHash string) (*TransactionByHashResult, e
 	// 交易receipt 状态信息，0表示失败，1表示成功
 	receipt, err := e.TransactionReceiptByHash(txHash)
 	var status, gasUsed, blockNumber string
-	// 当交易没有处于pending状态时，可以查询receipt信息，即交易是否成功
+	// 当交易没有处于pending状态时，可以查询receipt信息，即交易是否成功, err为nil时，表示查询成功进入if语句赋值
 	if err == nil {
 		gasUsed = strconv.FormatUint(receipt.GasUsed, 10)
 		status = strconv.FormatUint(receipt.Status, 10)
