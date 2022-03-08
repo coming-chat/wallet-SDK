@@ -108,9 +108,9 @@ func (e *EthChain) TokenSymbol(contractAddress string) (string, error) {
 // @param     (contractAddress)     合约地址
 // @return    (string,error)       名称，失败
 func (e *EthChain) TokenName(contractAddress string) (string, error) {
-	tokenSymbol := ""
+	tokenName := ""
 	err := e.CallContractConstant(
-		&tokenSymbol,
+		&tokenName,
 		contractAddress,
 		Erc20AbiStr,
 		"name",
