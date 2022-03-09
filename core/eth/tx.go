@@ -189,7 +189,7 @@ func (e *EthChain) BuildCallMethodTx(
 	}
 	if gasLimit == 0 || isPredictError {
 		msg := ethereum.CallMsg{From: fromAddress, To: &contractAddressObj, GasPrice: new(big.Int).SetInt64(10), Value: value, Data: input}
-		tempGasLimit, err := e.EstimateGasLimit(msg)
+		tempGasLimit, err := e.estimateGasLimit(msg)
 		if err != nil {
 			return nil, fmt.Errorf("failed to estimate gas: %v", err)
 		}
@@ -251,7 +251,7 @@ func (e *EthChain) BuildCallMethodTxWithPayload(
 
 	if gasLimit == 0 || isPredictError {
 		msg := ethereum.CallMsg{From: fromAddress, To: &contractAddressObj, GasPrice: new(big.Int).SetInt64(10), Value: value, Data: payloadBuf}
-		tempGasLimit, err := e.EstimateGasLimit(msg)
+		tempGasLimit, err := e.estimateGasLimit(msg)
 		if err != nil {
 			return nil, fmt.Errorf("failed to estimate gas: %v", err)
 		}
