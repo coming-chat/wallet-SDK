@@ -63,11 +63,18 @@ func (e *EthChain) EstimateContractGasLimit(
 	}
 	value := big.NewInt(0)
 
+	// 获取标准 gasprice, 如果失败则使用默认值 20000000000
+	gasPrice, err := e.SuggestGasPrice()
+	if err != nil {
+		gasPrice = DEFAULT_ETH_GAS_PRICE
+	}
+	gasPriceBigInt, _ := new(big.Int).SetString(gasPrice, 10)
+
 	// 如果method为transfer，合约余额不足会导致估算手续费失败掉
 	msg := ethereum.CallMsg{
 		From:     common.HexToAddress(fromAddress),
 		To:       &contractAddressObj,
-		GasPrice: new(big.Int).SetInt64(10),
+		GasPrice: gasPriceBigInt,
 		Value:    value,
 		Data:     input,
 	}

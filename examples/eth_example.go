@@ -39,8 +39,9 @@ func main() {
 
 	// 获取 Erc20代币 余额
 	busdBalance, _ := wallet.TokenBalance(busdContractAddress, walletAddress)
+	gasPrice, _ := wallet.SuggestGasPrice()
 
-	EstimateErc20GasLimit, _ := wallet.EstimateContractGasLimit(
+	EstimateErc20GasLimit, err := wallet.EstimateContractGasLimit(
 		// 用户地址，如果没有余额则难以估算手续费
 		"0xB553803EE21b486BB86f2A63Bd682529Aa7FCE8D",
 		busdContractAddress,
@@ -48,7 +49,7 @@ func main() {
 		"transfer",
 		"{\"toAddress\":\"0x178a8AB44b71858b38Cc68f349A06f397A73bFf5\", \"amount\":\"100000\", \"method\":\"transfer\"}",
 	)
-	fmt.Printf("EstimateErc20GasLimit: %v\n", EstimateErc20GasLimit)
+	fmt.Printf("EstimateErc20GasLimit: %v, err: %v, gas: %v gasPrice\n", EstimateErc20GasLimit, err, gasPrice)
 
 	tokenDecimal, err := wallet.TokenDecimal(busdContractAddress)
 
