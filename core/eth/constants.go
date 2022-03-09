@@ -5,3 +5,9 @@ var (
 	ERC20_METHOD_TRANSFER = "transfer"
 	ERC20_METHOD_APPROVE  = "approve"
 )
+
+// 默认gas limit估算失败后，21000 * 3 = 63000
+var (
+	DEFAULT_CONTRACT_GAS_LIMIT = "63000"
+	DEFAULT_ETH_GAS_LIMIT      = "21000"
+)

@@ -4,6 +4,7 @@ import (
 	"context"
 )
 
+// 获取最新区块高度
 func (e *EthChain) LatestBlockNumber() (int64, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), e.timeout)
 	defer cancel()

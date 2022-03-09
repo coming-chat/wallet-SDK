@@ -37,7 +37,7 @@ func (e *EthChain) EstimateContractGasLimit(
 
 	parsedAbi, err := abi.JSON(strings.NewReader(abiStr))
 	if err != nil {
-		return "0", err
+		return DEFAULT_CONTRACT_GAS_LIMIT, err
 	}
 	contractAddressObj := common.HexToAddress(contractAddress)
 
@@ -45,7 +45,7 @@ func (e *EthChain) EstimateContractGasLimit(
 	var input []byte
 	// 对交易参数进行格式化
 	if err := json.Unmarshal([]byte(erc20JsonParams), &erc20TxParams); err != nil {
-		return "0", err
+		return DEFAULT_CONTRACT_GAS_LIMIT, err
 	}
 
 	amountBigInt, _ := new(big.Int).SetString(erc20TxParams.Amount, 10)
@@ -56,32 +56,40 @@ func (e *EthChain) EstimateContractGasLimit(
 			common.HexToAddress(erc20TxParams.ToAddress),
 			amountBigInt)
 		if err != nil {
-			return "0", err
+			return DEFAULT_CONTRACT_GAS_LIMIT, err
 		}
 	} else {
-		return "0", fmt.Errorf("unsupported method name: %s", methodName)
+		return DEFAULT_CONTRACT_GAS_LIMIT, fmt.Errorf("unsupported method name: %s", methodName)
 	}
 	value := big.NewInt(0)
 
-	msg := ethereum.CallMsg{From: common.HexToAddress(fromAddress), To: &contractAddressObj, GasPrice: new(big.Int).SetInt64(10), Value: value, Data: input}
+	// 如果method为transfer，合约余额不足会导致估算手续费失败掉
+	msg := ethereum.CallMsg{
+		From:     common.HexToAddress(fromAddress),
+		To:       &contractAddressObj,
+		GasPrice: new(big.Int).SetInt64(10),
+		Value:    value,
+		Data:     input,
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), e.timeout)
 	defer cancel()
 	tempGasLimitUint, err := e.RemoteRpcClient.EstimateGas(ctx, msg)
 	if err != nil {
-		return "0", err
+		return DEFAULT_CONTRACT_GAS_LIMIT, err
 	}
 	gasLimit := uint64(float64(tempGasLimitUint) * 1.3)
 	gasLimitStr := strconv.FormatUint(gasLimit, 10)
 	return gasLimitStr, nil
 }
 
+// 通过msg信息预估手续费
 func (e *EthChain) EstimateGasLimit(msg ethereum.CallMsg) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), e.timeout)
 	defer cancel()
 	gasCount, err := e.RemoteRpcClient.EstimateGas(ctx, msg)
 	if err != nil {
-		return "0", err
+		return DEFAULT_ETH_GAS_LIMIT, err
 	}
 	gasLimitStr := strconv.FormatUint(gasCount, 10)
 	return gasLimitStr, nil
