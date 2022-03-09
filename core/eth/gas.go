@@ -28,6 +28,7 @@ func (e *EthChain) SuggestGasPrice() (string, error) {
 // erc20 代币 Transfer，Approve GasLimit 估计
 // var erc20TxParams Erc20TxParams
 func (e *EthChain) EstimateContractGasLimit(
+	// 用户钱包地址，由私钥可以转地址， util包 PrivateKeyToAddress
 	fromAddress,
 	contractAddress,
 	abiStr,

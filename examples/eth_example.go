@@ -25,6 +25,10 @@ func main() {
 	wallet := coin.NewEthChain()
 	wallet.CreateRemote(rpcUrl)
 
+	// 私钥转地址
+	address, _ := coin.PrivateKeyToAddress(privateKey)
+	fmt.Printf("用户address: %v \n", address)
+
 	// 获取主网代币 BNB 余额
 	balance, _ := wallet.Balance(walletAddress)
 	fmt.Printf("bnb balance: %v\n", balance)
