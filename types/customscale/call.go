@@ -22,7 +22,10 @@ func DecodeCall(metadata *types.Metadata, call *types.Call) (*CallData, error) {
 	arg := NewArgDecoder(bytes.NewReader(call.Args))
 	callArg, err := ArgDecode(metadata, arg, variant.Fields)
 	if err != nil {
-		return nil, err
+		return &CallData{
+			Method: fmt.Sprintf("%s.%s", string(mod.Name), string(variant.Name)),
+			Arg:    nil,
+		}, err
 	}
 	return &CallData{
 		Method: fmt.Sprintf("%s.%s", string(mod.Name), string(variant.Name)),
