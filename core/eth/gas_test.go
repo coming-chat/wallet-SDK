@@ -10,7 +10,6 @@ const (
 )
 
 func TestEstimateGasLimit(t *testing.T) {
-	ethChain := testEthChain()
 	gasprice := "10"
 	amount := "1"
 	gasLimit, err := ethChain.EstimateGasLimit(transferFromAddress, transferToAddress, gasprice, amount)

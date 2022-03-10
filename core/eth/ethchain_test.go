@@ -5,8 +5,4 @@ const (
 	// ethRpcUrl           = "https://bsc-dataseed.binance.org"
 )
 
-func testEthChain() *EthChain {
-	chain := NewEthChain()
-	_, _ = chain.CreateRemote(ethRpcUrl)
-	return chain
-}
+var ethChain, _ = NewEthChain().CreateRemote(ethRpcUrl)
