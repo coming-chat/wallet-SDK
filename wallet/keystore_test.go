@@ -129,7 +129,7 @@ func TestKeystoreSignAndSeedSign(t *testing.T) {
 		callList = append(callList, &call)
 	}
 
-	extrinsicsTxSeed, err := tx.NewExtrinsics(false, "Utility.batch_all", callList)
+	extrinsicsTxSeed, err := tx.NewExtrinsics("Utility.batch_all", callList)
 	if err != nil {
 		t.Error(err)
 	}
@@ -156,7 +156,7 @@ func TestKeystoreSignAndSeedSign(t *testing.T) {
 
 	t.Log(sendTxSeed)
 
-	extrinsicsTxKeystore, err := tx.NewExtrinsics(false, "Utility.batch_all", callList)
+	extrinsicsTxKeystore, err := tx.NewExtrinsics("Utility.batch_all", callList)
 	if err != nil {
 		t.Error(err)
 	}

@@ -7,14 +7,13 @@ import (
 	gsrc "github.com/centrifuge/go-substrate-rpc-client/v4"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/client"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
-	"github.com/coming-chat/wallet-SDK/types/chainxTypes"
 	"github.com/coming-chat/wallet-SDK/types/customscale"
 )
 
 var (
 	apiMiniX, _   = gsrc.NewSubstrateAPI("wss://minichain-testnet.coming.chat")
 	apiSherpax, _ = gsrc.NewSubstrateAPI("wss://sherpax-testnet.chainx.org")
-	apiChainX, _  = gsrc.NewSubstrateAPI("wss://mainnet.chainx.org/ws")
+	apiChainX, _  = gsrc.NewSubstrateAPI("wss://testnet3.chainx.org")
 	Minix         = ""
 	ChainX        = ""
 	Sherpax       = ""
@@ -52,11 +51,6 @@ func TestTransactionSherpax(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	var ext chainxTypes.Extrinsic
-	err = types.DecodeFromHexString(sendTx, &ext)
-	if err != nil {
-		t.Fatal(err)
-	}
 	t.Logf("Sherpax sendTx: %v", sendTx)
 }
 
@@ -73,11 +67,6 @@ func TestTransactionSherpaxGetUnSign(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	var ext chainxTypes.Extrinsic
-	err = types.DecodeFromHexString(sendTx, &ext)
-	if err != nil {
-		t.Fatal(err)
-	}
 	t.Logf("Sherpax unSign sendTx: %v", sendTx)
 }
 
@@ -86,11 +75,11 @@ func TestTransactionPCX(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	tx, err := txMetadata.NewChainXBalanceTransferTx(address44, "100000000")
+	tx, err := txMetadata.NewBalanceTransferTx(address44, "100000000")
 	if err != nil {
 		t.Fatal(err)
 	}
-	signData, err := tx.GetSignData("0x6ac13efb5b368b97b4934cef6edfdd99c2af51ba5109bfb8dacc116f9c584c10", 0, 10, 1)
+	signData, err := tx.GetSignData("0x2e25d2145e9ecf2d1c185b052e085e3c39340edf3dba74f702653afcdd0a9c37", 2, 13, 4)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -110,11 +99,6 @@ func TestTransactionPCX(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	var ext chainxTypes.Extrinsic
-	err = types.DecodeFromHexString(sendTx, &ext)
-	if err != nil {
-		t.Fatal(err)
-	}
 	t.Logf("Chainx sendTx: %v", sendTx)
 }
 
@@ -123,7 +107,7 @@ func TestTransactionPCXByKeystore(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	tx, err := txMetadata.NewChainXBalanceTransferTx(address44, "100000000")
+	tx, err := txMetadata.NewBalanceTransferTx(address44, "100000000")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -144,11 +128,6 @@ func TestTransactionPCXByKeystore(t *testing.T) {
 		t.Fatal(err)
 	}
 	sendTx, err := tx.GetTx(publicKey, signed)
-	if err != nil {
-		t.Fatal(err)
-	}
-	var ext chainxTypes.Extrinsic
-	err = types.DecodeFromHexString(sendTx, &ext)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -181,11 +160,6 @@ func TestTransactionXBTCByKeystore(t *testing.T) {
 		t.Fatal(err)
 	}
 	sendTx, err := tx.GetTx(publicKey, signed)
-	if err != nil {
-		t.Fatal(err)
-	}
-	var ext chainxTypes.Extrinsic
-	err = types.DecodeFromHexString(sendTx, &ext)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -340,7 +314,7 @@ func TestGetUnSignTxPCX(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	tx, err := txMetadata.NewChainXBalanceTransferTx(address44, "10000000")
+	tx, err := txMetadata.NewBalanceTransferTx(address44, "10000000")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -410,7 +384,7 @@ func TestNewTransactionFromHex(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	transaction, err := txMetadata.NewTransactionFromHex(false, "0xb00429021ecb3d110000000000043790c6e0b1cd20403f321c0532b5ca254d74eadcf3bcdb962f67c7e77caf42")
+	transaction, err := txMetadata.NewTransactionFromHex("0xb00429021ecb3d110000000000043790c6e0b1cd20403f321c0532b5ca254d74eadcf3bcdb962f67c7e77caf42")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -438,9 +412,8 @@ func TestNewTransactionFromHex(t *testing.T) {
 }
 
 func TestDecodeTx(t *testing.T) {
-	var extSuccess chainxTypes.Extrinsic
-	//var ext types.Extrinsic
-	err := types.DecodeFromHexString("0x0603ff58526e07a368f79e61e4e905c2b88f9ca11eaee26e438ca618d98bb751049e1b0700e8764817", &extSuccess.Method)
+	var ext types.Extrinsic
+	err := types.DecodeFromHexString("0x0603ff58526e07a368f79e61e4e905c2b88f9ca11eaee26e438ca618d98bb751049e1b0700e8764817", &ext.Method)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -448,7 +421,7 @@ func TestDecodeTx(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	call, err := customscale.DecodeCall(txMetadata.metadata, &extSuccess.Method)
+	call, err := customscale.DecodeCall(txMetadata.metadata, &ext.Method)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -460,15 +433,10 @@ func TestDecodeTx(t *testing.T) {
 }
 
 func TestDecodeTx2(t *testing.T) {
-	var extSuccess chainxTypes.Extrinsic
 	var errExtrinsic types.Extrinsic
 	//var ext types.Extrinsic
 	err := types.DecodeFromHexString("0x4d0284003e3543edb7c9d4c2246b841a14cfe1b9076043de3a219be5a76c97556297463f01d85fc2c1979e9ceaa639082545f041225400a75df50c4a54261913b30a84f83a1725f03e0dc2a425751e98b27f19a32e2716f92f067ab8908fc947dc7283ce88002503001e02040a0000760bc02040cd949016216c067331ee0d333056773f63a3ad5b3d7365e2b3c32f07c0f0172f03", &errExtrinsic)
 	//errExtrinsic.Signature = chainxTypes.ExtrinsicSignatureV4{}
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = types.DecodeFromHexString("0x550284ff4826ef96bd5e88fc3e93af37dfea53635e84fed316ccebc7d1bd2f4f259af94901b2a66398b84b9b92a40b31057bae9decd827371adad7fbc51fe69263ed7baf12b6fef29b5bd535c54791d221ec27aa6a57b12b14c3c86183934428ae220ecc8a550034001602040600ffba84803fe10c358afa418b34a77b99486458e0f021edbef0e02a80c2abef526f0f0000c16ff28623", &extSuccess)
 	if err != nil {
 		t.Fatal(err)
 	}
