@@ -10,6 +10,7 @@ const (
 )
 
 func TestEstimateGasLimit(t *testing.T) {
+	var ethChain, _ = NewEthChain().CreateRemote(ethRpcUrl)
 	gasprice := "10"
 	amount := "1"
 	gasLimit, err := ethChain.EstimateGasLimit(transferFromAddress, transferToAddress, gasprice, amount)

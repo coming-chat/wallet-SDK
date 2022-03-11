@@ -5,4 +5,4 @@ const (
 	// ethRpcUrl           = "https://bsc-dataseed.binance.org"
 )
 
-var ethChain, _ = NewEthChain().CreateRemote(ethRpcUrl)
+// var ethChain, _ = NewEthChain().CreateRemote(ethRpcUrl)
