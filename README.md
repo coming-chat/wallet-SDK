@@ -161,12 +161,11 @@ throw err
   * ##### 从Hex创建Transaction
 
     ```
-    Transaction t = tx.newTransactionFromHex(isChainX, txHex)
+    Transaction t = tx.newTransactionFromHex(txHex)
     ```
 
     | 参数     | 类型   | 描述           | 获取方式             |
     | -------- | ------ | -------------- | -------------------- |
-    | isChainX | bool   | 是否是chainx   |                      |
     | txHex    | string | tx的16进制数据 | 从Wallet Connect获取 |
 
     throw err
@@ -191,7 +190,7 @@ throw err
   * ##### 创建ChainX转账
 
     ```java
-    Transaction t = tx.newChainXBalanceTransferTx(dest, amount);
+    Transaction t = tx.newBalanceTransferTx(dest, amount);
     ```
 
     参数同上
