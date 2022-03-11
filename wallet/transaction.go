@@ -58,7 +58,7 @@ func (t *Transaction) GetSignData(genesisHashString string, nonce int64, specVer
 }
 
 func (t *Transaction) GetUnSignTx() (string, error) {
-	if t.extrinsic != nil {
+	if t.extrinsic == nil {
 		return "", ErrNilExtrinsic
 	}
 	return types.EncodeToHexString(t.extrinsic)
