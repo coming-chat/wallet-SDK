@@ -22,7 +22,7 @@ type Jsonable interface {
 // 可以从链上获取的转账详情信息
 // 客户端的详情展示还需要 FromCID, ToCID, CreateTimestamp, Transfer(转出/收入), CoinType, Decimal
 // 这些信息需要客户端自己维护
-type TransferDetail struct {
+type TransactionDetail struct {
 	// 交易在链上的哈希
 	HashString string
 	// 交易额
@@ -41,7 +41,7 @@ type TransferDetail struct {
 	FailureMessage string
 }
 
-func (i *TransferDetail) JsonString() string {
+func (i *TransactionDetail) JsonString() string {
 	json, err := json.Marshal(i)
 	if err != nil {
 		return ""
@@ -49,8 +49,8 @@ func (i *TransferDetail) JsonString() string {
 	return string(json)
 }
 
-func NewTransferDetailWithJsonString(s string) *TransferDetail {
-	var i TransferDetail
+func NewTransactionDetailWithJsonString(s string) *TransactionDetail {
+	var i TransactionDetail
 	json.Unmarshal([]byte(s), &i)
 	return &i
 }
@@ -58,7 +58,7 @@ func NewTransferDetailWithJsonString(s string) *TransferDetail {
 // 获取交易的详情
 // @param hashString 交易的 hash
 // @return 详情对象，该对象无法提供 CID 信息
-func (e *EthChain) FetchTransferDetail(hashString string) (*TransferDetail, error) {
+func (e *EthChain) FetchTransactionDetail(hashString string) (*TransactionDetail, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), e.timeout)
 	defer cancel()
 	tx, isPending, err := e.RemoteRpcClient.TransactionByHash(ctx, common.HexToHash(hashString))
@@ -78,7 +78,7 @@ func (e *EthChain) FetchTransferDetail(hashString string) (*TransferDetail, erro
 	fromAddress := msg.From().String()
 	toAddress := msg.To().String()
 	if isPending {
-		return &TransferDetail{
+		return &TransactionDetail{
 			HashString: hashString,
 			Status:     statusInt,
 
@@ -108,7 +108,7 @@ func (e *EthChain) FetchTransferDetail(hashString string) (*TransferDetail, erro
 	gasUsed := receipt.GasUsed
 	estimateFees = strconv.FormatUint(gasPrice*gasUsed, 10)
 
-	return &TransferDetail{
+	return &TransactionDetail{
 		HashString: hashString,
 		Status:     statusInt,
 
@@ -123,7 +123,7 @@ func (e *EthChain) FetchTransferDetail(hashString string) (*TransferDetail, erro
 
 // 获取交易的状态
 // @param hashString 交易的 hash
-func (e *EthChain) FetchTransferStatus(hashString string) int {
+func (e *EthChain) FetchTransactionStatus(hashString string) int {
 	ctx, cancel := context.WithTimeout(context.Background(), e.timeout)
 	defer cancel()
 	_, isPending, err := e.RemoteRpcClient.TransactionByHash(ctx, common.HexToHash(hashString))
