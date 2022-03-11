@@ -20,6 +20,15 @@ type Jsonable interface {
 	// NewXxxWithJsonString(s string) *Xxx
 }
 
+type TransactionStatus = SDKEnumInt
+
+const (
+	TransactionStatusNone    TransactionStatus = 0
+	TransactionStatusPending TransactionStatus = 1
+	TransactionStatusSuccess TransactionStatus = 2
+	TransactionStatusFailure TransactionStatus = 3
+)
+
 // 可以从链上获取的转账详情信息
 // 客户端的详情展示还需要 FromCID, ToCID, CreateTimestamp, Transfer(转出/收入), CoinType, Decimal
 // 这些信息需要客户端自己维护
@@ -34,8 +43,12 @@ type TransactionDetail struct {
 	FromAddress string
 	// 收款人的地址
 	ToAddress string
-	// 交易状态 0: None; 1: Pending; 2: Success; 3: Failure;
-	Status int
+	// 交易状态 枚举常量
+	// 0: TransactionStatusNone;
+	// 1: TransactionStatusPending;
+	// 2: TransactionStatusSuccess;
+	// 3: TransactionStatusFailure;
+	Status TransactionStatus
 	// 交易完成时间, 如果在 Pending 中，为 0
 	FinishTimestamp int64
 	// 失败描述
@@ -82,7 +95,7 @@ func (e *EthChain) FetchTransactionDetail(hashString string) (*TransactionDetail
 	}
 
 	if isPending {
-		detail.Status = 1
+		detail.Status = TransactionStatusPending
 		return detail, nil
 	}
 
@@ -98,7 +111,7 @@ func (e *EthChain) FetchTransactionDetail(hashString string) (*TransactionDetail
 	}
 
 	if receipt.Status == 0 {
-		detail.Status = 3 // failure
+		detail.Status = TransactionStatusFailure
 		// get error message
 		_, err := e.RemoteRpcClient.CallContract(ctx, ethereum.CallMsg{
 			From: msg.From(),
@@ -108,7 +121,7 @@ func (e *EthChain) FetchTransactionDetail(hashString string) (*TransactionDetail
 		detail.FailureMessage = err.Error()
 
 	} else {
-		detail.Status = 2 // success
+		detail.Status = TransactionStatusSuccess
 	}
 	gasUsed := receipt.GasUsed
 	detail.EstimateFees = strconv.FormatUint(gasPrice*gasUsed, 10)
