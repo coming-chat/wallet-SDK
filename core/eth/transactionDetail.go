@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"strconv"
 
+	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 )
@@ -70,23 +71,19 @@ func (e *EthChain) FetchTransactionDetail(hashString string) (*TransactionDetail
 		return nil, err
 	}
 
-	statusInt := 1 // Pending
 	gasPrice := msg.GasPrice().Uint64()
 	estimateGasLimit := msg.Gas()
-	estimateFees := strconv.FormatUint(gasPrice*estimateGasLimit, 10)
-	amount := strconv.FormatUint(msg.Value().Uint64(), 10)
-	fromAddress := msg.From().String()
-	toAddress := msg.To().String()
-	if isPending {
-		return &TransactionDetail{
-			HashString: hashString,
-			Status:     statusInt,
+	detail := &TransactionDetail{
+		HashString:   hashString,
+		FromAddress:  msg.From().String(),
+		ToAddress:    msg.To().String(),
+		Amount:       strconv.FormatUint(msg.Value().Uint64(), 10),
+		EstimateFees: strconv.FormatUint(gasPrice*estimateGasLimit, 10),
+	}
 
-			FromAddress:  fromAddress,
-			ToAddress:    toAddress,
-			Amount:       amount,
-			EstimateFees: estimateFees,
-		}, nil
+	if isPending {
+		detail.Status = 1
+		return detail, nil
 	}
 
 	// 交易receipt 状态信息，0表示失败，1表示成功
@@ -101,24 +98,23 @@ func (e *EthChain) FetchTransactionDetail(hashString string) (*TransactionDetail
 	}
 
 	if receipt.Status == 0 {
-		statusInt = 3
+		detail.Status = 3 // failure
+		// get error message
+		_, err := e.RemoteRpcClient.CallContract(ctx, ethereum.CallMsg{
+			From: msg.From(),
+			To:   msg.To(),
+			Data: msg.Data(),
+		}, receipt.BlockNumber)
+		detail.FailureMessage = err.Error()
+
 	} else {
-		statusInt = 2
+		detail.Status = 2 // success
 	}
 	gasUsed := receipt.GasUsed
-	estimateFees = strconv.FormatUint(gasPrice*gasUsed, 10)
+	detail.EstimateFees = strconv.FormatUint(gasPrice*gasUsed, 10)
+	detail.FinishTimestamp = int64(blockHeader.Time)
 
-	return &TransactionDetail{
-		HashString: hashString,
-		Status:     statusInt,
-
-		FromAddress:  fromAddress,
-		ToAddress:    toAddress,
-		Amount:       amount,
-		EstimateFees: estimateFees,
-
-		FinishTimestamp: int64(blockHeader.Time),
-	}, nil
+	return detail, nil
 }
 
 // 获取交易的状态
