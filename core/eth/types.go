@@ -50,5 +50,5 @@ type Erc20TxParams struct {
 	Method    string `json:"method"`
 }
 
-type SDKEnumInt = int8
+type SDKEnumInt = int
 type SDKEnumString = string

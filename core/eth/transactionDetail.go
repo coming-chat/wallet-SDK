@@ -132,22 +132,22 @@ func (e *EthChain) FetchTransactionDetail(hashString string) (*TransactionDetail
 
 // 获取交易的状态
 // @param hashString 交易的 hash
-func (e *EthChain) FetchTransactionStatus(hashString string) int {
+func (e *EthChain) FetchTransactionStatus(hashString string) TransactionStatus {
 	ctx, cancel := context.WithTimeout(context.Background(), e.timeout)
 	defer cancel()
 	_, isPending, err := e.RemoteRpcClient.TransactionByHash(ctx, common.HexToHash(hashString))
 	if err != nil {
-		return 0
+		return TransactionStatusNone
 	}
 	if isPending {
-		return 1
+		return TransactionStatusPending
 	}
 
 	// 交易receipt 状态信息，0表示失败，1表示成功
 	receipt, err := e.TransactionReceiptByHash(hashString)
 	if receipt.Status == 0 {
-		return 3
+		return TransactionStatusFailure
 	} else {
-		return 2
+		return TransactionStatusSuccess
 	}
 }
