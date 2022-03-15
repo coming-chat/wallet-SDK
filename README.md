@@ -421,7 +421,7 @@ func main() {
  // busd 测试网合约地址
  private String busdContractAddress = "0xeD24FC36d5Ee211Ea25A80239Fb8C4Cfd80f12Ee";
  // bsc测试网rpc 节点
- bscRpc = "https://eth-rinkeby.alchemyapi.io/v2/oYHKrgZwrX8PV76knF7hVPekQ8b5mCFd"
+ bscRpc ="https://data-seed-prebsc-1-s1.binance.org:8545"
 
  EthChain ethChain = new EthChain();
  ethChain.createRemote(bscRpc);
