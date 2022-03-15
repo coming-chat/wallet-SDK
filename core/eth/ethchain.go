@@ -44,6 +44,11 @@ func (e *EthChain) CreateRemote(rpcUrl string) (*EthChain, error) {
 	return e, nil
 }
 
+func (e *EthChain) ConnectRemote(rpcUrl string) error {
+	_, err := e.CreateRemote(rpcUrl)
+	return err
+}
+
 func (e *EthChain) Close() {
 	if e.RemoteRpcClient != nil {
 		e.RemoteRpcClient.Close()
