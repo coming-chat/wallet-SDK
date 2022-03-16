@@ -32,8 +32,6 @@ func (e *EthChain) CreateRemote(rpcUrl string) (*EthChain, error) {
 	}
 
 	remoteRpcClient := ethclient.NewClient(rpcClient)
-	ctx, cancel = context.WithTimeout(context.Background(), e.timeout)
-	defer cancel()
 	chainId, err := remoteRpcClient.ChainID(ctx)
 	if err != nil {
 		return nil, err
