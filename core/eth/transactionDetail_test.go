@@ -29,10 +29,11 @@ func TestTransaction(t *testing.T) {
 	rpcUrl := "https://mainnet.sherpax.io/rpc"
 	hashString := "0xee634a4a4152e018fbc9af27dd4a6791a4e74e852fc769173aba8bb3339fb089"
 
-	// rpcUrl := ethRpcUrl
+	u := &CoinUtil{
+		RpcUrl: rpcUrl,
+	}
 
-	var ethChain, _ = NewEthChain().CreateRemote(rpcUrl)
-	detail, err := ethChain.FetchTransactionDetail(hashString)
+	detail, err := u.FetchTransactionDetail(hashString)
 	if err != nil {
 		t.Fatal("fetch detail failure:", err)
 	}
