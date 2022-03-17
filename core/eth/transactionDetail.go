@@ -114,11 +114,19 @@ func (e *EthChain) FetchTransactionDetail(hashString string) (*TransactionDetail
 		detail.Status = TransactionStatusFailure
 		// get error message
 		_, err := e.RemoteRpcClient.CallContract(ctx, ethereum.CallMsg{
-			From: msg.From(),
-			To:   msg.To(),
-			Data: msg.Data(),
+			From:       msg.From(),
+			To:         msg.To(),
+			Data:       msg.Data(),
+			Gas:        msg.Gas(),
+			GasPrice:   msg.GasPrice(),
+			GasFeeCap:  msg.GasFeeCap(),
+			GasTipCap:  msg.GasTipCap(),
+			Value:      msg.Value(),
+			AccessList: msg.AccessList(),
 		}, receipt.BlockNumber)
-		detail.FailureMessage = err.Error()
+		if err != nil {
+			detail.FailureMessage = err.Error()
+		}
 
 	} else {
 		detail.Status = TransactionStatusSuccess
