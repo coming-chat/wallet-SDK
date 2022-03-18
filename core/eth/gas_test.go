@@ -20,3 +20,19 @@ func TestEstimateGasLimit(t *testing.T) {
 
 	t.Log("TestEstimateGasLimit success", gasLimit)
 }
+
+func TestContractGasLimit(t *testing.T) {
+	u := &CoinUtil{
+		RpcUrl:          binanceTestRpcUrl,
+		ContractAddress: "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+		WalletAddress:   "0x1988EbF818FF475f680AF72cf44BBEe1A7CEA666",
+	}
+	address := "0x1988EbF818FF475f680AF72cf44BBEe1A7CEA666"
+	amount := "111000000"
+
+	gasLimit, err := u.EstimateGasLimit(address, "", amount)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("gas  limit = ", gasLimit)
+}
