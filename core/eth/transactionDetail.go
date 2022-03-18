@@ -3,9 +3,12 @@ package eth
 import (
 	"context"
 	"encoding/json"
+	"math/big"
 	"strconv"
+	"strings"
 
 	"github.com/ethereum/go-ethereum"
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 )
@@ -84,13 +87,23 @@ func (e *EthChain) FetchTransactionDetail(hashString string) (*TransactionDetail
 		return nil, err
 	}
 
+	address := msg.To().String()
+	amount := strconv.FormatUint(msg.Value().Uint64(), 10)
+
+	if len(tx.Data()) != 0 {
+		address, amount, err = decodeErc20TransferInput(tx.Data())
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	gasPrice := msg.GasPrice().Uint64()
 	estimateGasLimit := msg.Gas()
 	detail := &TransactionDetail{
 		HashString:   hashString,
 		FromAddress:  msg.From().String(),
-		ToAddress:    msg.To().String(),
-		Amount:       strconv.FormatUint(msg.Value().Uint64(), 10),
+		ToAddress:    address,
+		Amount:       amount,
 		EstimateFees: strconv.FormatUint(gasPrice*estimateGasLimit, 10),
 	}
 
@@ -158,4 +171,31 @@ func (e *EthChain) FetchTransactionStatus(hashString string) TransactionStatus {
 	} else {
 		return TransactionStatusSuccess
 	}
+}
+
+// 解析 erc20 转账的 input data
+// @return 返回转账地址和金额
+func decodeErc20TransferInput(data []byte) (string, string, error) {
+	if len(data) == 0 {
+		// 主币
+		return "", "", nil
+	}
+
+	parsedAbi, err := abi.JSON(strings.NewReader(Erc20AbiStr))
+	if err != nil {
+		return "", "", err
+	}
+
+	method, err := parsedAbi.MethodById(data[:4])
+	if err != nil {
+		return "", "", err
+	}
+	if method.RawName != ERC20_METHOD_TRANSFER {
+		return "", "", nil
+	}
+
+	params, err := method.Inputs.Unpack(data[4:])
+	address := params[0].(common.Address).String()
+	amount := params[1].(*big.Int).String()
+	return address, amount, nil
 }
