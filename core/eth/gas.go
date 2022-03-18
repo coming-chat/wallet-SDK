@@ -15,6 +15,13 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+func (e *EthChain) gasFactor() float32 {
+	if strings.HasPrefix(e.rpcUrl, "https://mainnet.infura.io/v3") {
+		return 1.8
+	}
+	return 1.3
+}
+
 // 获取标准gas价格
 func (e *EthChain) SuggestGasPrice() (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), e.timeout)
@@ -87,7 +94,7 @@ func (e *EthChain) EstimateContractGasLimit(
 	if err != nil {
 		return DEFAULT_CONTRACT_GAS_LIMIT, err
 	}
-	gasLimit := uint64(float64(tempGasLimitUint) * 1.3)
+	gasLimit := uint64(float64(tempGasLimitUint) * float64(e.gasFactor()))
 	gasLimitStr := strconv.FormatUint(gasLimit, 10)
 	return gasLimitStr, nil
 }
@@ -138,5 +145,5 @@ func (e *EthChain) EstimateGasLimit(fromAddress string, receiverAddress string, 
 	if err != nil {
 		return DEFAULT_ETH_GAS_LIMIT, err
 	}
-	return gasLimitDecimal.Mul(decimal.NewFromFloat32(1.3)).Round(0).String(), nil
+	return gasLimitDecimal.Mul(decimal.NewFromFloat32(e.gasFactor())).Round(0).String(), nil
 }

@@ -14,6 +14,7 @@ type EthChain struct {
 	RpcClient       *rpc.Client
 	timeout         time.Duration
 	chainId         *big.Int
+	rpcUrl          string
 }
 
 func NewEthChain() *EthChain {
@@ -39,6 +40,7 @@ func (e *EthChain) CreateRemote(rpcUrl string) (*EthChain, error) {
 	e.chainId = chainId
 	e.RpcClient = rpcClient
 	e.RemoteRpcClient = remoteRpcClient
+	e.rpcUrl = rpcUrl
 	return e, nil
 }
 
