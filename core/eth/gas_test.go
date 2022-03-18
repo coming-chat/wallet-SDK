@@ -22,15 +22,25 @@ func TestEstimateGasLimit(t *testing.T) {
 }
 
 func TestContractGasLimit(t *testing.T) {
-	u := &CoinUtil{
-		RpcUrl:          binanceTestRpcUrl,
-		ContractAddress: "0xdAC17F958D2ee523a2206206994597C13D831ec7",
-		WalletAddress:   "0x1988EbF818FF475f680AF72cf44BBEe1A7CEA666",
-	}
-	address := "0x1988EbF818FF475f680AF72cf44BBEe1A7CEA666"
-	amount := "111000000"
+	// rpcUrl := binanceTestRpcUrl
+	// contractAddress := "0xdAC17F958D2ee523a2206206994597C13D831ec7"
+	// walletAddress := "0x1988EbF818FF475f680AF72cf44BBEe1A7CEA666"
+	// toAddress := "0x1988EbF818FF475f680AF72cf44BBEe1A7CEA666"
+	// amount := "111000000"
 
-	gasLimit, err := u.EstimateGasLimit(address, "", amount)
+	rpcUrl := ethMainProdRpcUrl
+	// rpcUrl := binanceProdRpcUrl
+	contractAddress := "0xdAC17F958D2ee523a2206206994597C13D831ec7"
+	walletAddress := "0x1F05e1419D511C5f1Df9a624FC31Afe24170b4A2"
+	toAddress := "0x1F05e1419D511C5f1Df9a624FC31Afe24170b4A2"
+	amount := "10000"
+
+	u := &CoinUtil{
+		RpcUrl:          rpcUrl,
+		ContractAddress: contractAddress,
+		WalletAddress:   walletAddress,
+	}
+	gasLimit, err := u.EstimateGasLimit(toAddress, "", amount)
 	if err != nil {
 		t.Fatal(err)
 	}

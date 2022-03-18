@@ -117,26 +117,26 @@ func (e *EthChain) EstimateGasLimit(fromAddress string, receiverAddress string, 
 	amountBigInt, _ := new(big.Int).SetString(amount, 10)
 	parsedAbi, err := abi.JSON(strings.NewReader(Erc20AbiStr))
 	if err != nil {
-		return "", err
+		return DEFAULT_ETH_GAS_LIMIT, err
 	}
 	input, err := parsedAbi.Pack(ERC20_METHOD_TRANSFER, common.HexToAddress(receiverAddress), amountBigInt)
 	if err != nil {
-		return "", err
+		return DEFAULT_ETH_GAS_LIMIT, err
 	}
 
 	price, isNumber := new(big.Int).SetString(gasPrice, 10)
 	if !isNumber {
-		return "", errors.New("gasPrice is invalid")
+		return DEFAULT_ETH_GAS_LIMIT, errors.New("gasPrice is invalid")
 	}
 
 	msg := ethereum.CallMsg{From: from, To: &contractAddressObj, GasPrice: price, Value: value, Data: input}
 	gasLimit, err := e.estimateGasLimit(msg)
 	if err != nil {
-		return "", err
+		return DEFAULT_ETH_GAS_LIMIT, err
 	}
 	gasLimitDecimal, err := decimal.NewFromString(gasLimit)
 	if err != nil {
-		return "", err
+		return DEFAULT_ETH_GAS_LIMIT, err
 	}
 	return gasLimitDecimal.Mul(decimal.NewFromFloat32(1.3)).Round(0).String(), nil
 }
