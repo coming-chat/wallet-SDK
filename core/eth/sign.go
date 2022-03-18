@@ -28,7 +28,10 @@ func (e *EthChain) SignMsg(privateKey string, data string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	hashBuf, _ := hex.DecodeString(hash)
+	hashBuf, err := hex.DecodeString(hash)
+	if err != nil {
+		return "", err
+	}
 	signature, err := crypto.Sign(hashBuf, privateKeyObj)
 	if err != nil {
 		return "", err

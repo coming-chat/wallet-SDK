@@ -32,10 +32,23 @@ func (e *EthChain) Erc20TokenInfo(contractAddress string, walletAddress string) 
 	var token Erc20Token
 	token.ContractAddress = contractAddress
 	token.ChainId = e.chainId.String()
-	token.Decimal, _ = e.TokenDecimal(contractAddress)
-	token.Symbol, _ = e.TokenSymbol(contractAddress)
-	token.Name, _ = e.TokenName(contractAddress)
-	token.Balance, _ = e.TokenBalance(contractAddress, walletAddress)
+	var err error
+	token.Decimal, err = e.TokenDecimal(contractAddress)
+	if err != nil {
+		return nil, err
+	}
+	token.Symbol, err = e.TokenSymbol(contractAddress)
+	if err != nil {
+		return nil, err
+	}
+	token.Name, err = e.TokenName(contractAddress)
+	if err != nil {
+		return nil, err
+	}
+	token.Balance, err = e.TokenBalance(contractAddress, walletAddress)
+	if err != nil {
+		return nil, err
+	}
 	return &token, nil
 }
 
