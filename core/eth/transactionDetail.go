@@ -6,6 +6,7 @@ import (
 	"math/big"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -154,6 +155,10 @@ func (e *EthChain) FetchTransactionDetail(hashString string) (*TransactionDetail
 // 获取交易的状态
 // @param hashString 交易的 hash
 func (e *EthChain) FetchTransactionStatus(hashString string) TransactionStatus {
+	if len(hashString) == 0 {
+		return TransactionStatusNone
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), e.timeout)
 	defer cancel()
 	_, isPending, err := e.RemoteRpcClient.TransactionByHash(ctx, common.HexToHash(hashString))
@@ -171,6 +176,49 @@ func (e *EthChain) FetchTransactionStatus(hashString string) TransactionStatus {
 	} else {
 		return TransactionStatusSuccess
 	}
+}
+
+// 批量获取交易的转账状态
+// @param hashList 要批量查询的交易的 hash 数组
+// @return 交易状态数组，它的顺序和 hashList 是保持一致的
+func (e *EthChain) BatchTransactionStatus(hashList []string) []string {
+	thread := 0
+	max := 10
+	wg := sync.WaitGroup{}
+
+	dict := &safeMap{Map: make(map[string]string)}
+	for _, hashString := range hashList {
+		if thread == max {
+			wg.Wait()
+			thread = 0
+		}
+		if thread < max {
+			wg.Add(1)
+		}
+
+		go func(w *sync.WaitGroup, hashString string, dict *safeMap) {
+			status := e.FetchTransactionStatus(hashString)
+			dict.writeMap(hashString, strconv.Itoa(status))
+			wg.Done()
+		}(&wg, hashString, dict)
+		thread++
+	}
+	wg.Wait()
+
+	result := []string{}
+	for _, hashString := range hashList {
+		result = append(result, dict.Map[hashString])
+	}
+	return result
+}
+
+// SDK 批量获取交易的转账状态，hash 列表和返回值，都只能用字符串，逗号隔开传递
+// @param hashListString 要批量查询的交易的 hash，用逗号拼接的字符串："hash1,hash2,hash3"
+// @return 批量的交易状态，它的顺序和 hashListString 是保持一致的: "status1,status2,status3"
+func (e *EthChain) SdkBatchTransactionStatus(hashListString string) string {
+	hashList := strings.Split(hashListString, ",")
+	array := e.BatchTransactionStatus(hashList)
+	return strings.Join(array, ",")
 }
 
 // 解析 erc20 转账的 input data

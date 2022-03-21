@@ -48,3 +48,13 @@ func TestTransaction(t *testing.T) {
 	t.Log("success")
 	t.Log(detail.JsonString())
 }
+
+func TestBatchStatus(t *testing.T) {
+	var ethChain, _ = NewEthChain().CreateRemote(binanceProdRpcUrl)
+
+	var hashStrings = "0x9ef27c4983b18fd25a149e737feefb952889253aa6e2cddb62c6cf80a23887c3,0x39fa91a5e34d50f373339b2a5e9102ffc2c321f497a49841c62fd213e433290d,0x2cbf78965bbddecf86d2d0fb17069fa760fa652d81ee79d9a99f0add92b05364"
+
+	var statuses = ethChain.SdkBatchTransactionStatus(hashStrings)
+
+	t.Log(statuses)
+}

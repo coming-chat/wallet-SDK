@@ -2,6 +2,7 @@ package eth
 
 import (
 	"math/big"
+	"sync"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -52,3 +53,21 @@ type Erc20TxParams struct {
 
 type SDKEnumInt = int
 type SDKEnumString = string
+
+type safeMap struct {
+	sync.RWMutex
+	Map map[string]string
+}
+
+func (l *safeMap) readMap(key string) (string, bool) {
+	l.RLock()
+	value, ok := l.Map[key]
+	l.RUnlock()
+	return value, ok
+}
+
+func (l *safeMap) writeMap(key string, value string) {
+	l.Lock()
+	l.Map[key] = value
+	l.Unlock()
+}
