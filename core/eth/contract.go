@@ -55,7 +55,10 @@ func (e *EthChain) CallContractConstantWithPayload(out interface{}, contractAddr
 	if opts.Pending {
 		pb := bind.PendingContractCaller(e.RemoteRpcClient)
 		output, err = pb.PendingCallContract(ctx, msg)
-		if err == nil && len(output) == 0 {
+		if err != nil {
+			return err
+		}
+		if len(output) == 0 {
 			// Make sure we have a contract to operate on, and bail out otherwise.
 			if code, err = pb.PendingCodeAt(ctx, contractAddressObj); err != nil {
 				return err

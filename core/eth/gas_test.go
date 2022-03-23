@@ -27,10 +27,13 @@ func TestContractGasLimit(t *testing.T) {
 	// walletAddress := "0x1988EbF818FF475f680AF72cf44BBEe1A7CEA666"
 	// toAddress := "0x1988EbF818FF475f680AF72cf44BBEe1A7CEA666"
 	// amount := "111000000"
+	id := 2
+	println(id)
 
 	rpcUrl := ethMainProdRpcUrl
 	// rpcUrl := binanceProdRpcUrl
-	contractAddress := "0xdAC17F958D2ee523a2206206994597C13D831ec7"
+	contractAddress := contractUSDT
+	// walletAddress := "0x46D608080FF930D847185Ea6811CC0652457E76c"
 	walletAddress := "0x1F05e1419D511C5f1Df9a624FC31Afe24170b4A2"
 	toAddress := "0x1F05e1419D511C5f1Df9a624FC31Afe24170b4A2"
 	amount := "10000"
