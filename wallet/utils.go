@@ -1,6 +1,8 @@
 package wallet
 
 import (
+	"github.com/btcsuite/btcd/btcutil"
+	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/itering/subscan/util/base58"
 	"github.com/itering/subscan/util/ss58"
@@ -56,4 +58,19 @@ func ByteToHex(data []byte) string {
 
 func HexToByte(hex string) ([]byte, error) {
 	return types.HexDecodeString(hex)
+}
+
+func IsValidBtcAddress(address, chainnet string) bool {
+	var netParams *chaincfg.Params
+	switch chainnet {
+	case "signet":
+		netParams = &chaincfg.SigNetParams
+	case "mainnet", "bitcoin":
+		netParams = &chaincfg.MainNetParams
+	default:
+		return false
+	}
+
+	_, err := btcutil.DecodeAddress(address, netParams)
+	return err == nil
 }
