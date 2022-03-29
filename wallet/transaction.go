@@ -2,6 +2,8 @@ package wallet
 
 import (
 	"math/big"
+	"strconv"
+	"strings"
 
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 )
@@ -107,6 +109,23 @@ func (t *Tx) NewTransactionFromHex(txHex string) (*Transaction, error) {
 	}
 
 	return transaction, nil
+}
+
+func (t *Tx) NewXGatewayBitcoinCreateTaprootWithdrawTx(ids, transactionHex string) (*Transaction, error) {
+	idList := strings.Split(ids, ",")
+	idsU32 := make([]uint32, 0)
+	for _, v := range idList {
+		id, err := strconv.ParseUint(v, 10, 32)
+		if err != nil {
+			return nil, err
+		}
+		idsU32 = append(idsU32, uint32(id))
+	}
+	transactionBytes, err := HexToByte(transactionHex)
+	if err != nil {
+		return nil, err
+	}
+	return t.NewExtrinsics("XGatewayBitcoin.create_taproot_withdraw_tx", idsU32, types.NewBytes(transactionBytes))
 }
 
 func (t *Tx) NewExtrinsics(call string, args ...interface{}) (*Transaction, error) {
