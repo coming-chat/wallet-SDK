@@ -11,11 +11,13 @@ pkgEth =  $(pkgCore)
 
 pkgPolka = ${module}/wallet
 
+pkgBtc = ${module}/core/btc
+
 buildAllSDKAndroid:
-	gomobile bind -ldflags "-s -w" -target=android -o=${outdir}/wallet.aar ${pkgEth} ${pkgPolka}
+	gomobile bind -ldflags "-s -w" -target=android -o=${outdir}/wallet.aar ${pkgEth} ${pkgPolka} ${pkgBtc}
 
 buildAllSDKIOS:
-	gomobile bind -ldflags "-s -w" -target=ios  -o=${outdir}/Wallet.xcframework ${pkgEth} ${pkgPolka}
+	gomobile bind -ldflags "-s -w" -target=ios  -o=${outdir}/Wallet.xcframework ${pkgEth} ${pkgPolka} ${pkgBtc}
 
 packageAll:
 	rm -rf ${outdir}/*

@@ -1,8 +1,6 @@
 package wallet
 
 import (
-	"github.com/btcsuite/btcd/btcutil"
-	"github.com/btcsuite/btcd/chaincfg"
 	"testing"
 )
 
@@ -27,39 +25,20 @@ func TestPublicKeyToAddress(t *testing.T) {
 }
 
 func TestValidAddress(t *testing.T) {
-	addArray := [][2]string{
-		// 有效的
-		{"signet", "tb1p5uslzuqy8k40mc86jfdtdjh4624umtwjyjffrvvypc7engl5z9ystm5728"},
-		{"signet", "tb1p4fwg0qlcsm94y90gnkwr0zkfsv9gxjlq43mpegf4cmn9xed02xcq3n0386"},
-		{"mainnet", "bc1p5uslzuqy8k40mc86jfdtdjh4624umtwjyjffrvvypc7engl5z9ysunz3sg"},
+	addArray := []string{
+		"5T8E3ZgvtHdZfEwsfZ9bZE5VCixUfCYS764We7xVuvQDbVrU",
+		"5RNt3DACYRhwHyy9esTZXVvffkFL3pQHv4qoEMFVfDqeDEnH",
 
-		// 错误的
-		{"signet", "tb1p4fwg0qlcsm94y90gnkwr0zkfsv9gxjlq43mpegf4cmn9xed02xcq3n0387"},
-		{"signet", "tb1p4fwg0qlcsm94y90gnkwr0zkfsv9gxjlq43mpeg"},
-		{"mainnet", "bc1p5uslzuqy8k40mc86jfdtdjh4624umtwjyjffrvvypc7engl5z9ysunz3sh"},
-		{"mainnet", "bc1p5uslzuqy8k40mc86jfdtdjh4624umtwjyjffrvvypc7e"},
+		"5RNt3DACYRhwHyy9esTZXVvffkFL3pQHv4qoEMFVfDqeDEnB", // 换了一个字符，错误的地址
+		"5RNt3DACYRhwHyy9esTZXVvffkFL3pQH",
 	}
 
 	for _, item := range addArray {
-		net := item[0]
-		addr := item[1]
-
-		var cfg *chaincfg.Params
-		switch net {
-		case "signet":
-			cfg = &chaincfg.SigNetParams
-		case "mainnet":
-			cfg = &chaincfg.MainNetParams
-		}
-		addobj, err := btcutil.DecodeAddress(addr, cfg)
-
+		pubkey, err := AddressToPublicKey(item)
 		if err != nil {
-			t.Log("false address, error = ", err)
+			t.Log("false address, ", err)
 		} else {
-			t.Log("true address, address = ", addobj)
+			t.Log("true address, pubkey=", pubkey)
 		}
-
-		t.Log(IsValidBtcAddress(addr, net))
 	}
-
 }

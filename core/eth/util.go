@@ -4,6 +4,7 @@ import (
 	"math/big"
 	"strconv"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 )
 
@@ -32,4 +33,8 @@ func PrivateKeyToAddress(privateKey string) (string, error) {
 		return "", err
 	}
 	return crypto.PubkeyToAddress(privateKeyECDSA.PublicKey).Hex(), nil
+}
+
+func IsValidAddress(address string) bool {
+	return common.IsHexAddress(address)
 }
