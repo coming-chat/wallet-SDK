@@ -18,7 +18,7 @@ type JsonRpcReq struct {
 	Params  []interface{} `json:"params"`
 }
 
-func RequestJsonRpc(method string, params ...interface{}) (interface{}, error) {
+func RequestJsonRpc(url, method string, params ...interface{}) (interface{}, error) {
 	data := &JsonRpcReq{
 		Id:      1,
 		Jsonrpc: "2.0",
@@ -29,7 +29,7 @@ func RequestJsonRpc(method string, params ...interface{}) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp, err := httpUtil.Request(http.MethodPost, "https://testnet3.chainx.org/rpc", map[string]string{"Content-Type": "application/json; charset=utf-8"}, body)
+	resp, err := httpUtil.Request(http.MethodPost, url, map[string]string{"Content-Type": "application/json; charset=utf-8"}, body)
 	if err != nil {
 		return nil, err
 	}
@@ -54,8 +54,8 @@ func RequestJsonRpc(method string, params ...interface{}) (interface{}, error) {
 	return nil, fmt.Errorf("code: %d, body: %s", resp.Code, string(resp.Body))
 }
 
-func XGatewayCommonWithdrawalListWithFeeInfo(assertId int) (string, error) {
-	result, err := RequestJsonRpc("xgatewaycommon_withdrawalListWithFeeInfo", assertId)
+func XGatewayCommonWithdrawalListWithFeeInfo(url string, assertId int) (string, error) {
+	result, err := RequestJsonRpc(url, "xgatewaycommon_withdrawalListWithFeeInfo", assertId)
 	if err != nil {
 		return "", err
 	}
@@ -104,7 +104,7 @@ func XGatewayCommonWithdrawalListWithFeeInfo(assertId int) (string, error) {
 	return string(jsonb), nil
 }
 
-func XGatewayBitcoinVerifyTxValid(rawTx, withdrawalIds string, isFullAmount bool) (bool, error) {
+func XGatewayBitcoinVerifyTxValid(url, rawTx, withdrawalIds string, isFullAmount bool) (bool, error) {
 	withdrawalIdList := strings.Split(withdrawalIds, ",")
 	withdrawalIdsU32 := make([]uint32, 0)
 	for _, v := range withdrawalIdList {
@@ -114,7 +114,7 @@ func XGatewayBitcoinVerifyTxValid(rawTx, withdrawalIds string, isFullAmount bool
 		}
 		withdrawalIdsU32 = append(withdrawalIdsU32, uint32(id))
 	}
-	result, err := RequestJsonRpc("xgatewaybitcoin_verifyTxValid", rawTx, withdrawalIdsU32, isFullAmount)
+	result, err := RequestJsonRpc(url, "xgatewaybitcoin_verifyTxValid", rawTx, withdrawalIdsU32, isFullAmount)
 	if err != nil {
 		return false, err
 	}

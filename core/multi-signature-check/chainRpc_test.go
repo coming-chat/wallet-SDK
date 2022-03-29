@@ -28,6 +28,7 @@ func TestAddressAmountKey(t *testing.T) {
 
 func TestRequestJsonRpc(t *testing.T) {
 	type args struct {
+		url    string
 		method string
 		params []interface{}
 	}
@@ -41,7 +42,7 @@ func TestRequestJsonRpc(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := RequestJsonRpc(tt.args.method, tt.args.params...)
+			got, err := RequestJsonRpc(tt.args.url, tt.args.method, tt.args.params...)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("RequestJsonRpc() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -55,6 +56,7 @@ func TestRequestJsonRpc(t *testing.T) {
 
 func TestXGatewayBitcoinVerifyTxValid(t *testing.T) {
 	type args struct {
+		url           string
 		rawTx         string
 		withdrawalIds string
 		isFullAmount  bool
@@ -69,7 +71,7 @@ func TestXGatewayBitcoinVerifyTxValid(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := XGatewayBitcoinVerifyTxValid(tt.args.rawTx, tt.args.withdrawalIds, tt.args.isFullAmount)
+			got, err := XGatewayBitcoinVerifyTxValid(tt.args.url, tt.args.rawTx, tt.args.withdrawalIds, tt.args.isFullAmount)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("XGatewayBitcoinVerifyTxValid() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -83,6 +85,7 @@ func TestXGatewayBitcoinVerifyTxValid(t *testing.T) {
 
 func TestXGatewayCommonWithdrawalListWithFeeInfo(t *testing.T) {
 	type args struct {
+		url      string
 		assertId int
 	}
 	tests := []struct {
@@ -91,24 +94,15 @@ func TestXGatewayCommonWithdrawalListWithFeeInfo(t *testing.T) {
 		want    string
 		wantErr bool
 	}{
-		{
-			name:    "test 1",
-			args:    args{assertId: 1},
-			want:    "",
-			wantErr: false,
-		},
+		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := XGatewayCommonWithdrawalListWithFeeInfo(tt.args.assertId)
-			if err != nil {
-				t.Fatal(err)
-			}
+			got, err := XGatewayCommonWithdrawalListWithFeeInfo(tt.args.url, tt.args.assertId)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("XGatewayCommonWithdrawalListWithFeeInfo() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			t.Log(got)
 			if got != tt.want {
 				t.Errorf("XGatewayCommonWithdrawalListWithFeeInfo() got = %v, want %v", got, tt.want)
 			}
