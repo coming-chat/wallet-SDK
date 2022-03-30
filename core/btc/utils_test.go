@@ -19,6 +19,7 @@ func TestValidAddress(t *testing.T) {
 		{"signet", "tb1p4fwg0qlcsm94y90gnkwr0zkfsv9gxjlq43mpeg"},
 		{"mainnet", "bc1p5uslzuqy8k40mc86jfdtdjh4624umtwjyjffrvvypc7engl5z9ysunz3sh"},
 		{"mainnet", "bc1p5uslzuqy8k40mc86jfdtdjh4624umtwjyjffrvvypc7e"},
+		{"mainnet", ""},
 	}
 
 	for _, item := range addArray {

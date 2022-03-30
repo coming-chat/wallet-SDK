@@ -31,6 +31,7 @@ func TestValidAddress(t *testing.T) {
 
 		"5RNt3DACYRhwHyy9esTZXVvffkFL3pQHv4qoEMFVfDqeDEnB", // 换了一个字符，错误的地址
 		"5RNt3DACYRhwHyy9esTZXVvffkFL3pQH",
+		"",
 	}
 
 	for _, item := range addArray {

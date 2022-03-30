@@ -16,6 +16,7 @@ func TestValidAddress(t *testing.T) {
 		// 错误的
 		"0x7161ada3EA6e53E5652A45988DdfF1cE595E09c",
 		"0x7161ada3EA6e53E5652A",
+		"",
 	}
 
 	for _, a := range addresses {

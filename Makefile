@@ -13,11 +13,13 @@ pkgPolka = ${module}/wallet
 
 pkgBtc = ${module}/core/btc
 
+pkgMSCheck = ${module}/core/multi-signature-check
+
 buildAllSDKAndroid:
-	gomobile bind -ldflags "-s -w" -target=android/arm,android/arm64 -o=${outdir}/wallet.aar ${pkgEth} ${pkgPolka} ${pkgBtc}
+	gomobile bind -ldflags "-s -w" -target=android/arm,android/arm64 -o=${outdir}/wallet.aar ${pkgEth} ${pkgPolka} ${pkgBtc} ${pkgMSCheck}
 
 buildAllSDKIOS:
-	gomobile bind -ldflags "-s -w" -target=ios  -o=${outdir}/Wallet.xcframework ${pkgEth} ${pkgPolka} ${pkgBtc}
+	gomobile bind -ldflags "-s -w" -target=ios  -o=${outdir}/Wallet.xcframework ${pkgEth} ${pkgPolka} ${pkgBtc} ${pkgMSCheck}
 
 packageAll:
 	rm -rf ${outdir}/*
