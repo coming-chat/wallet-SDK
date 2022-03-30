@@ -14,7 +14,7 @@ pkgPolka = ${module}/wallet
 pkgBtc = ${module}/core/btc
 
 buildAllSDKAndroid:
-	gomobile bind -ldflags "-s -w" -target=android -o=${outdir}/wallet.aar ${pkgEth} ${pkgPolka} ${pkgBtc}
+	gomobile bind -ldflags "-s -w" -target=android/arm,android/arm64 -o=${outdir}/wallet.aar ${pkgEth} ${pkgPolka} ${pkgBtc}
 
 buildAllSDKIOS:
 	gomobile bind -ldflags "-s -w" -target=ios  -o=${outdir}/Wallet.xcframework ${pkgEth} ${pkgPolka} ${pkgBtc}
