@@ -108,6 +108,9 @@ func XGatewayBitcoinVerifyTxValid(url, rawTx, withdrawalIds string, isFullAmount
 	withdrawalIdList := strings.Split(withdrawalIds, ",")
 	withdrawalIdsU32 := make([]uint32, 0)
 	for _, v := range withdrawalIdList {
+		if len(v) == 0 {
+			continue
+		}
 		id, err := strconv.ParseUint(v, 10, 32)
 		if err != nil {
 			return false, err
