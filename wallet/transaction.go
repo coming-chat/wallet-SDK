@@ -115,6 +115,9 @@ func (t *Tx) NewXGatewayBitcoinCreateTaprootWithdrawTx(ids, transactionHex strin
 	idList := strings.Split(ids, ",")
 	idsU32 := make([]uint32, 0)
 	for _, v := range idList {
+		if len(v) == 0 {
+			continue
+		}
 		id, err := strconv.ParseUint(v, 10, 32)
 		if err != nil {
 			return nil, err
