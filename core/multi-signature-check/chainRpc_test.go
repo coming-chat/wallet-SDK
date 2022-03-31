@@ -67,13 +67,49 @@ func TestXGatewayBitcoinVerifyTxValid(t *testing.T) {
 		want    bool
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "test ''",
+			args: args{
+				url:           "https://testnet3.chainx.org/rpc",
+				rawTx:         "02000000010541b61a554d00c59e91bdf720dbb3e83994505cb119ff7781d16fa10785cdf6000000000000000000026400000000000000225120c9929543dfa1e0bb84891acd47bfa6546b05e26b7a04af8eb6765fcc969d565f3802000000000000225120ae9122a56ea53656cbaceb9e2397fb9d0aa589de44a7ee7645c30b4918df3f2e00000000",
+				withdrawalIds: "",
+				isFullAmount:  true,
+			},
+		},
+		{
+			name: "test ''",
+			args: args{
+				url:           "https://testnet3.chainx.org/rpc",
+				rawTx:         "02000000010541b61a554d00c59e91bdf720dbb3e83994505cb119ff7781d16fa10785cdf6000000000000000000026400000000000000225120c9929543dfa1e0bb84891acd47bfa6546b05e26b7a04af8eb6765fcc969d565f3802000000000000225120ae9122a56ea53656cbaceb9e2397fb9d0aa589de44a7ee7645c30b4918df3f2e00000000",
+				withdrawalIds: "1",
+				isFullAmount:  true,
+			},
+		},
+		{
+			name: "test ''",
+			args: args{
+				url:           "https://testnet3.chainx.org/rpc",
+				rawTx:         "02000000010541b61a554d00c59e91bdf720dbb3e83994505cb119ff7781d16fa10785cdf6000000000000000000026400000000000000225120c9929543dfa1e0bb84891acd47bfa6546b05e26b7a04af8eb6765fcc969d565f3802000000000000225120ae9122a56ea53656cbaceb9e2397fb9d0aa589de44a7ee7645c30b4918df3f2e00000000",
+				withdrawalIds: "1,",
+				isFullAmount:  true,
+			},
+		},
+		{
+			name: "test ''",
+			args: args{
+				url:           "https://testnet3.chainx.org/rpc",
+				rawTx:         "02000000010541b61a554d00c59e91bdf720dbb3e83994505cb119ff7781d16fa10785cdf6000000000000000000026400000000000000225120c9929543dfa1e0bb84891acd47bfa6546b05e26b7a04af8eb6765fcc969d565f3802000000000000225120ae9122a56ea53656cbaceb9e2397fb9d0aa589de44a7ee7645c30b4918df3f2e00000000",
+				withdrawalIds: "1,2",
+				isFullAmount:  true,
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := XGatewayBitcoinVerifyTxValid(tt.args.url, tt.args.rawTx, tt.args.withdrawalIds, tt.args.isFullAmount)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("XGatewayBitcoinVerifyTxValid() error = %v, wantErr %v", err, tt.wantErr)
+				t.Error(err)
+				//t.Errorf("XGatewayBitcoinVerifyTxValid() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if got != tt.want {
