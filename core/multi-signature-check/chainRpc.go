@@ -63,7 +63,7 @@ func XGatewayCommonWithdrawalListWithFeeInfo(url string, assertId int) (string, 
 	if !ok {
 		return "", errors.New("resolve result.map data failed")
 	}
-	idMap := make(map[string]uint32)
+	idMap := make(map[string][]uint32)
 	for k, v := range data {
 		v, ok := v.([]interface{})
 		if !ok {
@@ -94,7 +94,7 @@ func XGatewayCommonWithdrawalListWithFeeInfo(url string, assertId int) (string, 
 				return "", err
 			}
 
-			idMap[AddressAmountKey(index0["addr"].(string), balance.Sub(fee).String())] = uint32(id)
+			idMap[AddressAmountKey(index0["addr"].(string), balance.Sub(fee).String())] = append(idMap[AddressAmountKey(index0["addr"].(string), balance.Sub(fee).String())], uint32(id))
 		}
 	}
 	jsonb, err := json.Marshal(idMap)
