@@ -181,3 +181,14 @@ func (u *CoinUtil) FetchTransactionDetail(hashString string) (*TransactionDetail
 	}
 	return chain.FetchTransactionDetail(hashString)
 }
+
+// SDK 批量获取交易的转账状态，hash 列表和返回值，都只能用字符串，逗号隔开传递
+// @param hashListString 要批量查询的交易的 hash，用逗号拼接的字符串："hash1,hash2,hash3"
+// @return 批量的交易状态，它的顺序和 hashListString 是保持一致的: "status1,status2,status3"
+func (u *CoinUtil) SdkBatchTransactionStatus(hashListString string) (string, error) {
+	chain, err := GetConnection(u.RpcUrl)
+	if err != nil {
+		return "", err
+	}
+	return chain.SdkBatchTransactionStatus(hashListString), nil
+}
