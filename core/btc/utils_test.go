@@ -1,10 +1,12 @@
 package btc
 
 import (
+	"encoding/hex"
 	"testing"
 
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
+	"github.com/btcsuite/btcd/chaincfg/chainhash"
 )
 
 func TestValidAddress(t *testing.T) {
@@ -72,4 +74,62 @@ func TestSendRawTransaction(t *testing.T) {
 		t.Fatal("send raw transaction error: ", err)
 	}
 	t.Log("send raw transaction success: ", hashString)
+}
+
+func TestFetch(t *testing.T) {
+	client, err := getClientFor(chainMainnet)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	hashString := "182218b286c78aae63aac2f72fe44f7f35206500cb0bdb96eda20449c482b698"
+	// hashString := "31244281753a3934060f6258cae6f87de7d96d8fc3c2f42d128dd3e0f72679b9"
+	hash, err := chainhash.NewHashFromStr(hashString)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rt, err := client.GetRawTransactionVerbose(hash)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(rt)
+
+	data, err := hex.DecodeString(rt.Hex)
+	xx, err := client.DecodeRawTransaction(data)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(xx)
+	// for _, txin := range rt.Vin {
+	// 	t.Log(txin)
+	// 	t.Log(txin.Coinbase)
+	// 	t.Log(txin.Txid)
+	// 	t.Log(txin.Vout)
+	// 	t.Log(txin.ScriptSig)
+	// 	t.Log(txin.Sequence)
+	// 	t.Log(txin.Witness)
+	// }
+
+}
+
+func TestUTXO(t *testing.T) {
+	client, err := getClientFor(chainMainnet)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	txid := "ac197b865317471a508f4e769612a317518427fbd184395ed3e2802412b3d706"
+	hash, err := chainhash.NewHashFromStr(txid)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	x, err := client.GetTxOut(hash, 1, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log(x)
 }

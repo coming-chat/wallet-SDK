@@ -11,7 +11,9 @@ import (
 
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
+	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/wire"
+	"github.com/coming-chat/wallet-SDK/core/eth"
 	"github.com/coming-chat/wallet-SDK/pkg/httpUtil"
 )
 
@@ -121,6 +123,52 @@ func decodeTx(txHex string) (*wire.MsgTx, error) {
 		return nil, err
 	}
 	return tx, nil
+}
+
+func FetchTransactionDetail(hashString, chainnet string) (*eth.TransactionDetail, error) {
+	client, err := getClientFor(chainnet)
+	if err != nil {
+		return nil, err
+	}
+
+	hash, err := chainhash.NewHashFromStr(hashString)
+	if err != nil {
+		return nil, err
+	}
+
+	rawResult, err := client.GetRawTransactionVerbose(hash)
+	if err != nil {
+		return nil, err
+	}
+
+	// map TxRawResult to TransactionDetail
+	status := eth.TransactionStatusPending
+	if rawResult.Confirmations > 0 {
+		status = eth.TransactionStatusSuccess
+	}
+
+	// TODO: need decode
+	fromAddress := ""
+	toAddress := ""
+	amount := "0"
+	fees := "0"
+	for _, txin := range rawResult.Vin {
+		println(txin)
+	}
+
+	return &eth.TransactionDetail{
+		HashString: hashString,
+
+		Amount:       amount,
+		EstimateFees: fees,
+
+		FromAddress: fromAddress,
+		ToAddress:   toAddress,
+
+		Status:          status,
+		FinishTimestamp: rawResult.Time,
+		// FailureMessage: "", // if rawResult not nil, then there is no failure
+	}, nil
 }
 
 func hostOf(chainnet string) (string, error) {
