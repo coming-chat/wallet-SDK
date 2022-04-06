@@ -18,7 +18,7 @@ type EthChain struct {
 }
 
 func NewEthChain() *EthChain {
-	timeout := 60 * time.Second
+	timeout := 15 * time.Second
 	return &EthChain{
 		timeout: timeout,
 	}

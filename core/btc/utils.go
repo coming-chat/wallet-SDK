@@ -1,6 +1,8 @@
 package btc
 
 import (
+	"bytes"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"math"
@@ -9,6 +11,7 @@ import (
 
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
+	"github.com/btcsuite/btcd/wire"
 	"github.com/coming-chat/wallet-SDK/pkg/httpUtil"
 )
 
@@ -18,9 +21,9 @@ import (
 func IsValidAddress(address, chainnet string) bool {
 	var netParams *chaincfg.Params
 	switch chainnet {
-	case "signet":
+	case chainSignet:
 		netParams = &chaincfg.SigNetParams
-	case "mainnet", "bitcoin": // bitcoin is to fit ComingChat
+	case chainMainnet, chainBitcoin:
 		netParams = &chaincfg.MainNetParams
 	default:
 		return false
@@ -62,30 +65,6 @@ func QueryBalancePubkey(pubkey, chainnet string) (string, error) {
 	return parseBalanceResponse(response)
 }
 
-// 对交易进行广播
-// @param txHex 签名的tx
-// @return 交易 hash
-func SendRawTransaction(txHex string, chainnet string) (string, error) {
-	host, err := hostOf(chainnet)
-	if err != nil {
-		return "", err
-	}
-	url := host + "/broadcast?tx=" + txHex
-
-	response, err := httpUtil.Request(http.MethodGet, url, nil, nil)
-	if err != nil {
-		return "", err
-	}
-
-	if response.Code != http.StatusOK {
-		return "", fmt.Errorf("code: %d, body: %s", response.Code, string(response.Body))
-	}
-
-	println(response)
-
-	return "", nil
-}
-
 func parseBalanceResponse(response *httpUtil.Res) (string, error) {
 	if response.Code != http.StatusOK {
 		return "0", fmt.Errorf("code: %d, body: %s", response.Code, string(response.Body))
@@ -110,11 +89,45 @@ func parseBalanceResponse(response *httpUtil.Res) (string, error) {
 	return strconv.FormatInt(balance, 10), nil
 }
 
+// 对交易进行广播
+// @param txHex 签名的tx
+// @return 交易 hash
+func SendRawTransaction(txHex string, chainnet string) (string, error) {
+	client, err := getClientFor(chainnet)
+	if err != nil {
+		return "", err
+	}
+
+	tx, err := decodeTx(txHex)
+	if err != nil {
+		return "", err
+	}
+
+	hash, err := client.SendRawTransaction(tx, false)
+	if err != nil {
+		return "", err
+	}
+
+	return hash.String(), nil
+}
+
+func decodeTx(txHex string) (*wire.MsgTx, error) {
+	tx := wire.NewMsgTx(wire.TxVersion)
+	raw, err := hex.DecodeString(txHex)
+	if err != nil {
+		return nil, err
+	}
+	if err = tx.Deserialize(bytes.NewReader(raw)); err != nil {
+		return nil, err
+	}
+	return tx, nil
+}
+
 func hostOf(chainnet string) (string, error) {
 	switch chainnet {
-	case "signet":
+	case chainSignet:
 		return "https://electrs-pre.coming.chat", nil
-	case "mainnet", "bitcoin":
+	case chainMainnet, chainBitcoin:
 		return "https://electrs-mainnet.coming.chat", nil
 	default:
 		return "", ErrUnsupportedChain

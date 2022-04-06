@@ -1,5 +1,7 @@
 package eth
 
+import "testing"
+
 const (
 	ethRpcUrl = "https://data-seed-prebsc-1-s1.binance.org:8545"
 
@@ -29,3 +31,16 @@ const (
 	contractWKSXBUSD = "0x37088186089c7D6BcD556d9A15087DFaE3Ba0C32"
 	contractWKSXUSDC = "0x935CC842f220CF3A7D10DA1c99F01B1A6894F7C5"
 )
+
+func TestConnect(t *testing.T) {
+	errRpc := "https://mainnet.sherpax.io/"
+	chain, err := NewEthChain().CreateRemote(errRpc)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log(chain)
+
+	chain, err = NewEthChain().CreateRemote(sherpaxProdRpcUrl)
+	t.Log("should successd connect", chain)
+}
