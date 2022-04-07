@@ -1,7 +1,6 @@
 package btc
 
 import (
-	"encoding/hex"
 	"testing"
 
 	"github.com/btcsuite/btcd/btcutil"
@@ -94,42 +93,13 @@ func TestFetch(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log(rt)
-
-	data, err := hex.DecodeString(rt.Hex)
-	xx, err := client.DecodeRawTransaction(data)
-
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log(xx)
-	// for _, txin := range rt.Vin {
-	// 	t.Log(txin)
-	// 	t.Log(txin.Coinbase)
-	// 	t.Log(txin.Txid)
-	// 	t.Log(txin.Vout)
-	// 	t.Log(txin.ScriptSig)
-	// 	t.Log(txin.Sequence)
-	// 	t.Log(txin.Witness)
-	// }
-
 }
 
-func TestUTXO(t *testing.T) {
-	client, err := getClientFor(chainMainnet)
-	if err != nil {
-		t.Fatal(err)
+func TestBatchTransactionStatus(t *testing.T) {
+	hashStrings := "xxx,182218b286c78aae63aac2f72fe44f7f35206500cb0bdb96eda20449c482b698,31244281753a3934060f6258cae6f87de7d96d8fc3c2f42d128dd3e0f72679b9"
+	statuses := SdkBatchTransactionStatus(hashStrings, chainMainnet)
+	if statuses != "0,2,2" {
+		t.Fatal("此测试用例，测试失败")
 	}
-
-	txid := "ac197b865317471a508f4e769612a317518427fbd184395ed3e2802412b3d706"
-	hash, err := chainhash.NewHashFromStr(txid)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	x, err := client.GetTxOut(hash, 1, true)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	t.Log(x)
+	t.Log(statuses)
 }

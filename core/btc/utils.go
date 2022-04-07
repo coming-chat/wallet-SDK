@@ -8,6 +8,7 @@ import (
 	"math"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
@@ -16,6 +17,16 @@ import (
 	"github.com/coming-chat/wallet-SDK/core/eth"
 	"github.com/coming-chat/wallet-SDK/pkg/httpUtil"
 )
+
+// btc 交易的详情：btc 的输入解析很复杂且网络代价比较大，因此只能查询到状态和时间
+type TransactionDetail struct {
+	// hash
+	HashString string
+	// 交易状态
+	Status eth.TransactionStatus
+	// 交易完成的时间戳 (s)
+	FinishTimestamp int64
+}
 
 // 检查地址是否有效
 // @param address 比特币地址
@@ -125,7 +136,8 @@ func decodeTx(txHex string) (*wire.MsgTx, error) {
 	return tx, nil
 }
 
-func FetchTransactionDetail(hashString, chainnet string) (*eth.TransactionDetail, error) {
+// 通过交易 hash，获取 btc 交易详情
+func FetchTransactionDetail(hashString, chainnet string) (*TransactionDetail, error) {
 	client, err := getClientFor(chainnet)
 	if err != nil {
 		return nil, err
@@ -141,34 +153,36 @@ func FetchTransactionDetail(hashString, chainnet string) (*eth.TransactionDetail
 		return nil, err
 	}
 
-	// map TxRawResult to TransactionDetail
 	status := eth.TransactionStatusPending
 	if rawResult.Confirmations > 0 {
 		status = eth.TransactionStatusSuccess
 	}
-
-	// TODO: need decode
-	fromAddress := ""
-	toAddress := ""
-	amount := "0"
-	fees := "0"
-	for _, txin := range rawResult.Vin {
-		println(txin)
-	}
-
-	return &eth.TransactionDetail{
-		HashString: hashString,
-
-		Amount:       amount,
-		EstimateFees: fees,
-
-		FromAddress: fromAddress,
-		ToAddress:   toAddress,
-
+	return &TransactionDetail{
+		HashString:      hashString,
 		Status:          status,
 		FinishTimestamp: rawResult.Time,
-		// FailureMessage: "", // if rawResult not nil, then there is no failure
 	}, nil
+}
+
+// 获取交易的状态
+// @param hashString 交易的 hash
+func FetchTransactionStatus(hashString string, chainnet string) eth.TransactionStatus {
+	detail, err := FetchTransactionDetail(hashString, chainnet)
+	if err != nil {
+		return eth.TransactionStatusNone
+	}
+	return detail.Status
+}
+
+// SDK 批量获取交易的转账状态，hash 列表和返回值，都只能用字符串，逗号隔开传递
+// @param hashListString 要批量查询的交易的 hash，用逗号拼接的字符串："hash1,hash2,hash3"
+// @return 批量的交易状态，它的顺序和 hashListString 是保持一致的: "status1,status2,status3"
+func SdkBatchTransactionStatus(hashListString string, chainnet string) string {
+	hashList := strings.Split(hashListString, ",")
+	statuses, _ := eth.MapListConcurrentStringToString(hashList, func(s string) (string, error) {
+		return strconv.Itoa(FetchTransactionStatus(s, chainnet)), nil
+	})
+	return strings.Join(statuses, ",")
 }
 
 func hostOf(chainnet string) (string, error) {
