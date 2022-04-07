@@ -45,7 +45,7 @@ func TestBatch(t *testing.T) {
 
 func TestSdkBatch(t *testing.T) {
 	e, _ := NewEthChain().CreateRemote(binanceTestRpcUrl)
-	contract := "0xE7e312dfC08e060cda1AF38C234AEAcc7A982143,0x4B53739D798EF0BEa5607c254336b40a93c75b52,0x935CC842f220CF3A7D10DA1c99F01B1A6894F7C5,0xed24fc36d5ee211ea25a80239fb8c4cfd80f12ee"
+	contract := "0xed24fc36d5ee211ea25a80239fb8c4cfd80f12ee"
 	address := "0xed24fc36d5ee211ea25a80239fb8c4cfd80f12ee"
 	result, err := e.SdkBatchTokenBalance(contract, address)
 	if err != nil {

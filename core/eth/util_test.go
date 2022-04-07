@@ -1,6 +1,7 @@
 package eth
 
 import (
+	"strconv"
 	"testing"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -23,4 +24,15 @@ func TestValidAddress(t *testing.T) {
 		address := common.HexToAddress(a)
 		t.Log(common.IsHexAddress(a), address)
 	}
+}
+
+type nnn int
+
+func TestMapConcurrent(t *testing.T) {
+	nums := []interface{}{1, 2, 3, 4, 5, 6}
+	// nums := []interface{}{"1", "2", "3", "4"}
+	res, _ := MapListConcurrent(nums, func(i interface{}) (interface{}, error) {
+		return strconv.Itoa(i.(int) * 100), nil
+	})
+	t.Log(res)
 }

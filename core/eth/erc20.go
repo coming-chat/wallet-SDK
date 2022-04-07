@@ -5,7 +5,6 @@ import (
 	"math/big"
 	"strconv"
 	"strings"
-	"sync"
 
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -67,11 +66,11 @@ func (e *EthChain) Erc20TokenInfo(contractAddress string, walletAddress string) 
 // @throw 如果任意一个代币请求余额出错时，会抛出错误
 func (e *EthChain) SdkBatchTokenBalance(contractListString, address string) (string, error) {
 	contractList := strings.Split(contractListString, ",")
-	balanceArray, err := e.BatchTokenBalance(contractList, address)
+	balances, err := e.BatchTokenBalance(contractList, address)
 	if err != nil {
 		return "", err
 	}
-	return strings.Join(balanceArray, ","), nil
+	return strings.Join(balances, ","), nil
 }
 
 // 批量请求代币余额
@@ -80,44 +79,9 @@ func (e *EthChain) SdkBatchTokenBalance(contractListString, address string) (str
 // @return 余额数组，顺序与传入的 contractList 是保持一致的
 // @throw 如果任意一个代币请求余额出错时，会抛出错误
 func (e *EthChain) BatchTokenBalance(contractList []string, address string) ([]string, error) {
-	thread := 0
-	max := 10
-	wg := sync.WaitGroup{}
-
-	dict := &safeMap{Map: make(map[string]string)}
-	var firstError error
-	for _, contractAddress := range contractList {
-		if firstError != nil {
-			continue
-		}
-		if thread == max {
-			wg.Wait()
-			thread = 0
-		}
-		if thread < max {
-			wg.Add(1)
-		}
-
-		go func(w *sync.WaitGroup, contractAddress string, address string, dict *safeMap, firstError *error) {
-			balance, e := e.TokenBalance(contractAddress, address)
-			if *firstError == nil && e != nil {
-				*firstError = e
-			}
-			dict.writeMap(contractAddress, balance)
-			wg.Done()
-		}(&wg, contractAddress, address, dict, &firstError)
-		thread++
-	}
-	wg.Wait()
-	if firstError != nil {
-		return nil, firstError
-	}
-
-	result := []string{}
-	for _, contractAddress := range contractList {
-		result = append(result, dict.Map[contractAddress])
-	}
-	return result, nil
+	return MapListConcurrentStringToString(contractList, func(s string) (string, error) {
+		return e.TokenBalance(s, address)
+	})
 }
 
 // @title    Erc20代币余额
