@@ -5,15 +5,15 @@ outdir=out
 
 module=github.com/coming-chat/wallet-SDK
 
-pkgCore = ${module}/core/eth
+pkgCore = ${module}/core
 
-pkgEth =  $(pkgCore)
+pkgEth =  $(pkgCore)/eth
 
-pkgPolka = ${module}/wallet
+pkgPolka = ${pkgCore}/wallet
 
-pkgBtc = ${module}/core/btc
+pkgBtc = ${pkgCore}/btc
 
-pkgMSCheck = ${module}/core/multi-signature-check
+pkgMSCheck = ${pkgCore}/multi-signature-check
 
 buildAllSDKAndroid:
 	gomobile bind -ldflags "-s -w" -target=android/arm,android/arm64 -o=${outdir}/wallet.aar ${pkgEth} ${pkgPolka} ${pkgBtc} ${pkgMSCheck}
