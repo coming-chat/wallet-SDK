@@ -64,6 +64,7 @@ func QueryBalance(address, chainnet string) (string, error) {
 
 // 根据公钥查余额
 func QueryBalancePubkey(pubkey, chainnet string) (string, error) {
+	pubkey = strings.TrimPrefix(pubkey, "0x")
 	host, err := hostOf(chainnet)
 	if err != nil {
 		return "0", err

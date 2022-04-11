@@ -57,7 +57,8 @@ func TestQueryBalance(t *testing.T) {
 
 	// ---------------
 
-	pubkey := "04e230aaa06269c609959bfbb6b0ebe4ad925967597b8df176edfeff81abcbf0edcaa1d61dbb118c7e6e0e835d576e1bf00802bcdd8613682d0ccb8a08c58999e0"
+	// pubkey := "04e230aaa06269c609959bfbb6b0ebe4ad925967597b8df176edfeff81abcbf0edcaa1d61dbb118c7e6e0e835d576e1bf00802bcdd8613682d0ccb8a08c58999e0"
+	pubkey := "0x04e230aaa06269c609959bfbb6b0ebe4ad925967597b8df176edfeff81abcbf0edcaa1d61dbb118c7e6e0e835d576e1bf00802bcdd8613682d0ccb8a08c58999e0"
 	balance, err = QueryBalancePubkey(pubkey, "mainnet")
 	if err != nil {
 		t.Fatal("query balance error: ", err)
