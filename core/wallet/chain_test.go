@@ -33,3 +33,18 @@ func TestQueryBalancePubkey(t *testing.T) {
 
 	t.Log(balance)
 }
+
+func TestXBTCBalance(t *testing.T) {
+	rpcUrl := "wss://minichain-testnet.coming.chat" // 非 chainx 会抛出 error
+	rpcUrl = "wss://testnet3.chainx.org"            // chainx 才可以正常查询
+	address := "5QUEnWNMDFqsbUGpvvtgWGUgiiojnEpLf7581ELLAQyQ1xnT"
+
+	chain := NewPolkaChain(rpcUrl)
+
+	balance, err := chain.QueryBalanceXBTC(address)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log(balance)
+}

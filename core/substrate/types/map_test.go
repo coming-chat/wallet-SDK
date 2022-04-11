@@ -2,11 +2,12 @@ package types
 
 import (
 	"encoding/hex"
+	"testing"
+
 	gsrpc "github.com/centrifuge/go-substrate-rpc-client/v4"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/itering/subscan/util/base58"
 	"github.com/itering/subscan/util/ss58"
-	"testing"
 )
 
 func TestGetXAssertsBalance(t *testing.T) {
@@ -53,4 +54,5 @@ func TestGetXAssertsBalance(t *testing.T) {
 	}
 	t.Log(ok)
 	t.Log(data)
+	t.Log(data.Data["Usable"])
 }

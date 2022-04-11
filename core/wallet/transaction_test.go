@@ -7,7 +7,7 @@ import (
 	gsrc "github.com/centrifuge/go-substrate-rpc-client/v4"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/client"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
-	"github.com/coming-chat/wallet-SDK/types/customscale"
+	"github.com/coming-chat/wallet-SDK/core/substrate/types/customscale"
 )
 
 var (

@@ -2,6 +2,7 @@ package types
 
 import (
 	"errors"
+
 	"github.com/centrifuge/go-substrate-rpc-client/v4/scale"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 )
@@ -11,7 +12,7 @@ var (
 )
 
 type Map struct {
-	data map[interface{}]interface{}
+	Data map[interface{}]interface{}
 }
 
 func NewMap(kd, vd *types.Si1Type) Map {
@@ -24,7 +25,7 @@ func (m *Map) Decode(decoder scale.Decoder) error {
 	if k == nil || v == nil {
 		return errors.New("please new map")
 	}
-	m.data = map[interface{}]interface{}{}
+	m.Data = map[interface{}]interface{}{}
 	length, err := decoder.ReadOneByte()
 	if err != nil {
 		return err
@@ -47,7 +48,7 @@ func (m *Map) Decode(decoder scale.Decoder) error {
 			if err != nil {
 				return err
 			}
-			m.data[string(variant.Name)] = v
+			m.Data[string(variant.Name)] = v
 			break
 		}
 	}

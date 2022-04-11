@@ -2,10 +2,12 @@ package wallet
 
 import (
 	"encoding/hex"
+	"errors"
 	"strings"
 
 	"github.com/btcsuite/btcd/btcutil/base58"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
+	CustomType "github.com/coming-chat/wallet-SDK/core/substrate/types"
 	"github.com/itering/subscan/util/ss58"
 )
 
@@ -110,6 +112,62 @@ func (c *PolkaChain) queryBalance(pubkey []byte) (b *PolkaBalance, err error) {
 	return &PolkaBalance{
 		Total:  total.String(),
 		Usable: usable.String(),
+	}, nil
+}
+
+// 特殊查询 XBTC 的余额
+// 只能通过 chainx 链对象来查询，其他链会抛出 error
+func (c *PolkaChain) QueryBalanceXBTC(address string) (b *PolkaBalance, err error) {
+	b = emptyBalance()
+
+	client, err := getPolkaClient(c.RpcUrl)
+	if err != nil {
+		return
+	}
+
+	err = client.LoadMetadataIfNotExists()
+	if err != nil {
+		return
+	}
+
+	ss58Format := base58.Decode("5QUEnWNMDFqsbUGpvvtgWGUgiiojnEpLf7581ELLAQyQ1xnT")
+	publicKey, err := hex.DecodeString(ss58.Decode("5QUEnWNMDFqsbUGpvvtgWGUgiiojnEpLf7581ELLAQyQ1xnT", int(ss58Format[0])))
+	if err != nil {
+		return
+	}
+
+	assetId, err := types.EncodeToBytes(uint32(1))
+	if err != nil {
+		return
+	}
+
+	metadata := client.metadata
+	call, err := types.CreateStorageKey(metadata, "XAssets", "AssetBalance", publicKey, assetId)
+	if err != nil {
+		return
+	}
+	entryMetadata, err := metadata.FindStorageEntryMetadata("XAssets", "AssetBalance")
+	if err != nil {
+		return
+	}
+	i := entryMetadata.(types.StorageEntryMetadataV14).Type.AsMap.Value
+	kIndex := metadata.AsMetadataV14.EfficientLookup[i.Int64()].Params[0].Type.Int64()
+	vValue := metadata.AsMetadataV14.EfficientLookup[i.Int64()].Params[1].Type.Int64()
+	data := CustomType.NewMap(metadata.AsMetadataV14.EfficientLookup[kIndex], metadata.AsMetadataV14.EfficientLookup[vValue])
+	_, err = client.api.RPC.State.GetStorageLatest(call, &data)
+	if err != nil {
+		return
+	}
+
+	usable, ok := data.Data["Usable"]
+	if !ok {
+		return b, errors.New("No usable balance")
+	}
+	usableInt := usable.(types.U128).Int
+
+	return &PolkaBalance{
+		Usable: usableInt.String(),
+		Total:  usableInt.String(),
 	}, nil
 }
 
