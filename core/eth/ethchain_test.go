@@ -1,6 +1,9 @@
 package eth
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
 
 const (
 	ethRpcUrl = "https://data-seed-prebsc-1-s1.binance.org:8545"
@@ -33,14 +36,31 @@ const (
 )
 
 func TestConnect(t *testing.T) {
-	errRpc := "https://mainnet.sherpax.io/"
-	chain, err := NewEthChain().CreateRemote(errRpc)
-	if err != nil {
-		t.Fatal(err)
+	// errRpc := binanceTestRpcUrl
+	// chain, err := NewEthChain().CreateRemote(errRpc)
+	// if err != nil {
+	// 	t.Fatal(err)
+	// }
+	// t.Log(chain)
+	defer func() {
+		err := recover()
+		if err != nil {
+			t.Log("recover err ", err)
+		}
+	}()
+
+	chain, _ := NewEthChain().CreateRemote(binanceTestRpcUrl)
+
+	for i := 0; i < 100; i++ {
+		time.Sleep(1 * time.Second)
+		address := "0xed24fc36d5ee211ea25a80239fb8c4cfd80f12ee"
+		balance, err := chain.TokenBalance(address, address)
+		if err != nil {
+			t.Log("...... catched err", err)
+		} else {
+			t.Log("...... balance", balance)
+		}
 	}
 
-	t.Log(chain)
-
-	chain, err = NewEthChain().CreateRemote(sherpaxProdRpcUrl)
-	t.Log("should successd connect", chain)
+	// t.Log("should successd connect", chain)
 }
