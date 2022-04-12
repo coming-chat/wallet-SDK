@@ -2,12 +2,18 @@ package wallet
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"errors"
+	"fmt"
+	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/btcsuite/btcd/btcutil/base58"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
+	"github.com/coming-chat/wallet-SDK/core/eth"
 	CustomType "github.com/coming-chat/wallet-SDK/core/substrate/types"
+	"github.com/coming-chat/wallet-SDK/pkg/httpUtil"
 	"github.com/itering/subscan/util/ss58"
 )
 
@@ -24,21 +30,34 @@ func emptyBalance() *PolkaBalance {
 }
 
 type PolkaChain struct {
-	RpcUrl string
+	RpcUrl  string
+	ScanUrl string
 }
 
-// 通过 rpc url 创建对象
-func NewPolkaChain(rpc string) *PolkaChain {
-	return &PolkaChain{RpcUrl: rpc}
+// 通过 url 创建对象
+// @param rpcUrl 链端 rpc 地址
+// @param scanUrl 浏览器地址(查询交易详情需要的)
+// 		chainx 线上: https://multiscan-api.coming.chat/chainx
+// 		minix  测试: https://multiscan-api-pre.coming.chat/minix
+func NewPolkaChain(rpcUrl, scanUrl string) *PolkaChain {
+	return &PolkaChain{
+		RpcUrl:  rpcUrl,
+		ScanUrl: scanUrl,
+	}
 }
 
-// 通过 rpc 和 metadata string 创建对象
-func NewPolkaChainWithRpc(rpc string, metadataString string) (*PolkaChain, error) {
-	_, err := getPolkaClientWithMetadata(rpc, metadataString)
+// 通过 url 和 metadata string 创建对象
+// @param rpcUrl 链端 rpc 地址
+// @param scanUrl 浏览器地址(查询交易详情需要的)
+func NewPolkaChainWithRpc(rpcUrl, scanUrl string, metadataString string) (*PolkaChain, error) {
+	_, err := getPolkaClientWithMetadata(rpcUrl, metadataString)
 	if err != nil {
 		return nil, err
 	}
-	return &PolkaChain{RpcUrl: rpc}, nil
+	return &PolkaChain{
+		RpcUrl:  rpcUrl,
+		ScanUrl: scanUrl,
+	}, nil
 }
 
 // 获取该链的 metadata string (如果没有会自动下载)
@@ -210,4 +229,77 @@ func (c *PolkaChain) SendRawTransaction(txHex string) (s string, err error) {
 	}
 
 	return hashString, nil
+}
+
+// 查询交易详情
+func (c *PolkaChain) FetchTransactionDetail(hashString string) (t *eth.TransactionDetail, err error) {
+	if c.ScanUrl == "" {
+		return nil, errors.New("Scan url is Empty.")
+	}
+	url := strings.TrimSuffix(c.ScanUrl, "/") + "/extrinsics/" + hashString
+
+	response, err := httpUtil.Request(http.MethodGet, url, nil, nil)
+	if err != nil {
+		return
+	}
+
+	if response.Code != http.StatusOK {
+		return nil, fmt.Errorf("code: %d, body: %s", response.Code, string(response.Body))
+	}
+	respDict := make(map[string]interface{})
+	err = json.Unmarshal(response.Body, &respDict)
+	if err != nil {
+		return
+	}
+
+	// decode informations
+	amount, _ := respDict["txAmount"].(string)
+	fee, _ := respDict["fee"].(string)
+	from, _ := respDict["signer"].(string)
+	to, _ := respDict["txTo"].(string)
+	timestamp, _ := respDict["blockTime"].(float64)
+
+	status := eth.TransactionStatusNone
+	finalized, _ := respDict["finalized"].(bool)
+	if finalized {
+		success, _ := respDict["success"].(bool)
+		if success {
+			status = eth.TransactionStatusSuccess
+		} else {
+			status = eth.TransactionStatusFailure
+		}
+	} else {
+		status = eth.TransactionStatusPending
+	}
+
+	return &eth.TransactionDetail{
+		HashString:      hashString,
+		Amount:          amount,
+		EstimateFees:    fee,
+		FromAddress:     from,
+		ToAddress:       to,
+		Status:          status,
+		FinishTimestamp: int64(timestamp),
+	}, nil
+}
+
+// 获取交易的状态
+// @param hashString 交易的 hash
+func (c *PolkaChain) FetchTransactionStatus(hashString string) eth.TransactionStatus {
+	detail, err := c.FetchTransactionDetail(hashString)
+	if err != nil {
+		return eth.TransactionStatusFailure
+	}
+	return detail.Status
+}
+
+// SDK 批量获取交易的转账状态，hash 列表和返回值，都只能用字符串，逗号隔开传递
+// @param hashListString 要批量查询的交易的 hash，用逗号拼接的字符串："hash1,hash2,hash3"
+// @return 批量的交易状态，它的顺序和 hashListString 是保持一致的: "status1,status2,status3"
+func (c *PolkaChain) SdkBatchTransactionStatus(hashListString string) string {
+	hashList := strings.Split(hashListString, ",")
+	statuses, _ := eth.MapListConcurrentStringToString(hashList, func(s string) (string, error) {
+		return strconv.Itoa(c.FetchTransactionStatus(s)), nil
+	})
+	return strings.Join(statuses, ",")
 }

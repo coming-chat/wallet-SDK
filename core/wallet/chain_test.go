@@ -8,7 +8,7 @@ func TestQueryBalance(t *testing.T) {
 	address := "5UXKnBuqVdoBgRDxrCgZErJojebb1pYivt4ei9D8NYQkbg9U" // have balance
 	// address := "5UXKnBuqVdoBgRDxrCg" // error address
 
-	chain := NewPolkaChain(rpcUrl)
+	chain := NewPolkaChain(rpcUrl, "")
 
 	balance, err := chain.QueryBalance(address)
 	if err != nil {
@@ -24,7 +24,7 @@ func TestQueryBalancePubkey(t *testing.T) {
 	// pubkey := ""
 	// pubkey := "0xd8110ae501b7f7b12d7bb3a0596"
 
-	chain := NewPolkaChain(rpcUrl)
+	chain := NewPolkaChain(rpcUrl, "")
 
 	balance, err := chain.QueryBalancePubkey(pubkey)
 	if err != nil {
@@ -39,7 +39,7 @@ func TestXBTCBalance(t *testing.T) {
 	rpcUrl = "wss://testnet3.chainx.org"            // chainx 才可以正常查询
 	address := "5QUEnWNMDFqsbUGpvvtgWGUgiiojnEpLf7581ELLAQyQ1xnT"
 
-	chain := NewPolkaChain(rpcUrl)
+	chain := NewPolkaChain(rpcUrl, "")
 
 	balance, err := chain.QueryBalanceXBTC(address)
 	if err != nil {
@@ -62,7 +62,7 @@ func TestMetadataString(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	chain, err := NewPolkaChainWithRpc(rpcUrl, meta)
+	chain, err := NewPolkaChainWithRpc(rpcUrl, "", meta)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -73,4 +73,18 @@ func TestMetadataString(t *testing.T) {
 	}
 
 	t.Log(chain)
+}
+
+func TestTransactionDetail(t *testing.T) {
+	rpcUrl := "https://mainnet.chainx.org/rpc"
+	scanUrl := "https://multiscan-api.coming.chat/chainx"
+	hashString := "0xb6dbc48dd686cd52897cc8f4871b406a2c64bf9f1d6f08903400f809d3f1ff75"
+
+	chain := NewPolkaChain(rpcUrl, scanUrl)
+
+	res, err := chain.FetchTransactionDetail(hashString)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(res)
 }

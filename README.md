@@ -450,10 +450,10 @@ func main() {
 
 ```golang
 // 只通过 rpcUrl 来初始化
-chain = NewPolkaChain(rpc)
+chain = NewPolkaChain(rpc, scan)
 
 // 通过传入本地缓存的 metadata 来初始化, 如果没有可以传空
-chain = NewPolkaChainWithRpc(rpc, metadata)
+chain = NewPolkaChainWithRpc(rpc, scan, metadata)
 
 // 获取 metadata string
 metadata, err = chain.GetMetadataString()
