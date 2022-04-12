@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/btcsuite/btcd/btcutil/base58"
+	"github.com/centrifuge/go-substrate-rpc-client/v4/client"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/coming-chat/wallet-SDK/core/eth"
 	CustomType "github.com/coming-chat/wallet-SDK/core/substrate/types"
@@ -302,4 +303,30 @@ func (c *PolkaChain) SdkBatchTransactionStatus(hashListString string) string {
 		return strconv.Itoa(c.FetchTransactionStatus(s)), nil
 	})
 	return strings.Join(statuses, ",")
+}
+
+// 功能和 GetSignData 相同，不需要提供 nonce, version 等参数，但需要提供 chain 对象和地址
+func (t *Transaction) GetSignDataFromChain(chain *PolkaChain, walletAddress string) ([]byte, error) {
+	cl, err := getPolkaClient(chain.RpcUrl)
+	if err != nil {
+		return nil, err
+	}
+
+	var nonce int64
+	err = client.CallWithBlockHash(cl.api.Client, &nonce, "system_accountNextIndex", nil, walletAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	genesisHash, err := cl.api.RPC.Chain.GetBlockHash(0)
+	if err != nil {
+		return nil, err
+	}
+
+	runtimeVersion, err := cl.api.RPC.State.GetRuntimeVersionLatest()
+	if err != nil {
+		return nil, err
+	}
+
+	return t.GetSignData(genesisHash.Hex(), nonce, int32(runtimeVersion.SpecVersion), int32(runtimeVersion.TransactionVersion))
 }
