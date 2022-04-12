@@ -29,6 +29,7 @@ iosZipName=wallet-SDK-ios
 andZipName=wallet-SDK-android
 packageAll:
 	# rm -rf ${outdir}/*
+	@cd ${outdir} && rm -f wallet-SDK-*.zip && rm -rf ${andZipName}.${v}
 	@make buildAllSDKAndroid && make buildAllSDKIOS
 	@cd ${outdir} && zip -ry ${iosZipName}.${v}.zip Wallet.xcframework
 	@cd ${outdir} && mkdir ${andZipName}.${v} && mv -f wallet.aar wallet-sources.jar ${andZipName}.${v}

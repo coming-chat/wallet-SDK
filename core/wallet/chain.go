@@ -38,8 +38,8 @@ type PolkaChain struct {
 // 通过 url 创建对象
 // @param rpcUrl 链端 rpc 地址
 // @param scanUrl 浏览器地址(查询交易详情需要的)
-// 		chainx 线上: https://multiscan-api.coming.chat/chainx
-// 		minix  测试: https://multiscan-api-pre.coming.chat/minix
+// 		chainx 线上: https://multiscan-api.coming.chat/chainx/extrinsics
+// 		minix  测试: https://multiscan-api-pre.coming.chat/minix/extrinsics
 func NewPolkaChain(rpcUrl, scanUrl string) *PolkaChain {
 	return &PolkaChain{
 		RpcUrl:  rpcUrl,
@@ -237,7 +237,7 @@ func (c *PolkaChain) FetchTransactionDetail(hashString string) (t *eth.Transacti
 	if c.ScanUrl == "" {
 		return nil, errors.New("Scan url is Empty.")
 	}
-	url := strings.TrimSuffix(c.ScanUrl, "/") + "/extrinsics/" + hashString
+	url := strings.TrimSuffix(c.ScanUrl, "/") + "/" + hashString
 
 	response, err := httpUtil.Request(http.MethodGet, url, nil, nil)
 	if err != nil {

@@ -77,7 +77,7 @@ func TestMetadataString(t *testing.T) {
 
 func TestTransactionDetail(t *testing.T) {
 	rpcUrl := "https://mainnet.chainx.org/rpc"
-	scanUrl := "https://multiscan-api.coming.chat/chainx"
+	scanUrl := "https://multiscan-api.coming.chat/chainx/extrinsics"
 	hashString := "0xb6dbc48dd686cd52897cc8f4871b406a2c64bf9f1d6f08903400f809d3f1ff75"
 
 	chain := NewPolkaChain(rpcUrl, scanUrl)
