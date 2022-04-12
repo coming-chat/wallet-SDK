@@ -48,3 +48,29 @@ func TestXBTCBalance(t *testing.T) {
 
 	t.Log(balance)
 }
+
+func TestMetadataString(t *testing.T) {
+	rpcUrl := "wss://testnet3.chainx.org" // chainx 才可以正常查询
+
+	client, err := newPolkaClient(rpcUrl, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	meta, err := client.MetadataString()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	chain, err := NewPolkaChainWithRpc(rpcUrl, meta)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	meta2, err := chain.GetMetadataString()
+	if meta != meta2 {
+		t.Fatal("metadata restore failed")
+	}
+
+	t.Log(chain)
+}

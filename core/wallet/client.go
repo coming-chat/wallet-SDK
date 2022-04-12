@@ -18,15 +18,25 @@ type polkaclient struct {
 	rpcUrl   string
 }
 
-func newPolkaClient(rpcUrl string) (*polkaclient, error) {
+func newPolkaClient(rpcUrl string, metadataString string) (*polkaclient, error) {
 	api, err := gsrpc.NewSubstrateAPI(rpcUrl)
 	if err != nil {
 		return nil, err
 	}
 
-	metadata, err := api.RPC.State.GetMetadataLatest()
-	if err != nil {
-		return nil, err
+	var metadata *types.Metadata
+	if metadataString == "" {
+		metadata, err = api.RPC.State.GetMetadataLatest()
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		var meta types.Metadata
+		err = types.DecodeFromHexString(metadataString, &meta)
+		if err != nil {
+			return nil, ErrWrongMetadata
+		}
+		metadata = &meta
 	}
 
 	return &polkaclient{
@@ -52,6 +62,14 @@ func (c *polkaclient) LoadMetadataIfNotExists() error {
 	return c.ReloadMetadata()
 }
 
+func (c *polkaclient) MetadataString() (string, error) {
+	err := c.LoadMetadataIfNotExists()
+	if err != nil {
+		return "", err
+	}
+	return types.EncodeToHexString(c.metadata)
+}
+
 // MARK: - client manager
 
 var clientConnections = make(map[string]*polkaclient)
@@ -59,6 +77,10 @@ var lock sync.RWMutex
 
 // 通过 rpcUrl, 获取 eth 的连接对象
 func getPolkaClient(rpcUrl string) (*polkaclient, error) {
+	return getPolkaClientWithMetadata(rpcUrl, "")
+}
+
+func getPolkaClientWithMetadata(rpcUrl, metadata string) (*polkaclient, error) {
 	chain, ok := clientConnections[rpcUrl]
 	if ok {
 		return chain, nil
@@ -75,7 +97,7 @@ func getPolkaClient(rpcUrl string) (*polkaclient, error) {
 	}
 
 	// 创建并存储
-	chain, err := newPolkaClient(rpcUrl)
+	chain, err := newPolkaClient(rpcUrl, metadata)
 	if err != nil {
 		return nil, err
 	}

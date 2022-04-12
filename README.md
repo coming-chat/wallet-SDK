@@ -413,7 +413,7 @@ func main() {
 
 #### Android 调用代码 (ERC20 转账)
 
-```
+```golang
  // 钱包地址
  private String walletAddress = "0xB553803EE21b486BB86f2A63Bd682529Aa7FCE8D";
  // 钱包对应的私钥
@@ -443,4 +443,21 @@ func main() {
   Log.d("tx hex",buildTxResult.getTxHex());
   String tx = ethChain.sendRawTransaction(buildTxResult.getTxHex());
   Log.d("send tx success", tx);
+```
+
+
+#### PolkaChain Metadata 相关用法
+
+```golang
+// 只通过 rpcUrl 来初始化
+chain = NewPolkaChain(rpc)
+
+// 通过传入本地缓存的 metadata 来初始化, 如果没有可以传空
+chain = NewPolkaChainWithRpc(rpc, metadata)
+
+// 获取 metadata string
+metadata, err = chain.GetMetadataString()
+
+// 刷新 metadata string (可以从返回值取得最新的 metadata)
+metadata, err = chain.ReloadMetadata()
 ```

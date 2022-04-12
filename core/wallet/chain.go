@@ -27,17 +27,42 @@ type PolkaChain struct {
 	RpcUrl string
 }
 
+// 通过 rpc url 创建对象
 func NewPolkaChain(rpc string) *PolkaChain {
 	return &PolkaChain{RpcUrl: rpc}
 }
 
-// 刷新最新的 metadata
-func (c *PolkaChain) ReloadMetadata() error {
+// 通过 rpc 和 metadata string 创建对象
+func NewPolkaChainWithRpc(rpc string, metadataString string) (*PolkaChain, error) {
+	_, err := getPolkaClientWithMetadata(rpc, metadataString)
+	if err != nil {
+		return nil, err
+	}
+	return &PolkaChain{RpcUrl: rpc}, nil
+}
+
+// 获取该链的 metadata string (如果没有会自动下载)
+func (c *PolkaChain) GetMetadataString() (s string, err error) {
 	client, err := getPolkaClient(c.RpcUrl)
 	if err != nil {
-		return err
+		return
 	}
-	return client.ReloadMetadata()
+	return client.MetadataString()
+}
+
+// 刷新最新的 metadata (可以从返回值读取到最新的 metadata)
+func (c *PolkaChain) ReloadMetadata() (s string, err error) {
+	client, err := getPolkaClient(c.RpcUrl)
+	if err != nil {
+		return
+	}
+
+	err = client.ReloadMetadata()
+	if err != nil {
+		return
+	}
+
+	return client.MetadataString()
 }
 
 // 通过 address 查询余额

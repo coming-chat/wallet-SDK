@@ -14,6 +14,7 @@ var (
 	ErrPublicKey    = errors.New("err publicKey")
 	ErrSeedOrPhrase = errors.New("invalid seed length")
 
+	ErrWrongMetadata   = errors.New("wrong metadata")
 	ErrNoEncrypted     = errors.New("no encrypted data to decode")
 	ErrEncryptedLength = errors.New("encrypted length is less than 24")
 	ErrInvalidParams   = errors.New("invalid injected scrypt params found")
