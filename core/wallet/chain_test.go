@@ -104,3 +104,19 @@ func TestKusamaBalance(t *testing.T) {
 
 	t.Log(balance)
 }
+
+func TestMINIScriptHash(t *testing.T) {
+	rpcUrl := "https://mainnet.chainx.org/rpc"   // 非 minix 会抛出 error
+	rpcUrl = "https://rpc-minichain.coming.chat" // 需要 minix 链才可以正常获取
+	address := "5RNt3DACYRhwHyy9esTZXVvffkFL3pQHv4qoEMFVfDqeDEnH"
+	amount := "10000"
+
+	chain := NewPolkaChain(rpcUrl, "")
+
+	scriptHash, err := chain.FetchScriptHashForMiniX(address, amount)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log(scriptHash)
+}

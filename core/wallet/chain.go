@@ -1,10 +1,12 @@
 package wallet
 
 import (
+	"bytes"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 	"strings"
@@ -329,4 +331,75 @@ func (t *Transaction) GetSignDataFromChain(chain *PolkaChain, walletAddress stri
 	}
 
 	return t.GetSignData(genesisHash.Hex(), nonce, int32(runtimeVersion.SpecVersion), int32(runtimeVersion.TransactionVersion))
+}
+
+type MiniXScriptHash struct {
+	ScriptHash  string
+	BlockNumber int32
+}
+
+// 获取 mini 多签转账时需要的 scriptHash
+// @param transferTo 转账目标地址
+// @param amount 要转出的金额
+func (c *PolkaChain) FetchScriptHashForMiniX(transferTo, amount string) (*MiniXScriptHash, error) {
+	cl, err := getPolkaClient(c.RpcUrl)
+	if err != nil {
+		return nil, err
+	}
+
+	amountInt, err := strconv.Atoi(amount)
+	if err != nil {
+		return nil, err
+	}
+
+	signedBlock, err := cl.api.RPC.Chain.GetBlockLatest()
+	if err != nil {
+		return nil, err
+	}
+	blockNumber := uint64(signedBlock.Block.Header.Number)
+	arrNumber := make([]uint64, 0)
+	arrNumber = append(arrNumber, blockNumber)
+	arrNumber = append(arrNumber, blockNumber+1000)
+	arr := make([]interface{}, 0)
+	arr = append(arr, transferTo, "Transfer", amountInt, arrNumber)
+
+	param := make(map[string]interface{})
+	param["id"] = 1
+	param["jsonrpc"] = "2.0"
+	param["method"] = "ts_computeScriptHash"
+	param["params"] = arr
+	body, err := c.post(c.RpcUrl, param)
+	if err != nil {
+		return nil, err
+	}
+	value := make(map[string]interface{})
+	err = json.Unmarshal(body, &value)
+	if err != nil {
+		return nil, err
+	}
+
+	scriptHash, ok := value["result"].(string)
+	if !ok {
+		return nil, errors.New("mini http get script hash result error")
+	}
+	return &MiniXScriptHash{
+		ScriptHash:  scriptHash,
+		BlockNumber: int32(blockNumber),
+	}, nil
+}
+
+func (c *PolkaChain) post(baseUrl string, param map[string]interface{}) (body []byte, err error) {
+	client := &http.Client{}
+	bytesData, _ := json.Marshal(param)
+	req, err := http.NewRequest("POST", baseUrl, bytes.NewReader(bytesData))
+	req.Header.Set("Content-Type", "application/json")
+	//http.Header.Set(req.Header, "Content-Type", "application/json")
+	resp, err := client.Do(req)
+	if resp == nil || err != nil {
+		return nil, err
+	}
+	if resp.StatusCode != 200 {
+		return nil, errors.New("Post " + baseUrl + " response code = " + resp.Status)
+	}
+	return ioutil.ReadAll(resp.Body)
 }
