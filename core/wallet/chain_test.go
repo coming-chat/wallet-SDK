@@ -1,6 +1,8 @@
 package wallet
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestQueryBalance(t *testing.T) {
 	rpcUrl := "wss://testnet3.chainx.org"
@@ -119,4 +121,22 @@ func TestMINIScriptHash(t *testing.T) {
 	}
 
 	t.Log(scriptHash)
+}
+
+func TestEstimatedFee(t *testing.T) {
+	// rpcUrl := "https://rpc-minichain.coming.chat"
+	rpcUrl := "https://mainnet.chainx.org/rpc"
+	address := "5RNt3DACYRhwHyy9esTZXVvffkFL3pQHv4qoEMFVfDqeDEnH"
+	amount := "10000"
+
+	chain := NewPolkaChain(rpcUrl, "")
+	metadata, _ := chain.GetMetadataString()
+	tx, _ := NewTx(metadata)
+	transaction, _ := tx.NewBalanceTransferTx(address, amount)
+
+	fee, err := chain.EstimateFeeForTransaction(transaction, 44)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(fee)
 }

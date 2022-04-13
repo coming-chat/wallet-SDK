@@ -104,3 +104,12 @@ func TestBatchTransactionStatus(t *testing.T) {
 	}
 	t.Log(statuses)
 }
+
+func TestSbtcDetail(t *testing.T) {
+	hashString := "efb7849f8f5a76da41faaa100977d189b025f1d01dee0fade87ffca4515af23a"
+	detail, err := FetchTransactionDetail(hashString, chainSignet)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(detail)
+}
