@@ -220,15 +220,12 @@ func (c *PolkaChain) QueryBalanceXBTC(address string) (b *PolkaBalance, err erro
 
 // 查询交易的预估手续费
 // @param transaction 交易的构造对象
-func (c *PolkaChain) EstimateFeeForTransaction(transaction *Transaction, ss58 int) (s string, err error) {
+func (c *PolkaChain) EstimateFeeForTransaction(transaction *Transaction) (s string, err error) {
 	s = "0"
 	wallet := mockWallet()
-	mockAddress, err := wallet.GetAddress(ss58)
-	if err != nil {
-		return
-	}
 
-	signData, err := transaction.GetSignDataFromChain(c, mockAddress)
+	fakeHash := "0x38c5a9f6fabb8d8583ed633c469cdeefb988b0d2384937b15e10e9c0a75aa744"
+	signData, err := transaction.GetSignData(fakeHash, 0, 0, 0)
 	if err != nil {
 		return
 	}
@@ -246,7 +243,6 @@ func (c *PolkaChain) EstimateFeeForTransaction(transaction *Transaction, ss58 in
 	}
 
 	cl, err := getPolkaClient(c.RpcUrl)
-
 	data := make(map[string]interface{})
 	err = client.CallWithBlockHash(cl.api.Client, &data, "payment_queryInfo", nil, sendTx)
 	if err != nil {

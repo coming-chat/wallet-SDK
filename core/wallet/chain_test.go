@@ -80,9 +80,13 @@ func TestMetadataString(t *testing.T) {
 }
 
 func TestTransactionDetail(t *testing.T) {
-	rpcUrl := "https://mainnet.chainx.org/rpc"
-	scanUrl := "https://multiscan-api.coming.chat/chainx/extrinsics"
-	hashString := "0xb6dbc48dd686cd52897cc8f4871b406a2c64bf9f1d6f08903400f809d3f1ff75"
+	// rpcUrl := "https://mainnet.chainx.org/rpc"
+	// scanUrl := "https://multiscan-api.coming.chat/chainx/extrinsics"
+	// hashString := "0xb6dbc48dd686cd52897cc8f4871b406a2c64bf9f1d6f08903400f809d3f1ff75"
+
+	rpcUrl := "https://rpc-minichain.coming.chat"
+	scanUrl := "https://multiscan-api-pre.coming.chat/minix/extrinsics"
+	hashString := "0x4f9ea1cf8337b27a335ef21f1d2806a0d25cc12a87f843a64102fbecfea77cb3"
 
 	chain := NewPolkaChain(rpcUrl, scanUrl)
 
@@ -124,8 +128,9 @@ func TestMINIScriptHash(t *testing.T) {
 }
 
 func TestEstimatedFee(t *testing.T) {
-	// rpcUrl := "https://rpc-minichain.coming.chat"
-	rpcUrl := "https://mainnet.chainx.org/rpc"
+	rpcUrl := "https://rpc-minichain.coming.chat"
+	// rpcUrl := "https://mainnet.chainx.org/rpc"
+	// rpcUrl := "https://mainnet.sherpax.io/rpc"
 	address := "5RNt3DACYRhwHyy9esTZXVvffkFL3pQHv4qoEMFVfDqeDEnH"
 	amount := "10000"
 
@@ -134,7 +139,7 @@ func TestEstimatedFee(t *testing.T) {
 	tx, _ := NewTx(metadata)
 	transaction, _ := tx.NewBalanceTransferTx(address, amount)
 
-	fee, err := chain.EstimateFeeForTransaction(transaction, 44)
+	fee, err := chain.EstimateFeeForTransaction(transaction)
 	if err != nil {
 		t.Fatal(err)
 	}
