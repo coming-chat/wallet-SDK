@@ -175,8 +175,8 @@ func (c *PolkaChain) QueryBalanceXBTC(address string) (b *PolkaBalance, err erro
 		return
 	}
 
-	ss58Format := base58.Decode("5QUEnWNMDFqsbUGpvvtgWGUgiiojnEpLf7581ELLAQyQ1xnT")
-	publicKey, err := hex.DecodeString(ss58.Decode("5QUEnWNMDFqsbUGpvvtgWGUgiiojnEpLf7581ELLAQyQ1xnT", int(ss58Format[0])))
+	ss58Format := base58.Decode(address)
+	publicKey, err := hex.DecodeString(ss58.Decode(address, int(ss58Format[0])))
 	if err != nil {
 		return
 	}
@@ -206,7 +206,7 @@ func (c *PolkaChain) QueryBalanceXBTC(address string) (b *PolkaBalance, err erro
 
 	usable, ok := data.Data["Usable"]
 	if !ok {
-		return b, errors.New("No usable balance")
+		return b, nil
 	}
 	usableInt := usable.(types.U128).Int
 

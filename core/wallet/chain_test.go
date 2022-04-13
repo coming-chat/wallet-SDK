@@ -37,7 +37,9 @@ func TestQueryBalancePubkey(t *testing.T) {
 func TestXBTCBalance(t *testing.T) {
 	rpcUrl := "wss://minichain-testnet.coming.chat" // 非 chainx 会抛出 error
 	rpcUrl = "wss://testnet3.chainx.org"            // chainx 才可以正常查询
-	address := "5QUEnWNMDFqsbUGpvvtgWGUgiiojnEpLf7581ELLAQyQ1xnT"
+	// address := "5QUEnWNMDFqsbUGpvvtgWGUgiiojnEpLf7581ELLAQyQ1xnT"
+	// address := "5PjZ58jF72pCz6Y3FkB3jtyWbhhEbWxBz8CkDD7NG3yjL6s1"
+	address := "5TrfBkZz213mgFL59pxqjGThzFCw2VvgkaKDMZi1pv9yNYCY"
 
 	chain := NewPolkaChain(rpcUrl, "")
 
@@ -87,4 +89,18 @@ func TestTransactionDetail(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log(res)
+}
+
+func TestKusamaBalance(t *testing.T) {
+	rpcUrl := "wss://kusama.api.onfinality.io/public-ws"
+	address := "JHnAxcdUANjiszJVpfDCQyn6T8swMKbvrCAgMbyinAQM2Aj"
+
+	chain := NewPolkaChain(rpcUrl, "")
+
+	balance, err := chain.QueryBalance(address)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log(balance)
 }
