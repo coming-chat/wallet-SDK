@@ -2,6 +2,7 @@ package wallet
 
 import (
 	"testing"
+	"time"
 )
 
 func TestQueryBalance(t *testing.T) {
@@ -129,8 +130,8 @@ func TestMINIScriptHash(t *testing.T) {
 
 func TestEstimatedFee(t *testing.T) {
 	rpcUrl := "https://rpc-minichain.coming.chat"
-	// rpcUrl := "https://mainnet.chainx.org/rpc"
-	// rpcUrl := "https://mainnet.sherpax.io/rpc"
+	rpcUrl = "https://mainnet.chainx.org/rpc"
+	rpcUrl = "https://mainnet.sherpax.io/rpc"
 	address := "5RNt3DACYRhwHyy9esTZXVvffkFL3pQHv4qoEMFVfDqeDEnH"
 	amount := "10000"
 
@@ -144,4 +145,38 @@ func TestEstimatedFee(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log(fee)
+}
+
+func TestChainTimeCost(t *testing.T) {
+	rpcUrl := "wss://testnet3.chainx.org"
+
+	t.Log("测试.............", "kjnjk")
+
+	start := time.Now()
+	c1, _ := newPolkaClient(rpcUrl, "")
+	metadata, err := c1.MetadataString()
+
+	cost := time.Since(start)
+	t.Log("metadata 是否获取成功：", err == nil)
+	t.Log("不使用 metadata 初始化的耗时：", cost)
+
+	t.Log("---------------------------")
+
+	start = time.Now()
+	c2, _ := newPolkaClient(rpcUrl, metadata)
+	_, err = c2.MetadataString()
+
+	cost = time.Since(start)
+	t.Log("metadata 是否获取成功：", err == nil)
+	t.Log("使用 metadata 初始化的耗时：", cost)
+
+	t.Log("--------------------------- 再测一次，不使用 metadata 初始化")
+
+	start = time.Now()
+	c3, _ := newPolkaClient(rpcUrl, "")
+	_, err = c3.MetadataString()
+
+	cost = time.Since(start)
+	t.Log("metadata 是否获取成功：", err == nil)
+	t.Log("第二次不使用 metadata 初始化的耗时：", cost)
 }

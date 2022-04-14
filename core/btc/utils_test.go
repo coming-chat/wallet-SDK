@@ -3,9 +3,12 @@ package btc
 import (
 	"testing"
 
+	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
+	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
+	"github.com/cosmos/go-bip39"
 )
 
 func TestValidAddress(t *testing.T) {
@@ -112,4 +115,34 @@ func TestSbtcDetail(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log(detail)
+}
+
+func TestBTCWallet_Privatekey_Publickey_Address(t *testing.T) {
+	// 从 coming 的 musig 库计算的测试用例
+	// private key = 0x7490eb31c8fa940cfd8b0c307ae6f694e7477ea53dec6f14b682ccc960b1784f
+	// public key = 0x043505763c9a201e2ac34955aa73c33894731e53975990b3808f6331412159deac36e4584cf8f4044943f4684bfb3c87995cbc5d47009d368443a1c0b331558de0
+	// mainnet address = bc1px5zhv0y6yq0z4s6f2k488secj3e3u5uhtxgt8qy0vvc5zg2em6kqahndud
+	// signet address = tb1px5zhv0y6yq0z4s6f2k488secj3e3u5uhtxgt8qy0vvc5zg2em6kq2l9zxz
+
+	phrase := "police saddle quote salon run split notice taxi expand uniform zone excess"
+	data, _ := bip39.NewSeedWithErrorChecking(phrase, "")
+
+	pri, pub := btcec.PrivKeyFromBytes(data)
+	priHex := types.HexEncodeToString(pri.Serialize())
+	pubHex := types.HexEncodeToString(pub.SerializeUncompressed())
+	t.Log("private key = ", priHex)
+	t.Log("public key = ", pubHex)
+
+	pubData := pub.SerializeUncompressed()
+	addressHash, err := btcutil.NewAddressTaproot(pubData[1:33], &chaincfg.MainNetParams)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("mainnet address = ", addressHash.EncodeAddress())
+
+	addressHash, err = btcutil.NewAddressTaproot(pubData[1:33], &chaincfg.SigNetParams)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("signet address = ", addressHash.EncodeAddress())
 }

@@ -53,7 +53,7 @@ func NewPolkaChain(rpcUrl, scanUrl string) *PolkaChain {
 // @param rpcUrl 链端 rpc 地址
 // @param scanUrl 浏览器地址(查询交易详情需要的)
 func NewPolkaChainWithRpc(rpcUrl, scanUrl string, metadataString string) (*PolkaChain, error) {
-	_, err := getPolkaClientWithMetadata(rpcUrl, metadataString)
+	_, err := getOrCreatePolkaClient(rpcUrl, metadataString)
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +65,7 @@ func NewPolkaChainWithRpc(rpcUrl, scanUrl string, metadataString string) (*Polka
 
 // 获取该链的 metadata string (如果没有会自动下载)
 func (c *PolkaChain) GetMetadataString() (s string, err error) {
-	client, err := getPolkaClient(c.RpcUrl)
+	client, err := getConnectedPolkaClient(c.RpcUrl)
 	if err != nil {
 		return
 	}
@@ -74,7 +74,7 @@ func (c *PolkaChain) GetMetadataString() (s string, err error) {
 
 // 刷新最新的 metadata (可以从返回值读取到最新的 metadata)
 func (c *PolkaChain) ReloadMetadata() (s string, err error) {
-	client, err := getPolkaClient(c.RpcUrl)
+	client, err := getConnectedPolkaClient(c.RpcUrl)
 	if err != nil {
 		return
 	}
@@ -110,7 +110,7 @@ func (c *PolkaChain) QueryBalancePubkey(pubkey string) (*PolkaBalance, error) {
 func (c *PolkaChain) queryBalance(pubkey []byte) (b *PolkaBalance, err error) {
 	b = emptyBalance()
 
-	client, err := getPolkaClient(c.RpcUrl)
+	client, err := getConnectedPolkaClient(c.RpcUrl)
 	if err != nil {
 		return
 	}
@@ -167,7 +167,7 @@ func (c *PolkaChain) queryBalance(pubkey []byte) (b *PolkaBalance, err error) {
 func (c *PolkaChain) QueryBalanceXBTC(address string) (b *PolkaBalance, err error) {
 	b = emptyBalance()
 
-	client, err := getPolkaClient(c.RpcUrl)
+	client, err := getConnectedPolkaClient(c.RpcUrl)
 	if err != nil {
 		return
 	}
@@ -242,7 +242,7 @@ func (c *PolkaChain) EstimateFeeForTransaction(transaction *Transaction) (s stri
 		return
 	}
 
-	cl, err := getPolkaClient(c.RpcUrl)
+	cl, err := getConnectedPolkaClient(c.RpcUrl)
 	data := make(map[string]interface{})
 	err = client.CallWithBlockHash(cl.api.Client, &data, "payment_queryInfo", nil, sendTx)
 	if err != nil {
@@ -259,7 +259,7 @@ func (c *PolkaChain) EstimateFeeForTransaction(transaction *Transaction) (s stri
 
 // 发起交易
 func (c *PolkaChain) SendRawTransaction(txHex string) (s string, err error) {
-	client, err := getPolkaClient(c.RpcUrl)
+	client, err := getConnectedPolkaClient(c.RpcUrl)
 	if err != nil {
 		return
 	}
@@ -348,7 +348,7 @@ func (c *PolkaChain) SdkBatchTransactionStatus(hashListString string) string {
 
 // 功能和 GetSignData 相同，不需要提供 nonce, version 等参数，但需要提供 chain 对象和地址
 func (t *Transaction) GetSignDataFromChain(chain *PolkaChain, walletAddress string) ([]byte, error) {
-	cl, err := getPolkaClient(chain.RpcUrl)
+	cl, err := getConnectedPolkaClient(chain.RpcUrl)
 	if err != nil {
 		return nil, err
 	}
@@ -381,7 +381,7 @@ type MiniXScriptHash struct {
 // @param transferTo 转账目标地址
 // @param amount 要转出的金额
 func (c *PolkaChain) FetchScriptHashForMiniX(transferTo, amount string) (*MiniXScriptHash, error) {
-	cl, err := getPolkaClient(c.RpcUrl)
+	cl, err := getConnectedPolkaClient(c.RpcUrl)
 	if err != nil {
 		return nil, err
 	}
