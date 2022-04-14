@@ -330,7 +330,7 @@ func (c *PolkaChain) FetchTransactionDetail(hashString string) (t *eth.Transacti
 func (c *PolkaChain) FetchTransactionStatus(hashString string) eth.TransactionStatus {
 	detail, err := c.FetchTransactionDetail(hashString)
 	if err != nil {
-		return eth.TransactionStatusFailure
+		return eth.TransactionStatusNone
 	}
 	return detail.Status
 }
