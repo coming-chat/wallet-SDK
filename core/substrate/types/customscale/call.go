@@ -13,7 +13,7 @@ type CallData struct {
 
 type CallArg struct {
 	FieldName string
-	Value     interface{}
+	Value     any
 }
 
 func DecodeCall(metadata *types.Metadata, call *types.Call) (*CallData, error) {
