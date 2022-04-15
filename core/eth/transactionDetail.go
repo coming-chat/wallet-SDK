@@ -76,6 +76,11 @@ func NewTransactionDetailWithJsonString(s string) *TransactionDetail {
 // @param hashString 交易的 hash
 // @return 详情对象，该对象无法提供 CID 信息
 func (e *EthChain) FetchTransactionDetail(hashString string) (*TransactionDetail, error) {
+	var err error
+	defer func() {
+		err = MapToBasicError(err)
+	}()
+
 	ctx, cancel := context.WithTimeout(context.Background(), e.timeout)
 	defer cancel()
 	tx, isPending, err := e.RemoteRpcClient.TransactionByHash(ctx, common.HexToHash(hashString))

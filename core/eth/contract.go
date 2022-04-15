@@ -26,7 +26,8 @@ func (e *EthChain) CallContractConstant(out interface{}, contractAddress, abiStr
 	if !ok {
 		return errors.New("method not found")
 	}
-	return e.CallContractConstantWithPayload(out, contractAddress, hex.EncodeToString(inputParams), method.Outputs, opts)
+	err = e.CallContractConstantWithPayload(out, contractAddress, hex.EncodeToString(inputParams), method.Outputs, opts)
+	return MapToBasicError(err)
 }
 
 func (e *EthChain) CallContractConstantWithPayload(out interface{}, contractAddress, payload string, outputTypes abi.Arguments, opts *bind.CallOpts) error {

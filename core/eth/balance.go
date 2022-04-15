@@ -16,7 +16,7 @@ func (e *EthChain) Balance(address string) (string, error) {
 	defer cancel()
 	result, err := e.RemoteRpcClient.BalanceAt(ctx, common.HexToAddress(address), nil)
 	if err != nil {
-		return "0", err
+		return "0", MapToBasicError(err)
 	}
 	return result.String(), nil
 }

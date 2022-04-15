@@ -109,6 +109,9 @@ func (c *PolkaChain) QueryBalancePubkey(pubkey string) (*PolkaBalance, error) {
 
 func (c *PolkaChain) queryBalance(pubkey []byte) (b *PolkaBalance, err error) {
 	b = emptyBalance()
+	defer func() {
+		err = eth.MapToBasicError(err)
+	}()
 
 	client, err := getConnectedPolkaClient(c.RpcUrl)
 	if err != nil {
@@ -166,6 +169,9 @@ func (c *PolkaChain) queryBalance(pubkey []byte) (b *PolkaBalance, err error) {
 // 只能通过 chainx 链对象来查询，其他链会抛出 error
 func (c *PolkaChain) QueryBalanceXBTC(address string) (b *PolkaBalance, err error) {
 	b = emptyBalance()
+	defer func() {
+		err = eth.MapToBasicError(err)
+	}()
 
 	client, err := getConnectedPolkaClient(c.RpcUrl)
 	if err != nil {
@@ -223,6 +229,9 @@ func (c *PolkaChain) QueryBalanceXBTC(address string) (b *PolkaBalance, err erro
 func (c *PolkaChain) EstimateFeeForTransaction(transaction *Transaction) (s string, err error) {
 	s = "0"
 	wallet := mockWallet()
+	defer func() {
+		err = eth.MapToBasicError(err)
+	}()
 
 	fakeHash := "0x38c5a9f6fabb8d8583ed633c469cdeefb988b0d2384937b15e10e9c0a75aa744"
 	signData, err := transaction.GetSignData(fakeHash, 0, 0, 0)
@@ -259,6 +268,9 @@ func (c *PolkaChain) EstimateFeeForTransaction(transaction *Transaction) (s stri
 
 // 发起交易
 func (c *PolkaChain) SendRawTransaction(txHex string) (s string, err error) {
+	defer func() {
+		err = eth.MapToBasicError(err)
+	}()
 	client, err := getConnectedPolkaClient(c.RpcUrl)
 	if err != nil {
 		return
@@ -356,17 +368,17 @@ func (t *Transaction) GetSignDataFromChain(chain *PolkaChain, walletAddress stri
 	var nonce int64
 	err = client.CallWithBlockHash(cl.api.Client, &nonce, "system_accountNextIndex", nil, walletAddress)
 	if err != nil {
-		return nil, err
+		return nil, eth.MapToBasicError(err)
 	}
 
 	genesisHash, err := cl.api.RPC.Chain.GetBlockHash(0)
 	if err != nil {
-		return nil, err
+		return nil, eth.MapToBasicError(err)
 	}
 
 	runtimeVersion, err := cl.api.RPC.State.GetRuntimeVersionLatest()
 	if err != nil {
-		return nil, err
+		return nil, eth.MapToBasicError(err)
 	}
 
 	return t.GetSignData(genesisHash.Hex(), nonce, int32(runtimeVersion.SpecVersion), int32(runtimeVersion.TransactionVersion))
@@ -393,7 +405,7 @@ func (c *PolkaChain) FetchScriptHashForMiniX(transferTo, amount string) (*MiniXS
 
 	signedBlock, err := cl.api.RPC.Chain.GetBlockLatest()
 	if err != nil {
-		return nil, err
+		return nil, eth.MapToBasicError(err)
 	}
 	blockNumber := uint64(signedBlock.Block.Header.Number)
 	arrNumber := make([]uint64, 0)
@@ -409,7 +421,7 @@ func (c *PolkaChain) FetchScriptHashForMiniX(transferTo, amount string) (*MiniXS
 	param["params"] = arr
 	body, err := c.post(c.RpcUrl, param)
 	if err != nil {
-		return nil, err
+		return nil, eth.MapToBasicError(err)
 	}
 	value := make(map[string]interface{})
 	err = json.Unmarshal(body, &value)

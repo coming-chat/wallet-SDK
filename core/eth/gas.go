@@ -43,6 +43,10 @@ func (e *EthChain) EstimateContractGasLimit(
 	abiStr,
 	methodName string,
 	erc20JsonParams string) (string, error) {
+	var err error
+	defer func() {
+		err = MapToBasicError(err)
+	}()
 
 	parsedAbi, err := abi.JSON(strings.NewReader(abiStr))
 	if err != nil {
@@ -104,7 +108,7 @@ func (e *EthChain) estimateGasLimit(msg ethereum.CallMsg) (string, error) {
 	defer cancel()
 	gasCount, err := e.RemoteRpcClient.EstimateGas(ctx, msg)
 	if err != nil {
-		return DEFAULT_ETH_GAS_LIMIT, err
+		return DEFAULT_ETH_GAS_LIMIT, MapToBasicError(err)
 	}
 	gasLimitStr := strconv.FormatUint(gasCount, 10)
 	return gasLimitStr, nil
@@ -139,7 +143,7 @@ func (e *EthChain) EstimateGasLimit(fromAddress string, receiverAddress string, 
 	msg := ethereum.CallMsg{From: from, To: &contractAddressObj, GasPrice: price, Value: value, Data: input}
 	gasLimit, err := e.estimateGasLimit(msg)
 	if err != nil {
-		return DEFAULT_ETH_GAS_LIMIT, err
+		return DEFAULT_ETH_GAS_LIMIT, MapToBasicError(err)
 	}
 	gasLimitDecimal, err := decimal.NewFromString(gasLimit)
 	if err != nil {

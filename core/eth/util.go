@@ -1,6 +1,7 @@
 package eth
 
 import (
+	"errors"
 	"math/big"
 	"strconv"
 	"sync"
@@ -112,4 +113,12 @@ func MapListConcurrentStringToString(strList []string, maper func(string) (strin
 		result[i] = v.(string)
 	}
 	return result, nil
+}
+
+// 将任何其他自定义类型的 error, 转为系统基础的 error 对象
+func MapToBasicError(e error) error {
+	if e == nil {
+		return e
+	}
+	return errors.New(e.Error())
 }

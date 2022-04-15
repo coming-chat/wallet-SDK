@@ -56,7 +56,7 @@ func QueryBalance(address, chainnet string) (string, error) {
 
 	response, err := httpUtil.Request(http.MethodGet, url, nil, nil)
 	if err != nil {
-		return "0", err
+		return "0", eth.MapToBasicError(err)
 	}
 
 	return parseBalanceResponse(response)
@@ -73,7 +73,7 @@ func QueryBalancePubkey(pubkey, chainnet string) (string, error) {
 
 	response, err := httpUtil.Request(http.MethodGet, url, nil, nil)
 	if err != nil {
-		return "0", err
+		return "0", eth.MapToBasicError(err)
 	}
 
 	return parseBalanceResponse(response)
@@ -119,7 +119,7 @@ func SendRawTransaction(txHex string, chainnet string) (string, error) {
 
 	hash, err := client.SendRawTransaction(tx, false)
 	if err != nil {
-		return "", err
+		return "", eth.MapToBasicError(err)
 	}
 
 	return hash.String(), nil
@@ -151,7 +151,7 @@ func FetchTransactionDetail(hashString, chainnet string) (*TransactionDetail, er
 
 	rawResult, err := client.GetRawTransactionVerbose(hash)
 	if err != nil {
-		return nil, err
+		return nil, eth.MapToBasicError(err)
 	}
 
 	status := eth.TransactionStatusPending

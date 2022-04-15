@@ -10,7 +10,7 @@ func GetChainId(e *EthChain) (string, error) {
 	defer cancel()
 	chainId, err := e.RemoteRpcClient.ChainID(ctx)
 	if err != nil {
-		return "0", err
+		return "0", MapToBasicError(err)
 	}
 
 	return chainId.String(), nil

@@ -103,7 +103,7 @@ func (e *EthChain) TokenBalance(contractAddress, address string) (string, error)
 		common.HexToAddress(address),
 	)
 	if err != nil {
-		return "0", err
+		return "0", MapToBasicError(err)
 	}
 
 	return result.String(), err
@@ -124,7 +124,7 @@ func (e *EthChain) TokenDecimal(contractAddress string) (string, error) {
 		nil,
 	)
 	if err != nil {
-		return "0", err
+		return "0", MapToBasicError(err)
 	}
 	tokenDecimal := strconv.Itoa(int(result))
 	return tokenDecimal, err
@@ -145,7 +145,7 @@ func (e *EthChain) TokenSymbol(contractAddress string) (string, error) {
 		nil,
 	)
 	if err != nil {
-		return "", err
+		return "", MapToBasicError(err)
 	}
 
 	return tokenSymbol, err
@@ -166,7 +166,7 @@ func (e *EthChain) TokenName(contractAddress string) (string, error) {
 		nil,
 	)
 	if err != nil {
-		return "", err
+		return "", MapToBasicError(err)
 	}
 
 	return tokenName, err

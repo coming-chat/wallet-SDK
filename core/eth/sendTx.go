@@ -13,7 +13,7 @@ func (e *EthChain) SendRawTransaction(txHex string) (string, error) {
 	defer cancel()
 	err := e.RpcClient.CallContext(ctx, &hash, "eth_sendRawTransaction", txHex)
 	if err != nil {
-		return "", err
+		return "", MapToBasicError(err)
 	}
 	return hash.String(), nil
 }

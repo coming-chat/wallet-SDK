@@ -2,7 +2,6 @@ package eth
 
 import (
 	"testing"
-	"time"
 )
 
 const (
@@ -42,25 +41,27 @@ func TestConnect(t *testing.T) {
 	// 	t.Fatal(err)
 	// }
 	// t.Log(chain)
-	defer func() {
-		err := recover()
-		if err != nil {
-			t.Log("recover err ", err)
-		}
-	}()
-
-	chain, _ := NewEthChain().CreateRemote(binanceTestRpcUrl)
-
-	for i := 0; i < 100; i++ {
-		time.Sleep(1 * time.Second)
-		address := "0xed24fc36d5ee211ea25a80239fb8c4cfd80f12ee"
-		balance, err := chain.TokenBalance(address, address)
-		if err != nil {
-			t.Log("...... catched err", err)
-		} else {
-			t.Log("...... balance", balance)
-		}
+	// rpc := "https://mainnet.sherpax.io/rpc"
+	// rpc := "https://bsc-dataseed.binance.org"
+	// rpc := "https://rinkeby.infura.io/v3/da3717f25f824cc1baa32d812386d93f"
+	rpc := "https://mainnet.infura.io/v3/da3717f25f824cc1baa32d812386d93f"
+	// rpc := "https://geth-mainnet.coming.chat/"
+	chain, err := NewEthChain().CreateRemote(rpc)
+	if err != nil {
+		t.Fatal(err)
 	}
+
+	t.Log(chain)
+	// for i := 0; i < 1; i++ {
+	// 	time.Sleep(1 * time.Second)
+	// 	address := "0xed24fc36d5ee211ea25a80239fb8c4cfd80f12ee"
+	// 	balance, err := chain.TokenBalance(address, address)
+	// 	if err != nil {
+	// 		t.Log("...... catched err", err)
+	// 	} else {
+	// 		t.Log("...... balance", balance)
+	// 	}
+	// }
 
 	// t.Log("should successd connect", chain)
 }

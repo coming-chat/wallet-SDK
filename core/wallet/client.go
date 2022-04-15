@@ -5,6 +5,7 @@ import (
 
 	gsrpc "github.com/centrifuge/go-substrate-rpc-client/v4"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
+	"github.com/coming-chat/wallet-SDK/core/eth"
 )
 
 type polkaclient struct {
@@ -35,7 +36,7 @@ func (c *polkaclient) connectApiIfNeeded() error {
 	if c.api == nil {
 		api, err := gsrpc.NewSubstrateAPI(c.rpcUrl)
 		if err != nil {
-			return err
+			return eth.MapToBasicError(err)
 		}
 		c.api = api
 	}
@@ -49,7 +50,7 @@ func (c *polkaclient) ReloadMetadata() error {
 	}
 	meta, err := c.api.RPC.State.GetMetadataLatest()
 	if err != nil {
-		return err
+		return eth.MapToBasicError(err)
 	}
 	c.metadata = meta
 	return nil

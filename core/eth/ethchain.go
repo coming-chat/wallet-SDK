@@ -29,13 +29,13 @@ func (e *EthChain) CreateRemote(rpcUrl string) (*EthChain, error) {
 	defer cancel()
 	rpcClient, err := rpc.DialContext(ctx, rpcUrl)
 	if err != nil {
-		return nil, err
+		return nil, MapToBasicError(err)
 	}
 
 	remoteRpcClient := ethclient.NewClient(rpcClient)
 	chainId, err := remoteRpcClient.ChainID(ctx)
 	if err != nil {
-		return nil, err
+		return nil, MapToBasicError(err)
 	}
 	e.chainId = chainId
 	e.RpcClient = rpcClient
