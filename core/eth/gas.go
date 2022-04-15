@@ -99,6 +99,9 @@ func (e *EthChain) EstimateContractGasLimit(
 		return DEFAULT_CONTRACT_GAS_LIMIT, err
 	}
 	gasLimit := uint64(float64(tempGasLimitUint) * float64(e.gasFactor()))
+	if gasLimit < 60000 {
+		gasLimit = 60000
+	}
 	gasLimitStr := strconv.FormatUint(gasLimit, 10)
 	return gasLimitStr, nil
 }

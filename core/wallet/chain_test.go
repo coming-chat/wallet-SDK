@@ -99,8 +99,11 @@ func TestTransactionDetail(t *testing.T) {
 }
 
 func TestKusamaBalance(t *testing.T) {
-	rpcUrl := "wss://kusama.api.onfinality.io/public-ws"
-	address := "JHnAxcdUANjiszJVpfDCQyn6T8swMKbvrCAgMbyinAQM2Aj"
+	// rpcUrl := "wss://kusama.api.onfinality.io/public-ws"
+	// address := "JHnAxcdUANjiszJVpfDCQyn6T8swMKbvrCAgMbyinAQM2Aj"
+
+	rpcUrl := "https://mainnet.sherpax.io/rpc"
+	address := "5R1kzaPnLasMiNgigKdjdyddYd2jQg6QqQtbFcZm4RLUuKQY"
 
 	chain := NewPolkaChain(rpcUrl, "")
 
