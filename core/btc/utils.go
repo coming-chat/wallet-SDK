@@ -18,16 +18,6 @@ import (
 	"github.com/coming-chat/wallet-SDK/pkg/httpUtil"
 )
 
-// btc 交易的详情：btc 的输入解析很复杂且网络代价比较大，因此只能查询到状态和时间
-type TransactionDetail struct {
-	// hash
-	HashString string
-	// 交易状态
-	Status eth.TransactionStatus
-	// 交易完成的时间戳 (s)
-	FinishTimestamp int64
-}
-
 // 检查地址是否有效
 // @param address 比特币地址
 // @param chainnet 链名称
@@ -138,7 +128,8 @@ func decodeTx(txHex string) (*wire.MsgTx, error) {
 }
 
 // 通过交易 hash，获取 btc 交易详情
-func FetchTransactionDetail(hashString, chainnet string) (*TransactionDetail, error) {
+// 注意：btc 的输入解析很复杂且网络代价比较大，因此只能查询到状态和时间
+func FetchTransactionDetail(hashString, chainnet string) (*eth.TransactionDetail, error) {
 	client, err := getClientFor(chainnet)
 	if err != nil {
 		return nil, err
@@ -158,7 +149,7 @@ func FetchTransactionDetail(hashString, chainnet string) (*TransactionDetail, er
 	if rawResult.Confirmations > 0 {
 		status = eth.TransactionStatusSuccess
 	}
-	return &TransactionDetail{
+	return &eth.TransactionDetail{
 		HashString:      hashString,
 		Status:          status,
 		FinishTimestamp: rawResult.Time,

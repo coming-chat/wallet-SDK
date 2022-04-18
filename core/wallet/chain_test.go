@@ -5,6 +5,15 @@ import (
 	"time"
 )
 
+const (
+	rpcChainxProd  = "https://mainnet.chainx.org/rpc"
+	rpcChainxTest  = "https://testnet3.chainx.org/rpc"
+	rpcMinixProd   = "https://minichain-mainnet.coming.chat/rpc"
+	rpcMinixTest   = "https://rpc-minichain.coming.chat"
+	rpcSherpaxProd = "https://mainnet.sherpax.io/rpc"
+	rpcSherpaxTest = "https://sherpax-testnet.chainx.org/rpc"
+)
+
 func TestQueryBalance(t *testing.T) {
 	// rpcUrl := "wss://testnet3.chainx.org"
 	// address := "5RNt3DACYRhwHyy9esTZXVvffkFL3pQHv4qoEMFVfDqeDEnH" // no balance
