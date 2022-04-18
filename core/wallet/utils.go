@@ -1,6 +1,8 @@
 package wallet
 
 import (
+	"math/big"
+
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/itering/subscan/util/base58"
 	"github.com/itering/subscan/util/ss58"
@@ -61,4 +63,13 @@ func HexToByte(hex string) ([]byte, error) {
 func IsValidAddress(address string) bool {
 	_, err := AddressToPublicKey(address)
 	return err == nil
+}
+
+// 返回两个数中比较大的一个
+func maxBigInt(x, y *big.Int) *big.Int {
+	if x.Cmp(y) > 0 {
+		return x
+	} else {
+		return y
+	}
 }

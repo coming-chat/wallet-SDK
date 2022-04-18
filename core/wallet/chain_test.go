@@ -6,12 +6,15 @@ import (
 )
 
 func TestQueryBalance(t *testing.T) {
-	rpcUrl := "wss://testnet3.chainx.org"
+	// rpcUrl := "wss://testnet3.chainx.org"
 	// address := "5RNt3DACYRhwHyy9esTZXVvffkFL3pQHv4qoEMFVfDqeDEnH" // no balance
-	address := "5UXKnBuqVdoBgRDxrCgZErJojebb1pYivt4ei9D8NYQkbg9U" // have balance
+	// address := "5UXKnBuqVdoBgRDxrCgZErJojebb1pYivt4ei9D8NYQkbg9U" // have balance
 	// address := "5UXKnBuqVdoBgRDxrCg" // error address
 
-	chain := NewPolkaChain(rpcUrl, "")
+	rpcUrl := "https://mainnet.sherpax.io/rpc"
+	address := "5QNvL6E6qfKBhV2VnvdLbdv2ou4VmU7FDFJ43XvcnuKgzpUp"
+
+	chain := NewPolkaChain(rpcUrl, "x")
 
 	balance, err := chain.QueryBalance(address)
 	if err != nil {

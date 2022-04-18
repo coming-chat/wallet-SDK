@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"math/big"
 	"net/http"
 	"strconv"
 	"strings"
@@ -150,18 +151,13 @@ func (c *PolkaChain) queryBalance(pubkey []byte) (b *PolkaBalance, err error) {
 		return
 	}
 
-	freeInt := data.Data.Free.Int
-	total := freeInt.Add(freeInt, data.Data.Reserved.Int)
-
-	locked := data.Data.MiscFrozen.Int
-	if data.Data.MiscFrozen.Cmp(data.Data.FeeFrozen.Int) <= 0 {
-		locked = data.Data.FeeFrozen.Int
-	}
-	usable := freeInt.Sub(freeInt, locked)
+	totalInt := big.NewInt(0).Add(data.Data.Free.Int, data.Data.Reserved.Int)
+	locked := maxBigInt(data.Data.MiscFrozen.Int, data.Data.FeeFrozen.Int)
+	usableInt := big.NewInt(0).Sub(data.Data.Free.Int, locked)
 
 	return &PolkaBalance{
-		Total:  total.String(),
-		Usable: usable.String(),
+		Total:  totalInt.String(),
+		Usable: usableInt.String(),
 	}, nil
 }
 
