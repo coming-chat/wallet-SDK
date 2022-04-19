@@ -224,6 +224,10 @@ func (c *PolkaChain) QueryBalanceXBTC(address string) (b *PolkaBalance, err erro
 // @param transaction 交易的构造对象
 func (c *PolkaChain) EstimateFeeForTransaction(transaction *Transaction) (s string, err error) {
 	s = "0"
+	if c == nil || transaction == nil {
+		return s, errors.New("transaction is nil")
+	}
+
 	wallet := mockWallet()
 	defer func() {
 		err = eth.MapToBasicError(err)
