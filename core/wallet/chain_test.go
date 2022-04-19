@@ -66,6 +66,17 @@ func TestXBTCBalance(t *testing.T) {
 	t.Log(balance)
 }
 
+func TestMultiSignBalanceMINI(t *testing.T) {
+	address := "5SeET3a9GgDRennxH89ixezysM5VGAUSArGAv5rJCUqyDpvH"
+
+	chain := NewPolkaChain(rpcMinixProd, "")
+	balance, err := chain.QueryBalance(address)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(balance)
+}
+
 func TestMetadataString(t *testing.T) {
 	rpcUrl := "wss://testnet3.chainx.org" // chainx 才可以正常查询
 
