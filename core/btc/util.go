@@ -66,10 +66,7 @@ func (u *Util) net() *chaincfg.Params {
 	return nil
 }
 
-// Deprecated: IsValidAddress is deprecated. Please use btc.util.IsValidAddress
-// 检查地址是否有效
-// @param address 比特币地址
-// @param chainnet 链名称
+// @param chainnet chain name
 func IsValidAddress(address, chainnet string) bool {
 	u, err := NewUtilWithChainnet(chainnet)
 	if err != nil {
