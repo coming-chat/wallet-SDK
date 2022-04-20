@@ -11,45 +11,6 @@ import (
 	"github.com/cosmos/go-bip39"
 )
 
-func TestValidAddress(t *testing.T) {
-	addArray := [][2]string{
-		// 有效的
-		{"signet", "tb1p5uslzuqy8k40mc86jfdtdjh4624umtwjyjffrvvypc7engl5z9ystm5728"},
-		{"signet", "tb1p4fwg0qlcsm94y90gnkwr0zkfsv9gxjlq43mpegf4cmn9xed02xcq3n0386"},
-		{"mainnet", "bc1p5uslzuqy8k40mc86jfdtdjh4624umtwjyjffrvvypc7engl5z9ysunz3sg"},
-
-		// 错误的
-		{"signet", "tb1p4fwg0qlcsm94y90gnkwr0zkfsv9gxjlq43mpegf4cmn9xed02xcq3n0387"},
-		{"signet", "tb1p4fwg0qlcsm94y90gnkwr0zkfsv9gxjlq43mpeg"},
-		{"mainnet", "bc1p5uslzuqy8k40mc86jfdtdjh4624umtwjyjffrvvypc7engl5z9ysunz3sh"},
-		{"mainnet", "bc1p5uslzuqy8k40mc86jfdtdjh4624umtwjyjffrvvypc7e"},
-		{"mainnet", ""},
-	}
-
-	for _, item := range addArray {
-		net := item[0]
-		addr := item[1]
-
-		var cfg *chaincfg.Params
-		switch net {
-		case "signet":
-			cfg = &chaincfg.SigNetParams
-		case "mainnet":
-			cfg = &chaincfg.MainNetParams
-		}
-		addobj, err := btcutil.DecodeAddress(addr, cfg)
-
-		if err != nil {
-			t.Log("false address, error = ", err)
-		} else {
-			t.Log("true address, address = ", addobj)
-		}
-
-		t.Log(IsValidAddress(addr, net))
-	}
-
-}
-
 func TestQueryBalance(t *testing.T) {
 	address := "tb1pqtguh4mt0206qr7t3pze5zf4st4v3xtvqfhgv7q7j6ymnv7gtutqy4nrud"
 	balance, err := QueryBalance(address, "signet")
@@ -72,7 +33,7 @@ func TestQueryBalance(t *testing.T) {
 func TestMultiSignBalanceSBTC(t *testing.T) {
 	address := "tb1pesh6vwvq8xqfff9frs47sfyd83m6h8297ngn7qhg35xzsuuac67q8tgepm"
 
-	balance, err := QueryBalance(address, chainSignet)
+	balance, err := QueryBalance(address, ChainSignet)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -90,7 +51,7 @@ func TestSendRawTransaction(t *testing.T) {
 }
 
 func TestFetch(t *testing.T) {
-	client, err := getClientFor(chainMainnet)
+	client, err := getClientFor(ChainMainnet)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -111,7 +72,7 @@ func TestFetch(t *testing.T) {
 
 func TestBatchTransactionStatus(t *testing.T) {
 	hashStrings := "xxx,182218b286c78aae63aac2f72fe44f7f35206500cb0bdb96eda20449c482b698,31244281753a3934060f6258cae6f87de7d96d8fc3c2f42d128dd3e0f72679b9"
-	statuses := SdkBatchTransactionStatus(hashStrings, chainMainnet)
+	statuses := SdkBatchTransactionStatus(hashStrings, ChainMainnet)
 	if statuses != "0,2,2" {
 		t.Fatal("此测试用例，测试失败")
 	}
@@ -120,7 +81,7 @@ func TestBatchTransactionStatus(t *testing.T) {
 
 func TestSbtcDetail(t *testing.T) {
 	hashString := "efb7849f8f5a76da41faaa100977d189b025f1d01dee0fade87ffca4515af23a"
-	detail, err := FetchTransactionDetail(hashString, chainSignet)
+	detail, err := FetchTransactionDetail(hashString, ChainSignet)
 	if err != nil {
 		t.Fatal(err)
 	}

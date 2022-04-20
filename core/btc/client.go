@@ -4,7 +4,7 @@ import "github.com/btcsuite/btcd/rpcclient"
 
 func getClientFor(chainnet string) (*rpcclient.Client, error) {
 	switch chainnet {
-	case chainSignet:
+	case ChainSignet:
 		return rpcclient.New(&rpcclient.ConnConfig{
 			Host:         "115.29.163.193:38332",
 			User:         "auth",
@@ -13,7 +13,7 @@ func getClientFor(chainnet string) (*rpcclient.Client, error) {
 			DisableTLS:   true,
 		}, nil)
 
-	case chainMainnet, chainBitcoin:
+	case ChainMainnet, ChainBitcoin:
 		return rpcclient.New(&rpcclient.ConnConfig{
 			Host:         "115.29.163.193:8332",
 			User:         "auth",

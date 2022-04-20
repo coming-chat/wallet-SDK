@@ -10,31 +10,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/btcsuite/btcd/btcutil"
-	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/coming-chat/wallet-SDK/core/eth"
 	"github.com/coming-chat/wallet-SDK/pkg/httpUtil"
 )
-
-// 检查地址是否有效
-// @param address 比特币地址
-// @param chainnet 链名称
-func IsValidAddress(address, chainnet string) bool {
-	var netParams *chaincfg.Params
-	switch chainnet {
-	case chainSignet:
-		netParams = &chaincfg.SigNetParams
-	case chainMainnet, chainBitcoin:
-		netParams = &chaincfg.MainNetParams
-	default:
-		return false
-	}
-
-	_, err := btcutil.DecodeAddress(address, netParams)
-	return err == nil
-}
 
 // 根据地址查余额
 func QueryBalance(address, chainnet string) (string, error) {
@@ -179,9 +159,9 @@ func SdkBatchTransactionStatus(hashListString string, chainnet string) string {
 
 func hostOf(chainnet string) (string, error) {
 	switch chainnet {
-	case chainSignet:
+	case ChainSignet:
 		return "https://electrs-pre.coming.chat", nil
-	case chainMainnet, chainBitcoin:
+	case ChainMainnet, ChainBitcoin:
 		return "https://electrs-mainnet.coming.chat", nil
 	default:
 		return "", ErrUnsupportedChain

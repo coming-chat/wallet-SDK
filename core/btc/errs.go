@@ -3,6 +3,6 @@ package btc
 import "errors"
 
 var (
-	ErrUnsupportedChain  = errors.New("Unsupported chain name")
+	ErrUnsupportedChain  = errors.New("Unsupported BTC chainnet")
 	ErrHttpResponseParse = errors.New("Network data parsing error")
 )

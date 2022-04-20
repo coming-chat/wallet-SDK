@@ -12,6 +12,9 @@ const (
 	rpcMinixTest   = "https://rpc-minichain.coming.chat"
 	rpcSherpaxProd = "https://mainnet.sherpax.io/rpc"
 	rpcSherpaxTest = "https://sherpax-testnet.chainx.org/rpc"
+
+	rpcPolkadot = "https://polkadot.api.onfinality.io/public-rpc"
+	rpcKusama   = "https://kusama.api.onfinality.io/public-rpc"
 )
 
 func TestQueryBalance(t *testing.T) {
@@ -20,7 +23,7 @@ func TestQueryBalance(t *testing.T) {
 	// address := "5UXKnBuqVdoBgRDxrCgZErJojebb1pYivt4ei9D8NYQkbg9U" // have balance
 	// address := "5UXKnBuqVdoBgRDxrCg" // error address
 
-	rpcUrl := "https://mainnet.sherpax.io/rpc"
+	rpcUrl := rpcSherpaxProd
 	address := "5QNvL6E6qfKBhV2VnvdLbdv2ou4VmU7FDFJ43XvcnuKgzpUp"
 
 	chain := NewPolkaChain(rpcUrl, "x")
