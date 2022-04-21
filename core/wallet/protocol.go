@@ -10,17 +10,16 @@ type Util interface {
 }
 
 type Account interface {
-	// If the account generated using keystore, it will return empty
-	// @return privateKey that will start with 0x.
-	PrivateKey() string
-	// @return publicKey that will start with 0x.
+	// @return privateKey data
+	PrivateKeyData() ([]byte, error)
+
+	// @return privateKey string that will start with 0x.
+	PrivateKey() (string, error)
+	// @return publicKey string that will start with 0x.
 	PublicKey() string
+	// @return address string
 	Address() string
 
 	SignData(data []byte, password string) (string, error)
-	SignHexData(hex string, password string) (string, error) // for sdk
-
-	// Only available to accounts generated with keystore.
-	// @return If the password is correct, will return nil
-	CheckPassword(password string) error
+	SignHexData(hex string, password string) (string, error)
 }

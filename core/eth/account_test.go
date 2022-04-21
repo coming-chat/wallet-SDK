@@ -1,7 +1,6 @@
 package eth
 
 import (
-	"reflect"
 	"testing"
 )
 
@@ -9,16 +8,13 @@ func TestNewAccountWithMnemonic(t *testing.T) {
 	tests := []struct {
 		name     string
 		mnemonic string
-		want     *Account
+		address  string // If the generated address can match, there is no problem.
 		wantErr  bool
 	}{
 		{
 			name:     "valid account 1",
 			mnemonic: "unaware oxygen allow method allow property predict various slice travel please priority",
-			want: &Account{
-				privateKey: "0x8c3083c24062f065ff2ee71b21f665375b266cebffa920e8909ec7c48006725d",
-				address:    "0x7161ada3EA6e53E5652A45988DdfF1cE595E09c2",
-			},
+			address:  "0x7161ada3EA6e53E5652A45988DdfF1cE595E09c2",
 		},
 		{
 			name:     "error mnemonic",
@@ -37,8 +33,8 @@ func TestNewAccountWithMnemonic(t *testing.T) {
 				}
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NewAccountWithMnemonic() got = %v, want %v", got, tt.want)
+			if got.Address() != tt.address {
+				t.Errorf("NewAccountWithMnemonic() got = %v, want %v", got, tt.address)
 			}
 		})
 	}

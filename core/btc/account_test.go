@@ -10,30 +10,30 @@ func TestNewAccountWithMnemonic(t *testing.T) {
 		chainnet string
 	}
 	mnemonic := "unaware oxygen allow method allow property predict various slice travel please priority"
-	privateKey := "0xc7fceb75bafba7aa10ffe10315352bfc523ac733f814e6a311bc736873df8923"
-	publicKey := "0x04a721f170043daafde0fa925ab6caf5d2abcdadd2249291b1840e3d99a3f41149e13185ef52451eef2e7cc0c5fe4180b64ca2d17eb886b2328518f6aed684719a"
+	// privateKey := "0xc7fceb75bafba7aa10ffe10315352bfc523ac733f814e6a311bc736873df8923"
+	// publicKey := "0x04a721f170043daafde0fa925ab6caf5d2abcdadd2249291b1840e3d99a3f41149e13185ef52451eef2e7cc0c5fe4180b64ca2d17eb886b2328518f6aed684719a"
 	addressMainnet := "bc1p5uslzuqy8k40mc86jfdtdjh4624umtwjyjffrvvypc7engl5z9ysunz3sg"
 	addressSignet := "tb1p5uslzuqy8k40mc86jfdtdjh4624umtwjyjffrvvypc7engl5z9ystm5728"
 	tests := []struct {
-		name    string
-		args    args
-		want    *Account
-		wantErr bool
+		name        string
+		args        args
+		wantAddress string // If the generated address can match, there is no problem.
+		wantErr     bool
 	}{
 		{
-			name: "mainnet nomal",
-			args: args{mnemonic: mnemonic, chainnet: ChainMainnet},
-			want: &Account{privateKey: privateKey, publicKey: publicKey, address: addressMainnet},
+			name:        "mainnet nomal",
+			args:        args{mnemonic: mnemonic, chainnet: ChainMainnet},
+			wantAddress: addressMainnet,
 		},
 		{
-			name: "coming bitcoin nomal",
-			args: args{mnemonic: mnemonic, chainnet: ChainBitcoin},
-			want: &Account{privateKey: privateKey, publicKey: publicKey, address: addressMainnet},
+			name:        "coming bitcoin nomal",
+			args:        args{mnemonic: mnemonic, chainnet: ChainBitcoin},
+			wantAddress: addressMainnet,
 		},
 		{
-			name: "signet nomal",
-			args: args{mnemonic: mnemonic, chainnet: ChainSignet},
-			want: &Account{privateKey: privateKey, publicKey: publicKey, address: addressSignet},
+			name:        "signet nomal",
+			args:        args{mnemonic: mnemonic, chainnet: ChainSignet},
+			wantAddress: addressSignet,
 		},
 		{
 			name: "error chainnet",
@@ -63,8 +63,8 @@ func TestNewAccountWithMnemonic(t *testing.T) {
 				}
 				return
 			}
-			if got.privateKey != tt.want.privateKey || got.publicKey != tt.want.publicKey || got.address != tt.want.address {
-				t.Errorf("NewAccountWithMnemonic() got = %v, want %v", got, tt.want)
+			if got.address != tt.wantAddress {
+				t.Errorf("NewAccountWithMnemonic() got = %v, want %v", got, tt.wantAddress)
 			}
 		})
 	}

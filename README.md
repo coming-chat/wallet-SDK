@@ -2,6 +2,18 @@
 
 ComingChat substrate wallet SDK
 
+|                       | Bitcoin | Ethereum | Polka |
+| --------------------- | ------- | -------- | ----- |
+| import mnemonic       | ✅       | ✅        | ✅     |
+| import keystore       | ❌       | ❌        | ✅     |
+| pri/pub key & address | ✅       | ✅        | ✅     |
+| multi network         | ✅       | ✅        | ✅     |
+| publicKey to address  | ✅       | ✅        | ✅     |
+| address to publicKey  | ❌       | ✅        | ✅     |
+| sign data             | ☑️       | ☑️        | ☑️     |
+
+✅: Completed      ☑️: TODO    ❌: Unsupported
+
 ## build android && ios
 
 * make buildAllAndroid
