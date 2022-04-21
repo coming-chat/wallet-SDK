@@ -20,6 +20,6 @@ type Account interface {
 	// @return address string
 	Address() string
 
-	SignData(data []byte, password string) (string, error)
-	SignHexData(hex string, password string) (string, error)
+	Sign(message []byte, password string) ([]byte, error)
+	SignHex(messageHex string, password string) ([]byte, error)
 }

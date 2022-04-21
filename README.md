@@ -10,7 +10,7 @@ ComingChat substrate wallet SDK
 | multi network         | ✅       | ✅        | ✅     |
 | publicKey to address  | ✅       | ✅        | ✅     |
 | address to publicKey  | ❌       | ✅        | ✅     |
-| sign data             | ☑️       | ☑️        | ☑️     |
+| sign data             | ☑️       | ☑️        | ✅     |
 
 ✅: Completed      ☑️: TODO    ❌: Unsupported
 

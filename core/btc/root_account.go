@@ -64,11 +64,11 @@ func (a *RootAccount) Address() string {
 }
 
 // TODO: function not implement yet.
-func (a *RootAccount) SignData(data []byte, password string) (string, error) {
-	return "", errors.New("TODO: function not implement yet.")
+func (a *RootAccount) Sign(message []byte, password string) ([]byte, error) {
+	return nil, errors.New("TODO: function not implement yet.")
 }
 
 // TODO: function not implement yet.
-func (a *RootAccount) SignHexData(hex string, password string) (string, error) {
-	return "", errors.New("TODO: function not implement yet.")
+func (a *RootAccount) SignHex(messageHex string, password string) ([]byte, error) {
+	return nil, errors.New("TODO: function not implement yet.")
 }

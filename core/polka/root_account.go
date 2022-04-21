@@ -2,7 +2,7 @@ package polka
 
 import (
 	"encoding/json"
-	"errors"
+	"fmt"
 
 	"github.com/centrifuge/go-substrate-rpc-client/v4/signature"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
@@ -104,12 +104,29 @@ func (a *RootAccount) Address() string {
 	return address
 }
 
-// TODO: function not implement yet.
-func (a *RootAccount) SignData(data []byte, password string) (string, error) {
-	return "", errors.New("TODO: function not implement yet.")
+func (a *RootAccount) Sign(message []byte, password string) (data []byte, err error) {
+	defer func() {
+		errPanic := recover()
+		if errPanic != nil {
+			err = wallet.ErrSign
+			fmt.Println(errPanic)
+			return
+		}
+	}()
+	if a.keypair != nil {
+		data, err := signature.Sign(message, a.keypair.URI)
+		return data, err // Must be separate to ensure that err can catch panic
+	} else if a.keystore != nil {
+		data, err := a.keystore.Sign(message, password)
+		return data, err
+	}
+	return nil, wallet.ErrNilWallet
 }
 
-// TODO: function not implement yet.
-func (a *RootAccount) SignHexData(hex string, password string) (string, error) {
-	return "", errors.New("TODO: function not implement yet.")
+func (a *RootAccount) SignHex(messageHex string, password string) ([]byte, error) {
+	message, err := types.HexDecodeString(messageHex)
+	if err != nil {
+		return nil, err
+	}
+	return a.Sign(message, password)
 }
