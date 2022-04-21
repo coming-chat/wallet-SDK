@@ -5,21 +5,23 @@ import (
 	"testing"
 
 	gsrc "github.com/centrifuge/go-substrate-rpc-client/v4"
-	"github.com/centrifuge/go-substrate-rpc-client/v4/client"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/coming-chat/wallet-SDK/core/substrate/types/customscale"
 )
 
 var (
-	apiMiniX, _   = gsrc.NewSubstrateAPI("wss://minichain-testnet.coming.chat")
-	apiSherpax, _ = gsrc.NewSubstrateAPI("wss://sherpax-testnet.chainx.org")
-	apiChainX, _  = gsrc.NewSubstrateAPI("wss://testnet3.chainx.org")
-	Minix         = ""
-	ChainX        = ""
-	Sherpax       = ""
-	_             = client.CallWithBlockHash(apiSherpax.Client, &Sherpax, "state_getMetadata", nil)
-	_             = client.CallWithBlockHash(apiMiniX.Client, &Minix, "state_getMetadata", nil)
-	_             = client.CallWithBlockHash(apiChainX.Client, &ChainX, "state_getMetadata", nil)
+	// apiMiniX, _   = gsrc.NewSubstrateAPI("wss://minichain-testnet.coming.chat")
+	// apiSherpax, _ = gsrc.NewSubstrateAPI("wss://sherpax-testnet.chainx.org")
+	// apiChainX, _  = gsrc.NewSubstrateAPI("wss://testnet3.chainx.org")
+	apiMiniX   gsrc.SubstrateAPI
+	apiSherpax gsrc.SubstrateAPI
+	apiChainX  gsrc.SubstrateAPI
+	Minix      = ""
+	ChainX     = ""
+	Sherpax    = ""
+	// _          = client.CallWithBlockHash(apiSherpax.Client, &Sherpax, "state_getMetadata", nil)
+	// _          = client.CallWithBlockHash(apiMiniX.Client, &Minix, "state_getMetadata", nil)
+	// _          = client.CallWithBlockHash(apiChainX.Client, &ChainX, "state_getMetadata", nil)
 )
 
 func TestTransactionSherpax(t *testing.T) {

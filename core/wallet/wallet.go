@@ -12,7 +12,7 @@ import (
 
 type Wallet struct {
 	key      *signature.KeyringPair
-	keystore *keystore
+	keystore *Keystore
 }
 
 func NewWallet(seedOrPhrase string) (*Wallet, error) {
@@ -30,13 +30,13 @@ func NewWallet(seedOrPhrase string) (*Wallet, error) {
 }
 
 func NewWalletFromKeyStore(keyStoreJson string, password string) (*Wallet, error) {
-	var keyStore keystore
+	var keyStore Keystore
 	err := json.Unmarshal([]byte(keyStoreJson), &keyStore)
 	if err != nil {
 		return nil, err
 	}
 
-	if err = keyStore.checkPassword(password); err != nil {
+	if err = keyStore.CheckPassword(password); err != nil {
 		return nil, err
 	}
 
@@ -49,7 +49,7 @@ func (w *Wallet) CheckPassword(password string) (bool, error) {
 	if w.keystore == nil {
 		return false, ErrNilKeystore
 	}
-	if err := w.keystore.checkPassword(password); err != nil {
+	if err := w.keystore.CheckPassword(password); err != nil {
 		return false, err
 	}
 	return true, nil

@@ -2,11 +2,12 @@ package wallet
 
 import (
 	"encoding/hex"
+	"math/big"
+	"testing"
+
 	gsrpc "github.com/centrifuge/go-substrate-rpc-client/v4"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/client"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
-	"math/big"
-	"testing"
 )
 
 const (
