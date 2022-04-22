@@ -51,7 +51,7 @@ func TestSendRawTransaction(t *testing.T) {
 }
 
 func TestFetch(t *testing.T) {
-	client, err := getClientFor(ChainMainnet)
+	client, err := rpcClientOf(ChainMainnet)
 	if err != nil {
 		t.Fatal(err)
 	}

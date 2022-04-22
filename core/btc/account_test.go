@@ -115,13 +115,7 @@ func TestIsValidAddress(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			util, err := NewUtilWithChainnet(tt.args.chainnet)
-			if err != nil {
-				t.Fatal("cant use invalid chainnet")
-				return
-			}
-
-			if got := util.IsValidAddress(tt.args.address); got != tt.want {
+			if got := IsValidAddress(tt.args.address, tt.args.chainnet); got != tt.want {
 				t.Errorf("IsValidAddress() = %v, want %v", got, tt.want)
 			}
 		})

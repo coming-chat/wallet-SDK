@@ -32,4 +32,6 @@ var (
 
 	ErrNumber = errors.New("illegal number")
 	ErrSign   = errors.New("sign panic error")
+
+	ErrMissRootAccount = errors.New("Missing root account")
 )

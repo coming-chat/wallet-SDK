@@ -18,7 +18,23 @@ func NewUtilWithNetwork(network int) *Util {
 
 // @param publicKey can start with 0x or not.
 func (u *Util) EncodePublicKeyToAddress(publicKey string) (string, error) {
-	address := ss58.Encode(publicKey, u.Network)
+	return EncodePublicKeyToAddress(publicKey, u.Network)
+}
+
+// @return publicKey that will start with 0x.
+func (u *Util) DecodeAddressToPublicKey(address string) (string, error) {
+	return DecodeAddressToPublicKey(address)
+}
+
+func (u *Util) IsValidAddress(address string) bool {
+	return IsValidAddress(address)
+}
+
+// MARK - like wallet.Util
+
+// @param publicKey can start with 0x or not.
+func EncodePublicKeyToAddress(publicKey string, network int) (string, error) {
+	address := ss58.Encode(publicKey, network)
 	if len(address) == 0 {
 		return "", wallet.ErrPublicKey
 	}
@@ -26,7 +42,7 @@ func (u *Util) EncodePublicKeyToAddress(publicKey string) (string, error) {
 }
 
 // @return publicKey that will start with 0x.
-func (u *Util) DecodeAddressToPublicKey(address string) (string, error) {
+func DecodeAddressToPublicKey(address string) (string, error) {
 	ss58Format := base58.Decode(address)
 	if len(ss58Format) == 0 {
 		return "", wallet.ErrAddress
@@ -38,7 +54,8 @@ func (u *Util) DecodeAddressToPublicKey(address string) (string, error) {
 	return "0x" + publicKey, nil
 }
 
-func (u *Util) IsValidAddress(address string) bool {
-	_, err := u.DecodeAddressToPublicKey(address)
+// @param chainnet chain name
+func IsValidAddress(address string) bool {
+	_, err := DecodeAddressToPublicKey(address)
 	return err == nil
 }

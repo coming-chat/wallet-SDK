@@ -18,7 +18,7 @@ import (
 
 // 根据地址查余额
 func QueryBalance(address, chainnet string) (string, error) {
-	host, err := hostOf(chainnet)
+	host, err := scanHostOf(chainnet)
 	if err != nil {
 		return "0", err
 	}
@@ -35,7 +35,7 @@ func QueryBalance(address, chainnet string) (string, error) {
 // 根据公钥查余额
 func QueryBalancePubkey(pubkey, chainnet string) (string, error) {
 	pubkey = strings.TrimPrefix(pubkey, "0x")
-	host, err := hostOf(chainnet)
+	host, err := scanHostOf(chainnet)
 	if err != nil {
 		return "0", err
 	}
@@ -77,7 +77,7 @@ func parseBalanceResponse(response *httpUtil.Res) (string, error) {
 // @param txHex 签名的tx
 // @return 交易 hash
 func SendRawTransaction(txHex string, chainnet string) (string, error) {
-	client, err := getClientFor(chainnet)
+	client, err := rpcClientOf(chainnet)
 	if err != nil {
 		return "", err
 	}
@@ -110,7 +110,7 @@ func decodeTx(txHex string) (*wire.MsgTx, error) {
 // 通过交易 hash，获取 btc 交易详情
 // 注意：btc 的输入解析很复杂且网络代价比较大，因此只能查询到状态和时间
 func FetchTransactionDetail(hashString, chainnet string) (*eth.TransactionDetail, error) {
-	client, err := getClientFor(chainnet)
+	client, err := rpcClientOf(chainnet)
 	if err != nil {
 		return nil, err
 	}
@@ -155,15 +155,4 @@ func SdkBatchTransactionStatus(hashListString string, chainnet string) string {
 		return strconv.Itoa(FetchTransactionStatus(s, chainnet)), nil
 	})
 	return strings.Join(statuses, ",")
-}
-
-func hostOf(chainnet string) (string, error) {
-	switch chainnet {
-	case ChainSignet:
-		return "https://electrs-pre.coming.chat", nil
-	case ChainMainnet, ChainBitcoin:
-		return "https://electrs-mainnet.coming.chat", nil
-	default:
-		return "", ErrUnsupportedChain
-	}
 }
