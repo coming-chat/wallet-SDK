@@ -1,7 +1,6 @@
 package polka
 
 import (
-	"github.com/coming-chat/wallet-SDK/core/wallet"
 	"github.com/decred/base58"
 	"github.com/itering/subscan/util/ss58"
 )
@@ -36,7 +35,7 @@ func (u *Util) IsValidAddress(address string) bool {
 func EncodePublicKeyToAddress(publicKey string, network int) (string, error) {
 	address := ss58.Encode(publicKey, network)
 	if len(address) == 0 {
-		return "", wallet.ErrPublicKey
+		return "", ErrPublicKey
 	}
 	return address, nil
 }
@@ -45,11 +44,11 @@ func EncodePublicKeyToAddress(publicKey string, network int) (string, error) {
 func DecodeAddressToPublicKey(address string) (string, error) {
 	ss58Format := base58.Decode(address)
 	if len(ss58Format) == 0 {
-		return "", wallet.ErrAddress
+		return "", ErrAddress
 	}
 	publicKey := ss58.Decode(address, int(ss58Format[0]))
 	if len(publicKey) == 0 {
-		return "", wallet.ErrAddress
+		return "", ErrAddress
 	}
 	return "0x" + publicKey, nil
 }

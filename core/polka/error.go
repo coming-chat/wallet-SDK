@@ -1,4 +1,4 @@
-package wallet
+package polka
 
 import "errors"
 
@@ -34,6 +34,4 @@ var (
 
 	ErrNumber = errors.New("illegal number")
 	ErrSign   = errors.New("sign panic error")
-
-	errMethodUnusable = errors.New("TODO: Method not yet implemented")
 )

@@ -1,4 +1,4 @@
-package wallet
+package polka
 
 import (
 	"bytes"
@@ -36,13 +36,13 @@ const (
 	defaultR int64 = 8
 )
 
-type Keystore struct {
+type keystore struct {
 	Encoded  string    `json:"encoded"`
-	Encoding *Encoding `json:"encoding"`
+	Encoding *encoding `json:"encoding"`
 	Address  string    `json:"address"`
 }
 
-type Encoding struct {
+type encoding struct {
 	Content []string `json:"content"`
 	Type    []string `json:"type"`
 	Version string   `json:"version"`
@@ -53,12 +53,12 @@ type keyring struct {
 	PublicKey  [32]byte
 }
 
-func (k *Keystore) CheckPassword(password string) error {
+func (k *keystore) CheckPassword(password string) error {
 	_, err := decodeKeystore(k, password)
 	return err
 }
 
-func (k *Keystore) Sign(msg []byte, password string) ([]byte, error) {
+func (k *keystore) Sign(msg []byte, password string) ([]byte, error) {
 	kr, err := decodeKeystore(k, password)
 	if err != nil {
 		return nil, err
@@ -70,7 +70,7 @@ func (k *Keystore) Sign(msg []byte, password string) ([]byte, error) {
 	return signature, nil
 }
 
-func decodeKeystore(ks *Keystore, password string) (*keyring, error) {
+func decodeKeystore(ks *keystore, password string) (*keyring, error) {
 	defer func() {
 		if err := recover(); err != nil {
 			log.Println(err)
@@ -97,7 +97,7 @@ func decodeKeystore(ks *Keystore, password string) (*keyring, error) {
 
 	copy(publicKey[:], pubKey[:])
 	copy(privateKey[:], secretKey[:])
-	addrPubKey, err := AddressToPublicKey(ks.Address)
+	addrPubKey, err := DecodeAddressToPublicKey(ks.Address)
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +111,7 @@ func decodeKeystore(ks *Keystore, password string) (*keyring, error) {
 	}, nil
 }
 
-func decodePolkaKeystoreEncoded(passphrase *string, encrypted []byte, encodeType *Encoding) ([]byte, []byte, error) {
+func decodePolkaKeystoreEncoded(passphrase *string, encrypted []byte, encodeType *encoding) ([]byte, []byte, error) {
 	var (
 		tmpSecret [32]byte
 		tmpNonce  [24]byte

@@ -1,6 +1,6 @@
-package wallet
+package base
 
-type Util interface {
+type AddressUtil interface {
 	// @param publicKey can start with 0x or not.
 	EncodePublicKeyToAddress(publicKey string) (string, error)
 	// @return publicKey that will start with 0x.

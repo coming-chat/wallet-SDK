@@ -24,7 +24,9 @@ func TestNewWallet(t *testing.T) {
 }
 
 func TestGetPrivateKey(t *testing.T) {
-	w, err := NewWallet(testSecretPhrase)
+	mnemonic := "rookie october miracle crisp invest grace birth exile black attitude bitter napkin"
+	privateHex := "0xba865d03c9f6f27871d4eddd8baffe2b16c444945388b39adb0a0966020bbbbe"
+	w, err := NewWallet(mnemonic)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -32,7 +34,7 @@ func TestGetPrivateKey(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if testSecretSeed != privateKey {
+	if privateHex != privateKey {
 		t.Fatal(privateKey)
 	}
 }

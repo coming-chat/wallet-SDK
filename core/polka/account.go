@@ -6,14 +6,13 @@ import (
 
 	"github.com/centrifuge/go-substrate-rpc-client/v4/signature"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
-	"github.com/coming-chat/wallet-SDK/core/wallet"
 	"github.com/vedhavyas/go-subkey"
 	"github.com/vedhavyas/go-subkey/sr25519"
 )
 
 type Account struct {
 	keypair  *signature.KeyringPair
-	keystore *wallet.Keystore
+	keystore *keystore
 
 	publicKey string
 	address   string
@@ -23,7 +22,7 @@ type Account struct {
 
 func NewAccountWithMnemonic(mnemonic string, network int) (*Account, error) {
 	if len(mnemonic) == 0 {
-		return nil, wallet.ErrSeedOrPhrase
+		return nil, ErrSeedOrPhrase
 	}
 	keyringPair, err := signature.KeyringPairFromSecret(mnemonic, uint8(network))
 	if err != nil {
@@ -45,7 +44,7 @@ func NewAccountWithMnemonic(mnemonic string, network int) (*Account, error) {
 }
 
 func NewAccountWithKeystore(keystoreString, password string, network int) (*Account, error) {
-	var keyStore wallet.Keystore
+	var keyStore keystore
 	err := json.Unmarshal([]byte(keystoreString), &keyStore)
 	if err != nil {
 		return nil, err
@@ -90,7 +89,7 @@ func (a *Account) DeriveAccountAt(network int) (*Account, error) {
 // @return privateKey data
 func (a *Account) PrivateKeyData() ([]byte, error) {
 	if a.keypair == nil {
-		return nil, wallet.ErrNilKey
+		return nil, ErrNilKey
 	}
 
 	scheme := sr25519.Scheme{}
@@ -124,7 +123,7 @@ func (a *Account) Sign(message []byte, password string) (data []byte, err error)
 	defer func() {
 		errPanic := recover()
 		if errPanic != nil {
-			err = wallet.ErrSign
+			err = ErrSign
 			fmt.Println(errPanic)
 			return
 		}
@@ -136,7 +135,7 @@ func (a *Account) Sign(message []byte, password string) (data []byte, err error)
 		data, err := a.keystore.Sign(message, password)
 		return data, err
 	}
-	return nil, wallet.ErrNilWallet
+	return nil, ErrNilWallet
 }
 
 func (a *Account) SignHex(messageHex string, password string) ([]byte, error) {
