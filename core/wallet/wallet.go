@@ -179,11 +179,3 @@ func (w *Wallet) GetPrivateKeyHex() (string, error) {
 	}
 	return account.PrivateKey()
 }
-
-// 内置账号，主要用来给用户未签名的交易签一下名
-// 然后给用户去链上查询手续费，保护用户资产安全
-func mockWallet() *Wallet {
-	mnemonic := "infant carbon above canyon corn collect finger drip area feature mule autumn"
-	w, _ := NewWallet(mnemonic)
-	return w
-}

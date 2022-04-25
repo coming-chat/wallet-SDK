@@ -6,13 +6,14 @@ outdir=out
 module=github.com/coming-chat/wallet-SDK
 
 pkgCore = ${module}/core
+pkgBase = ${pkgCore}/base
 pkgWallet = ${pkgCore}/wallet
 pkgPolka = ${pkgCore}/polka
 pkgBtc = ${pkgCore}/btc
 pkgEth =  $(pkgCore)/eth
 pkgMSCheck = ${pkgCore}/multi-signature-check
 
-pkgAll = ${pkgWallet} ${pkgPolka} ${pkgBtc} ${pkgEth} ${pkgMSCheck}
+pkgAll = ${pkgBase} ${pkgWallet} ${pkgPolka} ${pkgBtc} ${pkgEth} ${pkgMSCheck} 
 
 buildAllSDKAndroid:
 	gomobile bind -ldflags "-s -w" -target=android/arm,android/arm64 -o=${outdir}/wallet.aar ${pkgAll}

@@ -145,3 +145,11 @@ func (a *Account) SignHex(messageHex string, password string) ([]byte, error) {
 	}
 	return a.Sign(message, password)
 }
+
+// 内置账号，主要用来给用户未签名的交易签一下名
+// 然后给用户去链上查询手续费，保护用户资产安全
+func mockAccount() *Account {
+	mnemonic := "infant carbon above canyon corn collect finger drip area feature mule autumn"
+	a, _ := NewAccountWithMnemonic(mnemonic, 44)
+	return a
+}

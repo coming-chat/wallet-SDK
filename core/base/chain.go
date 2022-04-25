@@ -4,7 +4,7 @@ type Chain interface {
 	QueryBalanceWithAddress(address string) (*Balance, error)
 	QueryBalanceWithPublicKey(publicKey string) (*Balance, error)
 
-	QueryTokenBalance(token *Token, address string) (*Balance, error)
+	QueryTokenBalance(token Token, address string) (*Balance, error)
 
 	// Send the raw transaction on-chain
 	// @return the hex hash string

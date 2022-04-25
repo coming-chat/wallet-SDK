@@ -2,6 +2,7 @@ package base
 
 import (
 	"errors"
+	"math/big"
 	"sync"
 )
 
@@ -85,4 +86,13 @@ func MapListConcurrentStringToString(strList []string, maper func(string) (strin
 		result[i] = v.(string)
 	}
 	return result, nil
+}
+
+// Return the more biger of the two numbers
+func MaxBigInt(x, y *big.Int) *big.Int {
+	if x.Cmp(y) > 0 {
+		return x
+	} else {
+		return y
+	}
 }

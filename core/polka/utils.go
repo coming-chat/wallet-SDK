@@ -1,8 +1,6 @@
-package wallet
+package polka
 
 import (
-	"math/big"
-
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/itering/subscan/util/base58"
 	"github.com/itering/subscan/util/ss58"
@@ -32,44 +30,10 @@ func addressStringToAddress(dest string) (types.Address, error) {
 	return types.NewAddressFromHexAccountID(destPublicKey)
 }
 
-func AddressToPublicKey(address string) (string, error) {
-	ss58Format := base58.Decode(address)
-	if len(ss58Format) == 0 {
-		return "", ErrAddress
-	}
-	publicKey := ss58.Decode(address, int(ss58Format[0]))
-	if len(publicKey) == 0 {
-		return "", ErrAddress
-	}
-	return "0x" + publicKey, nil
-}
-
-func PublicKeyToAddress(publicKey string, network int) (string, error) {
-	address := ss58.Encode(publicKey, network)
-	if len(address) == 0 {
-		return "", ErrPublicKey
-	}
-	return address, nil
-}
-
 func ByteToHex(data []byte) string {
 	return types.HexEncodeToString(data)
 }
 
 func HexToByte(hex string) ([]byte, error) {
 	return types.HexDecodeString(hex)
-}
-
-func IsValidAddress(address string) bool {
-	_, err := AddressToPublicKey(address)
-	return err == nil
-}
-
-// 返回两个数中比较大的一个
-func maxBigInt(x, y *big.Int) *big.Int {
-	if x.Cmp(y) > 0 {
-		return x
-	} else {
-		return y
-	}
 }
