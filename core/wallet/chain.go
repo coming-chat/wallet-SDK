@@ -15,6 +15,7 @@ import (
 	"github.com/btcsuite/btcd/btcutil/base58"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/client"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
+	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/coming-chat/wallet-SDK/core/eth"
 	CustomType "github.com/coming-chat/wallet-SDK/core/substrate/types"
 	"github.com/coming-chat/wallet-SDK/pkg/httpUtil"
@@ -164,10 +165,8 @@ func (c *PolkaChain) queryBalance(pubkey []byte) (b *PolkaBalance, err error) {
 // 特殊查询 XBTC 的余额
 // 只能通过 chainx 链对象来查询，其他链会抛出 error
 func (c *PolkaChain) QueryBalanceXBTC(address string) (b *PolkaBalance, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
 	b = emptyBalance()
-	defer func() {
-		err = eth.MapToBasicError(err)
-	}()
 
 	client, err := getConnectedPolkaClient(c.RpcUrl)
 	if err != nil {
@@ -210,7 +209,7 @@ func (c *PolkaChain) QueryBalanceXBTC(address string) (b *PolkaBalance, err erro
 
 	usable, ok := data.Data["Usable"]
 	if !ok {
-		return b, nil
+		return
 	}
 	usableInt := usable.(types.U128).Int
 
