@@ -1,7 +1,5 @@
 # wallet-SDK
 
-ComingChat substrate wallet SDK
-
 |                       | Bitcoin | Ethereum | Polka |
 | --------------------- | ------- | -------- | ----- |
 | import mnemonic       | ✅       | ✅        | ✅     |
@@ -13,6 +11,128 @@ ComingChat substrate wallet SDK
 | sign data             | ☑️       | ☑️        | ✅     |
 
 ✅: Completed      ☑️: TODO    ❌: Unsupported
+
+## Usage
+
+### About Wallet 
+
+SDK provide wallet import, account public and private key and address acquisition.
+
+#### Import Wallet
+
+```golang
+// import mnemonic
+wallet, err = NewWalletFromMnemonic(mnemonic)
+
+// import keystore
+// It only supports Polka keystore.
+wallet, err = NewWalletFromKeyStore(keyStoreJson, password)
+```
+
+#### Create Account
+
+We currently support accounts in Bitcoin, Ethereum and Polkadot ecosystems.
+
+```golang
+// Polka
+polkaAccount, err = GetOrCreatePolkaAccount(network)
+
+// Bitcoin
+bitcoinAccount, err = GetOrCreateBitcoinAccount(chainnet)
+
+// Ethereum
+ethereumAccount, err = GetOrCreateEthereumAccount()
+```
+
+#### Get PrivateKey, PublicKey, Address
+
+```golang
+privateData, err = account.PrivateKeyData()
+
+privateKey, err = account.PrivateKey()
+
+publicKey = account.PublicKey()
+
+address = account.Address()
+```
+
+
+### About Chain
+
+We can use chain tools to do chain related work.
+* query balance
+* query estimate fees
+* send transaction
+* fetch transaction detail
+* support multi token: 
+  * eth contract erc20 token
+  * xbtc
+
+#### Create Chain
+
+```golang
+polkaChain, err = polka.NewChainWithRpc(rpcUrl, scanUrl, network)
+
+bitcoinChain, err = btc.NewChainWithChainnet(chainnet)
+
+ethereumChain, err = eth.NewChainWithRpc(rpcUrl)
+```
+
+#### Methods
+
+```golang 
+
+// query balance
+balance, err = chain.BalanceOfAddress(address)
+balance, err = chain.BalanceOfPublicKey(publicKey)
+balance, err = chain.BalanceOfAccount(account)s
+
+// send transaction
+txHash, err = chain.SendRawTransaction(signedTx)
+
+// fetch transaction detail
+detail, err = chain.FetchTransactionDetail(hashString)
+status = chain.FetchTransactionStatus(hashString)
+```
+
+#### Chain's Token
+
+```golang
+// MainToken
+token = chain.MainToken()
+
+// btc have not tokens
+
+// polka (only support XBTC of ChainX currently)
+xbtcToken = polkaChain.XBTCToken()
+
+// ethereum erc20 token
+erc20Token = ethereumChain.Erc20Token(contractAddress)
+
+// token balance (similar to chain's balance)
+balance, err = anyToken.BalanceOfAddress(address)
+balance, err = anyToken.BalanceOfPublicKey(publicKey)
+balance, err = anyToken.BalanceOfAccount(account)
+```
+
+#### Estimate fee
+
+```golang
+// sbtc's estimate fee is compute by utxo
+
+// polka 
+transaction = // ...
+fee, err = polkaChain.EstimateFeeForTransaction(transaction)
+
+// ethereum
+gasPrice, err = ethChain.SuggestGasPrice()
+gasLimit, err = anyEthToken.EstimateGasLimit(fromAddress, receiverAddress, gasPrice, amount)
+```
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+ComingChat substrate wallet SDK
 
 ## build android && ios
 
