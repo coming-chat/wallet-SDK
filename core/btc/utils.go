@@ -12,6 +12,7 @@ import (
 
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/wire"
+	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/coming-chat/wallet-SDK/core/eth"
 	"github.com/coming-chat/wallet-SDK/pkg/httpUtil"
 )
@@ -26,7 +27,7 @@ func QueryBalance(address, chainnet string) (string, error) {
 
 	response, err := httpUtil.Request(http.MethodGet, url, nil, nil)
 	if err != nil {
-		return "0", eth.MapToBasicError(err)
+		return "0", base.MapAnyToBasicError(err)
 	}
 
 	return parseBalanceResponse(response)
@@ -43,7 +44,7 @@ func QueryBalancePubkey(pubkey, chainnet string) (string, error) {
 
 	response, err := httpUtil.Request(http.MethodGet, url, nil, nil)
 	if err != nil {
-		return "0", eth.MapToBasicError(err)
+		return "0", base.MapAnyToBasicError(err)
 	}
 
 	return parseBalanceResponse(response)
@@ -89,7 +90,7 @@ func SendRawTransaction(txHex string, chainnet string) (string, error) {
 
 	hash, err := client.SendRawTransaction(tx, false)
 	if err != nil {
-		return "", eth.MapToBasicError(err)
+		return "", base.MapAnyToBasicError(err)
 	}
 
 	return hash.String(), nil
@@ -122,7 +123,7 @@ func FetchTransactionDetail(hashString, chainnet string) (*eth.TransactionDetail
 
 	rawResult, err := client.GetRawTransactionVerbose(hash)
 	if err != nil {
-		return nil, eth.MapToBasicError(err)
+		return nil, base.MapAnyToBasicError(err)
 	}
 
 	status := eth.TransactionStatusPending

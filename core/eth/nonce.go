@@ -4,6 +4,7 @@ import (
 	"context"
 	"strconv"
 
+	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -13,7 +14,7 @@ func (e *EthChain) Nonce(spenderAddressHex string) (string, error) {
 	defer cancel()
 	nonce, err := e.RemoteRpcClient.PendingNonceAt(ctx, common.HexToAddress(spenderAddressHex))
 	if err != nil {
-		return "0", MapToBasicError(err)
+		return "0", base.MapAnyToBasicError(err)
 	}
 	return strconv.FormatUint(nonce, 10), nil
 }

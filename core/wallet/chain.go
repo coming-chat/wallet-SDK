@@ -76,6 +76,8 @@ func (c *PolkaChain) GetMetadataString() (s string, err error) {
 
 // 刷新最新的 metadata (可以从返回值读取到最新的 metadata)
 func (c *PolkaChain) ReloadMetadata() (s string, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
+
 	client, err := getConnectedPolkaClient(c.RpcUrl)
 	if err != nil {
 		return
@@ -110,10 +112,8 @@ func (c *PolkaChain) QueryBalancePubkey(pubkey string) (*PolkaBalance, error) {
 }
 
 func (c *PolkaChain) queryBalance(pubkey []byte) (b *PolkaBalance, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
 	b = emptyBalance()
-	defer func() {
-		err = eth.MapToBasicError(err)
-	}()
 
 	client, err := getConnectedPolkaClient(c.RpcUrl)
 	if err != nil {
@@ -222,16 +222,10 @@ func (c *PolkaChain) QueryBalanceXBTC(address string) (b *PolkaBalance, err erro
 // 查询交易的预估手续费
 // @param transaction 交易的构造对象
 func (c *PolkaChain) EstimateFeeForTransaction(transaction *Transaction) (s string, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
 	s = "0"
-	if c == nil || transaction == nil {
-		return s, errors.New("transaction is nil")
-	}
 
 	wallet := mockWallet()
-	defer func() {
-		err = eth.MapToBasicError(err)
-	}()
-
 	fakeHash := "0x38c5a9f6fabb8d8583ed633c469cdeefb988b0d2384937b15e10e9c0a75aa744"
 	signData, err := transaction.GetSignData(fakeHash, 0, 0, 0)
 	if err != nil {
@@ -267,9 +261,8 @@ func (c *PolkaChain) EstimateFeeForTransaction(transaction *Transaction) (s stri
 
 // 发起交易
 func (c *PolkaChain) SendRawTransaction(txHex string) (s string, err error) {
-	defer func() {
-		err = eth.MapToBasicError(err)
-	}()
+	defer base.CatchPanicAndMapToBasicError(&err)
+
 	client, err := getConnectedPolkaClient(c.RpcUrl)
 	if err != nil {
 		return
@@ -286,6 +279,8 @@ func (c *PolkaChain) SendRawTransaction(txHex string) (s string, err error) {
 
 // 查询交易详情
 func (c *PolkaChain) FetchTransactionDetail(hashString string) (t *eth.TransactionDetail, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
+
 	if c.ScanUrl == "" {
 		return nil, errors.New("Scan url is Empty.")
 	}
@@ -358,26 +353,28 @@ func (c *PolkaChain) SdkBatchTransactionStatus(hashListString string) string {
 }
 
 // 功能和 GetSignData 相同，不需要提供 nonce, version 等参数，但需要提供 chain 对象和地址
-func (t *Transaction) GetSignDataFromChain(chain *PolkaChain, walletAddress string) ([]byte, error) {
+func (t *Transaction) GetSignDataFromChain(chain *PolkaChain, walletAddress string) (data []byte, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
+
 	cl, err := getConnectedPolkaClient(chain.RpcUrl)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	var nonce int64
 	err = client.CallWithBlockHash(cl.api.Client, &nonce, "system_accountNextIndex", nil, walletAddress)
 	if err != nil {
-		return nil, eth.MapToBasicError(err)
+		return
 	}
 
 	genesisHash, err := cl.api.RPC.Chain.GetBlockHash(0)
 	if err != nil {
-		return nil, eth.MapToBasicError(err)
+		return
 	}
 
 	runtimeVersion, err := cl.api.RPC.State.GetRuntimeVersionLatest()
 	if err != nil {
-		return nil, eth.MapToBasicError(err)
+		return
 	}
 
 	return t.GetSignData(genesisHash.Hex(), nonce, int32(runtimeVersion.SpecVersion), int32(runtimeVersion.TransactionVersion))
@@ -391,20 +388,22 @@ type MiniXScriptHash struct {
 // 获取 mini 多签转账时需要的 scriptHash
 // @param transferTo 转账目标地址
 // @param amount 要转出的金额
-func (c *PolkaChain) FetchScriptHashForMiniX(transferTo, amount string) (*MiniXScriptHash, error) {
+func (c *PolkaChain) FetchScriptHashForMiniX(transferTo, amount string) (hash *MiniXScriptHash, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
+
 	cl, err := getConnectedPolkaClient(c.RpcUrl)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	amountInt, err := strconv.Atoi(amount)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	signedBlock, err := cl.api.RPC.Chain.GetBlockLatest()
 	if err != nil {
-		return nil, eth.MapToBasicError(err)
+		return
 	}
 	blockNumber := uint64(signedBlock.Block.Header.Number)
 	arrNumber := make([]uint64, 0)
@@ -420,12 +419,12 @@ func (c *PolkaChain) FetchScriptHashForMiniX(transferTo, amount string) (*MiniXS
 	param["params"] = arr
 	body, err := c.post(c.RpcUrl, param)
 	if err != nil {
-		return nil, eth.MapToBasicError(err)
+		return
 	}
 	value := make(map[string]interface{})
 	err = json.Unmarshal(body, &value)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	scriptHash, ok := value["result"].(string)
