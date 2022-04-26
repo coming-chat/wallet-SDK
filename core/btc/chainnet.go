@@ -65,3 +65,13 @@ func rpcClientOf(chainnet string) (*rpcclient.Client, error) {
 
 	return nil, ErrUnsupportedChain
 }
+
+func nameOf(chainnet string) (string, error) {
+	switch chainnet {
+	case ChainSignet:
+		return "sBTC", nil
+	case ChainMainnet, ChainBitcoin:
+		return "BTC", nil
+	}
+	return "", ErrUnsupportedChain
+}

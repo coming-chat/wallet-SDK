@@ -1,10 +1,11 @@
 package base
 
 type Chain interface {
-	QueryBalanceWithAddress(address string) (*Balance, error)
-	QueryBalanceWithPublicKey(publicKey string) (*Balance, error)
+	MainToken() Token
 
-	QueryTokenBalance(token Token, address string) (*Balance, error)
+	BalanceOfAddress(address string) (*Balance, error)
+	BalanceOfPublicKey(publicKey string) (*Balance, error)
+	BalanceOfAccount(account Account) (*Balance, error)
 
 	// Send the raw transaction on-chain
 	// @return the hex hash string

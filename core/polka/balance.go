@@ -2,7 +2,6 @@ package polka
 
 import (
 	"encoding/hex"
-	"errors"
 	"math/big"
 	"strings"
 
@@ -15,7 +14,7 @@ import (
 
 // MARK - Implement the protocol Chain.Balance
 
-func (c *Chain) QueryBalanceWithAddress(address string) (*base.Balance, error) {
+func (c *Chain) BalanceOfAddress(address string) (*base.Balance, error) {
 	ss58Format := base58.Decode(address)
 	pubkey, err := hex.DecodeString(ss58.Decode(address, int(ss58Format[0])))
 	if err != nil {
@@ -24,7 +23,7 @@ func (c *Chain) QueryBalanceWithAddress(address string) (*base.Balance, error) {
 	return c.queryBalance(pubkey)
 }
 
-func (c *Chain) QueryBalanceWithPublicKey(publicKey string) (*base.Balance, error) {
+func (c *Chain) BalanceOfPublicKey(publicKey string) (*base.Balance, error) {
 	publicKey = strings.TrimPrefix(publicKey, "0x")
 	data, err := hex.DecodeString(publicKey)
 	if err != nil {
@@ -33,9 +32,8 @@ func (c *Chain) QueryBalanceWithPublicKey(publicKey string) (*base.Balance, erro
 	return c.queryBalance(data)
 }
 
-// Warning: Unsupported current
-func (c *Chain) QueryTokenBalance(token base.Token, address string) (*base.Balance, error) {
-	return nil, errors.New("Unsupported current")
+func (c *Chain) BalanceOfAccount(account base.Account) (*base.Balance, error) {
+	return c.BalanceOfPublicKey(account.PublicKey())
 }
 
 // query balance with pubkey data.

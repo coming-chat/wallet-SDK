@@ -19,7 +19,11 @@ func NewChainWithChainnet(chainnet string) (*Chain, error) {
 
 // MARK - Implement the protocol Chain
 
-func (c *Chain) QueryBalanceWithAddress(address string) (*base.Balance, error) {
+func (c *Chain) MainToken() base.Token {
+	return c
+}
+
+func (c *Chain) BalanceOfAddress(address string) (*base.Balance, error) {
 	b, err := queryBalance(address, c.Chainnet)
 	if err != nil {
 		return nil, err
@@ -29,8 +33,7 @@ func (c *Chain) QueryBalanceWithAddress(address string) (*base.Balance, error) {
 		Usable: b,
 	}, nil
 }
-
-func (c *Chain) QueryBalanceWithPublicKey(publicKey string) (*base.Balance, error) {
+func (c *Chain) BalanceOfPublicKey(publicKey string) (*base.Balance, error) {
 	b, err := queryBalancePubkey(publicKey, c.Chainnet)
 	if err != nil {
 		return nil, err
@@ -40,10 +43,8 @@ func (c *Chain) QueryBalanceWithPublicKey(publicKey string) (*base.Balance, erro
 		Usable: b,
 	}, nil
 }
-
-// Warning: Btc does not support tokens.
-func (c *Chain) QueryTokenBalance(token base.Token, address string) (*base.Balance, error) {
-	return nil, base.ErrUnsupportedFunction
+func (c *Chain) BalanceOfAccount(account base.Account) (*base.Balance, error) {
+	return c.BalanceOfPublicKey(account.PublicKey())
 }
 
 // Send the raw transaction on-chain
