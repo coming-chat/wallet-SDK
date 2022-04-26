@@ -5,6 +5,7 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
 )
@@ -24,18 +25,20 @@ func NewEthChain() *EthChain {
 	}
 }
 
-func (e *EthChain) CreateRemote(rpcUrl string) (*EthChain, error) {
+func (e *EthChain) CreateRemote(rpcUrl string) (chain *EthChain, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
+
 	ctx, cancel := context.WithTimeout(context.Background(), e.timeout)
 	defer cancel()
 	rpcClient, err := rpc.DialContext(ctx, rpcUrl)
 	if err != nil {
-		return nil, MapToBasicError(err)
+		return
 	}
 
 	remoteRpcClient := ethclient.NewClient(rpcClient)
 	chainId, err := remoteRpcClient.ChainID(ctx)
 	if err != nil {
-		return nil, MapToBasicError(err)
+		return
 	}
 	e.chainId = chainId
 	e.RpcClient = rpcClient

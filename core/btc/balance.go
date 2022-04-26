@@ -22,7 +22,7 @@ func queryBalance(address, chainnet string) (string, error) {
 
 	response, err := httpUtil.Request(http.MethodGet, url, nil, nil)
 	if err != nil {
-		return "0", base.MapToBasicError(err)
+		return "0", base.MapAnyToBasicError(err)
 	}
 
 	return parseBalanceResponse(response)
@@ -39,7 +39,7 @@ func queryBalancePubkey(pubkey, chainnet string) (string, error) {
 
 	response, err := httpUtil.Request(http.MethodGet, url, nil, nil)
 	if err != nil {
-		return "0", base.MapToBasicError(err)
+		return "0", base.MapAnyToBasicError(err)
 	}
 
 	return parseBalanceResponse(response)

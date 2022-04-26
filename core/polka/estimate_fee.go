@@ -9,16 +9,10 @@ import (
 )
 
 func (c *Chain) EstimateFeeForTransaction(transaction *Transaction) (s string, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
 	s = "0"
-	if c == nil || transaction == nil {
-		return s, errors.New("transaction is nil")
-	}
 
 	account := mockAccount()
-	defer func() {
-		err = base.MapToBasicError(err)
-	}()
-
 	fakeHash := "0x38c5a9f6fabb8d8583ed633c469cdeefb988b0d2384937b15e10e9c0a75aa744"
 	signData, err := transaction.GetSignData(fakeHash, 0, 0, 0)
 	if err != nil {

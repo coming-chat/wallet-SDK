@@ -3,6 +3,7 @@ package eth
 import (
 	"context"
 
+	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -13,7 +14,7 @@ func (e *EthChain) SendRawTransaction(txHex string) (string, error) {
 	defer cancel()
 	err := e.RpcClient.CallContext(ctx, &hash, "eth_sendRawTransaction", txHex)
 	if err != nil {
-		return "", MapToBasicError(err)
+		return "", base.MapAnyToBasicError(err)
 	}
 	return hash.String(), nil
 }

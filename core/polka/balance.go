@@ -40,10 +40,8 @@ func (c *Chain) QueryTokenBalance(token base.Token, address string) (*base.Balan
 
 // query balance with pubkey data.
 func (c *Chain) queryBalance(pubkey []byte) (b *base.Balance, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
 	b = base.EmptyBalance()
-	defer func() {
-		err = base.MapToBasicError(err)
-	}()
 
 	client, err := getConnectedPolkaClient(c.RpcUrl)
 	if err != nil {
@@ -95,10 +93,8 @@ func (c *Chain) queryBalance(pubkey []byte) (b *base.Balance, err error) {
 // 特殊查询 XBTC 的余额
 // 只能通过 chainx 链对象来查询，其他链会抛出 error
 func (c *Chain) QueryBalanceXBTC(address string) (b *base.Balance, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
 	b = base.EmptyBalance()
-	defer func() {
-		err = base.MapToBasicError(err)
-	}()
 
 	client, err := getConnectedPolkaClient(c.RpcUrl)
 	if err != nil {

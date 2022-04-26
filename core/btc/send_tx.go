@@ -23,7 +23,7 @@ func sendRawTransaction(signedTx, chainnet string) (string, error) {
 
 	hash, err := client.SendRawTransaction(tx, false)
 	if err != nil {
-		return "", base.MapToBasicError(err)
+		return "", base.MapAnyToBasicError(err)
 	}
 
 	return hash.String(), nil

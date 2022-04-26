@@ -13,26 +13,25 @@ import (
 )
 
 // 功能和 GetSignData 相同，不需要提供 nonce, version 等参数，但需要提供 chain 对象和地址
-func (c *Chain) GetSignData(t *Transaction, walletAddress string) ([]byte, error) {
+func (c *Chain) GetSignData(t *Transaction, walletAddress string) (data []byte, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
+
 	cl, err := getConnectedPolkaClient(c.RpcUrl)
 	if err != nil {
-		return nil, err
+		return
 	}
-
 	var nonce int64
 	err = client.CallWithBlockHash(cl.api.Client, &nonce, "system_accountNextIndex", nil, walletAddress)
 	if err != nil {
-		return nil, base.MapToBasicError(err)
+		return
 	}
-
 	genesisHash, err := cl.api.RPC.Chain.GetBlockHash(0)
 	if err != nil {
-		return nil, base.MapToBasicError(err)
+		return
 	}
-
 	runtimeVersion, err := cl.api.RPC.State.GetRuntimeVersionLatest()
 	if err != nil {
-		return nil, base.MapToBasicError(err)
+		return
 	}
 
 	return t.GetSignData(genesisHash.Hex(), nonce, int32(runtimeVersion.SpecVersion), int32(runtimeVersion.TransactionVersion))
@@ -46,20 +45,22 @@ type MiniXScriptHash struct {
 // 获取 mini 多签转账时需要的 scriptHash
 // @param transferTo 转账目标地址
 // @param amount 要转出的金额
-func (c *Chain) FetchScriptHashForMiniX(transferTo, amount string) (*MiniXScriptHash, error) {
+func (c *Chain) FetchScriptHashForMiniX(transferTo, amount string) (sh *MiniXScriptHash, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
+
 	cl, err := getConnectedPolkaClient(c.RpcUrl)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	amountInt, err := strconv.Atoi(amount)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	signedBlock, err := cl.api.RPC.Chain.GetBlockLatest()
 	if err != nil {
-		return nil, base.MapToBasicError(err)
+		return
 	}
 	blockNumber := uint64(signedBlock.Block.Header.Number)
 	arrNumber := make([]uint64, 0)
@@ -75,12 +76,12 @@ func (c *Chain) FetchScriptHashForMiniX(transferTo, amount string) (*MiniXScript
 	param["params"] = arr
 	body, err := c.post(c.RpcUrl, param)
 	if err != nil {
-		return nil, base.MapToBasicError(err)
+		return
 	}
 	value := make(map[string]interface{})
 	err = json.Unmarshal(body, &value)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	scriptHash, ok := value["result"].(string)

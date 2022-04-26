@@ -6,13 +6,15 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 )
 
-func (e *EthChain) CallContractConstant(out interface{}, contractAddress, abiStr, methodName string, opts *bind.CallOpts, params ...interface{}) error {
+func (e *EthChain) CallContractConstant(out interface{}, contractAddress, abiStr, methodName string, opts *bind.CallOpts, params ...interface{}) (err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
 	parsedAbi, err := abi.JSON(strings.NewReader(abiStr))
 	if err != nil {
 		return err
@@ -27,10 +29,12 @@ func (e *EthChain) CallContractConstant(out interface{}, contractAddress, abiStr
 		return errors.New("method not found")
 	}
 	err = e.CallContractConstantWithPayload(out, contractAddress, hex.EncodeToString(inputParams), method.Outputs, opts)
-	return MapToBasicError(err)
+	return err
 }
 
-func (e *EthChain) CallContractConstantWithPayload(out interface{}, contractAddress, payload string, outputTypes abi.Arguments, opts *bind.CallOpts) error {
+func (e *EthChain) CallContractConstantWithPayload(out interface{}, contractAddress, payload string, outputTypes abi.Arguments, opts *bind.CallOpts) (err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
+
 	if opts == nil {
 		opts = new(bind.CallOpts)
 	}

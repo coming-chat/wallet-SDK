@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
@@ -42,23 +43,22 @@ func (e *EthChain) EstimateContractGasLimit(
 	contractAddress,
 	abiStr,
 	methodName string,
-	erc20JsonParams string) (string, error) {
-	var err error
-	defer func() {
-		err = MapToBasicError(err)
-	}()
+	erc20JsonParams string) (gas string, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
+	gas = DEFAULT_CONTRACT_GAS_LIMIT
 
 	parsedAbi, err := abi.JSON(strings.NewReader(abiStr))
 	if err != nil {
-		return DEFAULT_CONTRACT_GAS_LIMIT, err
+		return
 	}
 	contractAddressObj := common.HexToAddress(contractAddress)
 
 	var erc20TxParams Erc20TxParams
 	var input []byte
 	// 对交易参数进行格式化
-	if err := json.Unmarshal([]byte(erc20JsonParams), &erc20TxParams); err != nil {
-		return DEFAULT_CONTRACT_GAS_LIMIT, err
+	err = json.Unmarshal([]byte(erc20JsonParams), &erc20TxParams)
+	if err != nil {
+		return
 	}
 
 	amountBigInt, _ := new(big.Int).SetString(erc20TxParams.Amount, 10)
@@ -69,7 +69,7 @@ func (e *EthChain) EstimateContractGasLimit(
 			common.HexToAddress(erc20TxParams.ToAddress),
 			amountBigInt)
 		if err != nil {
-			return DEFAULT_CONTRACT_GAS_LIMIT, err
+			return
 		}
 	} else {
 		return DEFAULT_CONTRACT_GAS_LIMIT, fmt.Errorf("unsupported method name: %s", methodName)
@@ -80,6 +80,7 @@ func (e *EthChain) EstimateContractGasLimit(
 	gasPrice, err := e.SuggestGasPrice()
 	if err != nil {
 		gasPrice = DEFAULT_ETH_GAS_PRICE
+		err = nil
 	}
 	gasPriceBigInt, _ := new(big.Int).SetString(gasPrice, 10)
 
@@ -96,7 +97,7 @@ func (e *EthChain) EstimateContractGasLimit(
 	defer cancel()
 	tempGasLimitUint, err := e.RemoteRpcClient.EstimateGas(ctx, msg)
 	if err != nil {
-		return DEFAULT_CONTRACT_GAS_LIMIT, err
+		return
 	}
 	gasLimit := uint64(float64(tempGasLimitUint) * float64(e.gasFactor()))
 	if gasLimit < 60000 {
@@ -106,12 +107,15 @@ func (e *EthChain) EstimateContractGasLimit(
 	return gasLimitStr, nil
 }
 
-func (e *EthChain) estimateGasLimit(msg ethereum.CallMsg) (string, error) {
+func (e *EthChain) estimateGasLimit(msg ethereum.CallMsg) (gas string, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
+	gas = DEFAULT_ETH_GAS_LIMIT
+
 	ctx, cancel := context.WithTimeout(context.Background(), e.timeout)
 	defer cancel()
 	gasCount, err := e.RemoteRpcClient.EstimateGas(ctx, msg)
 	if err != nil {
-		return DEFAULT_ETH_GAS_LIMIT, MapToBasicError(err)
+		return
 	}
 	gasLimitStr := strconv.FormatUint(gasCount, 10)
 	return gasLimitStr, nil
@@ -123,7 +127,10 @@ func (e *EthChain) estimateGasLimit(msg ethereum.CallMsg) (string, error) {
 // @param gasPrice Previously acquired or entered by the user
 // @param amount The amount transferred
 // @return Estimate gasLimit, is a `String` converted from `Uint64`
-func (e *EthChain) EstimateGasLimit(fromAddress string, receiverAddress string, gasPrice string, amount string) (string, error) {
+func (e *EthChain) EstimateGasLimit(fromAddress string, receiverAddress string, gasPrice string, amount string) (gas string, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
+	gas = DEFAULT_ETH_GAS_LIMIT
+
 	from := common.HexToAddress(fromAddress)
 	contractAddressObj := common.HexToAddress(receiverAddress)
 	value := big.NewInt(0)
@@ -131,11 +138,11 @@ func (e *EthChain) EstimateGasLimit(fromAddress string, receiverAddress string, 
 	amountBigInt, _ := new(big.Int).SetString(amount, 10)
 	parsedAbi, err := abi.JSON(strings.NewReader(Erc20AbiStr))
 	if err != nil {
-		return DEFAULT_ETH_GAS_LIMIT, err
+		return
 	}
 	input, err := parsedAbi.Pack(ERC20_METHOD_TRANSFER, common.HexToAddress(receiverAddress), amountBigInt)
 	if err != nil {
-		return DEFAULT_ETH_GAS_LIMIT, err
+		return
 	}
 
 	price, isNumber := new(big.Int).SetString(gasPrice, 10)
@@ -146,11 +153,11 @@ func (e *EthChain) EstimateGasLimit(fromAddress string, receiverAddress string, 
 	msg := ethereum.CallMsg{From: from, To: &contractAddressObj, GasPrice: price, Value: value, Data: input}
 	gasLimit, err := e.estimateGasLimit(msg)
 	if err != nil {
-		return DEFAULT_ETH_GAS_LIMIT, MapToBasicError(err)
+		return
 	}
 	gasLimitDecimal, err := decimal.NewFromString(gasLimit)
 	if err != nil {
-		return DEFAULT_ETH_GAS_LIMIT, err
+		return
 	}
 	return gasLimitDecimal.Mul(decimal.NewFromFloat32(e.gasFactor())).Round(0).String(), nil
 }

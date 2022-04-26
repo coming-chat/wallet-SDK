@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
@@ -75,21 +76,18 @@ func NewTransactionDetailWithJsonString(s string) *TransactionDetail {
 // 获取交易的详情
 // @param hashString 交易的 hash
 // @return 详情对象，该对象无法提供 CID 信息
-func (e *EthChain) FetchTransactionDetail(hashString string) (*TransactionDetail, error) {
-	var err error
-	defer func() {
-		err = MapToBasicError(err)
-	}()
+func (e *EthChain) FetchTransactionDetail(hashString string) (detail *TransactionDetail, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
 
 	ctx, cancel := context.WithTimeout(context.Background(), e.timeout)
 	defer cancel()
 	tx, isPending, err := e.RemoteRpcClient.TransactionByHash(ctx, common.HexToHash(hashString))
 	if err != nil {
-		return nil, err
+		return
 	}
 	msg, err := tx.AsMessage(types.NewEIP155Signer(e.chainId), nil)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	address := msg.To().String()
@@ -98,13 +96,13 @@ func (e *EthChain) FetchTransactionDetail(hashString string) (*TransactionDetail
 	if len(tx.Data()) != 0 {
 		address, amount, err = decodeErc20TransferInput(tx.Data())
 		if err != nil {
-			return nil, err
+			return
 		}
 	}
 
 	gasPrice := msg.GasPrice().Uint64()
 	estimateGasLimit := msg.Gas()
-	detail := &TransactionDetail{
+	detail = &TransactionDetail{
 		HashString:   hashString,
 		FromAddress:  msg.From().String(),
 		ToAddress:    address,
@@ -114,24 +112,24 @@ func (e *EthChain) FetchTransactionDetail(hashString string) (*TransactionDetail
 
 	if isPending {
 		detail.Status = TransactionStatusPending
-		return detail, nil
+		return
 	}
 
 	// 交易receipt 状态信息，0表示失败，1表示成功
 	// 当交易没有处于pending状态时，可以查询receipt信息，即交易是否成功, err为nil时，表示查询成功进入if语句赋值
 	receipt, err := e.TransactionReceiptByHash(hashString)
 	if err != nil {
-		return nil, err
+		return
 	}
 	blockHeader, err := e.RemoteRpcClient.HeaderByNumber(ctx, receipt.BlockNumber)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	if receipt.Status == 0 {
 		detail.Status = TransactionStatusFailure
 		// get error message
-		_, err := e.RemoteRpcClient.CallContract(ctx, ethereum.CallMsg{
+		_, errTx := e.RemoteRpcClient.CallContract(ctx, ethereum.CallMsg{
 			From:       msg.From(),
 			To:         msg.To(),
 			Data:       msg.Data(),
@@ -142,7 +140,7 @@ func (e *EthChain) FetchTransactionDetail(hashString string) (*TransactionDetail
 			Value:      msg.Value(),
 			AccessList: msg.AccessList(),
 		}, receipt.BlockNumber)
-		if err != nil {
+		if errTx != nil {
 			detail.FailureMessage = err.Error()
 		}
 

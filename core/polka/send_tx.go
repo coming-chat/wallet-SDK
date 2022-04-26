@@ -5,9 +5,8 @@ import "github.com/coming-chat/wallet-SDK/core/base"
 // MARK - Implement the protocol Chain.SendTx
 
 func (c *Chain) SendRawTransaction(signedTx string) (s string, err error) {
-	defer func() {
-		err = base.MapToBasicError(err)
-	}()
+	defer base.CatchPanicAndMapToBasicError(&err)
+
 	client, err := getConnectedPolkaClient(c.RpcUrl)
 	if err != nil {
 		return

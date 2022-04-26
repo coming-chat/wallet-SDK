@@ -23,7 +23,7 @@ func fetchTransactionDetail(hashString, chainnet string) (*base.TransactionDetai
 
 	rawResult, err := client.GetRawTransactionVerbose(hash)
 	if err != nil {
-		return nil, base.MapToBasicError(err)
+		return nil, base.MapAnyToBasicError(err)
 	}
 
 	status := base.TransactionStatusPending

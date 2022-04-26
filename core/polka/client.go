@@ -36,7 +36,7 @@ func (c *polkaclient) connectApiIfNeeded() error {
 	if c.api == nil {
 		api, err := gsrpc.NewSubstrateAPI(c.rpcUrl)
 		if err != nil {
-			return base.MapToBasicError(err)
+			return base.MapAnyToBasicError(err)
 		}
 		c.api = api
 	}
@@ -50,7 +50,7 @@ func (c *polkaclient) ReloadMetadata() error {
 	}
 	meta, err := c.api.RPC.State.GetMetadataLatest()
 	if err != nil {
-		return base.MapToBasicError(err)
+		return base.MapAnyToBasicError(err)
 	}
 	c.metadata = meta
 	return nil
