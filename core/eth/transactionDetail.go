@@ -2,7 +2,6 @@ package eth
 
 import (
 	"context"
-	"encoding/json"
 	"math/big"
 	"strconv"
 	"strings"
@@ -24,59 +23,10 @@ type Jsonable interface {
 	// NewXxxWithJsonString(s string) *Xxx
 }
 
-type TransactionStatus = SDKEnumInt
-
-const (
-	TransactionStatusNone    TransactionStatus = 0
-	TransactionStatusPending TransactionStatus = 1
-	TransactionStatusSuccess TransactionStatus = 2
-	TransactionStatusFailure TransactionStatus = 3
-)
-
-// 可以从链上获取的转账详情信息
-// 客户端的详情展示还需要 FromCID, ToCID, CreateTimestamp, Transfer(转出/收入), CoinType, Decimal
-// 这些信息需要客户端自己维护
-type TransactionDetail struct {
-	// 交易在链上的哈希
-	HashString string
-	// 交易额
-	Amount string
-	// 交易手续费, Pending 时为预估手续费，交易结束时为真实手续费
-	EstimateFees string
-	// 转账人的地址
-	FromAddress string
-	// 收款人的地址
-	ToAddress string
-	// 交易状态 枚举常量
-	// 0: TransactionStatusNone;
-	// 1: TransactionStatusPending;
-	// 2: TransactionStatusSuccess;
-	// 3: TransactionStatusFailure;
-	Status TransactionStatus
-	// 交易完成时间, 如果在 Pending 中，为 0
-	FinishTimestamp int64
-	// 失败描述
-	FailureMessage string
-}
-
-func (i *TransactionDetail) JsonString() string {
-	json, err := json.Marshal(i)
-	if err != nil {
-		return ""
-	}
-	return string(json)
-}
-
-func NewTransactionDetailWithJsonString(s string) *TransactionDetail {
-	var i TransactionDetail
-	json.Unmarshal([]byte(s), &i)
-	return &i
-}
-
 // 获取交易的详情
 // @param hashString 交易的 hash
 // @return 详情对象，该对象无法提供 CID 信息
-func (e *EthChain) FetchTransactionDetail(hashString string) (detail *TransactionDetail, err error) {
+func (e *EthChain) FetchTransactionDetail(hashString string) (detail *base.TransactionDetail, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
 
 	ctx, cancel := context.WithTimeout(context.Background(), e.timeout)
@@ -102,7 +52,7 @@ func (e *EthChain) FetchTransactionDetail(hashString string) (detail *Transactio
 
 	gasPrice := msg.GasPrice().Uint64()
 	estimateGasLimit := msg.Gas()
-	detail = &TransactionDetail{
+	detail = &base.TransactionDetail{
 		HashString:   hashString,
 		FromAddress:  msg.From().String(),
 		ToAddress:    address,
@@ -111,7 +61,7 @@ func (e *EthChain) FetchTransactionDetail(hashString string) (detail *Transactio
 	}
 
 	if isPending {
-		detail.Status = TransactionStatusPending
+		detail.Status = base.TransactionStatusPending
 		return
 	}
 
@@ -127,7 +77,7 @@ func (e *EthChain) FetchTransactionDetail(hashString string) (detail *Transactio
 	}
 
 	if receipt.Status == 0 {
-		detail.Status = TransactionStatusFailure
+		detail.Status = base.TransactionStatusFailure
 		// get error message
 		_, errTx := e.RemoteRpcClient.CallContract(ctx, ethereum.CallMsg{
 			From:       msg.From(),
@@ -145,7 +95,7 @@ func (e *EthChain) FetchTransactionDetail(hashString string) (detail *Transactio
 		}
 
 	} else {
-		detail.Status = TransactionStatusSuccess
+		detail.Status = base.TransactionStatusSuccess
 	}
 	gasUsed := receipt.GasUsed
 	detail.EstimateFees = strconv.FormatUint(gasPrice*gasUsed, 10)
@@ -156,27 +106,27 @@ func (e *EthChain) FetchTransactionDetail(hashString string) (detail *Transactio
 
 // 获取交易的状态
 // @param hashString 交易的 hash
-func (e *EthChain) FetchTransactionStatus(hashString string) TransactionStatus {
+func (e *EthChain) FetchTransactionStatus(hashString string) base.TransactionStatus {
 	if len(hashString) == 0 {
-		return TransactionStatusNone
+		return base.TransactionStatusNone
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), e.timeout)
 	defer cancel()
 	_, isPending, err := e.RemoteRpcClient.TransactionByHash(ctx, common.HexToHash(hashString))
 	if err != nil {
-		return TransactionStatusNone
+		return base.TransactionStatusNone
 	}
 	if isPending {
-		return TransactionStatusPending
+		return base.TransactionStatusPending
 	}
 
 	// 交易receipt 状态信息，0表示失败，1表示成功
 	receipt, err := e.TransactionReceiptByHash(hashString)
 	if receipt.Status == 0 {
-		return TransactionStatusFailure
+		return base.TransactionStatusFailure
 	} else {
-		return TransactionStatusSuccess
+		return base.TransactionStatusSuccess
 	}
 }
 

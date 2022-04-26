@@ -29,7 +29,7 @@ func TestTransactionDetail(t *testing.T) {
 		t.Fatal("fetch detail failure:", err)
 	}
 
-	t.Log(detail.JsonString())
+	t.Log(detail)
 }
 
 func TestTransaction(t *testing.T) {
@@ -46,7 +46,7 @@ func TestTransaction(t *testing.T) {
 	}
 
 	t.Log("success")
-	t.Log(detail.JsonString())
+	t.Log(detail)
 }
 
 func TestBatchStatus(t *testing.T) {

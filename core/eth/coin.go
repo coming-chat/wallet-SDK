@@ -1,10 +1,12 @@
 package eth
 
 import (
-	"fmt"
-	"strconv"
+	"errors"
+
+	"github.com/coming-chat/wallet-SDK/core/base"
 )
 
+// Deprecated: CoinUtil is deprecated. Please Use EthChain instead.
 type CoinUtil struct {
 	// 链的 RPC 地址
 	RpcUrl string
@@ -14,9 +16,7 @@ type CoinUtil struct {
 	WalletAddress string
 }
 
-// 创建 CoinUtil 对象
-// @param contractAddress 币种的合约地址，如果是主网的币，可传 nil
-// @param walletAddress 用户的钱包地址
+// Deprecated: CoinUtil is deprecated. Please Use NewChainWithRpc() instead.
 func NewCoinUtilWithRpc(rpcUrl, contractAddress, walletAddress string) *CoinUtil {
 	return &CoinUtil{
 		RpcUrl:          rpcUrl,
@@ -30,10 +30,8 @@ func (u *CoinUtil) IsMainCoin() bool {
 	return u.ContractAddress == ""
 }
 
-// 查询币种信息
-// 主币只能获取到余额
-// 合约币能获取到所有信息
-func (u *CoinUtil) CoinInfo() (*Erc20Token, error) {
+// Deprecated: CoinInfo is deprecated.
+func (u *CoinUtil) CoinInfo() (*Erc20TokenInfo, error) {
 	chain, err := GetConnection(u.RpcUrl)
 	if err != nil {
 		return nil, err
@@ -44,7 +42,7 @@ func (u *CoinUtil) CoinInfo() (*Erc20Token, error) {
 		if err != nil {
 			return nil, err
 		}
-		return &Erc20Token{
+		return &Erc20TokenInfo{
 			Balance: balance,
 		}, nil
 	} else {
@@ -52,143 +50,76 @@ func (u *CoinUtil) CoinInfo() (*Erc20Token, error) {
 	}
 }
 
-// 查询用户的钱包余额
+// Deprecated: QueryBalance is deprecated. Please Use Chain.Token().BalanceOfAddress() instead.
 func (u *CoinUtil) QueryBalance() (string, error) {
-	chain, err := GetConnection(u.RpcUrl)
-	if err != nil {
-		return "", err
-	}
-
-	var balance string
-	if u.IsMainCoin() {
-		balance, err = chain.Balance(u.WalletAddress)
-	} else {
-		balance, err = chain.TokenBalance(u.ContractAddress, u.WalletAddress)
-	}
-	if err != nil {
-		return "", err
-	}
-
-	return balance, nil
+	balance, err := u.baseToken().BalanceOfAddress(u.WalletAddress)
+	return balance.Usable, err
 }
 
-// 获取 gasPrice
+// Deprecated: SuggestGasPrice is deprecated. Please Use Chain.SuggestGasPrice() instead.
 func (u *CoinUtil) SuggestGasPrice() (string, error) {
-	chain, err := GetConnection(u.RpcUrl)
-	if err != nil {
-		return "", err
-	}
-	return chain.SuggestGasPrice()
+	return u.chain().SuggestGasPrice()
 }
 
-// 获取交易的 nonce
+// Deprecated: Nonce is deprecated. Please Use Chain.NonceOfAddress() instead.
 func (u *CoinUtil) Nonce() (string, error) {
-	chain, err := GetConnection(u.RpcUrl)
-	if err != nil {
-		return "", err
-	}
-	return chain.Nonce(u.WalletAddress)
+	return u.chain().NonceOfAddress(u.WalletAddress)
 }
 
-// 获取转账的 预估 gasLimit
+// Deprecated: Nonce is deprecated. Please Use Chain.Token().EstimateGasLimit() instead.
 func (u *CoinUtil) EstimateGasLimit(receiverAddress, gasPrice, amount string) (string, error) {
-	chain, err := GetConnection(u.RpcUrl)
+	token, err := u.ethToken()
 	if err != nil {
 		return "", err
 	}
-
-	var gasLimit string
-	if u.IsMainCoin() {
-		gasLimit, err = chain.EstimateGasLimit(u.WalletAddress, receiverAddress, gasPrice, amount)
-	} else {
-		erc20JsonParams := fmt.Sprintf(
-			"{\"toAddress\":\"%s\", \"amount\":\"%s\", \"method\":\"%s\"}",
-			receiverAddress,
-			amount,
-			ERC20_METHOD_TRANSFER)
-		gasLimit, err = chain.EstimateContractGasLimit(u.WalletAddress, u.ContractAddress, Erc20AbiStr, ERC20_METHOD_TRANSFER, erc20JsonParams)
-	}
-	if err != nil {
-		return "", err
-	}
-
-	return gasLimit, nil
+	return token.EstimateGasLimit(u.WalletAddress, receiverAddress, gasPrice, amount)
 }
 
-// 创建 ETH 转账交易
+// Deprecated: BuildTransferTx is deprecated. Please Use Chain.Token().BuildTransferTx() instead.
 func (u *CoinUtil) BuildTransferTx(privateKey, receiverAddress, nonce, gasPrice, gasLimit, amount string) (string, error) {
-	chain, err := GetConnection(u.RpcUrl)
+	token, err := u.ethToken()
 	if err != nil {
 		return "", err
 	}
-
-	nonceInt, err := strconv.ParseInt(nonce, 10, 64)
-	if err != nil {
-		return "", err
-	}
-	call := &CallMethodOpts{
-		Nonce:    nonceInt,
-		GasPrice: gasPrice,
-		GasLimit: gasLimit,
-	}
-
-	var output *BuildTxResult
-	if u.IsMainCoin() {
-		call.Value = amount
-		output, err = chain.BuildTransferTx(privateKey, receiverAddress, call)
-
-	} else {
-		erc20JsonParams := fmt.Sprintf(
-			"{\"toAddress\":\"%s\", \"amount\":\"%s\", \"method\":\"%s\"}",
-			receiverAddress,
-			amount,
-			ERC20_METHOD_TRANSFER)
-		output, err = chain.BuildCallMethodTx(privateKey, u.ContractAddress, Erc20AbiStr, ERC20_METHOD_TRANSFER, call, erc20JsonParams)
-	}
-	if err != nil {
-		return "", err
-	}
-
-	return output.TxHex, nil
+	return token.BuildTransferTx(privateKey, receiverAddress, nonce, gasPrice, gasLimit, amount)
 }
 
-// 对交易进行广播
+// Deprecated: SendRawTransaction is deprecated. Please Use Chain.SendRawTransaction() instead.
 func (u *CoinUtil) SendRawTransaction(txHex string) (string, error) {
-	chain, err := GetConnection(u.RpcUrl)
-	if err != nil {
-		return "", err
-	}
-	return chain.SendRawTransaction(txHex)
+	return u.chain().SendRawTransaction(txHex)
 }
 
-// 获取交易的状态
-// @param hashString 交易的 hash
-func (u *CoinUtil) FetchTransactionStatus(hashString string) TransactionStatus {
-	chain, err := GetConnection(u.RpcUrl)
-	if err != nil {
-		return TransactionStatusNone
-	}
-	return chain.FetchTransactionStatus(hashString)
+// Deprecated: FetchTransactionStatus is deprecated. Please Use Chain.FetchTransactionStatus() instead.
+func (u *CoinUtil) FetchTransactionStatus(hashString string) base.TransactionStatus {
+	return u.chain().FetchTransactionStatus(hashString)
 }
 
-// 获取交易的详情
-// @param hashString 交易的 hash
-// @return 详情对象，该对象无法提供 CID 信息
-func (u *CoinUtil) FetchTransactionDetail(hashString string) (*TransactionDetail, error) {
-	chain, err := GetConnection(u.RpcUrl)
-	if err != nil {
-		return nil, err
-	}
-	return chain.FetchTransactionDetail(hashString)
+// Deprecated: FetchTransactionDetail is deprecated. Please Use Chain.FetchTransactionDetail() instead.
+func (u *CoinUtil) FetchTransactionDetail(hashString string) (*base.TransactionDetail, error) {
+	return u.chain().FetchTransactionDetail(hashString)
 }
 
-// SDK 批量获取交易的转账状态，hash 列表和返回值，都只能用字符串，逗号隔开传递
-// @param hashListString 要批量查询的交易的 hash，用逗号拼接的字符串："hash1,hash2,hash3"
-// @return 批量的交易状态，它的顺序和 hashListString 是保持一致的: "status1,status2,status3"
+// Deprecated: SdkBatchTransactionStatus is deprecated. Please Use Chain.SdkBatchTransactionStatus() instead.
 func (u *CoinUtil) SdkBatchTransactionStatus(hashListString string) (string, error) {
-	chain, err := GetConnection(u.RpcUrl)
-	if err != nil {
-		return "", err
+	return u.chain().BatchFetchTransactionStatus(hashListString), nil
+}
+
+func (u *CoinUtil) chain() *Chain {
+	return NewChainWithRpc(u.RpcUrl)
+}
+
+func (u *CoinUtil) baseToken() base.Token {
+	if u.IsMainCoin() {
+		return u.chain().MainToken()
+	} else {
+		return u.chain().Erc20Token(u.ContractAddress)
 	}
-	return chain.SdkBatchTransactionStatus(hashListString), nil
+}
+
+func (u *CoinUtil) ethToken() (*Token, error) {
+	token, ok := u.baseToken().(*Token)
+	if !ok {
+		return nil, errors.New("golang type cast error") // TODO verify
+	}
+	return token, nil
 }
