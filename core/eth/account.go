@@ -68,18 +68,25 @@ func NewAccountWithMnemonic(mnemonic string) (*Account, error) {
 // MARK - Implement the protocol wallet.Account
 
 // @return privateKey data
-func (a *Account) PrivateKeyData() ([]byte, error) {
+func (a *Account) PrivateKey() ([]byte, error) {
 	return a.privateKey, nil
 }
 
-// The ethereum public key is same as address in coming
-// @return publicKey that will start with 0x.
-func (a *Account) PrivateKey() (string, error) {
+// @return privateKey string that will start with 0x.
+func (a *Account) PrivateKeyHex() (string, error) {
 	return types.HexEncodeToString(a.privateKey), nil
 }
 
+// Is deocde from address
+// @return publicKey data
+func (a *Account) PublicKey() []byte {
+	pub, _ := types.HexDecodeString(a.address)
+	return pub
+}
+
+// The ethereum public key is same as address in coming
 // @return publicKey string that will start with 0x.
-func (a *Account) PublicKey() string {
+func (a *Account) PublicKeyHex() string {
 	return a.address
 }
 
