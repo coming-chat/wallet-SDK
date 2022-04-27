@@ -1,6 +1,7 @@
 package wallet
 
 import (
+	"github.com/ChainSafe/go-schnorrkel"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/coming-chat/wallet-SDK/core/btc"
 	"github.com/coming-chat/wallet-SDK/core/eth"
@@ -19,20 +20,15 @@ type Wallet struct {
 	ethereumAccount *eth.Account
 }
 
-func NewWalletFromMnemonic(mnemonic string) (*Wallet, error) {
+func NewWalletWithMnemonic(mnemonic string) (*Wallet, error) {
 	if !IsValidMnemonic(mnemonic) {
 		return nil, ErrInvalidMnemonic
 	}
 	return &Wallet{Mnemonic: mnemonic}, nil
 }
 
-// Deprecated: NewWallet is deprecated. Please Use NewWalletFromMnemonic instead.
-func NewWallet(seedOrPhrase string) (*Wallet, error) {
-	return NewWalletFromMnemonic(seedOrPhrase)
-}
-
 // Only support Polka keystore.
-func NewWalletFromKeyStore(keyStoreJson string, password string) (*Wallet, error) {
+func NewWalletWithKeyStore(keyStoreJson string, password string) (*Wallet, error) {
 	// check is valid keystore
 	if !polka.IsValidKeystore(keyStoreJson, password) {
 		return nil, ErrKeystore
@@ -178,4 +174,15 @@ func (w *Wallet) GetPrivateKeyHex() (string, error) {
 		return "", err
 	}
 	return account.PrivateKey()
+}
+
+func Verify(publicKey [32]byte, msg []byte, signature []byte) bool {
+	var sigs [64]byte
+	copy(sigs[:], signature)
+	sig := new(schnorrkel.Signature)
+	if err := sig.Decode(sigs); err != nil {
+		return false
+	}
+	publicKeyD := schnorrkel.NewPublicKey(publicKey)
+	return publicKeyD.Verify(sig, schnorrkel.NewSigningContext([]byte("substrate"), msg))
 }
