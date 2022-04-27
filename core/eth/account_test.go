@@ -57,9 +57,9 @@ func TestIsValidAddress(t *testing.T) {
 			want:    true,
 		},
 		{
-			name:    "invalid address, but we cant check",
+			name:    "invalid address of eip55",
 			address: "0x7161ada3EA6e53E5652A45988DdfF1cE595E09c1",
-			want:    true,
+			want:    false,
 		},
 		{
 			name:    "invalid address short length",
@@ -75,7 +75,7 @@ func TestIsValidAddress(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := IsValidAddress(tt.address); got != tt.want {
-				t.Errorf("IsValidAddress() = %v, want %v", got, tt.want)
+				t.Errorf("IsValidAddress(%v) = %v, want %v", tt.address, got, tt.want)
 			}
 		})
 	}
