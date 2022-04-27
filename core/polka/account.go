@@ -14,7 +14,7 @@ type Account struct {
 	keypair  *signature.KeyringPair
 	keystore *keystore
 
-	publicKey string
+	publicKey []byte
 	address   string
 
 	Network int
@@ -29,8 +29,9 @@ func NewAccountWithMnemonic(mnemonic string, network int) (*Account, error) {
 		return nil, err
 	}
 
-	publicKey := types.HexEncodeToString(keyringPair.PublicKey)
-	address, err := EncodePublicKeyToAddress(publicKey, network)
+	publicKey := keyringPair.PublicKey
+	publicKeyHex := types.HexEncodeToString(publicKey)
+	address, err := EncodePublicKeyToAddress(publicKeyHex, network)
 	if err != nil {
 		return nil, err
 	}
@@ -53,11 +54,15 @@ func NewAccountWithKeystore(keystoreString, password string, network int) (*Acco
 		return nil, err
 	}
 
-	publicKey, err := DecodeAddressToPublicKey(keyStore.Address)
+	publicKeyHex, err := DecodeAddressToPublicKey(keyStore.Address)
 	if err != nil {
 		return nil, err
 	}
-	address, err := EncodePublicKeyToAddress(publicKey, network)
+	publicKey, err := types.HexDecodeString(publicKeyHex)
+	if err != nil {
+		return nil, err
+	}
+	address, err := EncodePublicKeyToAddress(publicKeyHex, network)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +76,7 @@ func NewAccountWithKeystore(keystoreString, password string, network int) (*Acco
 }
 
 func (a *Account) DeriveAccountAt(network int) (*Account, error) {
-	address, err := EncodePublicKeyToAddress(a.publicKey, network)
+	address, err := EncodePublicKeyToAddress(a.PublicKeyHex(), network)
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +92,7 @@ func (a *Account) DeriveAccountAt(network int) (*Account, error) {
 // MARK - Implement the protocol wallet.Account
 
 // @return privateKey data
-func (a *Account) PrivateKeyData() ([]byte, error) {
+func (a *Account) PrivateKey() ([]byte, error) {
 	if a.keypair == nil {
 		return nil, ErrNilKey
 	}
@@ -101,17 +106,22 @@ func (a *Account) PrivateKeyData() ([]byte, error) {
 }
 
 // @return privateKey string that will start with 0x.
-func (a *Account) PrivateKey() (string, error) {
-	data, err := a.PrivateKeyData()
+func (a *Account) PrivateKeyHex() (string, error) {
+	data, err := a.PrivateKey()
 	if err != nil {
 		return "", err
 	}
 	return types.HexEncodeToString(data), nil
 }
 
-// @return publicKey string that will start with 0x.
-func (a *Account) PublicKey() string {
+// @return publicKey data
+func (a *Account) PublicKey() []byte {
 	return a.publicKey
+}
+
+// @return publicKey string that will start with 0x.
+func (a *Account) PublicKeyHex() string {
+	return types.HexEncodeToString(a.publicKey)
 }
 
 // @return address string

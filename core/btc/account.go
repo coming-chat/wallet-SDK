@@ -10,7 +10,7 @@ import (
 
 type Account struct {
 	privateKey []byte
-	publicKey  string
+	publicKey  []byte
 	address    string
 	Chainnet   string
 }
@@ -24,7 +24,6 @@ func NewAccountWithMnemonic(mnemonic, chainnet string) (*Account, error) {
 	pri, pub := btcec.PrivKeyFromBytes(seed)
 	priData := pri.Serialize()
 	pubData := pub.SerializeUncompressed()
-	pubHex := types.HexEncodeToString(pubData)
 
 	address, err := EncodePublicDataToAddress(pubData, chainnet)
 	if err != nil {
@@ -33,14 +32,14 @@ func NewAccountWithMnemonic(mnemonic, chainnet string) (*Account, error) {
 
 	return &Account{
 		privateKey: priData,
-		publicKey:  pubHex,
+		publicKey:  pubData,
 		address:    address,
 		Chainnet:   chainnet,
 	}, nil
 }
 
 func (a *Account) DeriveAccountAt(chainnet string) (*Account, error) {
-	address, err := EncodePublicKeyToAddress(a.publicKey, chainnet)
+	address, err := EncodePublicDataToAddress(a.publicKey, chainnet)
 	if err != nil {
 		return nil, err
 	}
@@ -55,18 +54,23 @@ func (a *Account) DeriveAccountAt(chainnet string) (*Account, error) {
 // MARK - Implement the protocol wallet.Account
 
 // @return privateKey data
-func (a *Account) PrivateKeyData() ([]byte, error) {
+func (a *Account) PrivateKey() ([]byte, error) {
 	return a.privateKey, nil
 }
 
 // @return privateKey string that will start with 0x.
-func (a *Account) PrivateKey() (string, error) {
+func (a *Account) PrivateKeyHex() (string, error) {
 	return types.HexEncodeToString(a.privateKey), nil
 }
 
-// @return publicKey string that will start with 0x.
-func (a *Account) PublicKey() string {
+// @return publicKey data
+func (a *Account) PublicKey() []byte {
 	return a.publicKey
+}
+
+// @return publicKey string that will start with 0x.
+func (a *Account) PublicKeyHex() string {
+	return types.HexEncodeToString(a.publicKey)
 }
 
 // @return default is the mainnet address

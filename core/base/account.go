@@ -11,12 +11,15 @@ type AddressUtil interface {
 
 type Account interface {
 	// @return privateKey data
-	PrivateKeyData() ([]byte, error)
-
+	PrivateKey() ([]byte, error)
 	// @return privateKey string that will start with 0x.
-	PrivateKey() (string, error)
+	PrivateKeyHex() (string, error)
+
+	// @return publicKey data
+	PublicKey() []byte
 	// @return publicKey string that will start with 0x.
-	PublicKey() string
+	PublicKeyHex() string
+
 	// @return address string
 	Address() string
 
