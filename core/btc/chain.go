@@ -44,7 +44,7 @@ func (c *Chain) BalanceOfPublicKey(publicKey string) (*base.Balance, error) {
 	}, nil
 }
 func (c *Chain) BalanceOfAccount(account base.Account) (*base.Balance, error) {
-	return c.BalanceOfPublicKey(account.PublicKey())
+	return c.BalanceOfPublicKey(account.PublicKeyHex())
 }
 
 // Send the raw transaction on-chain

@@ -84,7 +84,7 @@ func (t *Token) BuildTransferTx(privateKey, fromAddress, receiverAddress, gasPri
 }
 
 func (t *Token) BuildTransferTxWithAccount(account base.Account, receiverAddress, gasPrice, gasLimit, amount string) (string, error) {
-	privateKey, err := account.PrivateKey()
+	privateKey, err := account.PrivateKeyHex()
 	if err != nil {
 		return "", err
 	}

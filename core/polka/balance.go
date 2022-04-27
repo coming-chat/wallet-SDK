@@ -33,7 +33,7 @@ func (c *Chain) BalanceOfPublicKey(publicKey string) (*base.Balance, error) {
 }
 
 func (c *Chain) BalanceOfAccount(account base.Account) (*base.Balance, error) {
-	return c.BalanceOfPublicKey(account.PublicKey())
+	return c.BalanceOfPublicKey(account.PublicKeyHex())
 }
 
 // query balance with pubkey data.

@@ -122,7 +122,7 @@ func TestAccount_PrivateKey(t *testing.T) {
 				}
 				return
 			}
-			got, err := account.PrivateKey()
+			got, err := account.PrivateKeyHex()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("PrivateKey() error = %v, wantErr %v", err, tt.wantErr)
 				return

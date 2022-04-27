@@ -2,7 +2,6 @@ package wallet
 
 import (
 	"github.com/ChainSafe/go-schnorrkel"
-	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/coming-chat/wallet-SDK/core/btc"
 	"github.com/coming-chat/wallet-SDK/core/eth"
 	"github.com/coming-chat/wallet-SDK/core/polka"
@@ -146,7 +145,7 @@ func (w *Wallet) GetPublicKey() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return types.HexDecodeString(account.PublicKey())
+	return account.PublicKey(), nil
 }
 
 // Deprecated: GetPublicKeyHex is deprecated. Please use wallet.PolkaAccount(network).PublicKey() instead
@@ -155,7 +154,7 @@ func (w *Wallet) GetPublicKeyHex() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return account.PublicKey(), nil
+	return account.PublicKeyHex(), nil
 }
 
 // Deprecated: GetAddress is deprecated. Please use wallet.PolkaAccount(network).Address() instead
@@ -173,7 +172,7 @@ func (w *Wallet) GetPrivateKeyHex() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return account.PrivateKey()
+	return account.PrivateKeyHex()
 }
 
 func Verify(publicKey [32]byte, msg []byte, signature []byte) bool {

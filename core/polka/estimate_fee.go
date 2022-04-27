@@ -4,7 +4,6 @@ import (
 	"errors"
 
 	"github.com/centrifuge/go-substrate-rpc-client/v4/client"
-	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/coming-chat/wallet-SDK/core/base"
 )
 
@@ -22,11 +21,7 @@ func (c *Chain) EstimateFeeForTransaction(transaction *Transaction) (s string, e
 	if err != nil {
 		return
 	}
-	pubkey, err := types.HexDecodeString(account.PublicKey())
-	if err != nil {
-		return
-	}
-	sendTx, err := transaction.GetTx(pubkey, signature)
+	sendTx, err := transaction.GetTx(account.PublicKey(), signature)
 	if err != nil {
 		return
 	}
