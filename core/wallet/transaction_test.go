@@ -42,7 +42,7 @@ func TestTransactionSherpax(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	wallet, err := NewWallet(testSecretPhrase)
+	wallet, err := NewWalletWithMnemonic(testSecretPhrase)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -90,7 +90,7 @@ func TestTransactionPCX(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	wallet, err := NewWallet(testSecretPhrase)
+	wallet, err := NewWalletWithMnemonic(testSecretPhrase)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -122,7 +122,7 @@ func TestTransactionPCXByKeystore(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	wallet, err := NewWalletFromKeyStore(keystore1, password1)
+	wallet, err := NewWalletWithKeyStore(keystore1, password1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -150,7 +150,7 @@ func TestTransactionXBTCByKeystore(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	wallet, err := NewWalletFromKeyStore(keystore1, password1)
+	wallet, err := NewWalletWithKeyStore(keystore1, password1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -182,7 +182,7 @@ func TestTransactionMini(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	wallet, err := NewWallet(testSecretPhrase)
+	wallet, err := NewWalletWithMnemonic(testSecretPhrase)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -219,7 +219,7 @@ func TestTransactionMiniByKeystore(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	wallet, err := NewWalletFromKeyStore(keystore1, password1)
+	wallet, err := NewWalletWithKeyStore(keystore1, password1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -256,7 +256,7 @@ func TestTransactionNFTByKeystore(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	wallet, err := NewWalletFromKeyStore(keystore1, password1)
+	wallet, err := NewWalletWithKeyStore(keystore1, password1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -358,7 +358,7 @@ func TestThreshold(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	wallet, err := NewWallet("boss mind sauce seek clutch busy boil screen room timber shop same")
+	wallet, err := NewWalletWithMnemonic("boss mind sauce seek clutch busy boil screen room timber shop same")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -399,7 +399,7 @@ func TestNewTransactionFromHex(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	wallet, err := NewWallet("boss mind sauce seek clutch busy boil screen room timber shop same")
+	wallet, err := NewWalletWithMnemonic("boss mind sauce seek clutch busy boil screen room timber shop same")
 	if err != nil {
 		t.Fatal(err)
 	}

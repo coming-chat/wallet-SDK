@@ -20,20 +20,15 @@ type Wallet struct {
 	ethereumAccount *eth.Account
 }
 
-func NewWalletFromMnemonic(mnemonic string) (*Wallet, error) {
+func NewWalletWithMnemonic(mnemonic string) (*Wallet, error) {
 	if !IsValidMnemonic(mnemonic) {
 		return nil, ErrInvalidMnemonic
 	}
 	return &Wallet{Mnemonic: mnemonic}, nil
 }
 
-// Deprecated: NewWallet is deprecated. Please Use NewWalletFromMnemonic instead.
-func NewWallet(seedOrPhrase string) (*Wallet, error) {
-	return NewWalletFromMnemonic(seedOrPhrase)
-}
-
 // Only support Polka keystore.
-func NewWalletFromKeyStore(keyStoreJson string, password string) (*Wallet, error) {
+func NewWalletWithKeyStore(keyStoreJson string, password string) (*Wallet, error) {
 	// check is valid keystore
 	if !polka.IsValidKeystore(keyStoreJson, password) {
 		return nil, ErrKeystore
@@ -185,7 +180,7 @@ func (w *Wallet) GetPrivateKeyHex() (string, error) {
 // 然后给用户去链上查询手续费，保护用户资产安全
 func mockWallet() *Wallet {
 	mnemonic := "infant carbon above canyon corn collect finger drip area feature mule autumn"
-	w, _ := NewWallet(mnemonic)
+	w, _ := NewWalletWithMnemonic(mnemonic)
 	return w
 }
 

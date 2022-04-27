@@ -12,7 +12,7 @@ const (
 )
 
 func TestNewWallet(t *testing.T) {
-	wallet, err := NewWallet(testSecretPhrase)
+	wallet, err := NewWalletWithMnemonic(testSecretPhrase)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -26,7 +26,7 @@ func TestNewWallet(t *testing.T) {
 func TestGetPrivateKey(t *testing.T) {
 	mnemonic := "rookie october miracle crisp invest grace birth exile black attitude bitter napkin"
 	privateHex := "0xba865d03c9f6f27871d4eddd8baffe2b16c444945388b39adb0a0966020bbbbe"
-	w, err := NewWallet(mnemonic)
+	w, err := NewWalletWithMnemonic(mnemonic)
 	if err != nil {
 		t.Fatal(err)
 	}
