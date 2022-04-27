@@ -1,6 +1,7 @@
 package wallet
 
 import (
+	"github.com/ChainSafe/go-schnorrkel"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/coming-chat/wallet-SDK/core/btc"
 	"github.com/coming-chat/wallet-SDK/core/eth"
@@ -186,4 +187,15 @@ func mockWallet() *Wallet {
 	mnemonic := "infant carbon above canyon corn collect finger drip area feature mule autumn"
 	w, _ := NewWallet(mnemonic)
 	return w
+}
+
+func Verify(publicKey [32]byte, msg []byte, signature []byte) bool {
+	var sigs [64]byte
+	copy(sigs[:], signature)
+	sig := new(schnorrkel.Signature)
+	if err := sig.Decode(sigs); err != nil {
+		return false
+	}
+	publicKeyD := schnorrkel.NewPublicKey(publicKey)
+	return publicKeyD.Verify(sig, schnorrkel.NewSigningContext([]byte("substrate"), msg))
 }
