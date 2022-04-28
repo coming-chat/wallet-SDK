@@ -17,12 +17,17 @@ func NewChainWithRpc(rpcUrl string) *Chain {
 func (c *Chain) BalanceOfAddress(address string) (*base.Balance, error) {
 	b := base.EmptyBalance()
 
+	eip55Address, err := TransformEIP55Address(address)
+	if err != nil {
+		return b, err
+	}
+
 	chain, err := GetConnection(c.RpcUrl)
 	if err != nil {
 		return b, err
 	}
 
-	balance, err := chain.Balance(address)
+	balance, err := chain.Balance(eip55Address)
 	if err != nil {
 		return b, err
 	}
