@@ -103,6 +103,7 @@ func MaxBigInt(x, y *big.Int) *big.Int {
  *  ```
  */
 func CatchPanicAndMapToBasicError(errOfResult *error) {
+	// first we have to recover()
 	errOfPanic := recover()
 	if errOfResult == nil {
 		return

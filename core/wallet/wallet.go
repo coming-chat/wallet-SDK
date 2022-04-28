@@ -1,7 +1,6 @@
 package wallet
 
 import (
-	"github.com/ChainSafe/go-schnorrkel"
 	"github.com/coming-chat/wallet-SDK/core/btc"
 	"github.com/coming-chat/wallet-SDK/core/eth"
 	"github.com/coming-chat/wallet-SDK/core/polka"
@@ -173,15 +172,4 @@ func (w *Wallet) GetPrivateKeyHex() (string, error) {
 		return "", err
 	}
 	return account.PrivateKeyHex()
-}
-
-func Verify(publicKey [32]byte, msg []byte, signature []byte) bool {
-	var sigs [64]byte
-	copy(sigs[:], signature)
-	sig := new(schnorrkel.Signature)
-	if err := sig.Decode(sigs); err != nil {
-		return false
-	}
-	publicKeyD := schnorrkel.NewPublicKey(publicKey)
-	return publicKeyD.Verify(sig, schnorrkel.NewSigningContext([]byte("substrate"), msg))
 }

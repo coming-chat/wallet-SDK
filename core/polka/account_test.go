@@ -2,6 +2,8 @@ package polka
 
 import (
 	"testing"
+
+	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 )
 
 type TestAccountCase struct {
@@ -157,6 +159,54 @@ func TestAccount_PrivateKey(t *testing.T) {
 				t.Errorf("PrivateKey() got = %v, want %v", got, tt.want)
 			}
 		})
+	}
+}
+
+func TestAccount_Sign_And_Verify(t *testing.T) {
+	account, err := NewAccountWithMnemonic(accountCase.mnemonic, 44)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	message := "0x1234567890"
+	messageData, err := types.HexDecodeString(message)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var signatureMap = make(map[string]bool)
+	for i := 0; i < 10; i++ {
+		signedData, err := account.Sign(messageData, "")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		signedMessage := types.HexEncodeToString(signedData)
+		if _, ok := signatureMap[signedMessage]; ok {
+			t.Fatal("Sign() error = The result of each calculation of Sign is likely to be different")
+		} else {
+			signatureMap[signedMessage] = true
+		}
+
+		var public32 [32]byte
+		copy(public32[:], account.publicKey)
+		isValid := Verify(public32, messageData, signedData)
+		if !isValid {
+			t.Fatal("Sign() Or Verify() error")
+		}
+
+		errorLengthSignature := signedData[1:]
+		isValid = Verify(public32, messageData, errorLengthSignature)
+		if isValid {
+			t.Fatal("Verify() error = should have gotten the error, but it succeeded.")
+		}
+
+		errorBitSignature := signedData
+		errorBitSignature[0] = errorBitSignature[0] + 1
+		isValid = Verify(public32, messageData, errorBitSignature)
+		if isValid {
+			t.Fatal("Verify() error = should have gotten the error, but it succeeded.")
+		}
 	}
 }
 

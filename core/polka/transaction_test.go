@@ -1,7 +1,10 @@
 package polka
 
 import (
+	"testing"
+
 	gsrc "github.com/centrifuge/go-substrate-rpc-client/v4"
+	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 )
 
 var (
@@ -23,6 +26,87 @@ const (
 	keystore1 = "{\"address\":\"5Gc8bR5p9JeCY3dpCvdonRWn79UxhKycDb8aC7xfqQPqWhr8\",\"encoded\":\"jC9MOH7OPYbHdJtiOWFW0lpMUCFO4nASKjzqHvXpEiYAgAAAAQAAAAgAAACm2Dm/CZ98R1uy34lMj7tr9+i3ERCFoeCSdNwOScsyDkvLwhVGv6qxOzmdiR7vzgRgEizMQbq17k0C1Tk59WyDnf9OfaGQTenQQpnFPiXxcmDa6TXQvF7Eq8VYw009ANLmDTIQ125JdQX6edYY85ZFpLiOltXiad44mhS1mC8OSCcOHsViVrk3Lk0eMsClYS1SUzv3QDCoHChFu6Za\",\"encoding\":{\"content\":[\"pkcs8\",\"sr25519\"],\"type\":[\"scrypt\",\"xsalsa20-poly1305\"],\"version\":\"3\"},\"meta\":{\"genesisHash\":\"0x3a10a25727b09cf04a9d143c3ebefb179c3c45613297339d3cbec4e5d4c75242\",\"name\":\"NFT测试2\",\"tags\":[],\"whenCreated\":1623900058655}}"
 	password1 = "111"
 )
+
+func GenerateTransferSignData(on rpcInfo, from, to, amount string) ([]byte, error) {
+	chain, err := on.Chain()
+	if err != nil {
+		return nil, err
+	}
+	metadata, err := chain.GetMetadataString()
+	if err != nil {
+		return nil, err
+	}
+	tx, err := NewTx(metadata)
+	if err != nil {
+		return nil, err
+	}
+	transaction, err := tx.NewBalanceTransferTx(to, amount)
+	if err != nil {
+		return nil, err
+	}
+	return chain.GetSignData(transaction, from)
+}
+
+func TestTransaction_GetSignData(t1 *testing.T) {
+	type args struct {
+		on     rpcInfo
+		from   string
+		to     string
+		amount string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantHex string
+		wantErr bool
+	}{
+		{
+			name: "chainx-pre trannsfer 1 PCX",
+			args: args{
+				on:     rpcs.chainxTest,
+				from:   accountCase.address44,
+				to:     "5TE1T7Znw5eaDqzpxCm8MBocbZLbbeeZ4GcnsRN37s2amd5s",
+				amount: "100000000",
+			},
+			wantHex: "0x0600009e9fefcd4c4d6702b7599f093a860de30a99b114072e3cb3aed14172c2433c240284d71700000015000000040000002e25d2145e9ecf2d1c185b052e085e3c39340edf3dba74f702653afcdd0a9c372e25d2145e9ecf2d1c185b052e085e3c39340edf3dba74f702653afcdd0a9c37",
+		},
+		{
+			name: "chainx trannsfer from error address",
+			args: args{
+				on:     rpcs.chainxTest,
+				from:   "5TE1T7Znw5eaDqzpxCm8MBocbZLbbeeZ4GcnsRN37s2amd55",
+				to:     accountCase.address44,
+				amount: "100000000",
+			},
+			wantErr: true,
+		},
+		{
+			name: "chainx trannsfer to error address",
+			args: args{
+				on:     rpcs.chainxTest,
+				from:   accountCase.address44,
+				to:     "5TE1T7Znw5eaDqzpxCm8MBocbZLbbeeZ4GcnsRN37s2amd5S",
+				amount: "100000000",
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t1.Run(tt.name, func(t1 *testing.T) {
+			signData, err := GenerateTransferSignData(tt.args.on, tt.args.from, tt.args.to, tt.args.amount)
+			if err != nil {
+				if !tt.wantErr {
+					t1.Errorf("GetSignData() error = %v, wantErr %v", err, tt.wantErr)
+				}
+				return
+			}
+			signedHex := types.HexEncodeToString(signData)
+			if signedHex != tt.wantHex {
+				t1.Errorf("GetSignData() got = %v, want %v, Maybe the metadata version updated ???", signedHex, tt.wantHex)
+			}
+		})
+	}
+}
 
 // func TestTransactionSherpax(t *testing.T) {
 // 	txMetadata, err := NewTx(Sherpax)
