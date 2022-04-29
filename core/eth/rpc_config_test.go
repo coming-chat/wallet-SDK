@@ -45,7 +45,7 @@ var rpcs = rpcConfig{
 		}},
 	sherpaxTest: rpcInfo{
 		"https://sherpax-testnet.chainx.org/rpc",
-		"https://scan.sherpax.io",
+		"https://evm-pre.sherpax.io",
 		contracts{
 			USDT: "0x1635583ACf7beF762E8119887b2f3B9F9BcD1742",
 			BUSD: "0x77eD6a802aB1d60A86F2e3c45B43a0Cd7Ee2572B",
@@ -53,7 +53,7 @@ var rpcs = rpcConfig{
 		}},
 	sherpaxProd: rpcInfo{
 		"https://mainnet.sherpax.io/rpc",
-		"https://scan.sherpax.io",
+		"https://evm.sherpax.io",
 		contracts{
 			USB:  "0xE7e312dfC08e060cda1AF38C234AEAcc7A982143",
 			USDT: "0x4B53739D798EF0BEa5607c254336b40a93c75b52",
