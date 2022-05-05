@@ -22,6 +22,18 @@ func NewTx(metadataString string) (*Tx, error) {
 	}, nil
 }
 
+func (c *Chain) GetTx() (*Tx, error) {
+	client, err := getConnectedPolkaClient(c.RpcUrl)
+	if err != nil {
+		return nil, err
+	}
+	metadata, err := client.MetadataString()
+	if err != nil {
+		return nil, err
+	}
+	return NewTx(metadata)
+}
+
 type Transaction struct {
 	extrinsic *types.Extrinsic
 }

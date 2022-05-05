@@ -15,10 +15,6 @@ func NewToken() (*Token, error) {
 	return nil, errors.New("Token initial unavailable, You must create based on Chain.MainToken()")
 }
 
-func (c *Chain) MainToken() base.Token {
-	return &Token{chain: c}
-}
-
 // MARK - Implement the protocol Token
 
 func (t *Token) Chain() base.Chain {
