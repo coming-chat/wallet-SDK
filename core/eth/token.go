@@ -8,6 +8,8 @@ import (
 )
 
 type TokenProtocol interface {
+	base.Token
+
 	EstimateGasLimit(fromAddress, receiverAddress, gasPrice, amount string) (string, error)
 	BuildTransferTx(privateKey, fromAddress, receiverAddress, gasPrice, gasLimit, amount string) (string, error)
 	BuildTransferTxWithAccount(account base.Account, receiverAddress, gasPrice, gasLimit, amount string) (string, error)

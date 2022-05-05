@@ -1,25 +1,11 @@
 package eth
 
-import "testing"
+import (
+	"reflect"
+	"testing"
 
-func TestErc20(t *testing.T) {
-	e, _ := NewEthChain().CreateRemote(rpcs.binanceTest.url)
-	contractAddress := rpcs.binanceTest.contracts.USDT
-
-	tokenName := ""
-	err := e.CallContractConstant(
-		&tokenName,
-		contractAddress,
-		Erc20AbiStr,
-		"name",
-		nil,
-	)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	t.Log(tokenName)
-}
+	"github.com/coming-chat/wallet-SDK/core/base"
+)
 
 func TestBatch(t *testing.T) {
 	c := NewChainWithRpc(rpcs.binanceTest.url)
@@ -52,4 +38,189 @@ func TestSdkBatch(t *testing.T) {
 	}
 
 	t.Log(result)
+}
+
+func TestErc20Token_TokenInfo(t1 *testing.T) {
+	tests := []struct {
+		name     string
+		rpc      string
+		contract string
+		want     *base.TokenInfo
+		wantErr  bool
+	}{
+		{
+			name:     "eth USDT",
+			rpc:      rpcs.ethereumProd.url,
+			contract: rpcs.ethereumProd.contracts.USDT,
+			want:     &base.TokenInfo{Name: "Tether USD", Symbol: "USDT", Decimal: 6},
+		},
+		{
+			name:     "binance prod USDC",
+			rpc:      rpcs.binanceProd.url,
+			contract: rpcs.binanceProd.contracts.USDC,
+			want:     &base.TokenInfo{Name: "USD Coin", Symbol: "USDC", Decimal: 18},
+		},
+		{
+			name:     "sherpax test BUSD",
+			rpc:      rpcs.sherpaxTest.url,
+			contract: rpcs.sherpaxTest.contracts.BUSD,
+			want:     &base.TokenInfo{Name: "Binance BUSD Token", Symbol: "BUSD", Decimal: 18},
+		},
+		{
+			name:     "eth error rpc",
+			rpc:      rpcs.ethereumProd.url + "s",
+			contract: rpcs.ethereumProd.contracts.USDT,
+			wantErr:  true,
+		},
+		{
+			name:     "eth error contract",
+			rpc:      rpcs.ethereumProd.url,
+			contract: rpcs.sherpaxTest.contracts.BUSD, // not a eth contract address
+			wantErr:  true,
+		},
+	}
+	for _, tt := range tests {
+		t1.Run(tt.name, func(t1 *testing.T) {
+			chain := NewChainWithRpc(tt.rpc)
+			token := chain.Erc20Token(tt.contract)
+			got, err := token.TokenInfo()
+			if (err != nil) != tt.wantErr {
+				t1.Errorf("TokenInfo() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if (err == nil) && !reflect.DeepEqual(got, tt.want) {
+				t1.Errorf("TokenInfo() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestErc20Token_BalanceOfAddress(t1 *testing.T) {
+	tests := []struct {
+		name     string
+		rpcInfo  rpcInfo
+		contract string
+		address  string
+		wantErr  bool
+	}{
+		{
+			name:     "eth USDT",
+			rpcInfo:  rpcs.ethereumProd,
+			contract: rpcs.ethereumProd.contracts.USDT,
+			address:  "0x7161ada3EA6e53E5652A45988DdfF1cE595E09c2",
+		},
+		{
+			name:     "binance test USDC",
+			rpcInfo:  rpcs.binanceTest,
+			contract: rpcs.binanceTest.contracts.BUSD,
+			address:  "0x9a576ec81b75ab1a00baeb976441e34db23882fe",
+		},
+		{
+			name:     "sherpax prod USB",
+			rpcInfo:  rpcs.sherpaxProd,
+			contract: rpcs.sherpaxProd.contracts.USB,
+			address:  "0x66E96c1238Bfb68C9D88C85F8C4b5FFb44a65472",
+		},
+		{
+			name:     "eth error rpc",
+			rpcInfo:  rpcInfo{url: rpcs.ethereumProd.url + "s"},
+			contract: rpcs.ethereumProd.contracts.USDT,
+			wantErr:  true,
+		},
+		{
+			name:     "sherpax prod error contract",
+			rpcInfo:  rpcs.sherpaxProd,
+			contract: rpcs.ethereumProd.contracts.USDT,
+			address:  "0x7161ada3EA6e53E5652A45988DdfF1cE595E09c2",
+			wantErr:  true,
+		},
+	}
+	for _, tt := range tests {
+		t1.Run(tt.name, func(t1 *testing.T) {
+			chain := NewChainWithRpc(tt.rpcInfo.url)
+			token := chain.Erc20Token(tt.contract)
+			got, err := token.BalanceOfAddress(tt.address)
+			if (err != nil) != tt.wantErr {
+				t1.Errorf("BalanceOfAddress() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if err == nil {
+				scanAddress := tt.rpcInfo.scan + "/token/" + tt.contract + "?a=" + tt.address
+				t1.Log(got.Total)
+				t1.Log("We can't assert the balance, Maybe you can query on scan url: ", scanAddress)
+			}
+		})
+	}
+}
+
+func TestErc20Token_EstimateGasLimit(t1 *testing.T) {
+	type args struct {
+		receiver string
+		gasPrice string
+		amount   string
+	}
+	defaultArgs := args{"0x7161ada3EA6e53E5652A45988DdfF1cE595E09c2", "10000000", "100"}
+
+	tests := []struct {
+		name     string
+		rpcInfo  rpcInfo
+		contract string
+		address  string
+		args     args
+		wantErr  bool
+	}{
+
+		{
+			name:     "eth USDT",
+			rpcInfo:  rpcs.ethereumProd,
+			contract: rpcs.ethereumProd.contracts.USDT,
+			address:  "0x7161ada3EA6e53E5652A45988DdfF1cE595E09c2",
+			args:     defaultArgs,
+			wantErr:  true, // there is no eth balance, it's will got an error: insufficient funds for transfer
+		},
+		{
+			name:     "binance test USDC",
+			rpcInfo:  rpcs.binanceTest,
+			contract: rpcs.binanceTest.contracts.BUSD,
+			address:  "0x9a576ec81b75ab1a00baeb976441e34db23882fe",
+			args:     defaultArgs,
+		},
+		{
+			name:     "sherpax prod USB",
+			rpcInfo:  rpcs.sherpaxProd,
+			contract: rpcs.sherpaxProd.contracts.USB,
+			address:  "0x7161ada3EA6e53E5652A45988DdfF1cE595E09c2",
+			args:     defaultArgs,
+			wantErr:  true, // ther is no balance.
+		},
+		{
+			name:     "eth error rpc",
+			rpcInfo:  rpcInfo{url: rpcs.ethereumProd.url + "s"},
+			contract: rpcs.ethereumProd.contracts.USDT,
+			args:     defaultArgs,
+			wantErr:  true,
+		},
+		{
+			name:     "sherpax prod error contract",
+			rpcInfo:  rpcs.sherpaxProd,
+			contract: rpcs.ethereumProd.contracts.USDT,
+			address:  "0x7161ada3EA6e53E5652A45988DdfF1cE595E09c2",
+			args:     defaultArgs,
+			wantErr:  true,
+		},
+	}
+	for _, tt := range tests {
+		t1.Run(tt.name, func(t1 *testing.T) {
+			chain := NewChainWithRpc(tt.rpcInfo.url)
+			token := chain.Erc20Token(tt.contract)
+			got, err := token.EstimateGasLimit(tt.address, tt.args.receiver, tt.args.gasPrice, tt.args.amount)
+			if (err != nil) != tt.wantErr {
+				t1.Errorf("EstimateGasLimit() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if err == nil {
+				t1.Log(got)
+			}
+		})
+	}
 }

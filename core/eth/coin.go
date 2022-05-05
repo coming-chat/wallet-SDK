@@ -1,8 +1,6 @@
 package eth
 
 import (
-	"errors"
-
 	"github.com/coming-chat/wallet-SDK/core/base"
 )
 
@@ -52,7 +50,7 @@ func (u *CoinUtil) CoinInfo() (*Erc20TokenInfo, error) {
 
 // Deprecated: QueryBalance is deprecated. Please Use Chain.Token().BalanceOfAddress() instead.
 func (u *CoinUtil) QueryBalance() (string, error) {
-	balance, err := u.baseToken().BalanceOfAddress(u.WalletAddress)
+	balance, err := u.token().BalanceOfAddress(u.WalletAddress)
 	return balance.Usable, err
 }
 
@@ -68,20 +66,12 @@ func (u *CoinUtil) Nonce() (string, error) {
 
 // Deprecated: Nonce is deprecated. Please Use Chain.Token().EstimateGasLimit() instead.
 func (u *CoinUtil) EstimateGasLimit(receiverAddress, gasPrice, amount string) (string, error) {
-	token, err := u.ethToken()
-	if err != nil {
-		return "", err
-	}
-	return token.EstimateGasLimit(u.WalletAddress, receiverAddress, gasPrice, amount)
+	return u.token().EstimateGasLimit(u.WalletAddress, receiverAddress, gasPrice, amount)
 }
 
 // Deprecated: BuildTransferTx is deprecated. Please Use Chain.Token().BuildTransferTx() instead.
 func (u *CoinUtil) BuildTransferTx(privateKey, receiverAddress, nonce, gasPrice, gasLimit, amount string) (string, error) {
-	token, err := u.ethToken()
-	if err != nil {
-		return "", err
-	}
-	return token.BuildTransferTx(privateKey, receiverAddress, nonce, gasPrice, gasLimit, amount)
+	return u.token().BuildTransferTx(privateKey, receiverAddress, nonce, gasPrice, gasLimit, amount)
 }
 
 // Deprecated: SendRawTransaction is deprecated. Please Use Chain.SendRawTransaction() instead.
@@ -108,18 +98,10 @@ func (u *CoinUtil) chain() *Chain {
 	return NewChainWithRpc(u.RpcUrl)
 }
 
-func (u *CoinUtil) baseToken() base.Token {
+func (u *CoinUtil) token() TokenProtocol {
 	if u.IsMainCoin() {
-		return u.chain().MainToken()
+		return u.chain().MainEthToken()
 	} else {
 		return u.chain().Erc20Token(u.ContractAddress)
 	}
-}
-
-func (u *CoinUtil) ethToken() (TokenProtocol, error) {
-	token, ok := u.baseToken().(TokenProtocol)
-	if !ok {
-		return nil, errors.New("golang type cast error") // TODO verify
-	}
-	return token, nil
 }

@@ -18,7 +18,11 @@ func (c *Chain) MainToken() base.Token {
 	return &Token{chain: c}
 }
 
-func (c *Chain) Erc20Token(contractAddress string) base.Token {
+func (c *Chain) MainEthToken() TokenProtocol {
+	return &Token{chain: c}
+}
+
+func (c *Chain) Erc20Token(contractAddress string) TokenProtocol {
 	return &Erc20Token{
 		Token:           &Token{chain: c},
 		ContractAddress: contractAddress,
