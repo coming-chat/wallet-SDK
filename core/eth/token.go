@@ -7,6 +7,12 @@ import (
 	"github.com/coming-chat/wallet-SDK/core/base"
 )
 
+type TokenProtocol interface {
+	EstimateGasLimit(fromAddress, receiverAddress, gasPrice, amount string) (string, error)
+	BuildTransferTx(privateKey, fromAddress, receiverAddress, gasPrice, gasLimit, amount string) (string, error)
+	BuildTransferTxWithAccount(account base.Account, receiverAddress, gasPrice, gasLimit, amount string) (string, error)
+}
+
 type Token struct {
 	chain *Chain
 }
@@ -14,10 +20,6 @@ type Token struct {
 // Warning: initial unavailable, You must create based on Chain.MainToken()
 func NewToken() (*Token, error) {
 	return nil, errors.New("Token initial unavailable, You must create based on Chain.MainToken()")
-}
-
-func (c *Chain) MainToken() base.Token {
-	return &Token{chain: c}
 }
 
 // MARK - Implement the protocol Token
@@ -43,7 +45,7 @@ func (t *Token) BalanceOfAccount(account base.Account) (*base.Balance, error) {
 	return t.BalanceOfAddress(account.Address())
 }
 
-// MARK - Other
+// MARK - Eth TokenProtocol
 
 func (t *Token) EstimateGasLimit(fromAddress, receiverAddress, gasPrice, amount string) (string, error) {
 	chain, err := GetConnection(t.chain.RpcUrl)

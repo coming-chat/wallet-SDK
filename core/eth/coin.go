@@ -116,8 +116,8 @@ func (u *CoinUtil) baseToken() base.Token {
 	}
 }
 
-func (u *CoinUtil) ethToken() (*Token, error) {
-	token, ok := u.baseToken().(*Token)
+func (u *CoinUtil) ethToken() (TokenProtocol, error) {
+	token, ok := u.baseToken().(TokenProtocol)
 	if !ok {
 		return nil, errors.New("golang type cast error") // TODO verify
 	}

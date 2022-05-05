@@ -1,5 +1,7 @@
 package eth
 
+// Test Basic rpc config
+
 type contracts struct {
 	USDT string
 	BUSD string

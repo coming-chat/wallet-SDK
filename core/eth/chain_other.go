@@ -1,6 +1,10 @@
 package eth
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/coming-chat/wallet-SDK/core/base"
+)
 
 func (c *Chain) ChainId() (string, error) {
 	chain, err := GetConnection(c.RpcUrl)
@@ -41,19 +45,13 @@ func (c *Chain) BatchFetchErc20TokenBalance(contractListString, address string) 
 	return strings.Join(balances, ","), nil
 }
 
-// Deprecated: SdkBatchTokenBalance is deprecated. Please Use Chain.BatchFetchErc20TokenBalance() instead.
-func (e *EthChain) SdkBatchTokenBalance(contractListString, address string) (string, error) {
-	c := NewChainWithRpc(e.rpcUrl)
-	return c.BatchFetchErc20TokenBalance(contractListString, address)
-}
-
 // 批量请求代币余额
 // @param contractList 批量查询的代币的合约地址数组
 // @param address 用户的钱包地址
 // @return 余额数组，顺序与传入的 contractList 是保持一致的
 // @throw 如果任意一个代币请求余额出错时，会抛出错误
 func (c *Chain) BatchErc20TokenBalance(contractList []string, address string) ([]string, error) {
-	return MapListConcurrentStringToString(contractList, func(s string) (string, error) {
+	return base.MapListConcurrentStringToString(contractList, func(s string) (string, error) {
 		b, err := c.Erc20Token(s).BalanceOfAddress(address)
 		return b.Total, err
 	})

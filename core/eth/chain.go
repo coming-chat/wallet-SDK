@@ -14,6 +14,17 @@ func NewChainWithRpc(rpcUrl string) *Chain {
 
 // MARK - Implement the protocol Chain
 
+func (c *Chain) MainToken() base.Token {
+	return &Token{chain: c}
+}
+
+func (c *Chain) Erc20Token(contractAddress string) base.Token {
+	return &Erc20Token{
+		Token:           &Token{chain: c},
+		ContractAddress: contractAddress,
+	}
+}
+
 func (c *Chain) BalanceOfAddress(address string) (*base.Balance, error) {
 	b := base.EmptyBalance()
 

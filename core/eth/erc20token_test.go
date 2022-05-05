@@ -3,8 +3,8 @@ package eth
 import "testing"
 
 func TestErc20(t *testing.T) {
-	e, _ := NewEthChain().CreateRemote(binanceTestRpcUrl)
-	contractAddress := "0x6cd2bf22b3ceadff6b8c226487265d81164396c5"
+	e, _ := NewEthChain().CreateRemote(rpcs.binanceTest.url)
+	contractAddress := rpcs.binanceTest.contracts.USDT
 
 	tokenName := ""
 	err := e.CallContractConstant(
@@ -19,11 +19,10 @@ func TestErc20(t *testing.T) {
 	}
 
 	t.Log(tokenName)
-
 }
 
 func TestBatch(t *testing.T) {
-	c := NewChainWithRpc(binanceTestRpcUrl)
+	c := NewChainWithRpc(rpcs.binanceTest.url)
 	array := []string{
 		// "0xE7e312dfC08e060cda1AF38C234AEAcc7A982143", // 报错
 		// "0x4B53739D798EF0BEa5607c254336b40a93c75b52", // 报错
@@ -44,7 +43,7 @@ func TestBatch(t *testing.T) {
 }
 
 func TestSdkBatch(t *testing.T) {
-	e, _ := NewEthChain().CreateRemote(binanceTestRpcUrl)
+	e, _ := NewEthChain().CreateRemote(rpcs.binanceTest.url)
 	contract := "0xed24fc36d5ee211ea25a80239fb8c4cfd80f12ee"
 	address := "0xed24fc36d5ee211ea25a80239fb8c4cfd80f12ee"
 	result, err := e.SdkBatchTokenBalance(contract, address)

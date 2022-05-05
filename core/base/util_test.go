@@ -1,6 +1,9 @@
 package base
 
-import "testing"
+import (
+	"strconv"
+	"testing"
+)
 
 func TestCatchPanic(t *testing.T) {
 	i, err := dangerousCode()
@@ -23,4 +26,13 @@ func dangerousCode() (i int, e error) {
 	// panic(3432434)
 
 	return 13, e
+}
+
+func TestMapConcurrent(t *testing.T) {
+	nums := []interface{}{1, 2, 3, 4, 5, 6}
+	// nums := []interface{}{"1", "2", "3", "4"}
+	res, _ := MapListConcurrent(nums, func(i interface{}) (interface{}, error) {
+		return strconv.Itoa(i.(int) * 100), nil
+	})
+	t.Log(res)
 }

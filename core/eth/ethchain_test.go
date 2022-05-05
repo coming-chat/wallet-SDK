@@ -4,49 +4,8 @@ import (
 	"testing"
 )
 
-const (
-	ethRpcUrl = "https://data-seed-prebsc-1-s1.binance.org:8545"
-
-	// scan https://etherscan.io/
-	ethMainProdRpcUrl = "https://mainnet.infura.io/v3/da3717f25f824cc1baa32d812386d93f"
-
-	// scan https://testnet.bscscan.com/
-	binanceTestRpcUrl = "https://data-seed-prebsc-1-s1.binance.org:8545"
-
-	// scan https://bscscan.com
-	binanceProdRpcUrl = "https://bsc-dataseed.binance.org"
-
-	// scan https://scan.sherpax.io/
-	sherpaxProdRpcUrl = "https://mainnet.sherpax.io/rpc"
-)
-
-// var ethChain, _ = NewEthChain().CreateRemote(ethRpcUrl)
-
-const (
-	contractUSDT    = "0xdac17f958d2ee523a2206206994597c13d831ec7"
-	contractBSCUSDT = "0x55d398326f99059fF775485246999027B3197955"
-	contractBSCBUSD = "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56"
-	contractBSCUSDC = "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d"
-
-	contractWKSXUSB  = "0xE7e312dfC08e060cda1AF38C234AEAcc7A982143"
-	contractWKSXUSDT = "0x4B53739D798EF0BEa5607c254336b40a93c75b52"
-	contractWKSXBUSD = "0x37088186089c7D6BcD556d9A15087DFaE3Ba0C32"
-	contractWKSXUSDC = "0x935CC842f220CF3A7D10DA1c99F01B1A6894F7C5"
-)
-
 func TestConnect(t *testing.T) {
-	// errRpc := binanceTestRpcUrl
-	// chain, err := NewEthChain().CreateRemote(errRpc)
-	// if err != nil {
-	// 	t.Fatal(err)
-	// }
-	// t.Log(chain)
-	// rpc := "https://mainnet.sherpax.io/rpc"
-	// rpc := "https://bsc-dataseed.binance.org"
-	// rpc := "https://rinkeby.infura.io/v3/da3717f25f824cc1baa32d812386d93f"
-	rpc := "https://mainnet.infura.io/v3/da3717f25f824cc1baa32d812386d93f"
-	// rpc := "https://geth-mainnet.coming.chat/"
-	chain, err := NewEthChain().CreateRemote(rpc)
+	chain, err := NewEthChain().CreateRemote(rpcs.ethereumProd.url)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -64,4 +23,59 @@ func TestConnect(t *testing.T) {
 	// }
 
 	// t.Log("should successd connect", chain)
+}
+
+func TestBatchStatus(t *testing.T) {
+	var ethChain, _ = NewEthChain().CreateRemote(rpcs.binanceProd.url)
+
+	var hashStrings = "0x9ef27c4983b18fd25a149e737feefb952889253aa6e2cddb62c6cf80a23887c3,0x39fa91a5e34d50f373339b2a5e9102ffc2c321f497a49841c62fd213e433290d,0x2cbf78965bbddecf86d2d0fb17069fa760fa652d81ee79d9a99f0add92b05364"
+
+	var statuses = ethChain.SdkBatchTransactionStatus(hashStrings)
+
+	t.Log(statuses)
+}
+
+const (
+	transferFromAddress = "0x8de5ff2eded4d897da535ab0f379ec1b9257ebab"
+	transferToAddress   = "0x6cd2bf22b3ceadff6b8c226487265d81164396c5"
+)
+
+func TestEstimateGasLimit(t *testing.T) {
+	var ethChain, _ = NewEthChain().CreateRemote(rpcs.binanceTest.url)
+	gasprice := "10"
+	amount := "1"
+	gasLimit, err := ethChain.EstimateGasLimit(transferFromAddress, transferToAddress, gasprice, amount)
+	if err != nil {
+		t.Fatal("gas---" + err.Error())
+	}
+
+	t.Log("TestEstimateGasLimit success", gasLimit)
+}
+
+func TestContractGasLimit(t *testing.T) {
+	// rpcUrl := rpcs.binanceTest.url
+	// contractAddress := "0xdAC17F958D2ee523a2206206994597C13D831ec7"
+	// walletAddress := "0x1988EbF818FF475f680AF72cf44BBEe1A7CEA666"
+	// toAddress := "0x1988EbF818FF475f680AF72cf44BBEe1A7CEA666"
+	// amount := "111000000"
+	id := 2
+	println(id)
+
+	rpcInfo := rpcs.ethereumProd
+	// rpcUrl := rpcs.binanceProd.url
+	// walletAddress := "0x46D608080FF930D847185Ea6811CC0652457E76c"
+	walletAddress := "0x1F05e1419D511C5f1Df9a624FC31Afe24170b4A2"
+	toAddress := "0x1F05e1419D511C5f1Df9a624FC31Afe24170b4A2"
+	amount := "10000"
+
+	u := &CoinUtil{
+		RpcUrl:          rpcInfo.url,
+		ContractAddress: rpcInfo.contracts.USDT,
+		WalletAddress:   walletAddress,
+	}
+	gasLimit, err := u.EstimateGasLimit(toAddress, "34891", amount)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("gas  limit = ", gasLimit)
 }
