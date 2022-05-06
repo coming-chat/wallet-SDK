@@ -40,6 +40,7 @@ func (c *Chain) MainToken() base.Token {
 	return &Token{chain: c}
 }
 
+// Note: Only chainx have XBTC token.
 func (c *Chain) XBTCToken() *XBTCToken {
 	return &XBTCToken{chain: c}
 }

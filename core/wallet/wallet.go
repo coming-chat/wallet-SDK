@@ -27,9 +27,10 @@ func NewWalletWithMnemonic(mnemonic string) (*Wallet, error) {
 
 // Only support Polka keystore.
 func NewWalletWithKeyStore(keyStoreJson string, password string) (*Wallet, error) {
-	// check is valid keystore
-	if !polka.IsValidKeystore(keyStoreJson, password) {
-		return nil, ErrKeystore
+	// check keystore's password
+	err := polka.CheckKeystorePassword(keyStoreJson, password)
+	if err != nil {
+		return nil, err
 	}
 	return &Wallet{
 		Keystore: keyStoreJson,
@@ -107,17 +108,10 @@ func (w *Wallet) GetOrCreateEthereumAccount() (*eth.Account, error) {
 	return account, err
 }
 
-// Deprecated: CheckPassword is deprecated. Please use wallet.PolkaAccount(network).CheckPassword() instead
+// check keystore password
 func (w *Wallet) CheckPassword(password string) (bool, error) {
-	account, err := w.GetOrCreatePolkaAccount(44)
-	if err != nil {
-		return false, err
-	}
-	err = account.CheckPassword(password)
-	if err != nil {
-		return false, err
-	}
-	return true, nil
+	err := polka.CheckKeystorePassword(w.Keystore, w.password)
+	return err == nil, err
 }
 
 // Deprecated: Sign is deprecated. Please use wallet.PolkaAccount(network).Sign() instead

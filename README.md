@@ -2,14 +2,21 @@
 
 |                       | Bitcoin | Ethereum | Polka |
 | --------------------- | ------- | -------- | ----- |
-| import mnemonic       | ✅       | ✅        | ✅     |
-| import keystore       | ❌       | ❌        | ✅     |
-| pri/pub key & address | ✅       | ✅        | ✅     |
-| multi network         | ✅       | ✅        | ✅     |
-| publicKey to address  | ✅       | ✅        | ✅     |
-| address to publicKey  | ❌       | ✅        | ✅     |
-| sign data             | ☑️       | ☑️        | ✅     |
+| import mnemonic       | ✅     | ✅      | ✅   |
+| import keystore       | ❌     | ❌      | ✅  |
+| pri/pub key & address | ✅     | ✅      | ✅   |
+| multi network         | ✅     | ✅      | ✅   |
+| publicKey to address  | ✅     | ✅      | ✅   |
+| address to publicKey  | ❌     | ✅      | ✅   |
+| sign data             | ☑️    | ☑️     | ✅   |
+|                       |         |          |       |
+| query balance | ✅ | ✅ | ✅ |
+| fetch transaction detail | ✅ | ✅ | ✅ |
+| gas fee | ❌ | ✅ | ✅ |
+| send taw transaction | ✅ | ✅ ☑️ | ✅ ☑️ |
+| multi token | ❌ | ✅ erc20 | ✅ XBTC |
 
+*If there are two icons, the first icon indicates development status, and the second icon indicates test status.*
 ✅: Completed      ☑️: TODO    ❌: Unsupported
 
 ## Usage
@@ -35,13 +42,13 @@ We currently support accounts in Bitcoin, Ethereum and Polkadot ecosystems.
 
 ```golang
 // Polka
-polkaAccount, err = GetOrCreatePolkaAccount(network)
+polkaAccount, err = wallet.GetOrCreatePolkaAccount(network)
 
 // Bitcoin
-bitcoinAccount, err = GetOrCreateBitcoinAccount(chainnet)
+bitcoinAccount, err = wallet.GetOrCreateBitcoinAccount(chainnet)
 
 // Ethereum
-ethereumAccount, err = GetOrCreateEthereumAccount()
+ethereumAccount, err = wallet.GetOrCreateEthereumAccount()
 ```
 
 #### Get PrivateKey, PublicKey, Address
@@ -85,7 +92,7 @@ ethereumChain, err = eth.NewChainWithRpc(rpcUrl)
 // query balance
 balance, err = chain.BalanceOfAddress(address)
 balance, err = chain.BalanceOfPublicKey(publicKey)
-balance, err = chain.BalanceOfAccount(account)s
+balance, err = chain.BalanceOfAccount(account)
 
 // send transaction
 txHash, err = chain.SendRawTransaction(signedTx)
