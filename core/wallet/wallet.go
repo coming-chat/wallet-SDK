@@ -1,8 +1,6 @@
 package wallet
 
 import (
-	"github.com/ChainSafe/go-schnorrkel"
-	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/coming-chat/wallet-SDK/core/btc"
 	"github.com/coming-chat/wallet-SDK/core/eth"
 	"github.com/coming-chat/wallet-SDK/core/polka"
@@ -29,9 +27,10 @@ func NewWalletWithMnemonic(mnemonic string) (*Wallet, error) {
 
 // Only support Polka keystore.
 func NewWalletWithKeyStore(keyStoreJson string, password string) (*Wallet, error) {
-	// check is valid keystore
-	if !polka.IsValidKeystore(keyStoreJson, password) {
-		return nil, ErrKeystore
+	// check keystore's password
+	err := polka.CheckKeystorePassword(keyStoreJson, password)
+	if err != nil {
+		return nil, err
 	}
 	return &Wallet{
 		Keystore: keyStoreJson,
@@ -109,17 +108,10 @@ func (w *Wallet) GetOrCreateEthereumAccount() (*eth.Account, error) {
 	return account, err
 }
 
-// Deprecated: CheckPassword is deprecated. Please use wallet.PolkaAccount(network).CheckPassword() instead
+// check keystore password
 func (w *Wallet) CheckPassword(password string) (bool, error) {
-	account, err := w.GetOrCreatePolkaAccount(44)
-	if err != nil {
-		return false, err
-	}
-	err = account.CheckPassword(password)
-	if err != nil {
-		return false, err
-	}
-	return true, nil
+	err := polka.CheckKeystorePassword(w.Keystore, w.password)
+	return err == nil, err
 }
 
 // Deprecated: Sign is deprecated. Please use wallet.PolkaAccount(network).Sign() instead
@@ -146,7 +138,7 @@ func (w *Wallet) GetPublicKey() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return types.HexDecodeString(account.PublicKey())
+	return account.PublicKey(), nil
 }
 
 // Deprecated: GetPublicKeyHex is deprecated. Please use wallet.PolkaAccount(network).PublicKey() instead
@@ -155,7 +147,7 @@ func (w *Wallet) GetPublicKeyHex() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return account.PublicKey(), nil
+	return account.PublicKeyHex(), nil
 }
 
 // Deprecated: GetAddress is deprecated. Please use wallet.PolkaAccount(network).Address() instead
@@ -173,24 +165,5 @@ func (w *Wallet) GetPrivateKeyHex() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return account.PrivateKey()
-}
-
-// 内置账号，主要用来给用户未签名的交易签一下名
-// 然后给用户去链上查询手续费，保护用户资产安全
-func mockWallet() *Wallet {
-	mnemonic := "infant carbon above canyon corn collect finger drip area feature mule autumn"
-	w, _ := NewWalletWithMnemonic(mnemonic)
-	return w
-}
-
-func Verify(publicKey [32]byte, msg []byte, signature []byte) bool {
-	var sigs [64]byte
-	copy(sigs[:], signature)
-	sig := new(schnorrkel.Signature)
-	if err := sig.Decode(sigs); err != nil {
-		return false
-	}
-	publicKeyD := schnorrkel.NewPublicKey(publicKey)
-	return publicKeyD.Verify(sig, schnorrkel.NewSigningContext([]byte("substrate"), msg))
+	return account.PrivateKeyHex()
 }

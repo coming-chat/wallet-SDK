@@ -2,10 +2,10 @@ package eth
 
 import (
 	"context"
-	"encoding/json"
 	"math/big"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/ethereum/go-ethereum"
@@ -24,59 +24,10 @@ type Jsonable interface {
 	// NewXxxWithJsonString(s string) *Xxx
 }
 
-type TransactionStatus = SDKEnumInt
-
-const (
-	TransactionStatusNone    TransactionStatus = 0
-	TransactionStatusPending TransactionStatus = 1
-	TransactionStatusSuccess TransactionStatus = 2
-	TransactionStatusFailure TransactionStatus = 3
-)
-
-// 可以从链上获取的转账详情信息
-// 客户端的详情展示还需要 FromCID, ToCID, CreateTimestamp, Transfer(转出/收入), CoinType, Decimal
-// 这些信息需要客户端自己维护
-type TransactionDetail struct {
-	// 交易在链上的哈希
-	HashString string
-	// 交易额
-	Amount string
-	// 交易手续费, Pending 时为预估手续费，交易结束时为真实手续费
-	EstimateFees string
-	// 转账人的地址
-	FromAddress string
-	// 收款人的地址
-	ToAddress string
-	// 交易状态 枚举常量
-	// 0: TransactionStatusNone;
-	// 1: TransactionStatusPending;
-	// 2: TransactionStatusSuccess;
-	// 3: TransactionStatusFailure;
-	Status TransactionStatus
-	// 交易完成时间, 如果在 Pending 中，为 0
-	FinishTimestamp int64
-	// 失败描述
-	FailureMessage string
-}
-
-func (i *TransactionDetail) JsonString() string {
-	json, err := json.Marshal(i)
-	if err != nil {
-		return ""
-	}
-	return string(json)
-}
-
-func NewTransactionDetailWithJsonString(s string) *TransactionDetail {
-	var i TransactionDetail
-	json.Unmarshal([]byte(s), &i)
-	return &i
-}
-
 // 获取交易的详情
 // @param hashString 交易的 hash
 // @return 详情对象，该对象无法提供 CID 信息
-func (e *EthChain) FetchTransactionDetail(hashString string) (detail *TransactionDetail, err error) {
+func (e *EthChain) FetchTransactionDetail(hashString string) (detail *base.TransactionDetail, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
 
 	ctx, cancel := context.WithTimeout(context.Background(), e.timeout)
@@ -102,7 +53,7 @@ func (e *EthChain) FetchTransactionDetail(hashString string) (detail *Transactio
 
 	gasPrice := msg.GasPrice().Uint64()
 	estimateGasLimit := msg.Gas()
-	detail = &TransactionDetail{
+	detail = &base.TransactionDetail{
 		HashString:   hashString,
 		FromAddress:  msg.From().String(),
 		ToAddress:    address,
@@ -111,7 +62,7 @@ func (e *EthChain) FetchTransactionDetail(hashString string) (detail *Transactio
 	}
 
 	if isPending {
-		detail.Status = TransactionStatusPending
+		detail.Status = base.TransactionStatusPending
 		return
 	}
 
@@ -127,7 +78,7 @@ func (e *EthChain) FetchTransactionDetail(hashString string) (detail *Transactio
 	}
 
 	if receipt.Status == 0 {
-		detail.Status = TransactionStatusFailure
+		detail.Status = base.TransactionStatusFailure
 		// get error message
 		_, err := e.RemoteRpcClient.CallContract(ctx, ethereum.CallMsg{
 			From:       msg.From(),
@@ -146,7 +97,7 @@ func (e *EthChain) FetchTransactionDetail(hashString string) (detail *Transactio
 		}
 
 	} else {
-		detail.Status = TransactionStatusSuccess
+		detail.Status = base.TransactionStatusSuccess
 	}
 	gasUsed := receipt.GasUsed
 	detail.EstimateFees = strconv.FormatUint(gasPrice*gasUsed, 10)
@@ -157,27 +108,27 @@ func (e *EthChain) FetchTransactionDetail(hashString string) (detail *Transactio
 
 // 获取交易的状态
 // @param hashString 交易的 hash
-func (e *EthChain) FetchTransactionStatus(hashString string) TransactionStatus {
+func (e *EthChain) FetchTransactionStatus(hashString string) base.TransactionStatus {
 	if len(hashString) == 0 {
-		return TransactionStatusNone
+		return base.TransactionStatusNone
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), e.timeout)
 	defer cancel()
 	_, isPending, err := e.RemoteRpcClient.TransactionByHash(ctx, common.HexToHash(hashString))
 	if err != nil {
-		return TransactionStatusNone
+		return base.TransactionStatusNone
 	}
 	if isPending {
-		return TransactionStatusPending
+		return base.TransactionStatusPending
 	}
 
 	// 交易receipt 状态信息，0表示失败，1表示成功
 	receipt, err := e.TransactionReceiptByHash(hashString)
 	if receipt.Status == 0 {
-		return TransactionStatusFailure
+		return base.TransactionStatusFailure
 	} else {
-		return TransactionStatusSuccess
+		return base.TransactionStatusSuccess
 	}
 }
 
@@ -185,7 +136,7 @@ func (e *EthChain) FetchTransactionStatus(hashString string) TransactionStatus {
 // @param hashList 要批量查询的交易的 hash 数组
 // @return 交易状态数组，它的顺序和 hashList 是保持一致的
 func (e *EthChain) BatchTransactionStatus(hashList []string) []string {
-	statuses, _ := MapListConcurrentStringToString(hashList, func(s string) (string, error) {
+	statuses, _ := base.MapListConcurrentStringToString(hashList, func(s string) (string, error) {
 		return strconv.Itoa(e.FetchTransactionStatus(s)), nil
 	})
 	return statuses
@@ -225,4 +176,79 @@ func decodeErc20TransferInput(data []byte) (string, string, error) {
 	address := params[0].(common.Address).String()
 	amount := params[1].(*big.Int).String()
 	return address, amount, nil
+}
+
+// 根据交易hash查询交易状态
+// TO-DO  返回更详细的信息，解析交易余额，交易动作
+func (e *EthChain) TransactionByHash(txHash string) (*TransactionByHashResult, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), e.timeout)
+	defer cancel()
+	tx, isPending, err := e.RemoteRpcClient.TransactionByHash(ctx, common.HexToHash(txHash))
+	if err != nil {
+		return nil, err
+	}
+	msg, err := tx.AsMessage(types.NewEIP155Signer(e.chainId), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	// 交易receipt 状态信息，0表示失败，1表示成功
+	receipt, err := e.TransactionReceiptByHash(txHash)
+	var status, gasUsed, blockNumber string
+	// 当交易没有处于pending状态时，可以查询receipt信息，即交易是否成功, err为nil时，表示查询成功进入if语句赋值
+	if err == nil {
+		gasUsed = strconv.FormatUint(receipt.GasUsed, 10)
+		status = strconv.FormatUint(receipt.Status, 10)
+		blockNumber = receipt.BlockHash.String()
+	}
+
+	return &TransactionByHashResult{
+		tx,
+		msg.From(),
+		isPending,
+		status,
+		gasUsed,
+		blockNumber,
+	}, nil
+}
+
+// TransactionReceipt 是指交易的收据，每笔交易执行完
+// 会产生一个收据，收据中包含交易的状态，交易的gas使用情况，交易执行是否成功的状态码等信息
+// 交易收据属性列表：
+// gasUsed: 交易执行时使用的gas数量
+// bloomFilter：交易信息日志检索
+// logInfoList: 交易日志集合
+// postTxState: 交易执行后的状态，1 表示成功，0表示失败
+func (e *EthChain) TransactionReceiptByHash(txHash string) (*types.Receipt, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), e.timeout)
+	defer cancel()
+	receipt, err := e.RemoteRpcClient.TransactionReceipt(ctx, common.HexToHash(txHash))
+	if err != nil {
+		return nil, err
+	}
+
+	return receipt, nil
+}
+
+func (e *EthChain) WaitConfirm(txHash string, interval time.Duration) *types.Receipt {
+	timer := time.NewTimer(0)
+	for range timer.C {
+		transRes, err := e.TransactionByHash(txHash)
+		if err != nil {
+			timer.Reset(interval)
+			continue
+		}
+		if transRes.IsPending {
+			timer.Reset(interval)
+			continue
+		}
+		receipt, err := e.TransactionReceiptByHash(txHash)
+		if err != nil {
+			timer.Reset(interval)
+			continue
+		}
+		timer.Stop()
+		return receipt
+	}
+	return nil
 }

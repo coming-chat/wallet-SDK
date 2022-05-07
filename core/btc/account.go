@@ -51,7 +51,7 @@ func (a *Account) DeriveAccountAt(chainnet string) (*Account, error) {
 	}, nil
 }
 
-// MARK - Implement the protocol wallet.Account
+// MARK - Implement the protocol Account
 
 // @return privateKey data
 func (a *Account) PrivateKey() ([]byte, error) {

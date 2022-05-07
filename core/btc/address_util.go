@@ -17,7 +17,7 @@ func NewUtilWithChainnet(chainnet string) (*Util, error) {
 	}
 }
 
-// MARK - Implement the protocol wallet.Util
+// MARK - Implement the protocol Util
 
 // @param publicKey can start with 0x or not.
 func (u *Util) EncodePublicKeyToAddress(publicKey string) (string, error) {
@@ -37,7 +37,7 @@ func (u *Util) IsValidAddress(address string) bool {
 	return IsValidAddress(address, u.Chainnet)
 }
 
-// MARK - like wallet.Util
+// MARK - like Util
 
 // @param publicKey can start with 0x or not.
 func EncodePublicKeyToAddress(publicKey, chainnet string) (string, error) {

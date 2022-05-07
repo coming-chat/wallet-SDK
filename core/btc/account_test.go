@@ -2,18 +2,38 @@ package btc
 
 import (
 	"testing"
+
+	"github.com/btcsuite/btcd/btcec/v2"
+	"github.com/btcsuite/btcd/btcutil"
+	"github.com/btcsuite/btcd/chaincfg"
+	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
+	"github.com/cosmos/go-bip39"
 )
+
+type TestAccountCase struct {
+	mnemonic    string
+	privateKey  string
+	publicKey   string
+	addrMainnet string
+	addrSignet  string
+}
+
+var accountCase = &TestAccountCase{
+	mnemonic:    "unaware oxygen allow method allow property predict various slice travel please priority",
+	privateKey:  "0xc7fceb75bafba7aa10ffe10315352bfc523ac733f814e6a311bc736873df8923",
+	publicKey:   "0x04a721f170043daafde0fa925ab6caf5d2abcdadd2249291b1840e3d99a3f41149e13185ef52451eef2e7cc0c5fe4180b64ca2d17eb886b2328518f6aed684719a",
+	addrMainnet: "bc1p5uslzuqy8k40mc86jfdtdjh4624umtwjyjffrvvypc7engl5z9ysunz3sg",
+	addrSignet:  "tb1p5uslzuqy8k40mc86jfdtdjh4624umtwjyjffrvvypc7engl5z9ystm5728",
+}
+var errorCase = &TestAccountCase{
+	mnemonic: "unaware oxygen allow method allow property predict various slice travel please check",
+}
 
 func TestNewAccountWithMnemonic(t *testing.T) {
 	type args struct {
 		mnemonic string
 		chainnet string
 	}
-	mnemonic := "unaware oxygen allow method allow property predict various slice travel please priority"
-	// privateKey := "0xc7fceb75bafba7aa10ffe10315352bfc523ac733f814e6a311bc736873df8923"
-	// publicKey := "0x04a721f170043daafde0fa925ab6caf5d2abcdadd2249291b1840e3d99a3f41149e13185ef52451eef2e7cc0c5fe4180b64ca2d17eb886b2328518f6aed684719a"
-	addressMainnet := "bc1p5uslzuqy8k40mc86jfdtdjh4624umtwjyjffrvvypc7engl5z9ysunz3sg"
-	addressSignet := "tb1p5uslzuqy8k40mc86jfdtdjh4624umtwjyjffrvvypc7engl5z9ystm5728"
 	tests := []struct {
 		name        string
 		args        args
@@ -22,49 +42,99 @@ func TestNewAccountWithMnemonic(t *testing.T) {
 	}{
 		{
 			name:        "mainnet nomal",
-			args:        args{mnemonic: mnemonic, chainnet: ChainMainnet},
-			wantAddress: addressMainnet,
+			args:        args{mnemonic: accountCase.mnemonic, chainnet: ChainMainnet},
+			wantAddress: accountCase.addrMainnet,
 		},
 		{
 			name:        "coming bitcoin nomal",
-			args:        args{mnemonic: mnemonic, chainnet: ChainBitcoin},
-			wantAddress: addressMainnet,
+			args:        args{mnemonic: accountCase.mnemonic, chainnet: ChainBitcoin},
+			wantAddress: accountCase.addrMainnet,
 		},
 		{
 			name:        "signet nomal",
-			args:        args{mnemonic: mnemonic, chainnet: ChainSignet},
-			wantAddress: addressSignet,
+			args:        args{mnemonic: accountCase.mnemonic, chainnet: ChainSignet},
+			wantAddress: accountCase.addrSignet,
 		},
 		{
-			name: "error chainnet",
-			args: args{
-				mnemonic: mnemonic,
-				chainnet: "xxxxxxx",
-			},
+			name:    "error chainnet",
+			args:    args{mnemonic: accountCase.mnemonic, chainnet: "xxxxxxx"},
 			wantErr: true,
 		},
 		{
-			name: "error mnemonic",
-			args: args{
-				mnemonic: "unaware oxygen allow method allow property predict various slice travel please fake",
-				chainnet: ChainSignet,
-			},
+			name:    "error mnemonic",
+			args:    args{mnemonic: errorCase.mnemonic, chainnet: ChainSignet},
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := NewAccountWithMnemonic(tt.args.mnemonic, tt.args.chainnet)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("NewAccountWithMnemonic() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if (err == nil) && got.address != tt.wantAddress {
+				t.Errorf("NewAccountWithMnemonic() got = %v, want %v", got.address, tt.wantAddress)
+			}
+		})
+	}
+}
+
+func TestAccount_DeriveAccountAt(t *testing.T) {
+	baseAccount, err := NewAccountWithMnemonic(accountCase.mnemonic, ChainMainnet)
+	if err != nil {
+		t.Fatal(err)
+	}
+	tests := []struct {
+		name        string
+		chainnet    string
+		wantAddress string
+		wantErr     bool
+	}{
+		{name: "same as mainnet", chainnet: ChainMainnet, wantAddress: accountCase.addrMainnet},
+		{name: "change signet", chainnet: ChainSignet, wantAddress: accountCase.addrSignet},
+		{name: "error net", chainnet: "signet2", wantErr: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := baseAccount.DeriveAccountAt(tt.chainnet)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("DeriveAccountAt() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if (err == nil) && got.address != tt.wantAddress {
+				t.Errorf("DeriveAccountAt() got = %v, want %v", got.address, tt.wantAddress)
+			}
+		})
+	}
+}
+
+func TestAccount_PrivateKey(t *testing.T) {
+	tests := []struct {
+		name     string
+		mnemonic string
+		want     string
+		wantErr  bool
+	}{
+		{name: "normal test", mnemonic: accountCase.mnemonic, want: accountCase.privateKey},
+		{name: "invalid mnemonic", mnemonic: errorCase.mnemonic, wantErr: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			account, err := NewAccountWithMnemonic(tt.mnemonic, ChainMainnet)
 			if err != nil {
-				if tt.wantErr {
-					t.Log(tt.name, ": get a error", err)
-				} else {
-					t.Errorf("NewAccountWithMnemonic() error = %v, wantErr %v", err, tt.wantErr)
+				if !tt.wantErr {
+					t.Errorf("PrivateKey() error = %v, wantErr %v", err, tt.wantErr)
 				}
 				return
 			}
-			if got.address != tt.wantAddress {
-				t.Errorf("NewAccountWithMnemonic() got = %v, want %v", got, tt.wantAddress)
+			got, err := account.PrivateKeyHex()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("PrivateKey() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if (err == nil) && got != tt.want {
+				t.Errorf("PrivateKey() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -75,8 +145,6 @@ func TestIsValidAddress(t *testing.T) {
 		chainnet string
 		address  string
 	}
-	addressMainnet := "bc1p5uslzuqy8k40mc86jfdtdjh4624umtwjyjffrvvypc7engl5z9ysunz3sg"
-	addressSignet := "tb1p4fwg0qlcsm94y90gnkwr0zkfsv9gxjlq43mpegf4cmn9xed02xcq3n0386"
 	tests := []struct {
 		name string
 		args args
@@ -84,26 +152,26 @@ func TestIsValidAddress(t *testing.T) {
 	}{
 		{
 			name: "mainnet valid",
-			args: args{chainnet: ChainMainnet, address: addressMainnet},
+			args: args{chainnet: ChainMainnet, address: accountCase.addrMainnet},
 			want: true,
 		},
 		{
 			name: "signet valid",
-			args: args{chainnet: ChainSignet, address: addressSignet},
+			args: args{chainnet: ChainSignet, address: accountCase.addrSignet},
 			want: true,
 		},
 		{
 			name: "mainnet valid check in signet",
-			args: args{chainnet: ChainSignet, address: addressMainnet},
+			args: args{chainnet: ChainSignet, address: accountCase.addrMainnet},
 			want: true,
 		},
 		{
 			name: "signet valid check in mainnet",
-			args: args{chainnet: ChainMainnet, address: addressSignet},
+			args: args{chainnet: ChainMainnet, address: accountCase.addrSignet},
 			want: true,
 		},
 		{
-			name: "mainnet invalid",
+			name: "error address",
 			args: args{chainnet: ChainMainnet, address: "bc1p5uslzuqy8k40mc86jfdtdjh4624umtw"},
 			want: false,
 		},
@@ -120,4 +188,34 @@ func TestIsValidAddress(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestBTCWallet_Privatekey_Publickey_Address(t *testing.T) {
+	// 从 coming 的 musig 库计算的测试用例
+	// private key = 0xc7fceb75bafba7aa10ffe10315352bfc523ac733f814e6a311bc736873df8923
+	// public key = 0x04a721f170043daafde0fa925ab6caf5d2abcdadd2249291b1840e3d99a3f41149e13185ef52451eef2e7cc0c5fe4180b64ca2d17eb886b2328518f6aed684719a
+	// mainnet address = bc1p5uslzuqy8k40mc86jfdtdjh4624umtwjyjffrvvypc7engl5z9ysunz3sg
+	// signet address = tb1p5uslzuqy8k40mc86jfdtdjh4624umtwjyjffrvvypc7engl5z9ystm5728
+
+	phrase := "unaware oxygen allow method allow property predict various slice travel please priority"
+	data, _ := bip39.NewSeedWithErrorChecking(phrase, "")
+
+	pri, pub := btcec.PrivKeyFromBytes(data)
+	priHex := types.HexEncodeToString(pri.Serialize())
+	pubHex := types.HexEncodeToString(pub.SerializeUncompressed())
+	t.Log("private key = ", priHex)
+	t.Log("public key = ", pubHex)
+
+	pubData := pub.SerializeUncompressed()
+	addressHash, err := btcutil.NewAddressTaproot(pubData[1:33], &chaincfg.MainNetParams)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("mainnet address = ", addressHash.EncodeAddress())
+
+	addressHash, err = btcutil.NewAddressTaproot(pubData[1:33], &chaincfg.SigNetParams)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("signet address = ", addressHash.EncodeAddress())
 }

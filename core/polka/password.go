@@ -6,17 +6,20 @@ func (a *Account) CheckPassword(password string) error {
 	if a.keystore == nil {
 		return ErrNilKeystore
 	}
-	return a.keystore.CheckPassword(password)
+	if a.keystore.CheckPassword(password) != nil {
+		return ErrPassword
+	}
+	return nil
 }
 
-func IsValidKeystore(keysotreJson, password string) bool {
-	var keyStore keystore
-	err := json.Unmarshal([]byte(keysotreJson), &keyStore)
+func CheckKeystorePassword(keystoreJson, password string) error {
+	var keystore keystore
+	err := json.Unmarshal([]byte(keystoreJson), &keystore)
 	if err != nil {
-		return false
+		return err
 	}
-	if err = keyStore.CheckPassword(password); err != nil {
-		return false
+	if keystore.CheckPassword(password) != nil {
+		return ErrPassword
 	}
-	return true
+	return nil
 }
