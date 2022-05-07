@@ -34,11 +34,11 @@ var rpcs = rpcConfigs{
 }
 
 func (n *rpcInfo) Chain() (*Chain, error) {
-	return NewChainWithRpc(n.url, n.scan, n.net)
+	return NewChainWithRpc(n.url, n.scan)
 }
 
 func (n *rpcInfo) MetadataString() (string, error) {
-	c, err := NewChainWithRpc(n.url, n.scan, n.net)
+	c, err := NewChainWithRpc(n.url, n.scan)
 	if err != nil {
 		return "", err
 	}

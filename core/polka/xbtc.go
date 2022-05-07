@@ -35,7 +35,7 @@ func (t *XBTCToken) BalanceOfAddress(address string) (*base.Balance, error) {
 }
 
 func (t *XBTCToken) BalanceOfPublicKey(publicKey string) (*base.Balance, error) {
-	address, err := t.chain.EncodePublicKeyToAddress(publicKey)
+	address, err := EncodePublicKeyToAddress(publicKey, 44)
 	if err != nil {
 		return nil, err
 	}
