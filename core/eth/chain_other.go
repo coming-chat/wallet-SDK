@@ -1,8 +1,11 @@
 package eth
 
 import (
+	"context"
+	"math/big"
 	"strings"
 
+	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/coming-chat/wallet-SDK/core/base"
 )
 
@@ -55,4 +58,26 @@ func (c *Chain) BatchErc20TokenBalance(contractList []string, address string) ([
 		b, err := c.Erc20Token(s).BalanceOfAddress(address)
 		return b.Total, err
 	})
+}
+
+func (c *Chain) CallContract(msg *CallMsg, blockNumber string) (string, error) {
+	chain, err := GetConnection(c.RpcUrl)
+	if err != nil {
+		return "", err
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), chain.timeout)
+	defer cancel()
+
+	block, _ := new(big.Int).SetString(blockNumber, 10)
+	hash, err := chain.RemoteRpcClient.CallContract(ctx, msg.msg, block)
+	if err != nil {
+		return "", err
+	}
+
+	return types.HexEncodeToString(hash), nil
+}
+
+func (c *Chain) PendingCallContract(msg *CallMsg) (string, error) {
+	return c.CallContract(msg, "-1")
 }
