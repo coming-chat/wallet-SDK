@@ -3,6 +3,7 @@ package eth
 import (
 	"math/big"
 
+	HexType "github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -66,6 +67,7 @@ func (msg *CallMsg) GetGas() int64       { return int64(msg.msg.Gas) }
 func (msg *CallMsg) GetGasPrice() string { return msg.msg.GasPrice.String() }
 func (msg *CallMsg) GetValue() string    { return msg.msg.Value.String() }
 func (msg *CallMsg) GetData() []byte     { return msg.msg.Data }
+func (msg *CallMsg) GetDataHex() string  { return HexType.HexEncodeToString(msg.msg.Data) }
 func (msg *CallMsg) GetTo() string       { return msg.msg.To.String() }
 
 func (msg *CallMsg) SetFrom(address string) { msg.msg.From = common.HexToAddress(address) }
@@ -79,6 +81,13 @@ func (msg *CallMsg) SetValue(value string) {
 	msg.msg.Value = i
 }
 func (msg *CallMsg) SetData(data []byte) { msg.msg.Data = common.CopyBytes(data) }
+func (msg *CallMsg) SetDataHex(hex string) {
+	data, err := HexType.HexDecodeString(hex)
+	if err != nil {
+		return
+	}
+	msg.msg.Data = data
+}
 func (msg *CallMsg) SetTo(address string) {
 	if address == "" {
 		msg.msg.To = nil
