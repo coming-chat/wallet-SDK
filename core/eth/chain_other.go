@@ -34,6 +34,14 @@ func (c *Chain) NonceOfAddress(address string) (string, error) {
 	return chain.Nonce(address)
 }
 
+func (c *Chain) LatestBlockNumber() (int64, error) {
+	chain, err := GetConnection(c.RpcUrl)
+	if err != nil {
+		return 0, err
+	}
+	return chain.LatestBlockNumber()
+}
+
 // SDK 批量请求代币余额，因为 golang 导出的方法不支持数组，因此传参和返回都只能用字符串
 // @param contractListString 批量查询的代币的合约地址字符串，用逗号隔开，例如: "add1,add2,add3"
 // @param address 用户的钱包地址
@@ -60,7 +68,9 @@ func (c *Chain) BatchErc20TokenBalance(contractList []string, address string) ([
 	})
 }
 
-func (c *Chain) CallContract(msg *CallMsg, blockNumber string) (string, error) {
+// call eth_call method
+// @param blockNumber Especially -2 is the latest block, -1 is pending block.
+func (c *Chain) CallContract(msg *CallMsg, blockNumber int64) (string, error) {
 	chain, err := GetConnection(c.RpcUrl)
 	if err != nil {
 		return "", err
@@ -69,7 +79,10 @@ func (c *Chain) CallContract(msg *CallMsg, blockNumber string) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), chain.timeout)
 	defer cancel()
 
-	block, _ := new(big.Int).SetString(blockNumber, 10)
+	var block *big.Int = nil
+	if blockNumber >= -1 {
+		block = new(big.Int).SetInt64(blockNumber)
+	}
 	hash, err := chain.RemoteRpcClient.CallContract(ctx, msg.msg, block)
 	if err != nil {
 		return "", err
@@ -79,5 +92,9 @@ func (c *Chain) CallContract(msg *CallMsg, blockNumber string) (string, error) {
 }
 
 func (c *Chain) PendingCallContract(msg *CallMsg) (string, error) {
-	return c.CallContract(msg, "-1")
+	return c.CallContract(msg, -1)
+}
+
+func (c *Chain) LatestCallContract(msg *CallMsg) (string, error) {
+	return c.CallContract(msg, -2)
 }

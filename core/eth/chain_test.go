@@ -181,3 +181,62 @@ func TestChain_FetchTransactionDetail_Cover_Multi_Rpcs(t *testing.T) {
 		})
 	}
 }
+
+func TestChain_CallContract(t *testing.T) {
+	msg := NewCallMsg()
+	msg.SetTo("0x37088186089c7d6bcd556d9a15087dfae3ba0c32")
+	msg.SetDataHex("0x70a082310000000000000000000000008de5ff2eded4d897da535ab0f379ec1b9257ebab")
+
+	tests := []struct {
+		name    string
+		on      rpcInfo
+		msg     *CallMsg
+		block   int64
+		wantErr bool
+	}{
+		{
+			name:  "binance prod pending",
+			on:    rpcs.binanceProd,
+			msg:   msg,
+			block: -1,
+		},
+		{
+			name:  "binance prod latest",
+			on:    rpcs.binanceProd,
+			msg:   msg,
+			block: -2,
+		},
+		{
+			name:    "sherpax prod pending",
+			on:      rpcs.sherpaxProd,
+			msg:     msg,
+			block:   -1,
+			wantErr: true, // sherpax not support pending call
+		},
+		{
+			name:  "sherpax prod latest",
+			on:    rpcs.sherpaxProd,
+			msg:   msg,
+			block: -2,
+		},
+		{
+			name:  "sherpax prod normal block",
+			on:    rpcs.sherpaxProd,
+			msg:   msg,
+			block: 1670400,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			chain := tt.on.Chain()
+			got, err := chain.CallContract(tt.msg, tt.block)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("CallContract() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if err == nil {
+				t.Logf("CallContract() got = %v", got)
+			}
+		})
+	}
+}
