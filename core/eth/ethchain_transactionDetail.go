@@ -36,7 +36,7 @@ func (e *EthChain) FetchTransactionDetail(hashString string) (detail *base.Trans
 	if err != nil {
 		return
 	}
-	msg, err := tx.AsMessage(types.NewEIP155Signer(e.chainId), nil)
+	msg, err := tx.AsMessage(types.NewLondonSigner(e.chainId), nil)
 	if err != nil {
 		return
 	}

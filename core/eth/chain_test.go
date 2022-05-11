@@ -152,9 +152,14 @@ func TestChain_FetchTransactionDetail_Cover_Multi_Rpcs(t *testing.T) {
 			wantTime: 1651217162,
 		},
 		{
-			name:    "ethereum EIP1559 transfer succeed, but not yet supported",
-			args:    args{rpcs.ethereumProd, "0xbba7921fda55dae8423d105d74acdbfea346f15969f6c924552d0b062128f271"},
-			wantErr: true,
+			name:     "sherpax test EIP1559 succeed",
+			args:     args{rpcs.sherpaxTest, "0x32afbd65fe73dda3734cb9419a87fccb861633db086f7ca487c044a8112dcbe7"},
+			wantTime: 1652150106,
+		},
+		{
+			name:     "ethereum EIP1559 transfer succeed",
+			args:     args{rpcs.ethereumProd, "0xbba7921fda55dae8423d105d74acdbfea346f15969f6c924552d0b062128f271"},
+			wantTime: 1651215357,
 		},
 		{
 			name:    "binance-prod error hash",
