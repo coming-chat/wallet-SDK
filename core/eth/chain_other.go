@@ -3,6 +3,7 @@ package eth
 import (
 	"context"
 	"math/big"
+	"strconv"
 	"strings"
 
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
@@ -34,12 +35,16 @@ func (c *Chain) NonceOfAddress(address string) (string, error) {
 	return chain.Nonce(address)
 }
 
-func (c *Chain) LatestBlockNumber() (int64, error) {
+func (c *Chain) LatestBlockNumber() (s string, err error) {
 	chain, err := GetConnection(c.RpcUrl)
 	if err != nil {
-		return 0, err
+		return
 	}
-	return chain.LatestBlockNumber()
+	n, err := chain.LatestBlockNumber()
+	if err != nil {
+		return
+	}
+	return strconv.FormatInt(n, 10), nil
 }
 
 // SDK 批量请求代币余额，因为 golang 导出的方法不支持数组，因此传参和返回都只能用字符串
