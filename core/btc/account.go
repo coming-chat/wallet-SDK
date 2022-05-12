@@ -87,3 +87,19 @@ func (a *Account) Sign(message []byte, password string) ([]byte, error) {
 func (a *Account) SignHex(messageHex string, password string) ([]byte, error) {
 	return nil, errors.New("TODO: function not implement yet.")
 }
+
+// MARK - Implement the protocol AddressUtil
+
+// @param publicKey can start with 0x or not.
+func (a *Account) EncodePublicKeyToAddress(publicKey string) (string, error) {
+	return EncodePublicKeyToAddress(publicKey, a.Chainnet)
+}
+
+// @return publicKey that will start with 0x.
+func (a *Account) DecodeAddressToPublicKey(address string) (string, error) {
+	return "", ErrDecodeAddress
+}
+
+func (a *Account) IsValidAddress(address string) bool {
+	return IsValidAddress(address, a.Chainnet)
+}

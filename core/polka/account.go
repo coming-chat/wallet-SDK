@@ -163,3 +163,19 @@ func mockAccount() *Account {
 	a, _ := NewAccountWithMnemonic(mnemonic, 44)
 	return a
 }
+
+// MARK - Implement the protocol AddressUtil
+
+// @param publicKey can start with 0x or not.
+func (a *Account) EncodePublicKeyToAddress(publicKey string) (string, error) {
+	return EncodePublicKeyToAddress(publicKey, a.Network)
+}
+
+// @return publicKey that will start with 0x.
+func (a *Account) DecodeAddressToPublicKey(address string) (string, error) {
+	return DecodeAddressToPublicKey(address)
+}
+
+func (a *Account) IsValidAddress(address string) bool {
+	return IsValidAddress(address)
+}
