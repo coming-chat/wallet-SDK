@@ -43,7 +43,7 @@ func EncodePublicKeyToAddress(publicKey string, addressPrefix string) (string, e
 		return "", err
 	}
 	pubKey := secp256k1.PubKey{Key: pubBytes}
-	return bech32.ConvertAndEncode(addressPrefix, pubKey.Address().Bytes())
+	return Bech32FromAccAddress(pubKey.Address().Bytes(), addressPrefix)
 }
 
 // @param chainnet chain name
@@ -68,4 +68,8 @@ func AccAddressFromBech32(address string, addressPrefix string) (sdk.AccAddress,
 	}
 
 	return sdk.AccAddress(bz), nil
+}
+
+func Bech32FromAccAddress(address []byte, addressPrefix string) (string, error) {
+	return bech32.ConvertAndEncode(addressPrefix, address)
 }

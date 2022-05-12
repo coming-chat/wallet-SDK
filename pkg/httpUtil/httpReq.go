@@ -2,8 +2,11 @@ package httpUtil
 
 import (
 	"bytes"
+	"errors"
 	"io"
+	"io/ioutil"
 	"net/http"
+	"net/url"
 	"sync"
 	"time"
 )
@@ -17,6 +20,32 @@ var (
 type Res struct {
 	Body []byte
 	Code int
+}
+
+func Get(baseUrl string, param map[string]string) (body []byte, err error) {
+	urlPath := baseUrl
+	if len(param) != 0 {
+		params := url.Values{}
+		for k, v := range param {
+			params.Set(k, v)
+		}
+		httpUrl, err := url.Parse(baseUrl)
+		if err != nil {
+			return nil, err
+		}
+		httpUrl.RawQuery = params.Encode()
+		urlPath = httpUrl.String()
+	}
+
+	resp, err := http.Get(urlPath)
+	if resp == nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return nil, errors.New("get " + baseUrl + " response code = " + resp.Status)
+	}
+	return ioutil.ReadAll(resp.Body)
 }
 
 func Request(method, url string, header map[string]string, body []byte) (*Res, error) {
