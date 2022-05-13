@@ -1,20 +1,20 @@
 # wallet-SDK
 
-|                       | Bitcoin | Ethereum | Polka |
-| --------------------- | ------- | -------- | ----- |
-| import mnemonic       | ✅     | ✅      | ✅   |
-| import keystore       | ❌     | ❌      | ✅  |
-| pri/pub key & address | ✅     | ✅      | ✅   |
-| multi network         | ✅     | ✅      | ✅   |
-| publicKey to address  | ✅     | ✅      | ✅   |
-| address to publicKey  | ❌     | ✅      | ✅   |
-| sign data             | ☑️    | ☑️     | ✅   |
-|                       |         |          |       |
-| query balance | ✅ | ✅ | ✅ |
-| fetch transaction detail | ✅ | ✅ | ✅ |
-| gas fee | ❌ | ✅ | ✅ |
-| send taw transaction | ✅ | ✅ ☑️ | ✅ ☑️ |
-| multi token | ❌ | ✅ erc20 | ✅ XBTC |
+|                       | Bitcoin | Ethereum | Polka | Cosmos |
+| --------------------- | ------- | -------- | ----- | ------ |
+| import mnemonic       | ✅     | ✅      | ✅   |✅   |
+| import keystore       | ❌     | ❌      | ✅  |❌   |
+| pri/pub key & address | ✅     | ✅      | ✅   |✅   |
+| multi network         | ✅     | ✅      | ✅   |✅ ☑️   |
+| publicKey to address  | ✅     | ✅      | ✅   |✅   |
+| address to publicKey  | ❌     | ✅      | ✅   |❌   |
+| sign data             | ☑️    | ☑️     | ✅   |☑️   |
+|                       |         |          |       |   |
+| query balance | ✅ | ✅ | ✅ |✅   |
+| fetch transaction detail | ✅ | ✅ | ✅ |✅   |
+| gas fee | ❌ | ✅ | ✅ |✅   |
+| send taw transaction | ✅ | ✅ ☑️ | ✅ ☑️ |✅   |
+| multi token | ❌ | ✅ erc20 | ✅ XBTC |✅ ☑️   |
 
 *If there are two icons, the first icon indicates development status, and the second icon indicates test status.*
 ✅: Completed      ☑️: TODO    ❌: Unsupported
@@ -49,6 +49,12 @@ bitcoinAccount, err = wallet.GetOrCreateBitcoinAccount(chainnet)
 
 // Ethereum
 ethereumAccount, err = wallet.GetOrCreateEthereumAccount()
+
+// Cosmos
+cosmosAccount, err = wallet.GetOrCreateCosmosAccount()
+
+// Terra is a type of cosmos
+terraAccount, err = wallet.GetOrCreateCosmosTypeAccount(330, "terra")
 ```
 
 #### Get PrivateKey, PublicKey, Address
@@ -83,6 +89,8 @@ polkaChain, err = polka.NewChainWithRpc(rpcUrl, scanUrl, network)
 bitcoinChain, err = btc.NewChainWithChainnet(chainnet)
 
 ethereumChain, err = eth.NewChainWithRpc(rpcUrl)
+
+cosmosChain, err = cosmos.NewChainWithRpc(rpcUrl, restUrl)
 ```
 
 #### Methods

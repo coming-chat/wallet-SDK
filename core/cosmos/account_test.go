@@ -13,14 +13,14 @@ type TestAccountCase struct {
 
 var accountCase1 = &TestAccountCase{
 	mnemonic: "unaware oxygen allow method allow property predict various slice travel please priority",
-	cointype: 118,
-	prefix:   "cosmos",
+	cointype: CosmosCointype,
+	prefix:   CosmosPrefix,
 	address:  "cosmos19jwusy7lm8v5kqay8qjml79hs6e30t8j7ygm8r",
 }
 var accountCase2 = &TestAccountCase{
 	mnemonic: "wild claw cabin cupboard update cheap thumb blanket float rare change inhale",
-	cointype: 118,
-	prefix:   "cosmos",
+	cointype: CosmosCointype,
+	prefix:   CosmosPrefix,
 	address:  "cosmos10d2wkfl7y8rpgyxkcwa8urwt8muuc9aqcq9vys",
 }
 var accountTerra = &TestAccountCase{

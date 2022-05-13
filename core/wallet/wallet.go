@@ -1,7 +1,10 @@
 package wallet
 
 import (
+	"fmt"
+
 	"github.com/coming-chat/wallet-SDK/core/btc"
+	"github.com/coming-chat/wallet-SDK/core/cosmos"
 	"github.com/coming-chat/wallet-SDK/core/eth"
 	"github.com/coming-chat/wallet-SDK/core/polka"
 )
@@ -16,6 +19,7 @@ type Wallet struct {
 	polkaAccounts   map[int]*polka.Account
 	bitcoinAccounts map[string]*btc.Account
 	ethereumAccount *eth.Account
+	cosmosAccounts  map[string]*cosmos.Account
 }
 
 func NewWalletWithMnemonic(mnemonic string) (*Wallet, error) {
@@ -106,6 +110,37 @@ func (w *Wallet) GetOrCreateEthereumAccount() (*eth.Account, error) {
 	// save to cache
 	w.ethereumAccount = account
 	return account, err
+}
+
+// Get or create a wallet account based on cosmos architecture.
+func (w *Wallet) GetOrCreateCosmosTypeAccount(cointype int64, addressPrefix string) (*cosmos.Account, error) {
+	key := fmt.Sprintf("%d-%s", cointype, addressPrefix)
+	if w.cosmosAccounts == nil {
+		w.cosmosAccounts = make(map[string]*cosmos.Account)
+	}
+
+	cache := w.cosmosAccounts[key]
+	if cache != nil {
+		return cache, nil
+	}
+
+	if len(w.Mnemonic) <= 0 {
+		return nil, ErrInvalidMnemonic
+	}
+
+	account, err := cosmos.NewAccountWithMnemonic(w.Mnemonic, cointype, addressPrefix)
+	if err != nil {
+		return nil, err
+	}
+
+	// save to cache
+	w.cosmosAccounts[key] = account
+	return account, err
+}
+
+// Get or create cosmos chain account
+func (w *Wallet) GetOrCreateCosmosAccount() (*cosmos.Account, error) {
+	return w.GetOrCreateCosmosTypeAccount(cosmos.CosmosCointype, cosmos.CosmosPrefix)
 }
 
 // check keystore password

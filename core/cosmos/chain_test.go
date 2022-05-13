@@ -49,7 +49,7 @@ func TestTransfer(t *testing.T) {
 	amount := "1000"
 
 	chain := rpcinfo.Chain()
-	token := chain.DenomToken("cosmos", "uatom")
+	token := chain.DenomToken(CosmosPrefix, CosmosCoinDenom)
 
 	signedTx, err := token.BuildTransferTxWithAccount(account, toAddress, gasPrice, gasLimit, amount)
 	if err != nil {
@@ -61,17 +61,6 @@ func TestTransfer(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log(txHash, "at2", rpcinfo.scan)
-}
-
-func TestQueryBalance(t *testing.T) {
-	c := NewChainWithRpc(rpcs.cosmosTest.rpc, rpcs.cosmosTest.rest)
-	address := accountCase1.address
-
-	b, err := c.BalanceOfAddressAndDenom(address, "uatom")
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log(b)
 }
 
 func TestChain_BalanceOfAddress(t *testing.T) {
@@ -91,13 +80,13 @@ func TestChain_BalanceOfAddress(t *testing.T) {
 			name:    "cosmos mainnet normal",
 			rpcinfo: rpcs.cosmosProd,
 			address: "cosmos1lkw6n8efpj7mk29yvajpn9zue099l359cgzf0t",
-			denom:   "uatom",
+			denom:   CosmosCoinDenom,
 		},
 		{
 			name:    "cosmos testnet error address",
 			rpcinfo: rpcs.cosmosTest,
 			address: accountCase1.address + "s",
-			denom:   "uatom",
+			denom:   CosmosCoinDenom,
 			wantErr: true,
 		},
 		{
