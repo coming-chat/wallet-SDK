@@ -20,6 +20,7 @@ require (
 	github.com/itering/subscan v0.1.0
 	github.com/pierrec/xxHash v0.1.5
 	github.com/shopspring/decimal v1.2.0
+	github.com/tendermint/tendermint v0.34.19
 	github.com/tyler-smith/go-bip39 v1.1.0
 	github.com/vedhavyas/go-subkey v1.0.2
 	golang.org/x/crypto v0.0.0-20220321153916-2c7772ba3064
@@ -126,16 +127,19 @@ require (
 	github.com/tendermint/btcd v0.1.1 // indirect
 	github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15 // indirect
 	github.com/tendermint/go-amino v0.16.0 // indirect
-	github.com/tendermint/tendermint v0.34.19 // indirect
 	github.com/tendermint/tm-db v0.6.6 // indirect
 	github.com/tklauser/go-sysconf v0.3.5 // indirect
 	github.com/tklauser/numcpus v0.2.2 // indirect
 	github.com/zondax/hid v0.9.0 // indirect
 	go.etcd.io/bbolt v1.3.6 // indirect
+	golang.org/x/mobile v0.0.0-20220504144722-50dca8fc073d // indirect
+	golang.org/x/mod v0.5.0 // indirect
 	golang.org/x/net v0.0.0-20211208012354-db4efeb81f4b // indirect
 	golang.org/x/sys v0.0.0-20220330033206-e17cdc41300f // indirect
 	golang.org/x/term v0.0.0-20210503060354-a79de5458b56 // indirect
 	golang.org/x/text v0.3.7 // indirect
+	golang.org/x/tools v0.1.8-0.20211022200916-316ba0b74098 // indirect
+	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/genproto v0.0.0-20211223182754-3ac035c7e7cb // indirect
 	google.golang.org/grpc v1.45.0 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
