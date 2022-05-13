@@ -28,7 +28,7 @@ type TransactionDetail struct {
 	ToAddress string
 
 	Status TransactionStatus
-	// transaction completion timestamp, 0 if Status is in Pending
+	// transaction completion timestamp (s), 0 if Status is in Pending
 	FinishTimestamp int64
 	// failure message
 	FailureMessage string

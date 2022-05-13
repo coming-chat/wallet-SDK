@@ -41,11 +41,12 @@ func (t *Token) TokenInfo() (*base.TokenInfo, error) {
 }
 
 func (t *Token) BalanceOfAddress(address string) (*base.Balance, error) {
-	return t.chain.BalanceOfAddress(address)
+	return t.chain.BalanceOfAddressAndDenom(address, t.Denom)
 }
 
+// Warning: Unable to use public key to query balance
 func (t *Token) BalanceOfPublicKey(publicKey string) (*base.Balance, error) {
-	return t.BalanceOfAddress(publicKey)
+	return base.EmptyBalance(), errors.New("Unable to use public key to query balance")
 }
 
 func (t *Token) BalanceOfAccount(account base.Account) (*base.Balance, error) {

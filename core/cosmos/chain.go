@@ -2,10 +2,17 @@ package cosmos
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/coming-chat/wallet-SDK/core/base"
+	"github.com/cosmos/cosmos-sdk/types/tx"
+	bankTypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	tendermintHttp "github.com/tendermint/tendermint/rpc/client/http"
+	tendermintTypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
 type Chain struct {
@@ -33,14 +40,13 @@ func (c *Chain) DenomToken(prefix, denom string) *Token {
 	return &Token{chain: c, Denom: denom, Prefix: prefix}
 }
 
-// TODO
 func (c *Chain) BalanceOfAddress(address string) (*base.Balance, error) {
-	return nil, nil
+	return c.BalanceOfAddressAndDenom(address, "")
 }
 
-// TODO
+// Warning: Unable to use public key to query balance
 func (c *Chain) BalanceOfPublicKey(publicKey string) (*base.Balance, error) {
-	return c.BalanceOfAddress(publicKey)
+	return base.EmptyBalance(), errors.New("Unable to use public key to query balance")
 }
 
 func (c *Chain) BalanceOfAccount(account base.Account) (*base.Balance, error) {
@@ -49,7 +55,6 @@ func (c *Chain) BalanceOfAccount(account base.Account) (*base.Balance, error) {
 
 // Send the raw transaction on-chain
 // @return the hex hash string
-// TODO
 func (c *Chain) SendRawTransaction(signedTx string) (string, error) {
 	client, err := c.GetClient()
 	if err != nil {
@@ -68,23 +73,92 @@ func (c *Chain) SendRawTransaction(signedTx string) (string, error) {
 }
 
 // Fetch transaction details through transaction hash
-// TODO
-func (c *Chain) FetchTransactionDetail(hash string) (*base.TransactionDetail, error) {
-	return nil, nil
+func (c *Chain) FetchTransactionDetail(hash string) (detail *base.TransactionDetail, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
+
+	result, err := c.fetchTxResult(hash)
+	if err != nil {
+		return
+	}
+
+	detail = &base.TransactionDetail{}
+	detail.HashString = hash
+	if result.TxResult.Data == nil {
+		detail.Status = base.TransactionStatusFailure
+		detail.FailureMessage = result.TxResult.Log
+	} else {
+		detail.Status = base.TransactionStatusSuccess
+	}
+
+	originTx := &tx.Tx{}
+	err = originTx.XXX_Unmarshal(result.Tx)
+	if err != nil {
+		return
+	}
+	detail.EstimateFees = originTx.AuthInfo.Fee.Amount[0].Amount.String()
+
+	msgSend := &bankTypes.MsgSend{}
+	err = msgSend.XXX_Unmarshal(originTx.Body.Messages[0].Value)
+	if err != nil {
+		return
+	}
+	detail.FromAddress = msgSend.FromAddress
+	detail.ToAddress = msgSend.ToAddress
+	detail.Amount = msgSend.Amount[0].Amount.String()
+
+	client, err := c.GetClient()
+	if err != nil {
+		return
+	}
+	blockHeight := result.Height
+	blockInfo, err := client.Block(context.Background(), &blockHeight)
+	if err != nil {
+		return
+	}
+	detail.FinishTimestamp = blockInfo.Block.Time.Unix()
+
+	return detail, nil
 }
 
 // Fetch transaction status through transaction hash
 func (c *Chain) FetchTransactionStatus(hash string) base.TransactionStatus {
-	return 0
+	result, err := c.fetchTxResult(hash)
+	if err != nil {
+		return base.TransactionStatusNone
+	}
+	if result.TxResult.Data == nil {
+		return base.TransactionStatusFailure
+	} else {
+		return base.TransactionStatusSuccess
+	}
+}
+
+func (c *Chain) fetchTxResult(hash string) (*tendermintTypes.ResultTx, error) {
+	client, err := c.GetClient()
+	if err != nil {
+		return nil, err
+	}
+	query := fmt.Sprintf("tx.hash='%s'", strings.TrimPrefix(hash, "0x"))
+	txSearch, err := client.TxSearch(context.Background(), query, true, nil, nil, "asc")
+	if err != nil {
+		return nil, err
+	}
+	if len(txSearch.Txs) <= 0 {
+		return nil, errors.New("Transaction not found: " + hash)
+	}
+	return txSearch.Txs[0], nil
 }
 
 // Batch fetch the transaction status, the hash list and the return value,
 // which can only be passed as strings separated by ","
 // @param hashListString The hash of the transactions to be queried in batches, a string concatenated with ",": "hash1,hash2,hash3"
 // @return Batch transaction status, its order is consistent with hashListString: "status1,status2,status3"
-// TODO
 func (c *Chain) BatchFetchTransactionStatus(hashListString string) string {
-	return ""
+	hashList := strings.Split(hashListString, ",")
+	statuses, _ := base.MapListConcurrentStringToString(hashList, func(s string) (string, error) {
+		return strconv.Itoa(c.FetchTransactionStatus(s)), nil
+	})
+	return strings.Join(statuses, ",")
 }
 
 // MARK - Client

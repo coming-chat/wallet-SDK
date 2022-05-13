@@ -1,17 +1,10 @@
 package cosmos
 
 import (
-	"context"
-	"strconv"
+	"reflect"
 	"testing"
 
-	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
-	clientTx "github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/coming-chat/wallet-SDK/core/base"
 )
 
 type chainInfo struct {
@@ -38,23 +31,13 @@ var rpcs = chainConfig{
 	},
 }
 
-// $request cosmos1unek4dqvkwxv6sfrakk4903m0gmxkfyeprcqtg  theta
-
-func TestQueryBalance(t *testing.T) {
-	// req := banktypes.QueryBalanceRequest{
-	// 	Address: accountCase1.address,
-	// 	Denom:   "",
-	// }
-	// cli := banktypes.NewQueryClient(grpc.ClientConn)
-	// res, err := cli.Balance(context.Background(), &req)
-	// t.Log(res, err)
-
-	c := NewChainWithRpc(rpcs.cosmosTest.rpc, rpcs.cosmosTest.rest)
-	acc, err := c.AccountOf(accountCase1.address)
-	t.Log(acc, err)
+func (i *chainInfo) Chain() *Chain {
+	return NewChainWithRpc(i.rpc, i.rest)
 }
 
-func TestTransssss(t *testing.T) {
+// $request cosmos1unek4dqvkwxv6sfrakk4903m0gmxkfyeprcqtg  theta
+
+func TestTransfer(t *testing.T) {
 	rpcinfo := rpcs.cosmosTest
 
 	from := accountCase1.mnemonic
@@ -65,7 +48,7 @@ func TestTransssss(t *testing.T) {
 	gasLimit := GasLimitDefault
 	amount := "1000"
 
-	chain := NewChainWithRpc(rpcinfo.rpc, rpcinfo.rest)
+	chain := rpcinfo.Chain()
 	token := chain.DenomToken("cosmos", "uatom")
 
 	signedTx, err := token.BuildTransferTxWithAccount(account, toAddress, gasPrice, gasLimit, amount)
@@ -80,104 +63,142 @@ func TestTransssss(t *testing.T) {
 	t.Log(txHash, "at2", rpcinfo.scan)
 }
 
-func TestTransfer(t *testing.T) {
-	rpcinfo := rpcs.cosmosTest
+func TestQueryBalance(t *testing.T) {
+	c := NewChainWithRpc(rpcs.cosmosTest.rpc, rpcs.cosmosTest.rest)
+	address := accountCase1.address
 
-	from := accountCase1.mnemonic
-	account, _ := NewCosmosAccountWithMnemonic(from)
-	privKey := account.privKey
-
-	toAddress := accountCase2.address
-	toAccAddress, err := AccAddressFromBech32(toAddress, "cosmos")
+	b, err := c.BalanceOfAddressAndDenom(address, "uatom")
 	if err != nil {
 		t.Fatal(err)
 	}
+	t.Log(b)
+}
 
-	chain := NewChainWithRpc(rpcinfo.rpc, rpcinfo.rest)
-	client, err := chain.GetClient()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	accountInfo, err := chain.AccountOf(account.Address())
-	if err != nil {
-		t.Fatal(err)
-	}
-	accountNumber, err := strconv.ParseUint(accountInfo.AccountNumber, 10, 64)
-	if err != nil {
-		t.Fatal(accountNumber)
-	}
-	sequence, err := strconv.ParseUint(accountInfo.Sequence, 10, 64)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	blockInfo, err := client.Block(context.Background(), nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	chainId := blockInfo.Block.ChainID
-	latestHeight := blockInfo.Block.Height
-
-	transferCoin := sdk.NewInt64Coin("uatom", 1000)
-	feeCoin := sdk.NewInt64Coin("uatom", 100)
-
-	encCfg := simapp.MakeTestEncodingConfig()
-
-	// Create a new TxBuilder.
-	txBuilder := encCfg.TxConfig.NewTxBuilder()
-	msg1 := banktypes.NewMsgSend(privKey.PubKey().Address().Bytes(), toAccAddress.Bytes(), sdk.NewCoins(transferCoin))
-	err = txBuilder.SetMsgs(msg1)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	txBuilder.SetGasLimit(110000)
-	txBuilder.SetFeeAmount(sdk.NewCoins(feeCoin))
-	// txBuilder.SetMemo("bridge")
-	txBuilder.SetTimeoutHeight(uint64(latestHeight) + 1000)
-
-	sigV2 := signing.SignatureV2{
-		PubKey: privKey.PubKey(),
-		Data: &signing.SingleSignatureData{
-			SignMode:  encCfg.TxConfig.SignModeHandler().DefaultMode(),
-			Signature: nil,
+func TestChain_BalanceOfAddress(t *testing.T) {
+	tests := []struct {
+		name    string
+		rpcinfo chainInfo
+		address string
+		denom   string
+		wantErr bool
+	}{
+		{
+			name:    "cosmos testnet normal",
+			rpcinfo: rpcs.cosmosTest,
+			address: accountCase1.address,
 		},
-		Sequence: sequence,
+		{
+			name:    "cosmos mainnet normal",
+			rpcinfo: rpcs.cosmosProd,
+			address: "cosmos1lkw6n8efpj7mk29yvajpn9zue099l359cgzf0t",
+			denom:   "uatom",
+		},
+		{
+			name:    "cosmos testnet error address",
+			rpcinfo: rpcs.cosmosTest,
+			address: accountCase1.address + "s",
+			denom:   "uatom",
+			wantErr: true,
+		},
+		{
+			name:    "cosmos mainnet error denom",
+			rpcinfo: rpcs.cosmosProd,
+			address: "cosmos1lkw6n8efpj7mk29yvajpn9zue099l359cgzf0t",
+			denom:   "atom",
+			wantErr: true,
+		},
 	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			chain := tt.rpcinfo.Chain()
+			got, err := chain.BalanceOfAddressAndDenom(tt.address, tt.denom)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("BalanceOfAddress() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if err == nil {
+				t.Logf("balance is %s. We cannot assert the value, You can verify at %s/account/%s",
+					got.Total, tt.rpcinfo.scan, tt.address)
+			}
+		})
+	}
+}
 
-	err = txBuilder.SetSignatures(sigV2)
-	if err != nil {
-		t.Fatal(err)
+func TestChain_FetchTransactionDetail(t *testing.T) {
+	tests := []struct {
+		name       string
+		rpcInfo    chainInfo
+		hash       string
+		wantDetail *base.TransactionDetail
+		wantErr    bool
+	}{
+		{
+			name:    "cosmos testnet normal succeed tx",
+			rpcInfo: rpcs.cosmosTest,
+			hash:    "F068275DE4A4CC904D3E6A412A50DFACC235C62770BCD001E54E00BC4C17B1F0",
+			wantDetail: &base.TransactionDetail{
+				HashString:      "F068275DE4A4CC904D3E6A412A50DFACC235C62770BCD001E54E00BC4C17B1F0",
+				FromAddress:     "cosmos19jwusy7lm8v5kqay8qjml79hs6e30t8j7ygm8r",
+				ToAddress:       "cosmos10d2wkfl7y8rpgyxkcwa8urwt8muuc9aqcq9vys",
+				Amount:          "10000",
+				EstimateFees:    "800",
+				Status:          base.TransactionStatusSuccess,
+				FinishTimestamp: 1652356672,
+			},
+		},
+		{
+			name:    "cosmos testnet normal failured tx",
+			rpcInfo: rpcs.cosmosTest,
+			hash:    "915B83334165EC73C5CF7B8FAD50E2B9165C1777C277B29A8D7FF6B2E4D6D96C",
+			wantDetail: &base.TransactionDetail{
+				HashString:      "915B83334165EC73C5CF7B8FAD50E2B9165C1777C277B29A8D7FF6B2E4D6D96C",
+				FromAddress:     "cosmos19jwusy7lm8v5kqay8qjml79hs6e30t8j7ygm8r",
+				ToAddress:       "cosmos10d2wkfl7y8rpgyxkcwa8urwt8muuc9aqcq9vys",
+				Amount:          "1000",
+				EstimateFees:    "500",
+				Status:          base.TransactionStatusFailure,
+				FinishTimestamp: 1652350345,
+				FailureMessage:  "out of gas in location: WriteFlat; gasWanted: 60000, gasUsed: 60683: out of gas",
+			},
+		},
+		{
+			name:    "cosmos mainnet normal succeed tx",
+			rpcInfo: rpcs.cosmosProd,
+			hash:    "56C3314BF9FACA7238AA9C3BDDF622EEE8C2443BA92BC35E443860C7DE3F23AC",
+			wantDetail: &base.TransactionDetail{
+				HashString:      "56C3314BF9FACA7238AA9C3BDDF622EEE8C2443BA92BC35E443860C7DE3F23AC",
+				FromAddress:     "cosmos17muvdgkep4ndptnyg38eufxsssq8jr3wnkysy8",
+				ToAddress:       "cosmos1aftc0rwy2zk2ksmlrf3z4llnzlrwn69luwx3gs",
+				Amount:          "5520000",
+				EstimateFees:    "5000",
+				Status:          base.TransactionStatusSuccess,
+				FinishTimestamp: 1652433492,
+			},
+		},
+		{
+			name:    "cosmos testnet normal error hash: odd length hex string",
+			rpcInfo: rpcs.cosmosTest,
+			hash:    "915B83334165EC73C5CF7B8FAD50E2B9165C1777C277B29A8D7FF6B2E4D6D96",
+			wantErr: true,
+		},
+		{
+			name:    "cosmos testnet normal error hash: not found",
+			rpcInfo: rpcs.cosmosTest,
+			hash:    "915B83334165EC73C5CF7B8FAD50E2B9165C1777C277B29A8D7FF6B2E4D6D9",
+			wantErr: true,
+		},
 	}
-
-	signerData := xauthsigning.SignerData{
-		ChainID:       chainId,
-		AccountNumber: accountNumber,
-		Sequence:      sequence,
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			chain := tt.rpcInfo.Chain()
+			gotDetail, err := chain.FetchTransactionDetail(tt.hash)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("FetchTransactionDetail() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if (err == nil) && !reflect.DeepEqual(gotDetail, tt.wantDetail) {
+				t.Errorf("FetchTransactionDetail() gotDetail = %v, want %v", gotDetail, tt.wantDetail)
+			}
+		})
 	}
-	sigV2, err = clientTx.SignWithPrivKey(
-		encCfg.TxConfig.SignModeHandler().DefaultMode(), signerData,
-		txBuilder, privKey, encCfg.TxConfig, sequence)
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = txBuilder.SetSignatures(sigV2)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	txBytes, err := encCfg.TxConfig.TxEncoder()(txBuilder.GetTx())
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	signedTx := types.HexEncodeToString(txBytes)
-
-	hashString, err := chain.SendRawTransaction(signedTx)
-	if err != nil {
-		return
-	}
-	t.Log(hashString, "at2", rpcinfo.scan)
 }
