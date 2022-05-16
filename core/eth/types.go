@@ -2,6 +2,7 @@ package eth
 
 import (
 	"math/big"
+	"strings"
 
 	HexType "github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/ethereum/go-ethereum"
@@ -76,8 +77,17 @@ func (msg *CallMsg) SetGasPrice(price string) {
 	i, _ := new(big.Int).SetString(price, 10)
 	msg.msg.GasPrice = i
 }
+
+// Set amount with decimal number
 func (msg *CallMsg) SetValue(value string) {
 	i, _ := new(big.Int).SetString(value, 10)
+	msg.msg.Value = i
+}
+
+// Set amount with hexadecimal number
+func (msg *CallMsg) SetValueHex(hex string) {
+	hex = strings.TrimPrefix(hex, "0x") // must trim 0x !!
+	i, _ := new(big.Int).SetString(hex, 16)
 	msg.msg.Value = i
 }
 func (msg *CallMsg) SetData(data []byte) { msg.msg.Data = common.CopyBytes(data) }
