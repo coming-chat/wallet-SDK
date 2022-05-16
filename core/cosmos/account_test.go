@@ -25,9 +25,15 @@ var accountCase2 = &TestAccountCase{
 }
 var accountTerra = &TestAccountCase{
 	mnemonic: "canyon young easy visa antenna address zone maple captain garden faith crawl tomorrow left risk identify impose miss baby whale nest assume clap trial",
-	cointype: 330,
-	prefix:   "terra",
+	cointype: TerraCointype,
+	prefix:   TerraPrefix,
 	address:  "terra1swy7k7r0jv4rmyjslp35pf0dfp0cs92c8mdwlr",
+}
+var accountTerra2 = &TestAccountCase{
+	mnemonic: "chronic crater bronze frown since repeat wonder lazy skull extend view later van copper result fun fantasy unaware author regular dizzy hood swamp sail",
+	cointype: TerraCointype,
+	prefix:   TerraPrefix,
+	address:  "terra1ugmzgw4m89mv887suxn2070k24dhu9xynrxhg8",
 }
 
 func TestNewAccountWithMnemonic(t *testing.T) {
@@ -41,6 +47,7 @@ func TestNewAccountWithMnemonic(t *testing.T) {
 		{name: "normal case1", acase: *accountCase1},
 		{name: "normal case2", acase: *accountCase2},
 		{name: "terra normal", acase: *accountTerra},
+		{name: "terra normal2", acase: *accountTerra2},
 		{name: "error mnemonic", acase: errorcase, wantErr: true},
 		{name: "error empty mnemonic", acase: TestAccountCase{}, wantErr: true},
 	}

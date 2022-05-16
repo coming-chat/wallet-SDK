@@ -83,7 +83,7 @@ We can use chain tools to do chain related work.
 
 #### Create Chain
 
-```golang
+```go
 polkaChain, err = polka.NewChainWithRpc(rpcUrl, scanUrl, network)
 
 bitcoinChain, err = btc.NewChainWithChainnet(chainnet)
@@ -91,6 +91,7 @@ bitcoinChain, err = btc.NewChainWithChainnet(chainnet)
 ethereumChain, err = eth.NewChainWithRpc(rpcUrl)
 
 cosmosChain, err = cosmos.NewChainWithRpc(rpcUrl, restUrl)
+terraChain, err = cosmos.NewChainWithRpc(terraRpcUrl, terraRestUrl)
 ```
 
 #### Methods
@@ -124,6 +125,10 @@ xbtcToken = polkaChain.XBTCToken()
 // ethereum erc20 token
 erc20Token = ethereumChain.Erc20Token(contractAddress)
 
+// cosmos token
+atomToken = cosmosChain.DenomToken("cosmos", "uatom")
+ustToken = terraChain.DenomToken("terra", "uusd")
+
 // token balance (similar to chain's balance)
 balance, err = anyToken.BalanceOfAddress(address)
 balance, err = anyToken.BalanceOfPublicKey(publicKey)
@@ -146,6 +151,81 @@ gasLimit, err = anyEthToken.EstimateGasLimit(fromAddress, receiverAddress, gasPr
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
+
+
+
+## Cosmos & Terra Demo
+
+### Creator
+
+```go
+// Import mnemonic
+wallet, err = NewWalletFromMnemonic(mnemonic)
+
+// Cosmos account
+cosmosAccount, err = wallet.GetOrCreateCosmosAccount()
+// Terra is a type of cosmos
+terraAccount, err = wallet.GetOrCreateCosmosTypeAccount(330, "terra")
+
+// Create Chain
+chain, err = cosmos.NewChainWithRpc(rpcUrl, restUrl)
+
+// Create a coin token
+atomToken = cosmosChain.DenomToken("cosmos", "uatom")
+lunaToken = terraChain.DenomToken("terra", "uluna")
+ustToken = terraChain.DenomToken("terra", "uusd")
+```
+
+### Query balance
+
+```go
+// query balance with token
+atomBalance, err = atomToken.BalanceOfAddress("cosmos1lkw6n8efpj7mk29yvajpn9zue099l359cgzf0t")
+lunaBalance, err = lunaToken.BalanceOfAddress("terra1ncjg4a59x2pgvqy9qjyqprlj8lrwshm0wleht5")
+ustBalance , err =  ustToken.BalanceOfAddress("terra1dr7ackrxsqwmac2arx26gre6rj6q3sv29fnn7k")
+
+// you can query balance with chain directly
+atomBalance, err = cosmosChain.BalanceOfAddressAndDenom("cosmos1lkw6n8efpj7mk29yvajpn9zue099l359cgzf0t", "uatom") // uatom
+lunaBalance, err =  terraChain.BalanceOfAddressAndDenom("terra1ncjg4a59x2pgvqy9qjyqprlj8lrwshm0wleht5", "uluna")  // uluna
+ustBalance , err =  terraChain.BalanceOfAddressAndDenom("terra1dr7ackrxsqwmac2arx26gre6rj6q3sv29fnn7k", "uusd")   // uusd
+```
+
+### Fetch Transaction Detail
+
+```go
+atomDetail, err = cosmosChain.FetchTransactionDetail("F068275DE4A4CC904D3E6A412A50DFACC235C62770BCD001E54E00BC4C17B1F0")
+
+lunaDetail, err =  terraChain.FetchTransactionDetail("19771A22934641DBD3D347DCCAE939DAC37F39ABD88005AA735B8AAEA78599BA")
+
+// exactly the same as luna detail.
+ustDetail , err =  terraChain.FetchTransactionDetail("25ACF16526D3A4DEE5FE7C5CCEB597B5691134647829AD30CA1E36EDBEAC32B6")
+```
+
+### Sign & Send transaction
+
+```go
+cosmosAccount = // create a cosmos account
+toAddress = "cosmos1lkw6n8efpj7mk29yvajp......"
+amount = "100000"
+gasPrice = "0.01"
+gasLimit = "80000"
+
+chain = cosmos.NewChainWithRpc(rpcUrl, restUrl)
+token = chain.DenomToken(prefix, denom)
+
+signedTx, err = token.BuildTransferTx(account.PrivateKeyHex(), toAddress, gasPrice, gasLimit, amount)
+
+txHash, err = chain.SendRawTransaction(signedTx)
+
+```
+
+
+
+----
+
+----
+
+
 
 ComingChat substrate wallet SDK
 

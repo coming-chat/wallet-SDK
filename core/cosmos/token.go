@@ -69,11 +69,6 @@ func (t *Token) BuildTransferTxWithAccount(account *Account, receiverAddress, ga
 }
 
 func (t *Token) buildTransferTx(privateKey types.PrivKey, receiverAddress, gasPrice, gasLimit, amount string) (s string, err error) {
-	toAddress, err := AccAddressFromBech32(receiverAddress, t.Prefix)
-	if err != nil {
-		return
-	}
-
 	amountInt, err := strconv.ParseInt(amount, 10, 64)
 	if err != nil {
 		return
@@ -126,7 +121,11 @@ func (t *Token) buildTransferTx(privateKey types.PrivKey, receiverAddress, gasPr
 	// Create a new TxBuilder.
 	encCfg := simapp.MakeTestEncodingConfig()
 	txBuilder := encCfg.TxConfig.NewTxBuilder()
-	msg1 := banktypes.NewMsgSend(privateKey.PubKey().Address().Bytes(), toAddress.Bytes(), sdk.NewCoins(amountCoin))
+	msg1 := &banktypes.MsgSend{
+		FromAddress: addressString,
+		ToAddress:   receiverAddress,
+		Amount:      sdk.NewCoins(amountCoin),
+	}
 	err = txBuilder.SetMsgs(msg1)
 	if err != nil {
 		return

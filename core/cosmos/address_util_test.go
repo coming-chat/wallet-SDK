@@ -13,44 +13,44 @@ func TestIsValidAddress(t *testing.T) {
 		name    string
 		address string
 		prefix  string
-		want    bool
+		isValid bool
 	}{
 		{
 			name:    "cosmos normal",
 			address: accountCase1.address,
 			prefix:  accountCase1.prefix,
-			want:    true,
+			isValid: true,
 		},
 		{
 			name:    "terra normal",
 			address: accountTerra.address,
 			prefix:  accountTerra.prefix,
-			want:    true,
+			isValid: true,
 		},
 		{
 			name:    "cosmos error prefix",
 			address: accountCase1.address,
 			prefix:  accountTerra.prefix,
-			want:    false,
+			isValid: false,
 		},
 		{
 			name:    "cosmos error address",
 			address: accountCase1.address + "s",
 			prefix:  accountCase1.prefix,
-			want:    false,
+			isValid: false,
 		},
 		{
 			name:    "terra error address",
 			address: accountTerra.address[1:],
 			prefix:  accountTerra.prefix,
-			want:    false,
+			isValid: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := IsValidAddress(tt.address, tt.prefix)
-			if got != tt.want {
-				t.Errorf("IsValidAddress() = %v, want %v", got, tt.want)
+			if got != tt.isValid {
+				t.Errorf("IsValidAddress() = %v, want %v", got, tt.isValid)
 			}
 		})
 	}

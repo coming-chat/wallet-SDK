@@ -64,9 +64,9 @@ func (c *Chain) BalanceOfAddressAndDenom(address, denom string) (b *base.Balance
 		return
 	}
 
-	// If no denom is specified, get the first balance
 	var balance *denomBalance = nil
 	if len(denom) <= 0 {
+		// If no denom is specified, get the first balance
 		balance = &balances.Balances[0]
 	} else {
 		for _, bal := range balances.Balances {
