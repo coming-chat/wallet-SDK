@@ -55,20 +55,20 @@ func (t *Token) BalanceOfAccount(account base.Account) (*base.Balance, error) {
 
 // MARK - Cosmos Token
 
-func (t *Token) BuildTransferTx(privateKey, receiverAddress, gasPrice, gasLimit, amount string) (string, error) {
+func (t *Token) BuildTransferTx(privateKey, receiverAddress, gasPrice, gasLimit, amount, memo string) (string, error) {
 	priBytes, err := hexTypes.HexDecodeString(privateKey)
 	if err != nil {
 		return "", err
 	}
 	priKey := &secp256k1.PrivKey{Key: priBytes}
-	return t.buildTransferTx(priKey, receiverAddress, gasPrice, gasLimit, amount)
+	return t.buildTransferTx(priKey, receiverAddress, gasPrice, gasLimit, amount, memo)
 }
 
-func (t *Token) BuildTransferTxWithAccount(account *Account, receiverAddress, gasPrice, gasLimit, amount string) (string, error) {
-	return t.buildTransferTx(account.privKey, receiverAddress, gasPrice, gasLimit, amount)
+func (t *Token) BuildTransferTxWithAccount(account *Account, receiverAddress, gasPrice, gasLimit, amount, memo string) (string, error) {
+	return t.buildTransferTx(account.privKey, receiverAddress, gasPrice, gasLimit, amount, memo)
 }
 
-func (t *Token) buildTransferTx(privateKey types.PrivKey, receiverAddress, gasPrice, gasLimit, amount string) (s string, err error) {
+func (t *Token) buildTransferTx(privateKey types.PrivKey, receiverAddress, gasPrice, gasLimit, amount, memo string) (s string, err error) {
 	amountInt, err := strconv.ParseInt(amount, 10, 64)
 	if err != nil {
 		return
@@ -133,7 +133,7 @@ func (t *Token) buildTransferTx(privateKey types.PrivKey, receiverAddress, gasPr
 
 	txBuilder.SetGasLimit(gasLimitInt.Uint64())
 	txBuilder.SetFeeAmount(sdk.NewCoins(feeCoin))
-	// txBuilder.SetMemo("bridge")
+	txBuilder.SetMemo(memo)
 	txBuilder.SetTimeoutHeight(uint64(latestHeight) + 1000)
 
 	sigV2 := signing.SignatureV2{
@@ -144,7 +144,6 @@ func (t *Token) buildTransferTx(privateKey types.PrivKey, receiverAddress, gasPr
 		},
 		Sequence: sequence,
 	}
-
 	err = txBuilder.SetSignatures(sigV2)
 	if err != nil {
 		return

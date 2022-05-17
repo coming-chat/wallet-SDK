@@ -5,16 +5,16 @@
 | import mnemonic       | ✅     | ✅      | ✅   |✅   |
 | import keystore       | ❌     | ❌      | ✅  |❌   |
 | pri/pub key & address | ✅     | ✅      | ✅   |✅   |
-| multi network         | ✅     | ✅      | ✅   |✅ ☑️   |
+| multi network         | ✅     | ✅      | ✅   |✅   |
 | publicKey to address  | ✅     | ✅      | ✅   |✅   |
 | address to publicKey  | ❌     | ✅      | ✅   |❌   |
 | sign data             | ☑️    | ☑️     | ✅   |☑️   |
 |                       |         |          |       |   |
 | query balance | ✅ | ✅ | ✅ |✅   |
 | fetch transaction detail | ✅ | ✅ | ✅ |✅   |
-| gas fee | ❌ | ✅ | ✅ |✅   |
+| gas fee | ❌ | ✅ | ✅ |☑️   |
 | send taw transaction | ✅ | ✅ ☑️ | ✅ ☑️ |✅   |
-| multi token | ❌ | ✅ erc20 | ✅ XBTC |✅ ☑️   |
+| multi token | ❌ | ✅ erc20 | ✅ XBTC |✅   |
 
 *If there are two icons, the first icon indicates development status, and the second icon indicates test status.*
 ✅: Completed      ☑️: TODO    ❌: Unsupported

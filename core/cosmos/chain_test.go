@@ -49,7 +49,7 @@ func (i *chainInfo) Chain() *Chain {
 
 // $request cosmos1unek4dqvkwxv6sfrakk4903m0gmxkfyeprcqtg  theta
 
-func TestTransfer(t *testing.T) {
+func TestAtomTransfer(t *testing.T) {
 	rpcinfo := rpcs.cosmosTest
 
 	from := accountCase1.mnemonic
@@ -61,9 +61,9 @@ func TestTransfer(t *testing.T) {
 	amount := "1000"
 
 	chain := rpcinfo.Chain()
-	token := chain.DenomToken(CosmosPrefix, CosmosCoinDenom)
+	token := chain.DenomToken(CosmosPrefix, CosmosAtomDenom)
 
-	signedTx, err := token.BuildTransferTxWithAccount(account, toAddress, gasPrice, gasLimit, amount)
+	signedTx, err := token.BuildTransferTxWithAccount(account, toAddress, gasPrice, gasLimit, amount, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -89,7 +89,7 @@ func TestLunaTransfer(t *testing.T) {
 	chain := rpcinfo.Chain()
 	token := chain.DenomToken(TerraPrefix, TerraLunaDenom)
 
-	signedTx, err := token.BuildTransferTxWithAccount(account, toAddress, gasPrice, gasLimit, amount)
+	signedTx, err := token.BuildTransferTxWithAccount(account, toAddress, gasPrice, gasLimit, amount, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -115,7 +115,7 @@ func TestUSTTransfer(t *testing.T) {
 	chain := rpcinfo.Chain()
 	token := chain.DenomToken(TerraPrefix, TerraUSTDenom)
 
-	signedTx, err := token.BuildTransferTxWithAccount(account, toAddress, gasPrice, gasLimit, amount)
+	signedTx, err := token.BuildTransferTxWithAccount(account, toAddress, gasPrice, gasLimit, amount, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -144,13 +144,13 @@ func TestChain_BalanceOfAddress(t *testing.T) {
 			name:    "cosmos mainnet normal",
 			rpcinfo: rpcs.cosmosProd,
 			address: "cosmos1lkw6n8efpj7mk29yvajpn9zue099l359cgzf0t",
-			denom:   CosmosCoinDenom,
+			denom:   CosmosAtomDenom,
 		},
 		{
 			name:    "cosmos testnet error address",
 			rpcinfo: rpcs.cosmosTest,
 			address: accountCase1.address + "s",
-			denom:   CosmosCoinDenom,
+			denom:   CosmosAtomDenom,
 			wantErr: true,
 		},
 		{

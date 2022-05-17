@@ -1,22 +1,38 @@
 package cosmos
 
 const (
-	GasPriceLow     = "0.01"
+	// All comments are made for sdk
+
+	// 0.01
+	GasPriceLow = "0.01"
+	// 0.025
 	GasPriceAverage = "0.025"
-	GasPriceHigh    = "0.04"
+	// 0.04
+	GasPriceHigh = "0.04"
 
-	GasLimitDefault = "80000"
+	// 100000
+	GasLimitDefault = "100000"
 
-	CosmosCointype  = 118
-	CosmosPrefix    = "cosmos"
-	CosmosCoinDenom = "uatom"
+	// 118
+	CosmosCointype = 118
+	// cosmos
+	CosmosPrefix = "cosmos"
+	// uatom
+	CosmosAtomDenom = "uatom"
 
-	TerraCointype  = 330
-	TerraPrefix    = "terra"
+	// 330
+	TerraCointype = 330
+	// terra
+	TerraPrefix = "terra"
+	// uluna
 	TerraLunaDenom = "uluna"
-	TerraUSTDenom  = "uusd"
+	// uusd
+	TerraUSTDenom = "uusd"
 
-	TerraGasPrice        = "10"
-	TerraGasPriceUST     = "0.25"
+	// 10
+	TerraGasPrice = "10"
+	// 0.25
+	TerraGasPriceUST = "0.25"
+	// 80000
 	TerraGasLimitDefault = "80000"
 )
