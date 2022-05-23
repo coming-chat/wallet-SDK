@@ -8,6 +8,7 @@ import (
 
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/coming-chat/wallet-SDK/core/base"
+	"github.com/ethereum/go-ethereum/crypto"
 )
 
 func (c *Chain) ChainId() (string, error) {
@@ -102,4 +103,46 @@ func (c *Chain) PendingCallContract(msg *CallMsg) (string, error) {
 
 func (c *Chain) LatestCallContract(msg *CallMsg) (string, error) {
 	return c.CallContract(msg, -2)
+}
+
+// Sign a transaction
+// @return signed tx hash
+func (c *Chain) SignTransaction(privateKey string, transaction *Transaction) (*base.OptionalString, error) {
+	privatekeyData, err := types.HexDecodeString(privateKey)
+	if err != nil {
+		return nil, err
+	}
+	return c.SignWithPrivateKeyData(privatekeyData, transaction)
+}
+
+func (c *Chain) SignTransactionWithAccount(account base.Account, transaction *Transaction) (*base.OptionalString, error) {
+	privatekeyData, err := account.PrivateKey()
+	if err != nil {
+		return nil, err
+	}
+	return c.SignWithPrivateKeyData(privatekeyData, transaction)
+}
+
+func (c *Chain) SignWithPrivateKeyData(privateKeyData []byte, transaction *Transaction) (o *base.OptionalString, err error) {
+	client, err := GetConnection(c.RpcUrl)
+	if err != nil {
+		return
+	}
+
+	privateKeyECDSA, err := crypto.ToECDSA(privateKeyData)
+	if err != nil {
+		return
+	}
+
+	rawTx, err := transaction.GetRawTx()
+	if err != nil {
+		return
+	}
+
+	output, err := client.buildTxWithTransaction(rawTx, privateKeyECDSA)
+	if err != nil {
+		return
+	}
+
+	return &base.OptionalString{Value: output.TxHex}, nil
 }

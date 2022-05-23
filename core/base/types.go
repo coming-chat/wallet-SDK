@@ -5,6 +5,16 @@ import "sync"
 type SDKEnumInt = int
 type SDKEnumString = string
 
+// Optional string for easy of writing iOS code
+type OptionalString struct {
+	Value string
+}
+
+// Optional bool for easy of writing iOS code
+type OptionalBool struct {
+	Value bool
+}
+
 type safeMap struct {
 	sync.RWMutex
 	Map map[interface{}]interface{}

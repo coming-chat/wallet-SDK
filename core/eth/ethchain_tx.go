@@ -64,7 +64,11 @@ func (e *EthChain) buildTx(
 			Data:      data,
 		})
 	}
-	signedTx, err := types.SignTx(rawTx, types.LatestSignerForChainID(e.chainId), privateKeyECDSA)
+	return e.buildTxWithTransaction(rawTx, privateKeyECDSA)
+}
+
+func (e *EthChain) buildTxWithTransaction(transaction *types.Transaction, privateKeyCDSA *ecdsa.PrivateKey) (*BuildTxResult, error) {
+	signedTx, err := types.SignTx(transaction, types.LatestSignerForChainID(e.chainId), privateKeyCDSA)
 	if err != nil {
 		return nil, err
 	}

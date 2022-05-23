@@ -219,11 +219,30 @@ txHash, err = chain.SendRawTransaction(signedTx)
 
 ```
 
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 
-----
 
-----
+## Ethereum Sign Transaction
+
+```go
+ethereumChain, err = eth.NewChainWithRpc(rpcUrl)
+
+// make an transaction object
+transaction, err = NewTransaction(nonce, gasPrice, gasLimit, to, value, data)
+// transaction.MaxPriorityFeePerGas = "10000" // if send EIP1559 tx
+
+// sign with hexed privatekey
+signedTxObj, err = ethereumChain.SignTransaction(privateKeyHex, transaction)
+// sign with ethereum account
+signedTxObj, err = ethereumChain.SignTransactionWithAccount(ethAccount, transaction) 
+
+signedHashString = signedTxObj.Value // signed transaction hash string
+```
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 
 

@@ -1,6 +1,7 @@
 package eth
 
 import (
+	"errors"
 	"math/big"
 	"strings"
 
@@ -104,5 +105,65 @@ func (msg *CallMsg) SetTo(address string) {
 	} else {
 		a := common.HexToAddress(address)
 		msg.msg.To = &a
+	}
+}
+
+type Transaction struct {
+	Nonce    int64  // nonce of sender account
+	GasPrice string // wei per gas
+	GasLimit int64  // gas limit
+	To       string // receiver
+	Value    string // wei amount
+	Data     []byte // contract invocation input data
+
+	// EIP1559, Default is ""
+	MaxPriorityFeePerGas string
+}
+
+func NewTransaction(nonce int64, gasPrice string, gasLimit int64, to string, value string, data []byte) (*Transaction, error) {
+	tx := &Transaction{nonce, gasPrice, gasLimit, to, value, data, ""}
+	_, err := tx.GetRawTx()
+	if err != nil {
+		return nil, err
+	}
+	return tx, nil
+}
+
+func (tx *Transaction) GetRawTx() (*types.Transaction, error) {
+	gasPriceInt, valid := big.NewInt(0).SetString(tx.GasPrice, 10)
+	if !valid {
+		return nil, errors.New("Invalid gasPrice")
+	}
+	valueInt, valid := big.NewInt(0).SetString(tx.Value, 10)
+	if !valid {
+		return nil, errors.New("Invalid value")
+	}
+	if !common.IsHexAddress(tx.To) {
+		return nil, errors.New("Invalid toAddress")
+	}
+	toAddress := common.HexToAddress(tx.To)
+
+	maxPriorityFeePerGasInt, valid := big.NewInt(0).SetString(tx.MaxPriorityFeePerGas, 10)
+	if !valid || maxPriorityFeePerGasInt.Int64() == 0 {
+		// is legacy tx
+		return types.NewTx(&types.LegacyTx{
+			Nonce:    uint64(tx.Nonce),
+			To:       &toAddress,
+			Value:    valueInt,
+			Gas:      uint64(tx.GasLimit),
+			GasPrice: gasPriceInt,
+			Data:     tx.Data,
+		}), nil
+	} else {
+		// is dynamic fee tx
+		return types.NewTx(&types.DynamicFeeTx{
+			Nonce:     uint64(tx.Nonce),
+			To:        &toAddress,
+			Value:     valueInt,
+			Gas:       uint64(tx.GasLimit),
+			GasFeeCap: gasPriceInt,
+			GasTipCap: maxPriorityFeePerGasInt,
+			Data:      tx.Data,
+		}), nil
 	}
 }
