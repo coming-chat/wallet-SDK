@@ -1,18 +1,19 @@
 package eth
 
 import (
+	"crypto/ecdsa"
 	"errors"
-	"strconv"
 
 	"github.com/coming-chat/wallet-SDK/core/base"
+	"github.com/ethereum/go-ethereum/crypto"
 )
 
 type TokenProtocol interface {
 	base.Token
 
 	EstimateGasLimit(fromAddress, receiverAddress, gasPrice, amount string) (string, error)
-	BuildTransferTx(privateKey, fromAddress, receiverAddress, gasPrice, gasLimit, amount string) (string, error)
-	BuildTransferTxWithAccount(account base.Account, receiverAddress, gasPrice, gasLimit, amount string) (string, error)
+	BuildTransferTx(privateKey string, transaction *Transaction) (*base.OptionalString, error)
+	BuildTransferTxWithAccount(account *Account, transaction *Transaction) (*base.OptionalString, error)
 }
 
 type Token struct {
@@ -59,38 +60,43 @@ func (t *Token) EstimateGasLimit(fromAddress, receiverAddress, gasPrice, amount 
 	return gasLimit, err
 }
 
-func (t *Token) BuildTransferTx(privateKey, fromAddress, receiverAddress, gasPrice, gasLimit, amount string) (string, error) {
-	chain, err := GetConnection(t.chain.RpcUrl)
+func (t *Token) BuildTransferTx(privateKey string, transaction *Transaction) (*base.OptionalString, error) {
+	privateKeyECDSA, err := crypto.HexToECDSA(privateKey)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-
-	nonce, err := t.chain.NonceOfAddress(fromAddress)
-	if err != nil {
-		return "", err
-	}
-	nonceInt, err := strconv.ParseInt(nonce, 10, 64)
-	if err != nil {
-		return "", err
-	}
-	call := &CallMethodOpts{
-		Nonce:    nonceInt,
-		GasPrice: gasPrice,
-		GasLimit: gasLimit,
-	}
-	call.Value = amount
-
-	output, err := chain.BuildTransferTx(privateKey, receiverAddress, call)
-	if err != nil {
-		return "", err
-	}
-	return output.TxHex, nil
+	return t.buildTransfer(privateKeyECDSA, transaction)
 }
 
-func (t *Token) BuildTransferTxWithAccount(account base.Account, receiverAddress, gasPrice, gasLimit, amount string) (string, error) {
-	privateKey, err := account.PrivateKeyHex()
+func (t *Token) BuildTransferTxWithAccount(account *Account, transaction *Transaction) (*base.OptionalString, error) {
+	return t.buildTransfer(account.privateKeyECDSA, transaction)
+}
+
+func (t *Token) buildTransfer(privateKey *ecdsa.PrivateKey, transaction *Transaction) (*base.OptionalString, error) {
+	chain, err := GetConnection(t.chain.RpcUrl)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return t.BuildTransferTx(privateKey, account.Address(), receiverAddress, gasPrice, gasLimit, amount)
+
+	if transaction.Nonce == "" || transaction.Nonce == "0" {
+		address := crypto.PubkeyToAddress(privateKey.PublicKey).Hex()
+		nonce, err := chain.Nonce(address)
+		if err != nil {
+			nonce = "0"
+			err = nil
+		}
+		transaction.Nonce = nonce
+	}
+
+	rawTx, err := transaction.GetRawTx()
+	if err != nil {
+		return nil, err
+	}
+
+	txResult, err := chain.buildTxWithTransaction(rawTx, privateKey)
+	if err != nil {
+		return nil, err
+	}
+
+	return &base.OptionalString{Value: txResult.TxHex}, nil
 }

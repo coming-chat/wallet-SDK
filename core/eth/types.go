@@ -8,6 +8,7 @@ import (
 
 	HexType "github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/ethereum/go-ethereum"
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 )
@@ -125,6 +126,16 @@ func NewTransaction(nonce, gasPrice, gasLimit, to, value, data string) *Transact
 	return &Transaction{nonce, gasPrice, gasLimit, to, value, data, ""}
 }
 
+// This is an alias property for GasPrice in order to support EIP1559
+func (tx *Transaction) MaxFee() string {
+	return tx.GasPrice
+}
+
+// This is an alias property for GasPrice in order to support EIP1559
+func (tx *Transaction) SetMaxFee(maxFee string) {
+	tx.GasPrice = maxFee
+}
+
 func (tx *Transaction) GetRawTx() (*types.Transaction, error) {
 	var (
 		gasPrice, value, maxFeePerGas *big.Int // default nil
@@ -193,4 +204,31 @@ func (tx *Transaction) GetRawTx() (*types.Transaction, error) {
 			Data:      data,
 		}), nil
 	}
+}
+
+func (tx *Transaction) TransformToErc20Transaction(contractAddress string) error {
+	if len(tx.Data) > 0 && tx.Value == "0" {
+		return nil
+	}
+	parsedAbi, err := abi.JSON(strings.NewReader(Erc20AbiStr))
+	if err != nil {
+		return err
+	}
+
+	if !IsValidAddress(tx.To) {
+		return errors.New("Invalid receiver address")
+	}
+	amountInt, valid := big.NewInt(0).SetString(tx.Value, 10)
+	if !valid {
+		return errors.New("Invalid transfer amount")
+	}
+	input, err := parsedAbi.Pack(ERC20_METHOD_TRANSFER, common.HexToAddress(tx.To), amountInt)
+	if err != nil {
+		return err
+	}
+
+	tx.To = contractAddress
+	tx.Value = "0"
+	tx.Data = HexType.HexEncodeToString(input)
+	return nil
 }

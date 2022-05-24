@@ -14,8 +14,8 @@ import (
 
 type Account struct {
 	*Util
-	privateKey []byte
-	address    string
+	privateKeyECDSA *ecdsa.PrivateKey
+	address         string
 }
 
 func NewAccountWithMnemonic(mnemonic string) (*Account, error) {
@@ -47,21 +47,12 @@ func NewAccountWithMnemonic(mnemonic string) (*Account, error) {
 		return nil, err
 	}
 	privateKeyECDSA := privateKey.ToECDSA()
-	privateKeyData := privateKey.Serialize()
-
-	publicKey := privateKeyECDSA.Public()
-	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
-	if !ok {
-		return nil, errors.New("General public key failed.")
-	}
-
-	address := crypto.PubkeyToAddress(*publicKeyECDSA)
-	addressHex := address.Hex()
+	address := crypto.PubkeyToAddress(privateKeyECDSA.PublicKey).Hex()
 
 	return &Account{
-		Util:       NewUtil(),
-		privateKey: privateKeyData,
-		address:    addressHex,
+		Util:            NewUtil(),
+		privateKeyECDSA: privateKeyECDSA,
+		address:         address,
 	}, nil
 }
 
@@ -69,12 +60,12 @@ func NewAccountWithMnemonic(mnemonic string) (*Account, error) {
 
 // @return privateKey data
 func (a *Account) PrivateKey() ([]byte, error) {
-	return a.privateKey, nil
+	return a.privateKeyECDSA.D.Bytes(), nil
 }
 
 // @return privateKey string that will start with 0x.
 func (a *Account) PrivateKeyHex() (string, error) {
-	return types.HexEncodeToString(a.privateKey), nil
+	return types.HexEncodeToString(a.privateKeyECDSA.D.Bytes()), nil
 }
 
 // Is deocde from address

@@ -1,11 +1,12 @@
 package eth
 
 import (
+	"crypto/ecdsa"
 	"errors"
 	"fmt"
-	"strconv"
 
 	"github.com/coming-chat/wallet-SDK/core/base"
+	"github.com/ethereum/go-ethereum/crypto"
 )
 
 type Erc20TokenInfo struct {
@@ -105,35 +106,22 @@ func (t *Erc20Token) EstimateGasLimit(fromAddress, receiverAddress, gasPrice, am
 	return gasLimit, err
 }
 
-func (t *Erc20Token) BuildTransferTx(privateKey, fromAddress, receiverAddress, gasPrice, gasLimit, amount string) (string, error) {
-	chain, err := GetConnection(t.chain.RpcUrl)
+func (t *Erc20Token) BuildTransferTx(privateKey string, transaction *Transaction) (*base.OptionalString, error) {
+	privateKeyECDSA, err := crypto.HexToECDSA(privateKey)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
+	return t.buildTransfer(privateKeyECDSA, transaction)
+}
 
-	nonce, err := t.chain.NonceOfAddress(fromAddress)
-	if err != nil {
-		return "", err
-	}
-	nonceInt, err := strconv.ParseInt(nonce, 10, 64)
-	if err != nil {
-		return "", err
-	}
-	call := &CallMethodOpts{
-		Nonce:    nonceInt,
-		GasPrice: gasPrice,
-		GasLimit: gasLimit,
-	}
+func (t *Erc20Token) BuildTransferTxWithAccount(account *Account, transaction *Transaction) (*base.OptionalString, error) {
+	return t.buildTransfer(account.privateKeyECDSA, transaction)
+}
 
-	erc20JsonParams := fmt.Sprintf(
-		"{\"toAddress\":\"%s\", \"amount\":\"%s\", \"method\":\"%s\"}",
-		receiverAddress,
-		amount,
-		ERC20_METHOD_TRANSFER)
-	output, err := chain.BuildCallMethodTx(privateKey, t.ContractAddress, Erc20AbiStr, ERC20_METHOD_TRANSFER, call, erc20JsonParams)
+func (t *Erc20Token) buildTransfer(privateKey *ecdsa.PrivateKey, transaction *Transaction) (*base.OptionalString, error) {
+	err := transaction.TransformToErc20Transaction(t.ContractAddress)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-
-	return output.TxHex, nil
+	return t.Token.buildTransfer(privateKey, transaction)
 }

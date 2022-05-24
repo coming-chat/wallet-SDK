@@ -70,8 +70,9 @@ func (u *CoinUtil) EstimateGasLimit(receiverAddress, gasPrice, amount string) (s
 }
 
 // Deprecated: BuildTransferTx is deprecated. Please Use Chain.Token().BuildTransferTx() instead.
-func (u *CoinUtil) BuildTransferTx(privateKey, receiverAddress, nonce, gasPrice, gasLimit, amount string) (string, error) {
-	return u.token().BuildTransferTx(privateKey, u.WalletAddress, receiverAddress, gasPrice, gasLimit, amount)
+func (u *CoinUtil) BuildTransferTx(privateKey, receiverAddress, nonce, gasPrice, gasLimit, amount string) (*base.OptionalString, error) {
+	transaction := NewTransaction(nonce, gasPrice, gasLimit, receiverAddress, amount, "")
+	return u.token().BuildTransferTx(privateKey, transaction)
 }
 
 // Deprecated: SendRawTransaction is deprecated. Please Use Chain.SendRawTransaction() instead.
