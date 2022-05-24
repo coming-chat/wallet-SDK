@@ -3,6 +3,7 @@ package eth
 import (
 	"errors"
 	"math/big"
+	"strconv"
 	"strings"
 
 	HexType "github.com/centrifuge/go-substrate-rpc-client/v4/types"
@@ -109,61 +110,87 @@ func (msg *CallMsg) SetTo(address string) {
 }
 
 type Transaction struct {
-	Nonce    int64  // nonce of sender account
+	Nonce    string // nonce of sender account
 	GasPrice string // wei per gas
-	GasLimit int64  // gas limit
+	GasLimit string // gas limit
 	To       string // receiver
 	Value    string // wei amount
-	Data     []byte // contract invocation input data
+	Data     string // contract invocation input data
 
 	// EIP1559, Default is ""
 	MaxPriorityFeePerGas string
 }
 
-func NewTransaction(nonce int64, gasPrice string, gasLimit int64, to string, value string, data []byte) (*Transaction, error) {
-	tx := &Transaction{nonce, gasPrice, gasLimit, to, value, data, ""}
-	_, err := tx.GetRawTx()
-	if err != nil {
-		return nil, err
-	}
-	return tx, nil
+func NewTransaction(nonce, gasPrice, gasLimit, to, value, data string) *Transaction {
+	return &Transaction{nonce, gasPrice, gasLimit, to, value, data, ""}
 }
 
 func (tx *Transaction) GetRawTx() (*types.Transaction, error) {
-	gasPriceInt, valid := big.NewInt(0).SetString(tx.GasPrice, 10)
-	if !valid {
-		return nil, errors.New("Invalid gasPrice")
+	var (
+		gasPrice, value, maxFeePerGas *big.Int // default nil
+
+		nonce     uint64 = 0
+		gasLimit  uint64 = 90000 // reference https://eth.wiki/json-rpc/API method eth_sendTransaction
+		toAddress common.Address
+		data      []byte
+		valid     bool
+		err       error
+	)
+	if tx.GasPrice != "" {
+		if gasPrice, valid = big.NewInt(0).SetString(tx.GasPrice, 10); !valid {
+			return nil, errors.New("Invalid gasPrice")
+		}
 	}
-	valueInt, valid := big.NewInt(0).SetString(tx.Value, 10)
-	if !valid {
-		return nil, errors.New("Invalid value")
+	if tx.Value != "" {
+		if value, valid = big.NewInt(0).SetString(tx.Value, 10); !valid {
+			return nil, errors.New("Invalid value")
+		}
 	}
-	if !common.IsHexAddress(tx.To) {
+	if tx.MaxPriorityFeePerGas != "" {
+		if maxFeePerGas, valid = big.NewInt(0).SetString(tx.MaxPriorityFeePerGas, 10); !valid {
+			return nil, errors.New("Invalid max priority fee per gas")
+		}
+	}
+	if tx.Nonce != "" {
+		if nonce, err = strconv.ParseUint(tx.Nonce, 10, 64); err != nil {
+			return nil, errors.New("Invalid Nonce")
+		}
+	}
+	if tx.GasLimit != "" {
+		if gasLimit, err = strconv.ParseUint(tx.GasLimit, 10, 64); err != nil {
+			return nil, errors.New("Invalid gas limit")
+		}
+	}
+	if tx.To != "" && !common.IsHexAddress(tx.To) {
 		return nil, errors.New("Invalid toAddress")
 	}
-	toAddress := common.HexToAddress(tx.To)
+	toAddress = common.HexToAddress(tx.To)
+	if tx.Data != "" {
+		if data, err = HexType.HexDecodeString(tx.Data); err != nil {
+			return nil, errors.New("Invalid data string")
+		}
+	}
 
-	maxPriorityFeePerGasInt, valid := big.NewInt(0).SetString(tx.MaxPriorityFeePerGas, 10)
-	if !valid || maxPriorityFeePerGasInt.Int64() == 0 {
+	if maxFeePerGas == nil || maxFeePerGas.Int64() == 0 {
 		// is legacy tx
 		return types.NewTx(&types.LegacyTx{
-			Nonce:    uint64(tx.Nonce),
+			Nonce:    nonce,
 			To:       &toAddress,
-			Value:    valueInt,
-			Gas:      uint64(tx.GasLimit),
-			GasPrice: gasPriceInt,
-			Data:     tx.Data,
+			Value:    value,
+			Gas:      gasLimit,
+			GasPrice: gasPrice,
+			Data:     data,
 		}), nil
 	} else {
 		// is dynamic fee tx
 		return types.NewTx(&types.DynamicFeeTx{
-			Nonce:     uint64(tx.Nonce),
+			Nonce:     nonce,
 			To:        &toAddress,
-			Value:     valueInt,
-			Gas:       uint64(tx.GasLimit),
-			GasFeeCap: gasPriceInt,
-			GasTipCap: maxPriorityFeePerGasInt,
-			Data:      tx.Data,
+			Value:     value,
+			Gas:       gasLimit,
+			GasFeeCap: gasPrice,
+			GasTipCap: maxFeePerGas,
+			Data:      data,
 		}), nil
 	}
 }

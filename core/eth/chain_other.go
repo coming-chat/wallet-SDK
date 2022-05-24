@@ -2,6 +2,7 @@ package eth
 
 import (
 	"context"
+	"errors"
 	"math/big"
 	"strconv"
 	"strings"
@@ -77,6 +78,9 @@ func (c *Chain) BatchErc20TokenBalance(contractList []string, address string) ([
 // call eth_call method
 // @param blockNumber Especially -2 is the latest block, -1 is pending block.
 func (c *Chain) CallContract(msg *CallMsg, blockNumber int64) (string, error) {
+	if msg == nil {
+		return "", errors.New("Invalid call message")
+	}
 	chain, err := GetConnection(c.RpcUrl)
 	if err != nil {
 		return "", err
@@ -116,6 +120,9 @@ func (c *Chain) SignTransaction(privateKey string, transaction *Transaction) (*b
 }
 
 func (c *Chain) SignTransactionWithAccount(account base.Account, transaction *Transaction) (*base.OptionalString, error) {
+	if account == nil {
+		return nil, errors.New("Invalid account")
+	}
 	privatekeyData, err := account.PrivateKey()
 	if err != nil {
 		return nil, err
@@ -124,6 +131,10 @@ func (c *Chain) SignTransactionWithAccount(account base.Account, transaction *Tr
 }
 
 func (c *Chain) SignWithPrivateKeyData(privateKeyData []byte, transaction *Transaction) (o *base.OptionalString, err error) {
+	if privateKeyData == nil || transaction == nil {
+		return nil, errors.New("Invalid privatekey or transaction")
+	}
+
 	client, err := GetConnection(c.RpcUrl)
 	if err != nil {
 		return

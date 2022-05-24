@@ -230,7 +230,7 @@ txHash, err = chain.SendRawTransaction(signedTx)
 ethereumChain, err = eth.NewChainWithRpc(rpcUrl)
 
 // make an transaction object
-transaction, err = NewTransaction(nonce, gasPrice, gasLimit, to, value, data)
+transaction = NewTransaction(nonce, gasPrice, gasLimit, to, value, data)
 // transaction.MaxPriorityFeePerGas = "10000" // if send EIP1559 tx
 
 // sign with hexed privatekey
