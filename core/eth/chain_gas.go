@@ -2,6 +2,7 @@ package eth
 
 import (
 	"context"
+	"errors"
 	"math/big"
 )
 
@@ -30,6 +31,9 @@ func (c *Chain) SuggestGasPriceEIP1559() (*GasPrice, error) {
 	header, err := client.RemoteRpcClient.HeaderByNumber(ctx, nil) // now we can only input `nil`
 	if err != nil {
 		return nil, err
+	}
+	if header.BaseFee == nil {
+		return nil, errors.New("The specified chain does not yet support EIP1559")
 	}
 	// calculate formular refence from https://www.blocknative.com/blog/eip-1559-fees#determining-the-base-fee
 	// nextBlock BaseFee = CurrentBaseFee * (0.875 + 0.25 * CurrentUsage / CurrentLimit )

@@ -261,12 +261,3 @@ func TestEthCall(t *testing.T) {
 	}
 	t.Log(res)
 }
-
-func TestGasPriceEIP1559(t *testing.T) {
-	c := rpcs.ethereumProd.Chain()
-	gas, err := c.SuggestGasPriceEIP1559()
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log("s", gas)
-}
