@@ -7,17 +7,58 @@ import (
 )
 
 type GasPrice struct {
-	// Latest block baseFee in wei.
-	BaseFee string
+	// Pending block baseFee in wei.
+	BaseFee            string
+	SuggestPriorityFee string
 
-	// Suggest maxPriorityFeePerGas * 1 in wei
-	PriorityFeeLow string
-	// Suggest maxPriorityFeePerGas * 1.5 in wei
-	PriorityFeeAverage string
-	// Suggest maxPriorityFeePerGas * 2 in wei
-	PriorityFeeHigh string
+	MaxPriorityFee string
+	MaxFee         string
 }
 
+// MaxPriorityFee = SuggestPriorityFee * 1.0
+// MaxFee = (MaxPriorityFee + BaseFee) * 1.0
+func (g *GasPrice) UseLow() *GasPrice {
+	return g.UseRate(1.0, 1.0)
+}
+
+// MaxPriorityFee = SuggestPriorityFee * 1.5
+// MaxFee = (MaxPriorityFee + BaseFee) * 1.11
+func (g *GasPrice) UseAverage() *GasPrice {
+	return g.UseRate(1.5, 1.11)
+}
+
+// MaxPriorityFee = SuggestPriorityFee * 2.0
+// MaxFee = (MaxPriorityFee + BaseFee) * 1.5
+func (g *GasPrice) UseHigh() *GasPrice {
+	return g.UseRate(2.0, 1.5)
+}
+
+// MaxPriorityFee = SuggestPriorityFee * priorityRate
+// MaxFee = (MaxPriorityFee + BaseFee) * maxFeeRate
+func (g *GasPrice) UseRate(priorityRate, maxFeeRate float64) *GasPrice {
+	suggestPriorityFloat, ok := big.NewFloat(0).SetString(g.SuggestPriorityFee)
+	if !ok {
+		suggestPriorityFloat = big.NewFloat(0)
+	}
+	baseFeeFloat, ok := big.NewFloat(0).SetString(g.BaseFee)
+	if !ok {
+		baseFeeFloat = big.NewFloat(0)
+	}
+
+	maxPriorityFloat := big.NewFloat(0).Mul(suggestPriorityFloat, big.NewFloat(priorityRate))
+	sumFloat := big.NewFloat(0).Add(maxPriorityFloat, baseFeeFloat)
+	maxFeeFloat := big.NewFloat(0).Mul(sumFloat, big.NewFloat(maxFeeRate))
+	maxPriorityInt, _ := maxPriorityFloat.Int(nil)
+	maxFeeInt, _ := maxFeeFloat.Int(nil)
+	return &GasPrice{
+		BaseFee:            g.BaseFee,
+		SuggestPriorityFee: g.SuggestPriorityFee,
+		MaxPriorityFee:     maxPriorityInt.String(),
+		MaxFee:             maxFeeInt.String(),
+	}
+}
+
+// The gas price use average grade default.
 func (c *Chain) SuggestGasPriceEIP1559() (*GasPrice, error) {
 	client, err := GetConnection(c.RpcUrl)
 	if err != nil {
@@ -51,16 +92,16 @@ func (c *Chain) SuggestGasPriceEIP1559() (*GasPrice, error) {
 		return nil, err
 	}
 
-	priorityFloat := big.NewFloat(0).SetInt(priorityFee)
-	averageFloat := big.NewFloat(0).Mul(priorityFloat, big.NewFloat(1.5))
-	averageInt, _ := averageFloat.Int(nil)
-	priorityHigh := big.NewInt(0).Mul(priorityFee, big.NewInt(2))
+	return (&GasPrice{
+		BaseFee:            pendingBaseFeeInt.String(),
+		SuggestPriorityFee: priorityFee.String(),
+	}).UseAverage(), nil
+}
 
-	return &GasPrice{
-		BaseFee: pendingBaseFeeInt.String(),
-
-		PriorityFeeLow:     priorityFee.String(),
-		PriorityFeeAverage: averageInt.String(),
-		PriorityFeeHigh:    priorityHigh.String(),
-	}, nil
+func (c *Chain) SuggestGasPrice() (string, error) {
+	chain, err := GetConnection(c.RpcUrl)
+	if err != nil {
+		return "", err
+	}
+	return chain.SuggestGasPrice()
 }

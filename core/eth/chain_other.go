@@ -20,14 +20,6 @@ func (c *Chain) ChainId() (string, error) {
 	return chain.chainId.String(), nil
 }
 
-func (c *Chain) SuggestGasPrice() (string, error) {
-	chain, err := GetConnection(c.RpcUrl)
-	if err != nil {
-		return "", err
-	}
-	return chain.SuggestGasPrice()
-}
-
 // 获取交易的 nonce
 func (c *Chain) NonceOfAddress(address string) (string, error) {
 	chain, err := GetConnection(c.RpcUrl)

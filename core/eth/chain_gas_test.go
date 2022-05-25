@@ -32,10 +32,13 @@ func TestChain_SuggestGasPriceEIP1559(t *testing.T) {
 				}
 				return
 			}
-			if got.BaseFee == "" && got.PriorityFeeLow == "" {
+			if got.BaseFee == "" || got.SuggestPriorityFee == "" {
 				t.Errorf("SuggestGasPriceEIP1559() got an empty fee = %v", got)
 			} else {
 				t.Logf("SuggestGasPriceEIP1559() got %v, you can cheker at %v", got, tt.checker)
+				t.Log(got.UseLow())
+				t.Log(got)
+				t.Log(got.UseHigh())
 			}
 		})
 	}
