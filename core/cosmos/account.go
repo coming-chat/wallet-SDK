@@ -2,6 +2,7 @@ package cosmos
 
 import (
 	hexTypes "github.com/centrifuge/go-substrate-rpc-client/v4/types"
+	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -77,10 +78,15 @@ func (a *Account) Sign(message []byte, password string) ([]byte, error) {
 }
 
 // TODO: Need Test.
-func (a *Account) SignHex(messageHex string, password string) ([]byte, error) {
-	message, err := hexTypes.HexDecodeString(messageHex)
+func (a *Account) SignHex(messageHex string, password string) (*base.OptionalString, error) {
+	bytes, err := hexTypes.HexDecodeString(messageHex)
 	if err != nil {
 		return nil, err
 	}
-	return a.privKey.Sign(message)
+	signed, err := a.privKey.Sign(bytes)
+	if err != nil {
+		return nil, err
+	}
+	signedString := hexTypes.HexEncodeToString(signed)
+	return &base.OptionalString{Value: signedString}, nil
 }

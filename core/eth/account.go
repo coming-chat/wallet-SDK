@@ -2,11 +2,12 @@ package eth
 
 import (
 	"crypto/ecdsa"
-	"errors"
+	"fmt"
 
 	"github.com/btcsuite/btcd/btcutil/hdkeychain"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
+	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/cosmos/go-bip39"
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -86,12 +87,32 @@ func (a *Account) Address() string {
 	return a.address
 }
 
-// TODO: function not implement yet.
 func (a *Account) Sign(message []byte, password string) ([]byte, error) {
-	return nil, errors.New("TODO: function not implement yet.")
+	dataString := string(message)
+	hashBytes := SignHashForMsg(dataString)
+	signature, err := crypto.Sign(hashBytes, a.privateKeyECDSA)
+	if err != nil {
+		return nil, err
+	}
+	signature[crypto.RecoveryIDOffset] += 27 // Transform V from 0/1 to 27/28 according to the yellow paper
+	return signature, nil
 }
 
-// TODO: function not implement yet.
-func (a *Account) SignHex(messageHex string, password string) ([]byte, error) {
-	return nil, errors.New("TODO: function not implement yet.")
+func (a *Account) SignHex(messageHex string, password string) (*base.OptionalString, error) {
+	data, err := types.HexDecodeString(messageHex)
+	if err != nil {
+		return nil, err
+	}
+	signed, err := a.Sign(data, password)
+	if err != nil {
+		return nil, err
+	}
+	signedString := types.HexEncodeToString(signed)
+	return &base.OptionalString{Value: signedString}, nil
+}
+
+// 以太坊的 hash 专门在数据前面加上了一段话
+func SignHashForMsg(data string) []byte {
+	msg := fmt.Sprintf("\x19Ethereum Signed Message:\n%d%s", len(data), data)
+	return crypto.Keccak256([]byte(msg))
 }

@@ -6,6 +6,7 @@ import (
 
 	"github.com/centrifuge/go-substrate-rpc-client/v4/signature"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
+	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/vedhavyas/go-subkey"
 	"github.com/vedhavyas/go-subkey/sr25519"
 )
@@ -148,12 +149,17 @@ func (a *Account) Sign(message []byte, password string) (data []byte, err error)
 	return nil, ErrNilWallet
 }
 
-func (a *Account) SignHex(messageHex string, password string) ([]byte, error) {
-	message, err := types.HexDecodeString(messageHex)
+func (a *Account) SignHex(messageHex string, password string) (*base.OptionalString, error) {
+	bytes, err := types.HexDecodeString(messageHex)
 	if err != nil {
 		return nil, err
 	}
-	return a.Sign(message, password)
+	signed, err := a.Sign(bytes, password)
+	if err != nil {
+		return nil, err
+	}
+	signedString := types.HexEncodeToString(signed)
+	return &base.OptionalString{Value: signedString}, nil
 }
 
 // 内置账号，主要用来给用户未签名的交易签一下名

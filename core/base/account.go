@@ -24,5 +24,5 @@ type Account interface {
 	Address() string
 
 	Sign(message []byte, password string) ([]byte, error)
-	SignHex(messageHex string, password string) ([]byte, error)
+	SignHex(messageHex string, password string) (*OptionalString, error)
 }

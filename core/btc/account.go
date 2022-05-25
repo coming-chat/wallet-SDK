@@ -5,6 +5,7 @@ import (
 
 	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
+	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/cosmos/go-bip39"
 )
 
@@ -84,7 +85,7 @@ func (a *Account) Sign(message []byte, password string) ([]byte, error) {
 }
 
 // TODO: function not implement yet.
-func (a *Account) SignHex(messageHex string, password string) ([]byte, error) {
+func (a *Account) SignHex(messageHex string, password string) (*base.OptionalString, error) {
 	return nil, errors.New("TODO: function not implement yet.")
 }
 

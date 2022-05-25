@@ -1,6 +1,7 @@
 package wallet
 
 import (
+	"encoding/hex"
 	"fmt"
 
 	"github.com/coming-chat/wallet-SDK/core/btc"
@@ -164,7 +165,11 @@ func (w *Wallet) SignFromHex(messageHex string, password string) ([]byte, error)
 	if err != nil {
 		return nil, err
 	}
-	return account.SignHex(messageHex, password)
+	bytes, err := hex.DecodeString(messageHex)
+	if err != nil {
+		return nil, err
+	}
+	return account.Sign(bytes, password)
 }
 
 // Deprecated: GetPublicKey is deprecated. Please use wallet.PolkaAccount(network).PublicKey() instead
