@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"math/big"
+
+	"github.com/coming-chat/wallet-SDK/core/base"
 )
 
 type GasPrice struct {
@@ -98,10 +100,14 @@ func (c *Chain) SuggestGasPriceEIP1559() (*GasPrice, error) {
 	}).UseAverage(), nil
 }
 
-func (c *Chain) SuggestGasPrice() (string, error) {
+func (c *Chain) SuggestGasPrice() (*base.OptionalString, error) {
 	chain, err := GetConnection(c.RpcUrl)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return chain.SuggestGasPrice()
+	price, err := chain.SuggestGasPrice()
+	if err != nil {
+		return nil, err
+	}
+	return &base.OptionalString{Value: price}, nil
 }

@@ -54,11 +54,6 @@ func (u *CoinUtil) QueryBalance() (string, error) {
 	return balance.Usable, err
 }
 
-// Deprecated: SuggestGasPrice is deprecated. Please Use Chain.SuggestGasPrice() instead.
-func (u *CoinUtil) SuggestGasPrice() (string, error) {
-	return u.chain().SuggestGasPrice()
-}
-
 // Deprecated: Nonce is deprecated. Please Use Chain.NonceOfAddress() instead.
 func (u *CoinUtil) Nonce() (string, error) {
 	return u.chain().NonceOfAddress(u.WalletAddress)

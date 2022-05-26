@@ -56,7 +56,7 @@ func TestToken_EstimateGasLimit(t1 *testing.T) {
 				}
 				return
 			}
-			got, err := token.EstimateGasLimit(tt.from, tt.args.receiver, gasPrice, tt.args.amount)
+			got, err := token.EstimateGasLimit(tt.from, tt.args.receiver, gasPrice.Value, tt.args.amount)
 			if (err != nil) != tt.wantErr {
 				t1.Errorf("EstimateGasLimit() error = %v, wantErr %v", err, tt.wantErr)
 				return
