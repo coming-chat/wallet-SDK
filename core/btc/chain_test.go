@@ -147,6 +147,10 @@ func TestChain_FetchTransactionDetail(t *testing.T) {
 	}
 }
 
+func TestChain_SuggestFeeRate(t *testing.T) {
+	t.Log(SuggestFeeRate())
+}
+
 func TestChain_BatchFetchTransactionStatus(t *testing.T) {
 	hashStrings := "xxx,182218b286c78aae63aac2f72fe44f7f35206500cb0bdb96eda20449c482b698,31244281753a3934060f6258cae6f87de7d96d8fc3c2f42d128dd3e0f72679b9"
 	statuses := SdkBatchTransactionStatus(hashStrings, ChainMainnet)

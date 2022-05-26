@@ -1,7 +1,12 @@
 package btc
 
 import (
+	"encoding/json"
+	"fmt"
+	"net/http"
+
 	"github.com/coming-chat/wallet-SDK/core/base"
+	"github.com/coming-chat/wallet-SDK/pkg/httpUtil"
 )
 
 type Chain struct {
@@ -66,4 +71,45 @@ func (c *Chain) FetchTransactionStatus(hash string) base.TransactionStatus {
 
 func (c *Chain) BatchFetchTransactionStatus(hashListString string) string {
 	return sdkBatchTransactionStatus(hashListString, c.Chainnet)
+}
+
+type FeeRate struct {
+	Low     int64
+	Average int64
+	High    int64
+}
+
+func SuggestFeeRate() (*FeeRate, error) {
+	url := "https://mempool-mainnet.coming.chat/api/v1/fees/recommended"
+
+	response, err := httpUtil.Request(http.MethodGet, url, nil, nil)
+	if err != nil {
+		return nil, base.MapAnyToBasicError(err)
+	}
+
+	if response.Code != http.StatusOK {
+		return nil, fmt.Errorf("code: %d, body: %s", response.Code, string(response.Body))
+	}
+	respDict := make(map[string]interface{})
+	err = json.Unmarshal(response.Body, &respDict)
+	if err != nil {
+		return nil, err
+	}
+
+	var low, avg, high float64
+	var ok bool
+	if low, ok = respDict["minimumFee"].(float64); !ok {
+		low = 1
+	}
+	if avg, ok = respDict["halfHourFee"].(float64); !ok {
+		avg = 1
+	}
+	if high, ok = respDict["fastestFee"].(float64); !ok {
+		high = 1
+	}
+	return &FeeRate{
+		Low:     int64(low),
+		Average: int64(avg),
+		High:    int64(high),
+	}, nil
 }
