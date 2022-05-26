@@ -69,25 +69,13 @@ func (c *Chain) SuggestGasPriceEIP1559() (*GasPrice, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), client.timeout)
 	defer cancel()
 
-	// We best get the pending block base fee, but now, get the pending block will be crash
-	// Waiting for new version support, We need call `HeaderByNumber(ctx, big.NewInt(-1))`
-	header, err := client.RemoteRpcClient.HeaderByNumber(ctx, nil) // now we can only input `nil`
+	header, err := client.RemoteRpcClient.HeaderByNumber(ctx, big.NewInt(-1))
 	if err != nil {
 		return nil, err
 	}
 	if header.BaseFee == nil {
 		return nil, errors.New("The specified chain does not yet support EIP1559")
 	}
-	// calculate formular refence from https://www.blocknative.com/blog/eip-1559-fees#determining-the-base-fee
-	// nextBlock BaseFee = CurrentBaseFee * (0.875 + 0.25 * CurrentUsage / CurrentLimit )
-	numerator := header.GasUsed
-	if header.GasUsed > header.GasLimit {
-		numerator = header.GasLimit
-	}
-	usageRate := big.NewFloat(float64(numerator) / float64(header.GasLimit))
-	rate := big.NewFloat(0).Add(big.NewFloat(0.875), big.NewFloat(0).Mul(big.NewFloat(0.25), usageRate))
-	pendingBaseFeeFloat := big.NewFloat(0).Mul(big.NewFloat(0).SetInt(header.BaseFee), rate)
-	pendingBaseFeeInt, _ := pendingBaseFeeFloat.Int(nil)
 
 	priorityFee, err := client.RemoteRpcClient.SuggestGasTipCap(ctx)
 	if err != nil {
@@ -95,7 +83,7 @@ func (c *Chain) SuggestGasPriceEIP1559() (*GasPrice, error) {
 	}
 
 	return (&GasPrice{
-		BaseFee:            pendingBaseFeeInt.String(),
+		BaseFee:            header.BaseFee.String(),
 		SuggestPriorityFee: priorityFee.String(),
 	}).UseAverage(), nil
 }
