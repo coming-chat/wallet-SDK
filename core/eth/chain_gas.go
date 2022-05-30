@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"math/big"
+	"strconv"
 
 	"github.com/coming-chat/wallet-SDK/core/base"
 )
@@ -98,4 +99,31 @@ func (c *Chain) SuggestGasPrice() (*base.OptionalString, error) {
 		return nil, err
 	}
 	return &base.OptionalString{Value: price}, nil
+}
+
+func (c *Chain) EstimateGasLimit(msg *CallMsg) (gas *base.OptionalString, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
+
+	if len(msg.msg.Data) > 0 {
+		// any contract transaction
+		gas = &base.OptionalString{Value: DEFAULT_CONTRACT_GAS_LIMIT}
+	} else {
+		// nomal transfer
+		gas = &base.OptionalString{Value: DEFAULT_ETH_GAS_LIMIT}
+	}
+
+	client, err := GetConnection(c.RpcUrl)
+	if err != nil {
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), client.timeout)
+	defer cancel()
+	gasLimit, err := client.RemoteRpcClient.EstimateGas(ctx, msg.msg)
+	if err != nil {
+		return
+	}
+	gasStr := strconv.FormatUint(gasLimit, 10)
+
+	return &base.OptionalString{Value: gasStr}, nil
 }
