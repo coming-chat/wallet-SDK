@@ -3,6 +3,7 @@ package eth
 import (
 	"context"
 	"errors"
+	"fmt"
 	"math/big"
 	"strconv"
 	"strings"
@@ -140,6 +141,17 @@ func (c *Chain) SignWithPrivateKeyData(privateKeyData []byte, transaction *Trans
 	rawTx, err := transaction.GetRawTx()
 	if err != nil {
 		return
+	}
+
+	gasLimitFloat, _ := big.NewFloat(0).SetString(transaction.GasLimit)
+	gasPriceFloat, _ := big.NewFloat(0).SetString(transaction.GasPrice)
+	gasFeeFloat := big.NewFloat(0).Mul(gasLimitFloat, gasPriceFloat)
+	gasThreshold := big.NewFloat(0).SetInt(big.NewInt(0).Exp(big.NewInt(10), big.NewInt(17), nil)) // 10 ^ 17 = 0.1 Ether
+	if gasFeeFloat.Cmp(gasThreshold) != -1 {
+		// gasFee is greater than or equal to 0.1 Ether
+		etherUnit := big.NewFloat(0).Mul(gasThreshold, big.NewFloat(10)) // 10 ^ 18
+		floatValue, _ := big.NewFloat(0).Quo(gasFeeFloat, etherUnit).Float64()
+		return nil, errors.New("Transaction exception: Miner fee is too high " + fmt.Sprintf("%.2f", floatValue))
 	}
 
 	output, err := client.buildTxWithTransaction(rawTx, privateKeyECDSA)
