@@ -1,9 +1,13 @@
 package eth
 
 import (
+	"errors"
 	"math/big"
 	"strconv"
+	"strings"
 
+	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 )
 
@@ -32,4 +36,21 @@ func PrivateKeyToAddress(privateKey string) (string, error) {
 		return "", err
 	}
 	return crypto.PubkeyToAddress(privateKeyECDSA.PublicKey).Hex(), nil
+}
+
+// Encode erc20 transfer data
+func EncodeErc20Transfer(toAddress, amount string) ([]byte, error) {
+	parsedAbi, err := abi.JSON(strings.NewReader(Erc20AbiStr))
+	if err != nil {
+		return nil, err
+	}
+
+	if !common.IsHexAddress(toAddress) {
+		return nil, errors.New("Invalid receiver address")
+	}
+	amountInt, valid := big.NewInt(0).SetString(amount, 10)
+	if !valid {
+		return nil, errors.New("Invalid transfer amount")
+	}
+	return parsedAbi.Pack(ERC20_METHOD_TRANSFER, common.HexToAddress(toAddress), amountInt)
 }

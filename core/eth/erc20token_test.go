@@ -154,19 +154,16 @@ func TestErc20Token_BalanceOfAddress(t1 *testing.T) {
 }
 
 func TestErc20Token_EstimateGasLimit(t1 *testing.T) {
-	type args struct {
-		receiver string
-		gasPrice string
-		amount   string
-	}
-	defaultArgs := args{"0x7161ada3EA6e53E5652A45988DdfF1cE595E09c2", "10000000", "100"}
+	enoughGasPrice := "100000000000" // 100 Gwei
+	haveEthUsdtAddress := "0x22fFF189C37302C02635322911c3B64f80CE7203"
 
 	tests := []struct {
 		name     string
 		rpcInfo  rpcInfo
 		contract string
-		address  string
-		args     args
+		from     string
+		to       string
+		amount   string
 		wantErr  bool
 	}{
 
@@ -174,38 +171,43 @@ func TestErc20Token_EstimateGasLimit(t1 *testing.T) {
 			name:     "eth USDT",
 			rpcInfo:  rpcs.ethereumProd,
 			contract: rpcs.ethereumProd.contracts.USDT,
-			address:  "0x7161ada3EA6e53E5652A45988DdfF1cE595E09c2",
-			args:     defaultArgs,
-			wantErr:  true, // there is no eth balance, it's will got an error: insufficient funds for transfer
+			from:     haveEthUsdtAddress,
+			to:       "0x7161ada3EA6e53E5652A45988DdfF1cE595E09c2",
+			amount:   "100",
 		},
 		{
 			name:     "binance test USDC",
 			rpcInfo:  rpcs.binanceTest,
 			contract: rpcs.binanceTest.contracts.BUSD,
-			address:  "0x9a576ec81b75ab1a00baeb976441e34db23882fe",
-			args:     defaultArgs,
+			from:     "0x7Da8a0276627fa857f5459f4B1A9D8161226d604",
+			to:       "0x7161ada3EA6e53E5652A45988DdfF1cE595E09c2",
+			amount:   "100",
 		},
 		{
 			name:     "sherpax prod USB",
 			rpcInfo:  rpcs.sherpaxProd,
 			contract: rpcs.sherpaxProd.contracts.USB,
-			address:  "0x7161ada3EA6e53E5652A45988DdfF1cE595E09c2",
-			args:     defaultArgs,
+			from:     "0x7161ada3EA6e53E5652A45988DdfF1cE595E09c2",
+			to:       "0x7161ada3EA6e53E5652A45988DdfF1cE595E09c2",
+			amount:   "100",
 			wantErr:  true, // ther is no balance.
 		},
 		{
 			name:     "eth error rpc",
 			rpcInfo:  rpcInfo{url: rpcs.ethereumProd.url + "s"},
 			contract: rpcs.ethereumProd.contracts.USDT,
-			args:     defaultArgs,
+			from:     "0x7161ada3EA6e53E5652A45988DdfF1cE595E09c2",
+			to:       "0x7161ada3EA6e53E5652A45988DdfF1cE595E09c2",
+			amount:   "100",
 			wantErr:  true,
 		},
 		{
 			name:     "sherpax prod error contract",
 			rpcInfo:  rpcs.sherpaxProd,
 			contract: rpcs.ethereumProd.contracts.USDT,
-			address:  "0x7161ada3EA6e53E5652A45988DdfF1cE595E09c2",
-			args:     defaultArgs,
+			from:     "0x7161ada3EA6e53E5652A45988DdfF1cE595E09c2",
+			to:       "0x7161ada3EA6e53E5652A45988DdfF1cE595E09c2",
+			amount:   "100",
 			wantErr:  true,
 		},
 	}
@@ -213,7 +215,7 @@ func TestErc20Token_EstimateGasLimit(t1 *testing.T) {
 		t1.Run(tt.name, func(t1 *testing.T) {
 			chain := NewChainWithRpc(tt.rpcInfo.url)
 			token := chain.Erc20Token(tt.contract)
-			got, err := token.EstimateGasLimit(tt.address, tt.args.receiver, tt.args.gasPrice, tt.args.amount)
+			got, err := token.EstimateGasLimit(tt.from, tt.to, enoughGasPrice, tt.amount)
 			if (err != nil) != tt.wantErr {
 				t1.Errorf("EstimateGasLimit() error = %v, wantErr %v", err, tt.wantErr)
 				return

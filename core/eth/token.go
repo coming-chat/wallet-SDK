@@ -51,13 +51,17 @@ func (t *Token) BalanceOfAccount(account base.Account) (*base.Balance, error) {
 // MARK - Eth TokenProtocol
 
 func (t *Token) EstimateGasLimit(fromAddress, receiverAddress, gasPrice, amount string) (string, error) {
-	chain, err := GetConnection(t.chain.RpcUrl)
+	msg := NewCallMsg()
+	msg.SetFrom(fromAddress)
+	msg.SetTo(receiverAddress)
+	msg.SetGasPrice(gasPrice)
+	msg.SetValue(amount)
+
+	res, err := t.chain.EstimateGasLimit(msg)
 	if err != nil {
 		return "", err
 	}
-
-	gasLimit, err := chain.EstimateGasLimit(fromAddress, receiverAddress, gasPrice, amount)
-	return gasLimit, err
+	return res.Value, nil
 }
 
 func (t *Token) BuildTransferTx(privateKey string, transaction *Transaction) (*base.OptionalString, error) {

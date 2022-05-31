@@ -8,7 +8,6 @@ import (
 
 	HexType "github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/ethereum/go-ethereum"
-	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 )
@@ -210,25 +209,13 @@ func (tx *Transaction) TransformToErc20Transaction(contractAddress string) error
 	if len(tx.Data) > 0 && tx.Value == "0" {
 		return nil
 	}
-	parsedAbi, err := abi.JSON(strings.NewReader(Erc20AbiStr))
-	if err != nil {
-		return err
-	}
-
-	if !IsValidAddress(tx.To) {
-		return errors.New("Invalid receiver address")
-	}
-	amountInt, valid := big.NewInt(0).SetString(tx.Value, 10)
-	if !valid {
-		return errors.New("Invalid transfer amount")
-	}
-	input, err := parsedAbi.Pack(ERC20_METHOD_TRANSFER, common.HexToAddress(tx.To), amountInt)
+	data, err := EncodeErc20Transfer(tx.To, tx.Value)
 	if err != nil {
 		return err
 	}
 
 	tx.To = contractAddress
 	tx.Value = "0"
-	tx.Data = HexType.HexEncodeToString(input)
+	tx.Data = HexType.HexEncodeToString(data)
 	return nil
 }

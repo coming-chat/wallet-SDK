@@ -3,10 +3,10 @@ package eth
 import (
 	"crypto/ecdsa"
 	"errors"
-	"fmt"
 
 	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/shopspring/decimal"
 )
 
 type Erc20TokenInfo struct {
@@ -91,19 +91,26 @@ func (t *Erc20Token) BalanceOfAddress(address string) (*base.Balance, error) {
 }
 
 func (t *Erc20Token) EstimateGasLimit(fromAddress, receiverAddress, gasPrice, amount string) (string, error) {
-	chain, err := GetConnection(t.chain.RpcUrl)
+	msg := NewCallMsg()
+	msg.SetFrom(fromAddress)
+	msg.SetTo(t.ContractAddress)
+	msg.SetGasPrice(gasPrice)
+
+	data, err := EncodeErc20Transfer(receiverAddress, amount)
 	if err != nil {
 		return "", err
 	}
+	msg.SetData(data)
 
-	erc20JsonParams := fmt.Sprintf(
-		"{\"toAddress\":\"%s\", \"amount\":\"%s\", \"method\":\"%s\"}",
-		receiverAddress,
-		amount,
-		ERC20_METHOD_TRANSFER)
-	gasLimit, err := chain.EstimateContractGasLimit(fromAddress, t.ContractAddress, Erc20AbiStr, ERC20_METHOD_TRANSFER, erc20JsonParams)
-
-	return gasLimit, err
+	gasLimit, err := t.chain.EstimateGasLimit(msg)
+	if err != nil {
+		return "", err
+	}
+	gasLimitDecimal, err := decimal.NewFromString(gasLimit.Value)
+	if err != nil {
+		return "", err
+	}
+	return gasLimitDecimal.Mul(decimal.NewFromFloat32(1.3)).Round(0).String(), nil
 }
 
 func (t *Erc20Token) BuildTransferTx(privateKey string, transaction *Transaction) (*base.OptionalString, error) {
