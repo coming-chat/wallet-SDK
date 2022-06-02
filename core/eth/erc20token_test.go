@@ -78,6 +78,12 @@ func TestErc20Token_TokenInfo(t1 *testing.T) {
 			contract: rpcs.sherpaxTest.contracts.BUSD, // not a eth contract address
 			wantErr:  true,
 		},
+		{
+			name:     "optimism prod",
+			rpc:      rpcs.optimismProd.url,
+			contract: "0x2e3d870790dc77a83dd1d18184acc7439a53f475",
+			want:     &base.TokenInfo{Name: "Frax", Symbol: "FRAX", Decimal: 18},
+		},
 	}
 	for _, tt := range tests {
 		t1.Run(tt.name, func(t1 *testing.T) {
@@ -134,6 +140,12 @@ func TestErc20Token_BalanceOfAddress(t1 *testing.T) {
 			address:  "0x7161ada3EA6e53E5652A45988DdfF1cE595E09c2",
 			wantErr:  true,
 		},
+		{
+			name:     "optimism prod",
+			rpcInfo:  rpcs.optimismProd,
+			contract: "0x2e3d870790dc77a83dd1d18184acc7439a53f475", // FRAX
+			address:  "0xbba2379f5cc9a2f248c5cf18ad72379ae2478f42",
+		},
 	}
 	for _, tt := range tests {
 		t1.Run(tt.name, func(t1 *testing.T) {
@@ -154,41 +166,33 @@ func TestErc20Token_BalanceOfAddress(t1 *testing.T) {
 }
 
 func TestErc20Token_EstimateGasLimit(t1 *testing.T) {
-	enoughGasPrice := "100000000000" // 100 Gwei
-	haveEthUsdtAddress := "0x22fFF189C37302C02635322911c3B64f80CE7203"
-
 	tests := []struct {
 		name     string
 		rpcInfo  rpcInfo
 		contract string
 		from     string
-		to       string
 		amount   string
 		wantErr  bool
 	}{
-
 		{
 			name:     "eth USDT",
 			rpcInfo:  rpcs.ethereumProd,
 			contract: rpcs.ethereumProd.contracts.USDT,
-			from:     haveEthUsdtAddress,
-			to:       "0x7161ada3EA6e53E5652A45988DdfF1cE595E09c2",
+			from:     "0x22fFF189C37302C02635322911c3B64f80CE7203",
 			amount:   "100",
 		},
-		{
-			name:     "binance test USDC",
-			rpcInfo:  rpcs.binanceTest,
-			contract: rpcs.binanceTest.contracts.BUSD,
-			from:     "0x7Da8a0276627fa857f5459f4B1A9D8161226d604",
-			to:       "0x7161ada3EA6e53E5652A45988DdfF1cE595E09c2",
-			amount:   "100",
-		},
+		// {
+		// 	name:     "binance test USDC",
+		// 	rpcInfo:  rpcs.binanceTest,
+		// 	contract: rpcs.binanceTest.contracts.BUSD,
+		// 	from:     "0x7Da8a0276627fa857f5459f4B1A9D8161226d604",
+		// 	amount:   "100",
+		// },
 		{
 			name:     "sherpax prod USB",
 			rpcInfo:  rpcs.sherpaxProd,
 			contract: rpcs.sherpaxProd.contracts.USB,
 			from:     "0x7161ada3EA6e53E5652A45988DdfF1cE595E09c2",
-			to:       "0x7161ada3EA6e53E5652A45988DdfF1cE595E09c2",
 			amount:   "100",
 			wantErr:  true, // ther is no balance.
 		},
@@ -197,7 +201,6 @@ func TestErc20Token_EstimateGasLimit(t1 *testing.T) {
 			rpcInfo:  rpcInfo{url: rpcs.ethereumProd.url + "s"},
 			contract: rpcs.ethereumProd.contracts.USDT,
 			from:     "0x7161ada3EA6e53E5652A45988DdfF1cE595E09c2",
-			to:       "0x7161ada3EA6e53E5652A45988DdfF1cE595E09c2",
 			amount:   "100",
 			wantErr:  true,
 		},
@@ -206,22 +209,36 @@ func TestErc20Token_EstimateGasLimit(t1 *testing.T) {
 			rpcInfo:  rpcs.sherpaxProd,
 			contract: rpcs.ethereumProd.contracts.USDT,
 			from:     "0x7161ada3EA6e53E5652A45988DdfF1cE595E09c2",
-			to:       "0x7161ada3EA6e53E5652A45988DdfF1cE595E09c2",
 			amount:   "100",
 			wantErr:  true,
+		},
+		{
+			name:     "optmism prod contract",
+			rpcInfo:  rpcs.optimismProd,
+			contract: "0x2e3d870790dc77a83dd1d18184acc7439a53f475",
+			from:     "0xbba2379f5cc9a2f248c5cf18ad72379ae2478f42",
+			amount:   "1000000",
 		},
 	}
 	for _, tt := range tests {
 		t1.Run(tt.name, func(t1 *testing.T) {
 			chain := NewChainWithRpc(tt.rpcInfo.url)
+			gasPrice, err := chain.SuggestGasPrice()
+			if err != nil {
+				if !tt.wantErr {
+					t1.Errorf("EstimateGasLimit() error = %v, wantErr %v", err, tt.wantErr)
+				}
+				return
+			}
+			tenfoldPrice := gasPrice.Value + "0"
 			token := chain.Erc20Token(tt.contract)
-			got, err := token.EstimateGasLimit(tt.from, tt.to, enoughGasPrice, tt.amount)
+			got, err := token.EstimateGasLimit(tt.from, accountCase1.address, tenfoldPrice, tt.amount)
 			if (err != nil) != tt.wantErr {
 				t1.Errorf("EstimateGasLimit() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if err == nil {
-				t1.Log(got)
+				t1.Logf("EstimateGasLimit() %v", got)
 			}
 		})
 	}

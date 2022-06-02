@@ -12,7 +12,7 @@ type contracts struct {
 type rpcInfo struct {
 	url       string
 	scan      string
-	contracts contracts
+	contracts *contracts
 }
 type rpcConfig struct {
 	ethereumProd rpcInfo
@@ -21,24 +21,31 @@ type rpcConfig struct {
 	binanceProd  rpcInfo
 	sherpaxTest  rpcInfo
 	sherpaxProd  rpcInfo
+
+	optimismProd rpcInfo
+	optimismTest rpcInfo
+	arbitrumProd rpcInfo
+	arbitrumTest rpcInfo
+	kccProd      rpcInfo
+	kccTest      rpcInfo
 }
 
 var rpcs = rpcConfig{
 	ethereumProd: rpcInfo{
 		"https://geth-mainnet.coming.chat",
 		"https://etherscan.io",
-		contracts{
+		&contracts{
 			USDT: "0xdAC17F958D2ee523a2206206994597C13D831ec7",
 		}},
 	rinkeby: rpcInfo{
 		"https://rinkeby.infura.io/v3/161645ea57d2494d996c4d2de2489419",
 		"",
-		contracts{},
+		nil,
 	},
 	binanceTest: rpcInfo{
 		"https://data-seed-prebsc-1-s1.binance.org:8545",
 		"https://testnet.bscscan.com",
-		contracts{
+		&contracts{
 			USDT: "0x6cd2Bf22B3CeaDfF6B8C226487265d81164396C5",
 			BUSD: "0xeD24FC36d5Ee211Ea25A80239Fb8C4Cfd80f12Ee",
 			USDC: "0x0644014472cD39f51f57ce91be871537D7A5A2Ab",
@@ -46,7 +53,7 @@ var rpcs = rpcConfig{
 	binanceProd: rpcInfo{
 		"https://bsc-dataseed.binance.org",
 		"https://bscscan.com",
-		contracts{
+		&contracts{
 			USDT: "0x55d398326f99059fF775485246999027B3197955",
 			BUSD: "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56",
 			USDC: "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d",
@@ -54,7 +61,7 @@ var rpcs = rpcConfig{
 	sherpaxTest: rpcInfo{
 		"https://sherpax-testnet.chainx.org/rpc",
 		"https://evm-pre.sherpax.io",
-		contracts{
+		&contracts{
 			USDT: "0x1635583ACf7beF762E8119887b2f3B9F9BcD1742",
 			BUSD: "0x77eD6a802aB1d60A86F2e3c45B43a0Cd7Ee2572B",
 			USDC: "0xa017362eB5B22302e4E5c55786f651214BD168A2",
@@ -62,12 +69,45 @@ var rpcs = rpcConfig{
 	sherpaxProd: rpcInfo{
 		"https://mainnet.sherpax.io/rpc",
 		"https://evm.sherpax.io",
-		contracts{
+		&contracts{
 			USB:  "0xE7e312dfC08e060cda1AF38C234AEAcc7A982143",
 			USDT: "0x4B53739D798EF0BEa5607c254336b40a93c75b52",
 			BUSD: "0x37088186089c7D6BcD556d9A15087DFaE3Ba0C32",
 			USDC: "0x935CC842f220CF3A7D10DA1c99F01B1A6894F7C5",
 		}},
+
+	optimismProd: rpcInfo{
+		"https://mainnet.optimism.io",
+		"https://optimistic.etherscan.io",
+		nil,
+	},
+	optimismTest: rpcInfo{
+		"https://kovan.optimism.io",
+		"https://kovan-optimistic.etherscan.io",
+		nil,
+	},
+
+	arbitrumProd: rpcInfo{
+		"https://arb1.arbitrum.io/rpc",
+		"https://arbiscan.io",
+		nil,
+	},
+	arbitrumTest: rpcInfo{
+		"https://rinkeby.arbitrum.io/rpc",
+		"https://testnet.arbiscan.io",
+		nil,
+	},
+
+	kccProd: rpcInfo{
+		"https://rpc-mainnet.kcc.network",
+		"https://scan.kcc.io",
+		nil,
+	},
+	kccTest: rpcInfo{
+		"https://rpc-testnet.kcc.network",
+		"https://scan-testnet.kcc.network",
+		nil,
+	},
 }
 
 func (n *rpcInfo) Chain() *Chain {

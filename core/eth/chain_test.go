@@ -1,6 +1,7 @@
 package eth
 
 import (
+	"math/big"
 	"reflect"
 	"testing"
 
@@ -8,6 +9,7 @@ import (
 )
 
 func TestChain_BalanceOfAddress(t *testing.T) {
+	addressBlackHole := "0x0000000000000000000000000000000000000000"
 	tests := []struct {
 		name    string
 		net     rpcInfo
@@ -22,7 +24,7 @@ func TestChain_BalanceOfAddress(t *testing.T) {
 		{
 			name:    "eth black hole",
 			net:     rpcs.ethereumProd,
-			address: "0x0000000000000000000000000000000000000000",
+			address: addressBlackHole,
 		},
 		{
 			name:    "binance-prod normal",
@@ -45,6 +47,26 @@ func TestChain_BalanceOfAddress(t *testing.T) {
 			address: "0x62c3aF16954fba6D920835ec56f",
 			wantErr: true,
 		},
+		{
+			name:    "optmism prod",
+			net:     rpcs.optimismProd,
+			address: addressBlackHole,
+		},
+		{
+			name:    "optimism test",
+			net:     rpcs.optimismTest,
+			address: addressBlackHole,
+		},
+		{
+			name:    "arbitrum prod",
+			net:     rpcs.arbitrumProd,
+			address: addressBlackHole,
+		},
+		{
+			name:    "kcc prod",
+			net:     rpcs.kccProd,
+			address: addressBlackHole,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -55,7 +77,9 @@ func TestChain_BalanceOfAddress(t *testing.T) {
 				}
 				return
 			}
-			t.Log("queryed balance is ", got.Total)
+			totalFloat, _ := big.NewFloat(0).SetString(got.Total)
+			totalFloat.Quo(totalFloat, big.NewFloat(1000000000000000000))
+			t.Logf("BalanceOfAddress() balance ≈ %v, full = %v", totalFloat.String(), got.Total)
 			t.Log("Unable to verify balance, maybe you should check with this address which may be useful: " + tt.net.scan + "/address/" + tt.address)
 		})
 	}
@@ -83,6 +107,20 @@ func TestChain_FetchTransactionDetail(t *testing.T) {
 				ToAddress:       "0x5fD3d526A946DdB67C810f1F1C4A8c9214da17ef",
 				Status:          base.TransactionStatusSuccess,
 				FinishTimestamp: 1647598998,
+			},
+		},
+		{
+			name: "optimism prod erc20 token failured execution reverted",
+			args: args{rpcs.optimismProd, "0x13dfd70e710e8451cf88cf8bd55b02a525a45efe028309a019defe5ffc9d5e83"},
+			want: &base.TransactionDetail{
+				HashString:      "0x13dfd70e710e8451cf88cf8bd55b02a525a45efe028309a019defe5ffc9d5e83",
+				Amount:          "38919826",
+				EstimateFees:    "36096000000",
+				FromAddress:     "0x8F1c69De5E086BA1E441707B9cbD94860529beE4",
+				ToAddress:       "0xE56BD3FfC787942F8aB9cf20D2D650E3184aCCc3",
+				Status:          base.TransactionStatusFailure,
+				FinishTimestamp: 1654140210,
+				FailureMessage:  "execution reverted",
 			},
 		},
 		{
@@ -170,6 +208,21 @@ func TestChain_FetchTransactionDetail_Cover_Multi_Rpcs(t *testing.T) {
 			name:    "ethereum-prod error hash",
 			args:    args{rpcs.binanceProd, "0x5841f924fd76434f7f17ef8faf19214"},
 			wantErr: true,
+		},
+		{
+			name:     "optimism prod succeed",
+			args:     args{rpcs.optimismProd, "0xda38aaaaa858fb65f62a41455308e71a57cc6c5a1c647d7f80ba316362a5a31c"},
+			wantTime: 1654133507,
+		},
+		{
+			name:     "arbitrum prod erc20 succeed",
+			args:     args{rpcs.arbitrumProd, "0xc9b7e00273af851237f4cd76570da81942aca9b163044c6b7b9d09a46e17338b"},
+			wantTime: 1653897408,
+		},
+		{
+			name:     "kcc prod succeed",
+			args:     args{rpcs.kccProd, "0xb118c7957aacf4c63c8b723776ade76fd77d5411ea799741ce9edf80d6a5739f"},
+			wantTime: 1654119340,
 		},
 	}
 	for _, tt := range tests {
