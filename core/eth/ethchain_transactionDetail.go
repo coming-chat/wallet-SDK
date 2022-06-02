@@ -42,7 +42,7 @@ func (e *EthChain) FetchTransactionDetail(hashString string) (detail *base.Trans
 	}
 
 	address := msg.To().String()
-	amount := strconv.FormatUint(msg.Value().Uint64(), 10)
+	amount := msg.Value().String()
 
 	if len(tx.Data()) != 0 {
 		address, amount, err = decodeErc20TransferInput(tx.Data())
@@ -51,14 +51,13 @@ func (e *EthChain) FetchTransactionDetail(hashString string) (detail *base.Trans
 		}
 	}
 
-	gasPrice := msg.GasPrice().Uint64()
-	estimateGasLimit := msg.Gas()
+	gasFeeInt := big.NewInt(0).Mul(msg.GasPrice(), big.NewInt(0).SetUint64(msg.Gas()))
 	detail = &base.TransactionDetail{
 		HashString:   hashString,
 		FromAddress:  msg.From().String(),
 		ToAddress:    address,
 		Amount:       amount,
-		EstimateFees: strconv.FormatUint(gasPrice*estimateGasLimit, 10),
+		EstimateFees: gasFeeInt.String(),
 	}
 
 	if isPending {
@@ -99,8 +98,8 @@ func (e *EthChain) FetchTransactionDetail(hashString string) (detail *base.Trans
 	} else {
 		detail.Status = base.TransactionStatusSuccess
 	}
-	gasUsed := receipt.GasUsed
-	detail.EstimateFees = strconv.FormatUint(gasPrice*gasUsed, 10)
+	gasFeeInt = big.NewInt(0).Mul(msg.GasPrice(), big.NewInt(0).SetUint64(receipt.GasUsed))
+	detail.EstimateFees = gasFeeInt.String()
 	detail.FinishTimestamp = int64(blockHeader.Time)
 
 	return detail, nil
