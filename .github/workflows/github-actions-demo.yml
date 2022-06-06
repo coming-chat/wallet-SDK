@@ -20,8 +20,10 @@ jobs:
       - name: Install gomobile env
         run: |
           go install golang.org/x/mobile/cmd/gomobile
-          ~/go/bin/gomobile init 
           go install golang.org/x/mobile/bind 
+      - run: |
+          ls ~/go/bin
+          ~/go/bin/gomobile init 
           make packageAll v=0.2.3
       - name: List files in the repository
         run: |
