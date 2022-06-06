@@ -26,7 +26,9 @@ jobs:
           go install golang.org/x/mobile/bind 
       - name: List files in ~/go/bin
         run: ls ~/go/bin
-      - run: |
-          ~/go/bin/gomobile init 
-          make packageAll v=0.2.3
+      - name: Current path
+        run: pwd
+      - name: gomobile init
+        run: ~/go/bin/gomobile init
+      - run: make packageAll v=0.2.3
       - run: echo "🍏 This job's status is ${{ job.status }}."
