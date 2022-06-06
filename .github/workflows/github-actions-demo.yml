@@ -35,7 +35,6 @@ jobs:
         run: ls ~/go/bin
       - name: Current path
         run: pwd
-      - name: gomobile init
-        run: ~/go/bin/gomobile init
+      - run: gomobile init
       - run: make packageAll v=0.2.3
       - run: echo "🍏 This job's status is ${{ job.status }}."
