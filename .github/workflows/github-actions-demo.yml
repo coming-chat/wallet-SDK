@@ -3,6 +3,8 @@ on:
   push:
     branches:
       - 'Zhangguiguang-patch-1'
+    paths:
+      - '**.go'
 jobs:
   Explore-GitHub-Actions:
     runs-on: ubuntu-latest
