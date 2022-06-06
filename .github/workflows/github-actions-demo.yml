@@ -4,7 +4,7 @@ on:
     tags:
       - 'v**'
 concurrency: 
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-pack
   cancel-in-progress: true
 jobs:
   Explore-GitHub-Actions:
