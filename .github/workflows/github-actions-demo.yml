@@ -30,6 +30,7 @@ jobs:
           echo "Config path"
           export PATH=$PATH:~/go/bin
           echo "After gomobile command" `which gomobile`
+          echo "Show gomobile version" `gomobile version`
       - name: List files in ~/go/bin
         run: ls ~/go/bin
       - name: Current path
