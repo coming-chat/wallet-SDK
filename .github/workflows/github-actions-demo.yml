@@ -20,9 +20,10 @@ jobs:
           ls ${{ github.workspace }}
       - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
       - run: echo "🖥️ The workflow is now ready to test your code on the runner."
-      - run: |
-        brew -v
-        go version
+      - name: "See env"
+        run: |
+          go version
+          brew -v
       # - name: Install gomobile env
       #   run: |
       #     go install golang.org/x/mobile/cmd/gomobile@latest
