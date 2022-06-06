@@ -21,6 +21,7 @@ jobs:
         run: |
           go install golang.org/x/mobile/cmd/gomobile
           go install golang.org/x/mobile/bind
+          ~/go/bin/gomobile init
       - run: make packageAll v=0.2.3
       - name: List files in the repository
         run: |
