@@ -1,5 +1,8 @@
 name: GitHub Actions Demo
-on: [push]
+on: 
+  push:
+    branches:
+      - 'Zhangguiguang-patch-1'
 jobs:
   Explore-GitHub-Actions:
     runs-on: ubuntu-latest
