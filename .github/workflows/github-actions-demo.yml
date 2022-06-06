@@ -22,7 +22,7 @@ jobs:
       - run: echo "🖥️ The workflow is now ready to test your code on the runner."
       - name: Install gomobile env
         run: |
-          go install golang.org/x/mobile/cmd/gomobile
+          go install golang.org/x/mobile/cmd/gomobile@latest
           go install golang.org/x/mobile/bind 
       - name: List files in ~/go/bin
         run: ls ~/go/bin
