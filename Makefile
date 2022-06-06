@@ -34,3 +34,5 @@ packageAll:
 	@cd ${outdir} && mkdir ${andZipName}.${v} && mv -f wallet.aar wallet-sources.jar ${andZipName}.${v}
 	@cd ${outdir} && zip -ry ${andZipName}.${v}.zip ${andZipName}.${v}
 	@cd ${outdir} && open .
+
+# alter file not **.go, github actions not run.
