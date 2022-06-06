@@ -19,8 +19,8 @@ jobs:
       - run: echo "🖥️ The workflow is now ready to test your code on the runner."
       - name: Install gomobile env
         run: |
-          go get golang.org/x/mobile/cmd/gomobile
-          go get golang.org/x/mobile/bind
+          go install golang.org/x/mobile/cmd/gomobile
+          go install golang.org/x/mobile/bind
       - run: make packageAll v=0.2.3
       - name: List files in the repository
         run: |
