@@ -1,10 +1,8 @@
 name: GitHub Actions Demo
 on: 
   push:
-    branches:
-      - 'Zhangguiguang-patch-1'
-    paths:
-      - '**.go'
+    tags:
+      - 'v**'
 jobs:
   Explore-GitHub-Actions:
     runs-on: ubuntu-latest
