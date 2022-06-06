@@ -3,6 +3,9 @@ on:
   push:
     tags:
       - 'v**'
+concurrency: 
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   Explore-GitHub-Actions:
     runs-on: macos-latest
