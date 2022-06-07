@@ -3,6 +3,7 @@ package eth
 import (
 	"crypto/ecdsa"
 	"errors"
+	"strings"
 
 	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -114,6 +115,7 @@ func (t *Erc20Token) EstimateGasLimit(fromAddress, receiverAddress, gasPrice, am
 }
 
 func (t *Erc20Token) BuildTransferTx(privateKey string, transaction *Transaction) (*base.OptionalString, error) {
+	privateKey = strings.TrimPrefix(privateKey, "0x")
 	privateKeyECDSA, err := crypto.HexToECDSA(privateKey)
 	if err != nil {
 		return nil, err
