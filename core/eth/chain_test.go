@@ -314,3 +314,40 @@ func TestEthCall(t *testing.T) {
 	}
 	t.Log(res)
 }
+
+func TestTransferOptimism(t *testing.T) {
+	from, _ := NewAccountWithMnemonic(accountCase1.mnemonic)
+	to := "0x8De5fF2edeD4d897da535ab0F379Ec1b9257eBaB"
+	amount := "10000000000000" // 0.00001
+	t.Log(TransferCoin(&rpcs.optimismTest, from, to, amount))
+}
+
+func TestTransferArbitrum(t *testing.T) {
+	from, _ := NewAccountWithMnemonic(accountCase1.mnemonic)
+	to := "0x8De5fF2edeD4d897da535ab0F379Ec1b9257eBaB"
+	amount := "10000000000000" // 0.00001
+	t.Log(TransferCoin(&rpcs.kccTest, from, to, amount))
+}
+
+func TransferCoin(at *rpcInfo, from *Account, toAddress string, amount string) (string, error) {
+	chain := at.Chain()
+
+	gasPrice, err := chain.SuggestGasPrice()
+	if err != nil {
+		return "", err
+	}
+
+	token := chain.MainEthToken()
+	gasLimit, err := token.EstimateGasLimit(from.Address(), toAddress, gasPrice.Value, amount)
+	if err != nil {
+		return "", err
+	}
+
+	transaction := NewTransaction("", gasPrice.Value, gasLimit, toAddress, amount, "")
+	signedTx, err := token.BuildTransferTxWithAccount(from, transaction)
+	if err != nil {
+		return "", err
+	}
+
+	return chain.SendRawTransaction(signedTx.Value)
+}
