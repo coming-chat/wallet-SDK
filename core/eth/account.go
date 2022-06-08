@@ -61,12 +61,13 @@ func NewAccountWithMnemonic(mnemonic string) (*Account, error) {
 
 // @return privateKey data
 func (a *Account) PrivateKey() ([]byte, error) {
-	return a.privateKeyECDSA.D.Bytes(), nil
+	return crypto.FromECDSA(a.privateKeyECDSA), nil
 }
 
 // @return privateKey string that will start with 0x.
 func (a *Account) PrivateKeyHex() (string, error) {
-	return types.HexEncodeToString(a.privateKeyECDSA.D.Bytes()), nil
+	bytes := crypto.FromECDSA(a.privateKeyECDSA)
+	return types.HexEncodeToString(bytes), nil
 }
 
 // Is deocde from address
