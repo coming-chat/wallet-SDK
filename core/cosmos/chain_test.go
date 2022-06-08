@@ -16,8 +16,8 @@ type chainInfo struct {
 type chainConfig struct {
 	cosmosProd chainInfo
 	cosmosTest chainInfo
-	terraProd  chainInfo
-	terraTest  chainInfo
+	luncProd   chainInfo
+	luncTest   chainInfo
 }
 
 var rpcs = chainConfig{
@@ -31,12 +31,12 @@ var rpcs = chainConfig{
 		rest: "https://cosmos-testnet-rpc.allthatnode.com:1317",
 		scan: "https://cosmoshub-testnet.mintscan.io/cosmoshub-testnet",
 	},
-	terraProd: chainInfo{
+	luncProd: chainInfo{
 		rpc:  "https://terra-mainnet-rpc.allthatnode.com:26657",
 		rest: "https://terra-mainnet-rpc.allthatnode.com:1317",
 		scan: "https://finder.terra.money",
 	},
-	terraTest: chainInfo{
+	luncTest: chainInfo{
 		rpc:  "https://terra-bombay-rpc.allthatnode.com:26657",
 		rest: "https://terra-bombay-rpc.allthatnode.com:1317",
 		scan: "https://finder.terra.money/testnet",
@@ -76,7 +76,7 @@ func TestAtomTransfer(t *testing.T) {
 }
 
 func TestLunaTransfer(t *testing.T) {
-	rpcinfo := rpcs.terraProd
+	rpcinfo := rpcs.luncProd
 
 	from := accountTerra.mnemonic
 	account, _ := NewTerraAccountWithMnemonic(from)
@@ -102,7 +102,7 @@ func TestLunaTransfer(t *testing.T) {
 }
 
 func TestUSTTransfer(t *testing.T) {
-	rpcinfo := rpcs.terraProd
+	rpcinfo := rpcs.luncProd
 
 	from := accountTerra.mnemonic
 	account, _ := NewTerraAccountWithMnemonic(from)
@@ -162,19 +162,19 @@ func TestChain_BalanceOfAddress(t *testing.T) {
 		},
 		{
 			name:    "terra testnet luna normal",
-			rpcinfo: rpcs.terraTest,
+			rpcinfo: rpcs.luncTest,
 			address: accountTerra.address,
 			denom:   TerraLunaDenom,
 		},
 		{
 			name:    "terra mainnet ust normal",
-			rpcinfo: rpcs.terraProd,
+			rpcinfo: rpcs.luncProd,
 			address: "terra1dr7ackrxsqwmac2arx26gre6rj6q3sv29fnn7k",
 			denom:   TerraUSTDenom,
 		},
 		{
 			name:    "terra mainnet luna normal",
-			rpcinfo: rpcs.terraProd,
+			rpcinfo: rpcs.luncProd,
 			address: "terra1ncjg4a59x2pgvqy9qjyqprlj8lrwshm0wleht5",
 			denom:   TerraLunaDenom,
 		},
@@ -260,7 +260,7 @@ func TestChain_FetchTransactionDetail(t *testing.T) {
 		},
 		{
 			name:    "terra mainnet ust normal succeed tx",
-			rpcInfo: rpcs.terraProd,
+			rpcInfo: rpcs.luncProd,
 			hash:    "8C40B11BC4A242A6F0EEA187A37304CF7BB5DEC6E7DD0B6A912EE28E2B6F90B9",
 			wantDetail: &base.TransactionDetail{
 				HashString:      "8C40B11BC4A242A6F0EEA187A37304CF7BB5DEC6E7DD0B6A912EE28E2B6F90B9",
@@ -274,7 +274,7 @@ func TestChain_FetchTransactionDetail(t *testing.T) {
 		},
 		{
 			name:    "terra mainnet luna normal succeed tx",
-			rpcInfo: rpcs.terraProd,
+			rpcInfo: rpcs.luncProd,
 			hash:    "19771A22934641DBD3D347DCCAE939DAC37F39ABD88005AA735B8AAEA78599BA",
 			wantDetail: &base.TransactionDetail{
 				HashString:      "19771A22934641DBD3D347DCCAE939DAC37F39ABD88005AA735B8AAEA78599BA",
@@ -288,7 +288,7 @@ func TestChain_FetchTransactionDetail(t *testing.T) {
 		},
 		{
 			name:    "terra mainnet ust normal failured tx",
-			rpcInfo: rpcs.terraProd,
+			rpcInfo: rpcs.luncProd,
 			hash:    "25ACF16526D3A4DEE5FE7C5CCEB597B5691134647829AD30CA1E36EDBEAC32B6",
 			wantDetail: &base.TransactionDetail{
 				HashString:      "25ACF16526D3A4DEE5FE7C5CCEB597B5691134647829AD30CA1E36EDBEAC32B6",

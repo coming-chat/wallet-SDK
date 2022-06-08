@@ -36,3 +36,52 @@ const (
 	// 80000
 	TerraGasLimitDefault = "80000"
 )
+
+type GradedGasPrice struct {
+	Low     string
+	Average string
+	High    string
+}
+
+type KnownTokenInfo struct {
+	Cointype int64
+	Prefix   string
+	Denom    string
+	GasPrice *GradedGasPrice
+	GasLimit string
+}
+
+var (
+	CosmosAtom = &KnownTokenInfo{
+		Cointype: 118,
+		Prefix:   "cosmos",
+		Denom:    "uatom",
+		GasPrice: &GradedGasPrice{
+			Low:     "0.01",
+			Average: "0.025",
+			High:    "0.04",
+		},
+		GasLimit: "100000",
+	}
+	TerraLunc = &KnownTokenInfo{
+		Cointype: 330,
+		Prefix:   "terra",
+		Denom:    "uluna",
+		GasPrice: &GradedGasPrice{"10", "10", "10"},
+		GasLimit: "80000",
+	}
+	TerraUst = &KnownTokenInfo{
+		Cointype: 330,
+		Prefix:   "terra",
+		Denom:    "uusd",
+		GasPrice: &GradedGasPrice{"0.25", "0.25", "0.25"},
+		GasLimit: "80000",
+	}
+	// TerraLuna = &KnownTokenInfo{
+	// 	Cointype: 330,
+	// 	Prefix:   "terra",
+	// 	Denom:    "uluna",
+	// 	GasPrice: &GradedGasPrice{"10", "10", "10"},
+	// 	GasLimit: "80000",
+	// }
+)
