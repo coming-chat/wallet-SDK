@@ -72,14 +72,14 @@ func (a *Account) PrivateKeyHex() (string, error) {
 // Is deocde from address
 // @return publicKey data
 func (a *Account) PublicKey() []byte {
-	pub, _ := types.HexDecodeString(a.address)
-	return pub
+	return crypto.FromECDSAPub(&a.privateKeyECDSA.PublicKey)
 }
 
 // The ethereum public key is same as address in coming
 // @return publicKey string that will start with 0x.
 func (a *Account) PublicKeyHex() string {
-	return a.address
+	bytes := crypto.FromECDSAPub(&a.privateKeyECDSA.PublicKey)
+	return types.HexEncodeToString(bytes)
 }
 
 // The ethereum address is same as public key in coming
@@ -115,4 +115,23 @@ func (a *Account) SignHex(messageHex string, password string) (*base.OptionalStr
 func SignHashForMsg(data string) []byte {
 	msg := fmt.Sprintf("\x19Ethereum Signed Message:\n%d%s", len(data), data)
 	return crypto.Keccak256([]byte(msg))
+}
+
+func VerifySignature(pubkey, message, signedMsg string) bool {
+	pubBytes, err := types.HexDecodeString(pubkey)
+	if err != nil {
+		return false
+	}
+	originBytes, err := types.HexDecodeString(message)
+	if err != nil {
+		return false
+	}
+	originMsgHash := SignHashForMsg(string(originBytes))
+
+	signedBytes, err := types.HexDecodeString(signedMsg)
+	if err != nil {
+		return false
+	}
+	signedBytes = signedBytes[:len(signedBytes)-1]
+	return crypto.VerifySignature(pubBytes, originMsgHash, signedBytes)
 }

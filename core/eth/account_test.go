@@ -152,3 +152,24 @@ func TestETHWallet_Privatekey_Publickey_Address(t *testing.T) {
 	address := crypto.PubkeyToAddress(*publicKeyECDSA)
 	t.Log("address = ", address.Hex())
 }
+
+func TestSignAndVerify(t *testing.T) {
+	account, _ := NewAccountWithMnemonic(accountCase1.mnemonic)
+
+	message := "fjppdipsidjsosososofdafjiowewsosap"
+	msgbytes := []byte(message)
+	messageHex := types.HexEncodeToString(msgbytes)
+
+	signedString, err := account.SignHex(messageHex, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// ============================================
+	valid := VerifySignature(account.PublicKeyHex(), messageHex, signedString.Value)
+	if valid {
+		t.Log("Sign & Verify succeed!")
+	} else {
+		t.Fatal("Sign & Verify failured.")
+	}
+}
