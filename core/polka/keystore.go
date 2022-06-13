@@ -2,6 +2,7 @@ package polka
 
 import (
 	"bytes"
+	"crypto/rand"
 	"encoding/base64"
 	"encoding/hex"
 	"log"
@@ -215,7 +216,11 @@ func (kg *keyring) sign(t *merlin.Transcript) ([]byte, error) {
 	t.AppendMessage([]byte("proto-name"), []byte("Schnorr-sig"))
 	t.AppendMessage([]byte("sign:pk"), pubByte[:])
 
-	_, err := t.BuildRNG().ReKeyWithWitnessBytes([]byte("signing"), kg.privateKey[32:]).Read(rByte[:])
+	tRng, err := t.BuildRNG().ReKeyWithWitnessBytes([]byte("signing"), kg.privateKey[32:]).Finalize(rand.Reader)
+	if err != nil {
+		return nil, err
+	}
+	_, err = tRng.Read(rByte[:])
 	if err != nil {
 		return nil, err
 	}
@@ -239,7 +244,7 @@ func (kg *keyring) sign(t *merlin.Transcript) ([]byte, error) {
 
 	// s = kx + r
 	s := x.Multiply(x, k).Add(x, r)
-
+	r.Zero()
 	signature := &schnorrkel.Signature{R: R, S: s}
 	signatureByte := signature.Encode()
 
