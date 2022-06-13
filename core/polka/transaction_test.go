@@ -534,3 +534,75 @@ func TestTransaction_GetSignData(t1 *testing.T) {
 // 		t.Fatal(err)
 // 	}
 // }
+
+func TestTx_NewExtrinsics(t1 *testing.T) {
+	type fields struct {
+		metadata *types.Metadata
+	}
+	type args struct {
+		call string
+		args []interface{}
+	}
+	chain, err := rpcs.chainxTest.Chain()
+	if err != nil {
+		t1.Error(err)
+	}
+	metadata, err := chain.GetMetadataString()
+	if err != nil {
+		t1.Error(err)
+	}
+	t, err := NewTx(metadata)
+	if err != nil {
+		t1.Error(err)
+	}
+	accountID, err := addressStringToMultiAddress("5Gc8bR5p9JeCY3dpCvdonRWn79UxhKycDb8aC7xfqQPqWhr8")
+	if err != nil {
+		t1.Error(err)
+	}
+	newCall, err := types.NewCall(t.metadata, "Balances.transfer", accountID, types.NewUCompactFromUInt(100000000))
+	if err != nil {
+		return
+	}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *Transaction
+		wantErr bool
+	}{
+		{
+			name: "transfer1",
+			args: args{
+				call: "Utility.batch_all",
+				args: []interface{}{
+					[]types.Call{newCall, newCall, newCall, newCall, newCall},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t1.Run(tt.name, func(t1 *testing.T) {
+			got, err := t.NewExtrinsics(tt.args.call, tt.args.args...)
+			data, err := chain.GetSignData(got, "5Gc8bR5p9JeCY3dpCvdonRWn79UxhKycDb8aC7xfqQPqWhr8")
+			if err != nil {
+				t1.Error(err)
+			}
+			t1.Log(ByteToHex(data))
+			withKeystore, err := NewAccountWithKeystore(keystore1, password1, 44)
+			if err != nil {
+				t1.Error(err)
+			}
+			signedData, err := withKeystore.Sign(data, password1)
+			if err != nil {
+				t1.Error(err)
+			}
+			t1.Log(ByteToHex(signedData))
+			tx, err := got.GetTx(withKeystore.PublicKey(), signedData)
+			if err != nil {
+				t1.Error(err)
+			}
+			t1.Log(tx)
+		})
+	}
+}

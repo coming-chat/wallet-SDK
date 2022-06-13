@@ -1,6 +1,10 @@
 package wallet
 
-import "testing"
+import (
+	"github.com/ChainSafe/go-schnorrkel"
+	"github.com/tyler-smith/go-bip39"
+	"testing"
+)
 
 // const (
 // 	testSecretPhrase = "rookie october miracle crisp invest grace birth exile black attitude bitter napkin"
@@ -17,4 +21,19 @@ func TestGenMnemonic(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Logf("mnemonic: %s", mnemonic)
+}
+
+func TestSeed(t *testing.T) {
+	mnemonic, err := GenMnemonic()
+	if err != nil {
+		return
+	}
+	t.Log(mnemonic)
+	seed := bip39.NewSeed(mnemonic, "")
+	fromMnemonic, err := schnorrkel.SeedFromMnemonic(mnemonic, "")
+	if err != nil {
+		return
+	}
+	t.Log(seed)
+	t.Log(fromMnemonic)
 }
