@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/hex"
+	"golang.org/x/crypto/blake2b"
 	"log"
 
 	"github.com/ChainSafe/go-schnorrkel"
@@ -63,6 +64,10 @@ func (k *keystore) Sign(msg []byte, password string) ([]byte, error) {
 	kr, err := decodeKeystore(k, password)
 	if err != nil {
 		return nil, err
+	}
+	if len(msg) > 256 {
+		h := blake2b.Sum256(msg)
+		msg = h[:]
 	}
 	signature, err := kr.sign(signingContext(msg))
 	if err != nil {
