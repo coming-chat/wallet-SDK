@@ -102,10 +102,10 @@ func SuggestFeeRate() (*FeeRate, error) {
 		low = 1
 	}
 	if avg, ok = respDict["halfHourFee"].(float64); !ok {
-		avg = 1
+		avg = low
 	}
 	if high, ok = respDict["fastestFee"].(float64); !ok {
-		high = 1
+		high = avg
 	}
 	return &FeeRate{
 		Low:     int64(low),
