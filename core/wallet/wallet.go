@@ -6,6 +6,7 @@ import (
 
 	"github.com/coming-chat/wallet-SDK/core/btc"
 	"github.com/coming-chat/wallet-SDK/core/cosmos"
+	"github.com/coming-chat/wallet-SDK/core/doge"
 	"github.com/coming-chat/wallet-SDK/core/eth"
 	"github.com/coming-chat/wallet-SDK/core/polka"
 )
@@ -21,6 +22,7 @@ type Wallet struct {
 	bitcoinAccounts map[string]*btc.Account
 	ethereumAccount *eth.Account
 	cosmosAccounts  map[string]*cosmos.Account
+	dogeAccount     *doge.Account
 }
 
 func NewWalletWithMnemonic(mnemonic string) (*Wallet, error) {
@@ -136,6 +138,24 @@ func (w *Wallet) GetOrCreateCosmosTypeAccount(cointype int64, addressPrefix stri
 
 	// save to cache
 	w.cosmosAccounts[key] = account
+	return account, err
+}
+
+func (w *Wallet) GetOrCreateDogeAccount() (*doge.Account, error) {
+	cache := w.dogeAccount
+	if cache != nil {
+		return cache, nil
+	}
+	if len(w.Mnemonic) <= 0 {
+		return nil, ErrInvalidMnemonic
+	}
+
+	account, err := doge.NewAccountWithMnemonic(w.Mnemonic)
+	if err != nil {
+		return nil, err
+	}
+	// save to cache
+	w.dogeAccount = account
 	return account, err
 }
 
