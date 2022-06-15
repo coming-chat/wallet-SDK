@@ -4,6 +4,7 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 )
@@ -17,14 +18,13 @@ func NewUtil() *Util {
 
 // MARK - Implement the protocol wallet.Util
 
-// The ethereum public key is same as address in coming
 func (u *Util) EncodePublicKeyToAddress(publicKey string) (string, error) {
-	return publicKey, nil
+	return EncodePublicKeyToAddress(publicKey)
 }
 
-// The ethereum public key is same as address in coming
+// Warning: eth cannot support decode address to public key
 func (u *Util) DecodeAddressToPublicKey(address string) (string, error) {
-	return address, nil
+	return "", errors.New("eth cannot support decode address to public key")
 }
 
 // It will check based on eip55 rules
@@ -34,14 +34,22 @@ func (u *Util) IsValidAddress(address string) bool {
 
 // MARK - like wallet.Util
 
-// The ethereum public key is same as address in coming
 func EncodePublicKeyToAddress(publicKey string) (string, error) {
-	return publicKey, nil
+	bytes, err := types.HexDecodeString(publicKey)
+	if err != nil {
+		return "", err
+	}
+	publicKeyECDSA, err := crypto.UnmarshalPubkey(bytes)
+	if err != nil {
+		return "", err
+	}
+	address := crypto.PubkeyToAddress(*publicKeyECDSA)
+	return address.String(), nil
 }
 
-// The ethereum public key is same as address in coming
+// Warning: eth cannot support decode address to public key
 func DecodeAddressToPublicKey(address string) (string, error) {
-	return address, nil
+	return "", errors.New("eth cannot support decode address to public key")
 }
 
 // It will check based on eip55 rules

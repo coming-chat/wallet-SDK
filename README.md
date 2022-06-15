@@ -7,7 +7,7 @@
 | pri/pub key & address | ✅     | ✅      | ✅   |✅   |
 | multi network         | ✅     | ✅      | ✅   |✅   |
 | publicKey to address  | ✅     | ✅      | ✅   |✅   |
-| address to publicKey  | ❌     | ✅      | ✅   |❌   |
+| address to publicKey  | ❌     | ❌      | ✅   |❌   |
 | sign data             | ☑️    | ☑️     | ✅   |☑️   |
 |                       |         |          |       |   |
 | query balance | ✅ | ✅ | ✅ |✅   |
