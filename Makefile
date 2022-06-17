@@ -34,3 +34,18 @@ packageAll:
 	@cd ${outdir} && mkdir ${andZipName}.${v} && mv -f wallet.aar wallet-sources.jar ${andZipName}.${v}
 	@cd ${outdir} && zip -ry ${andZipName}.${v}.zip ${andZipName}.${v}
 	@cd ${outdir} && open .
+
+# 给打包机打包归档用的
+# ❯ ssh -T coming@192.168.3.84 << EOF
+# ❯ cdsdk_wallet
+# ❯ make archiveSDK v=0.0.2
+# ❯ EOF
+archiveSDK:
+	@git reset --hard && git clean -id && git checkout -f main && git pull --rebase
+	@make packageAll ${v}
+	@cd ${outdir} && rm -rf ${v} && mkdir ${v}
+	@cd ${outdir} && mv ${andZipName}.${v}.zip ${iosZipName}.${v}.zip ${v}
+	@cd ${outdir}/${v} && echo `git log -1` > info.md
+	@cd ${outdir}/${v} && echo "\n归档时间: " >> info.md
+	@cd ${outdir}/${v} && echo `date +%FT%T%z` >> info.md
+	@say '归档完成'
