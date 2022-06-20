@@ -22,7 +22,7 @@ type Wallet struct {
 	bitcoinAccounts map[string]*btc.Account
 	ethereumAccount *eth.Account
 	cosmosAccounts  map[string]*cosmos.Account
-	dogeAccount     *doge.Account
+	dogeAccounts    map[string]*doge.Account
 }
 
 func NewWalletWithMnemonic(mnemonic string) (*Wallet, error) {
@@ -141,21 +141,23 @@ func (w *Wallet) GetOrCreateCosmosTypeAccount(cointype int64, addressPrefix stri
 	return account, err
 }
 
-func (w *Wallet) GetOrCreateDogeAccount() (*doge.Account, error) {
-	cache := w.dogeAccount
+func (w *Wallet) GetOrCreateDogeAccount(chainnet string) (*doge.Account, error) {
+	if w.dogeAccounts == nil {
+		w.dogeAccounts = make(map[string]*doge.Account)
+	}
+	cache := w.dogeAccounts[chainnet]
 	if cache != nil {
 		return cache, nil
 	}
 	if len(w.Mnemonic) <= 0 {
 		return nil, ErrInvalidMnemonic
 	}
-
-	account, err := doge.NewAccountWithMnemonic(w.Mnemonic)
+	account, err := doge.NewAccountWithMnemonic(w.Mnemonic, chainnet)
 	if err != nil {
 		return nil, err
 	}
 	// save to cache
-	w.dogeAccount = account
+	w.dogeAccounts[chainnet] = account
 	return account, err
 }
 

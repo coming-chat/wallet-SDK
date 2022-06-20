@@ -13,9 +13,10 @@ type Account struct {
 	privateKey []byte
 	publicKey  []byte
 	address    string
+	Chainnet   string
 }
 
-func NewAccountWithMnemonic(mnemonic string) (*Account, error) {
+func NewAccountWithMnemonic(mnemonic, chainnet string) (*Account, error) {
 	seed, err := bip39.NewSeedWithErrorChecking(mnemonic, "")
 	if err != nil {
 		return nil, err
@@ -25,7 +26,7 @@ func NewAccountWithMnemonic(mnemonic string) (*Account, error) {
 	priData := pri.Serialize()
 	pubData := pub.SerializeUncompressed()
 
-	address, err := EncodePublicDataToAddress(pubData)
+	address, err := EncodePublicDataToAddress(pubData, chainnet)
 	if err != nil {
 		return nil, err
 	}
@@ -34,6 +35,7 @@ func NewAccountWithMnemonic(mnemonic string) (*Account, error) {
 		privateKey: priData,
 		publicKey:  pubData,
 		address:    address,
+		Chainnet:   chainnet,
 	}, nil
 }
 
@@ -78,7 +80,7 @@ func (a *Account) SignHex(messageHex string, password string) (*base.OptionalStr
 
 // @param publicKey can start with 0x or not.
 func (a *Account) EncodePublicKeyToAddress(publicKey string) (string, error) {
-	return EncodePublicKeyToAddress(publicKey)
+	return EncodePublicKeyToAddress(publicKey, a.Chainnet)
 }
 
 // @return publicKey that will start with 0x.
@@ -87,5 +89,5 @@ func (a *Account) DecodeAddressToPublicKey(address string) (string, error) {
 }
 
 func (a *Account) IsValidAddress(address string) bool {
-	return IsValidAddress(address)
+	return IsValidAddress(address, a.Chainnet)
 }
