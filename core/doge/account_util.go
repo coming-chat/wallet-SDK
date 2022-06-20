@@ -11,8 +11,12 @@ type Util struct {
 	Chainnet string
 }
 
-func NewUtilWithChainnet(chainnet string) *Util {
-	return &Util{Chainnet: chainnet}
+func NewUtilWithChainnet(chainnet string) (*Util, error) {
+	if isValidChain(chainnet) {
+		return &Util{Chainnet: chainnet}, nil
+	} else {
+		return nil, ErrUnsupportedChain
+	}
 }
 
 // MARK - Implement the protocol Util
