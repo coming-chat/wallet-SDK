@@ -9,6 +9,27 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
+func TestChain_EstimateGasLimitLayer2(t *testing.T) {
+	l2gasPrice := big.NewInt(1e6)
+
+	add := common.HexToAddress("0")
+	msg := ethereum.CallMsg{
+		From:     add,
+		To:       &add,
+		Value:    big.NewInt(1e14),
+		GasPrice: l2gasPrice,
+		Data:     nil,
+	}
+
+	chain := rpcs.optimismProd.Chain()
+	gas, err := chain.EstimateGasLimitLayer2(&CallMsg{msg: msg})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log(gas, gas.GasFee())
+}
+
 func TestChain_SuggestGasPriceEIP1559(t *testing.T) {
 	tests := []struct {
 		name    string
