@@ -115,7 +115,7 @@ func TestChain_FetchTransactionDetail(t *testing.T) {
 			want: &base.TransactionDetail{
 				HashString:      "0x13dfd70e710e8451cf88cf8bd55b02a525a45efe028309a019defe5ffc9d5e83",
 				Amount:          "38919826",
-				EstimateFees:    "36096000000",
+				EstimateFees:    "202882647584248",
 				FromAddress:     "0x8F1c69De5E086BA1E441707B9cbD94860529beE4",
 				ToAddress:       "0xE56BD3FfC787942F8aB9cf20D2D650E3184aCCc3",
 				Status:          base.TransactionStatusFailure,
@@ -134,7 +134,7 @@ func TestChain_FetchTransactionDetail(t *testing.T) {
 				ToAddress:       "0x6cd2Bf22B3CeaDfF6B8C226487265d81164396C5",
 				Status:          base.TransactionStatusFailure,
 				FinishTimestamp: 1649840877,
-				FailureMessage:  "out of gas",
+				FailureMessage:  "err: insufficient funds for gas * price + value: address 0xaa25Aa7a19f9c426E07dee59b12f944f4d9f1DD3 have 0 want 378000000000000 (supplied gas 21000)",
 			},
 		},
 	}
