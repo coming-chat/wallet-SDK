@@ -2,6 +2,7 @@ package eth
 
 import (
 	"context"
+	"encoding/json"
 	"math/big"
 	"strconv"
 	"strings"
@@ -11,6 +12,7 @@ import (
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
 )
 
@@ -98,7 +100,15 @@ func (e *EthChain) FetchTransactionDetail(hashString string) (detail *base.Trans
 	} else {
 		detail.Status = base.TransactionStatusSuccess
 	}
-	gasFeeInt = big.NewInt(0).Mul(msg.GasPrice(), big.NewInt(0).SetUint64(receipt.GasUsed))
+
+	effectiveGasPrice := msg.GasPrice()
+	if receipt.EffectiveGasPrice != nil {
+		effectiveGasPrice = receipt.EffectiveGasPrice
+	}
+	gasFeeInt = big.NewInt(0).Mul(effectiveGasPrice, big.NewInt(0).SetUint64(receipt.GasUsed))
+	if receipt.L1Fee != nil {
+		gasFeeInt = gasFeeInt.Add(gasFeeInt, receipt.L1Fee)
+	}
 	detail.EstimateFees = gasFeeInt.String()
 	detail.FinishTimestamp = int64(blockHeader.Time)
 
@@ -218,18 +228,21 @@ func (e *EthChain) TransactionByHash(txHash string) (*TransactionByHashResult, e
 // bloomFilter：交易信息日志检索
 // logInfoList: 交易日志集合
 // postTxState: 交易执行后的状态，1 表示成功，0表示失败
-func (e *EthChain) TransactionReceiptByHash(txHash string) (*types.Receipt, error) {
+func (e *EthChain) TransactionReceiptByHash(txHash string) (*customReceipt, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), e.timeout)
 	defer cancel()
-	receipt, err := e.RemoteRpcClient.TransactionReceipt(ctx, common.HexToHash(txHash))
-	if err != nil {
-		return nil, err
-	}
 
-	return receipt, nil
+	var r *customReceipt
+	err := e.RpcClient.CallContext(ctx, &r, "eth_getTransactionReceipt", txHash)
+	if err == nil {
+		if r == nil {
+			return nil, ethereum.NotFound
+		}
+	}
+	return r, err
 }
 
-func (e *EthChain) WaitConfirm(txHash string, interval time.Duration) *types.Receipt {
+func (e *EthChain) WaitConfirm(txHash string, interval time.Duration) *customReceipt {
 	timer := time.NewTimer(0)
 	for range timer.C {
 		transRes, err := e.TransactionByHash(txHash)
@@ -249,5 +262,38 @@ func (e *EthChain) WaitConfirm(txHash string, interval time.Duration) *types.Rec
 		timer.Stop()
 		return receipt
 	}
+	return nil
+}
+
+// customReceipt is inherit from eth/core types.Receipt, and added some necessary properties
+type customReceipt struct {
+	types.Receipt
+
+	// Optimism Layer2 gas info
+	L1Fee *big.Int `json:"l1Fee"`
+
+	// Arbitrum Layer2 gas info
+	EffectiveGasPrice *big.Int `json:"effectiveGasPrice"`
+}
+
+func (r *customReceipt) UnmarshalJSON(data []byte) error {
+	err := r.Receipt.UnmarshalJSON(data)
+	if err != nil {
+		return err
+	}
+	// If the basic eth receipt unmarshal is successed, The latter should not return an error
+
+	type Layer2Addtional struct {
+		L1Fee             *hexutil.Big `json:"l1Fee"`
+		EffectiveGasPrice *hexutil.Big `json:"effectiveGasPrice"`
+	}
+	var layer2Gas Layer2Addtional
+	err = json.Unmarshal(data, &layer2Gas)
+	if err != nil {
+		return nil // should not return an error
+	}
+	r.L1Fee = (*big.Int)(layer2Gas.L1Fee)
+	r.EffectiveGasPrice = (*big.Int)(layer2Gas.EffectiveGasPrice)
+
 	return nil
 }

@@ -8,6 +8,23 @@ import (
 	"github.com/coming-chat/wallet-SDK/core/base"
 )
 
+func TestChainDetail(t *testing.T) {
+	hash := "0xd9efdb33723288e16c2a552f1699d8daddfdbaf4c79cec0fc95d2dcc9025da70"
+	chain := rpcs.arbitrumProd.Chain()
+
+	// hash := "0xa2b05fc52748ee21845c8596263d75d85f54c522575be2e399235d144cd5a153"
+	// chain := rpcs.optimismProd.Chain()
+
+	// hash := "0x740cc93867cd3b84928ba9ae65a6511368f856e180e82fbf2649cca540d6db2c"
+	// chain := rpcs.optimismTest.Chain()
+
+	detail, err := chain.FetchTransactionDetail(hash)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(detail)
+}
+
 func TestChain_BalanceOfAddress(t *testing.T) {
 	addressBlackHole := "0x0000000000000000000000000000000000000000"
 	tests := []struct {
@@ -115,7 +132,7 @@ func TestChain_FetchTransactionDetail(t *testing.T) {
 			want: &base.TransactionDetail{
 				HashString:      "0x13dfd70e710e8451cf88cf8bd55b02a525a45efe028309a019defe5ffc9d5e83",
 				Amount:          "38919826",
-				EstimateFees:    "36096000000",
+				EstimateFees:    "202882647584248",
 				FromAddress:     "0x8F1c69De5E086BA1E441707B9cbD94860529beE4",
 				ToAddress:       "0xE56BD3FfC787942F8aB9cf20D2D650E3184aCCc3",
 				Status:          base.TransactionStatusFailure,
@@ -134,7 +151,7 @@ func TestChain_FetchTransactionDetail(t *testing.T) {
 				ToAddress:       "0x6cd2Bf22B3CeaDfF6B8C226487265d81164396C5",
 				Status:          base.TransactionStatusFailure,
 				FinishTimestamp: 1649840877,
-				FailureMessage:  "out of gas",
+				FailureMessage:  "err: insufficient funds for gas * price + value: address 0xaa25Aa7a19f9c426E07dee59b12f944f4d9f1DD3 have 0 want 378000000000000 (supplied gas 21000)",
 			},
 		},
 	}
