@@ -8,6 +8,23 @@ import (
 	"github.com/coming-chat/wallet-SDK/core/base"
 )
 
+func TestChainDetail(t *testing.T) {
+	hash := "0xd9efdb33723288e16c2a552f1699d8daddfdbaf4c79cec0fc95d2dcc9025da70"
+	chain := rpcs.arbitrumProd.Chain()
+
+	// hash := "0xa2b05fc52748ee21845c8596263d75d85f54c522575be2e399235d144cd5a153"
+	// chain := rpcs.optimismProd.Chain()
+
+	// hash := "0x740cc93867cd3b84928ba9ae65a6511368f856e180e82fbf2649cca540d6db2c"
+	// chain := rpcs.optimismTest.Chain()
+
+	detail, err := chain.FetchTransactionDetail(hash)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(detail)
+}
+
 func TestChain_BalanceOfAddress(t *testing.T) {
 	addressBlackHole := "0x0000000000000000000000000000000000000000"
 	tests := []struct {

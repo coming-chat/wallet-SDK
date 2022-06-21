@@ -100,7 +100,12 @@ func (e *EthChain) FetchTransactionDetail(hashString string) (detail *base.Trans
 	} else {
 		detail.Status = base.TransactionStatusSuccess
 	}
-	gasFeeInt = big.NewInt(0).Mul(msg.GasPrice(), big.NewInt(0).SetUint64(receipt.GasUsed))
+
+	effectiveGasPrice := msg.GasPrice()
+	if receipt.EffectiveGasPrice != nil {
+		effectiveGasPrice = receipt.EffectiveGasPrice
+	}
+	gasFeeInt = big.NewInt(0).Mul(effectiveGasPrice, big.NewInt(0).SetUint64(receipt.GasUsed))
 	if receipt.L1Fee != nil {
 		gasFeeInt = gasFeeInt.Add(gasFeeInt, receipt.L1Fee)
 	}
@@ -266,6 +271,9 @@ type customReceipt struct {
 
 	// Optimism Layer2 gas info
 	L1Fee *big.Int `json:"l1Fee"`
+
+	// Arbitrum Layer2 gas info
+	EffectiveGasPrice *big.Int `json:"effectiveGasPrice"`
 }
 
 func (r *customReceipt) UnmarshalJSON(data []byte) error {
@@ -276,7 +284,8 @@ func (r *customReceipt) UnmarshalJSON(data []byte) error {
 	// If the basic eth receipt unmarshal is successed, The latter should not return an error
 
 	type Layer2Addtional struct {
-		L1Fee *hexutil.Big `json:"l1Fee"`
+		L1Fee             *hexutil.Big `json:"l1Fee"`
+		EffectiveGasPrice *hexutil.Big `json:"effectiveGasPrice"`
 	}
 	var layer2Gas Layer2Addtional
 	err = json.Unmarshal(data, &layer2Gas)
@@ -284,6 +293,7 @@ func (r *customReceipt) UnmarshalJSON(data []byte) error {
 		return nil // should not return an error
 	}
 	r.L1Fee = (*big.Int)(layer2Gas.L1Fee)
+	r.EffectiveGasPrice = (*big.Int)(layer2Gas.EffectiveGasPrice)
 
 	return nil
 }
