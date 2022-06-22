@@ -2,13 +2,11 @@ package eth
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"math/big"
 	"strconv"
 
 	"github.com/coming-chat/wallet-SDK/core/base"
-	"github.com/ethereum/go-ethereum/params"
 )
 
 type GasPrice struct {
@@ -61,36 +59,6 @@ func (g *GasPrice) UseRate(priorityRate, maxFeeRate float64) *GasPrice {
 		MaxPriorityFee:     maxPriorityInt.String(),
 		MaxFee:             maxFeeInt.String(),
 	}
-}
-
-type OptimismLayer2Gas struct {
-	L1GasLimit string
-	L1GasPrice string
-	L2GasLimit string
-	L2GasPrice string
-}
-
-// l1GasLimit * l1GasPrice + l2Gaslimit * l2GasPrice
-func (g *OptimismLayer2Gas) GasFee() string {
-	l1Limit, ok := big.NewInt(0).SetString(g.L1GasLimit, 10)
-	if !ok {
-		l1Limit = big.NewInt(0)
-	}
-	l1Price, ok := big.NewInt(0).SetString(g.L1GasPrice, 10)
-	if !ok {
-		l1Price = big.NewInt(0)
-	}
-	l2Limit, ok := big.NewInt(0).SetString(g.L2GasLimit, 10)
-	if !ok {
-		l2Limit = big.NewInt(0)
-	}
-	l2Price, ok := big.NewInt(0).SetString(g.L2GasPrice, 10)
-	if !ok {
-		l2Price = big.NewInt(0)
-	}
-	l1Fee := big.NewInt(0).Mul(l1Limit, l1Price)
-	l2Fee := big.NewInt(0).Mul(l2Limit, l2Price)
-	return big.NewInt(0).Add(l1Fee, l2Fee).String()
 }
 
 // The gas price use average grade default.
@@ -158,55 +126,4 @@ func (c *Chain) EstimateGasLimit(msg *CallMsg) (gas *base.OptionalString, err er
 	gasStr := strconv.FormatUint(gasLimit, 10)
 
 	return &base.OptionalString{Value: gasStr}, nil
-}
-
-func (c *Chain) EstimateGasLimitLayer2(msg *CallMsg) (*OptimismLayer2Gas, error) {
-	l2GasLimitString, err := c.EstimateGasLimit(msg)
-	if err != nil {
-		return nil, err
-	}
-	l2GasPrice := msg.msg.GasPrice
-
-	// We need fetch the ethereum mainnet Gas Price
-	ethMainRpc := "https://geth-mainnet.coming.chat"
-	l1GasPriceString, err := NewChainWithRpc(ethMainRpc).SuggestGasPrice()
-	if err != nil {
-		return nil, err
-	}
-
-	data, err := json.Marshal(msg.msg)
-	if err != nil {
-		return nil, err
-	}
-	l1GasLimit := calculateL1GasLimit(data, overhead)
-
-	return &OptimismLayer2Gas{
-		L1GasLimit: l1GasLimit.String(),
-		L1GasPrice: l1GasPriceString.Value,
-		L2GasLimit: l2GasLimitString.Value,
-		L2GasPrice: l2GasPrice.String(),
-	}, nil
-}
-
-const overhead uint64 = 200 * params.TxDataNonZeroGasEIP2028
-
-func calculateL1GasLimit(data []byte, overhead uint64) *big.Int {
-	zeroes, ones := zeroesAndOnes(data)
-	zeroesCost := zeroes * params.TxDataZeroGas
-	onesCost := ones * params.TxDataNonZeroGasEIP2028
-	gasLimit := zeroesCost + onesCost + overhead
-	return new(big.Int).SetUint64(gasLimit)
-}
-
-func zeroesAndOnes(data []byte) (uint64, uint64) {
-	var zeroes uint64
-	var ones uint64
-	for _, byt := range data {
-		if byt == 0 {
-			zeroes++
-		} else {
-			ones++
-		}
-	}
-	return zeroes, ones
 }

@@ -91,6 +91,15 @@ func (t *Erc20Token) BalanceOfAddress(address string) (*base.Balance, error) {
 	}, nil
 }
 
+func (t *Erc20Token) EstimateGasFeeLayer2(msg *CallMsg) (*OptimismLayer2Gas, error) {
+	data, err := EncodeErc20Transfer(msg.GetTo(), msg.GetValue())
+	if err != nil {
+		return nil, err
+	}
+	msg.SetData(data)
+	return t.Token.EstimateGasFeeLayer2(msg)
+}
+
 func (t *Erc20Token) EstimateGasLimit(fromAddress, receiverAddress, gasPrice, amount string) (string, error) {
 	msg := NewCallMsg()
 	msg.SetFrom(fromAddress)

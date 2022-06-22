@@ -66,7 +66,7 @@ func NewCallMsg() *CallMsg {
 }
 
 func (msg *CallMsg) GetFrom() string     { return msg.msg.From.String() }
-func (msg *CallMsg) GetGas() int64       { return int64(msg.msg.Gas) }
+func (msg *CallMsg) GetGasLimit() string { return strconv.FormatUint(msg.msg.Gas, 10) }
 func (msg *CallMsg) GetGasPrice() string { return msg.msg.GasPrice.String() }
 func (msg *CallMsg) GetValue() string    { return msg.msg.Value.String() }
 func (msg *CallMsg) GetData() []byte     { return msg.msg.Data }
@@ -74,7 +74,10 @@ func (msg *CallMsg) GetDataHex() string  { return HexType.HexEncodeToString(msg.
 func (msg *CallMsg) GetTo() string       { return msg.msg.To.String() }
 
 func (msg *CallMsg) SetFrom(address string) { msg.msg.From = common.HexToAddress(address) }
-func (msg *CallMsg) SetGas(gas int64)       { msg.msg.Gas = uint64(gas) }
+func (msg *CallMsg) SetGasLimit(gas string) {
+	i, _ := strconv.ParseUint(gas, 10, 64)
+	msg.msg.Gas = i
+}
 func (msg *CallMsg) SetGasPrice(price string) {
 	i, _ := new(big.Int).SetString(price, 10)
 	msg.msg.GasPrice = i
