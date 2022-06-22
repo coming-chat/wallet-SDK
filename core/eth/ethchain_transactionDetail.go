@@ -228,11 +228,11 @@ func (e *EthChain) TransactionByHash(txHash string) (*TransactionByHashResult, e
 // bloomFilter：交易信息日志检索
 // logInfoList: 交易日志集合
 // postTxState: 交易执行后的状态，1 表示成功，0表示失败
-func (e *EthChain) TransactionReceiptByHash(txHash string) (*customReceipt, error) {
+func (e *EthChain) TransactionReceiptByHash(txHash string) (*Receipt, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), e.timeout)
 	defer cancel()
 
-	var r *customReceipt
+	var r *Receipt
 	err := e.RpcClient.CallContext(ctx, &r, "eth_getTransactionReceipt", txHash)
 	if err == nil {
 		if r == nil {
@@ -242,7 +242,7 @@ func (e *EthChain) TransactionReceiptByHash(txHash string) (*customReceipt, erro
 	return r, err
 }
 
-func (e *EthChain) WaitConfirm(txHash string, interval time.Duration) *customReceipt {
+func (e *EthChain) WaitConfirm(txHash string, interval time.Duration) *Receipt {
 	timer := time.NewTimer(0)
 	for range timer.C {
 		transRes, err := e.TransactionByHash(txHash)
@@ -266,7 +266,7 @@ func (e *EthChain) WaitConfirm(txHash string, interval time.Duration) *customRec
 }
 
 // customReceipt is inherit from eth/core types.Receipt, and added some necessary properties
-type customReceipt struct {
+type Receipt struct {
 	types.Receipt
 
 	// Optimism Layer2 gas info
@@ -276,7 +276,7 @@ type customReceipt struct {
 	EffectiveGasPrice *big.Int `json:"effectiveGasPrice"`
 }
 
-func (r *customReceipt) UnmarshalJSON(data []byte) error {
+func (r *Receipt) UnmarshalJSON(data []byte) error {
 	err := r.Receipt.UnmarshalJSON(data)
 	if err != nil {
 		return err
