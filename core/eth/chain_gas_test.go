@@ -2,6 +2,7 @@ package eth
 
 import (
 	"math/big"
+	"strconv"
 	"testing"
 
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
@@ -10,19 +11,19 @@ import (
 )
 
 func TestChain_EstimateGasLimitLayer2(t *testing.T) {
-	l2gasPrice := big.NewInt(1e6)
+	address := "0x0000000000000000000000000000000000000000"
+	l2gasPrice := strconv.FormatInt(1e6, 10)
+	amount := strconv.FormatInt(1e14, 10)
 
-	add := common.HexToAddress("0")
-	msg := ethereum.CallMsg{
-		From:     add,
-		To:       &add,
-		Value:    big.NewInt(1e14),
-		GasPrice: l2gasPrice,
-		Data:     nil,
-	}
+	msg := CallMsg{}
+	msg.SetFrom(address)
+	msg.SetTo(address)
+	msg.SetValue(amount)
+	msg.SetGasPrice(l2gasPrice)
+	msg.SetGasLimit("21000")
 
 	chain := rpcs.optimismProd.Chain()
-	gas, err := chain.EstimateGasLimitLayer2(&CallMsg{msg: msg})
+	gas, err := chain.MainEthToken().EstimateGasFeeLayer2(&msg)
 	if err != nil {
 		t.Fatal(err)
 	}
