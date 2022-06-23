@@ -26,9 +26,20 @@ func NewEthChain() *EthChain {
 }
 
 func (e *EthChain) CreateRemote(rpcUrl string) (chain *EthChain, err error) {
+	return e.CreateRemoteWithTimeout(rpcUrl, 0)
+}
+
+// @param timeout time unit millsecond. 0 means use chain's default: 60000ms.
+func (e *EthChain) CreateRemoteWithTimeout(rpcUrl string, timeout int64) (chain *EthChain, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
 
-	ctx, cancel := context.WithTimeout(context.Background(), e.timeout)
+	var t time.Duration
+	if timeout == 0 {
+		t = e.timeout
+	} else {
+		t = time.Duration(timeout * int64(time.Millisecond))
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), t)
 	defer cancel()
 	rpcClient, err := rpc.DialContext(ctx, rpcUrl)
 	if err != nil {

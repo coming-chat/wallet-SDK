@@ -10,6 +10,16 @@ import (
 	"github.com/coming-chat/wallet-SDK/core/base"
 )
 
+type RpcReachabilityDelegate interface {
+	// A node has received a response
+	ReachabilityDidReceiveNode(tester *RpcReachability, latency *RpcLatency)
+	// A node request failed
+	ReachabilityDidFailNode(tester *RpcReachability, latency *RpcLatency)
+	// The entire network connection test task is over
+	// @param overview Overview of the results of all connection tests
+	ReachabilityDidFinish(tester *RpcReachability, overview string)
+}
+
 const reachFailedTime int64 = -1
 
 type RpcReachability struct {
@@ -19,6 +29,8 @@ type RpcReachability struct {
 	Timeout int64
 	// Time interval between two network connectivity tests (ms). default 1500ms
 	Delay int64
+
+	stoped bool
 }
 
 func NewRpcReachability() *RpcReachability {
@@ -35,9 +47,37 @@ type RpcLatency struct {
 	Height  int64  `json:"height"`
 }
 
+func (r *RpcReachability) StopConnectivity() {
+	r.stoped = true
+}
+
+// @param rpcList string of rpcs like "rpc1,rpc2,rpc3,..."
+func (r *RpcReachability) StartConnectivityDelegate(rpcList string, delegate RpcReachabilityDelegate) {
+	if delegate == nil {
+		println("You execute the method StartConnectivityDelegate() without listening for any callbacks!!! You should better set a delegate.")
+	} else {
+		r.startConnectivity(rpcList, delegate)
+	}
+}
+
 // @param rpcList string of rpcs like "rpc1,rpc2,rpc3,..."
 // @return jsonString sorted array base of tatency like "[{rpcUrl:rpc1,latency:100}, {rpcUrl:rpc2, latency:111}, ...]" latency unit is ms. -1 means the connection failed
-func (r *RpcReachability) StartConnectivityTest(rpcList string) string {
+func (r *RpcReachability) StartConnectivitySync(rpcList string) string {
+	return r.startConnectivity(rpcList, nil)
+}
+
+func (r *RpcReachability) startConnectivity(rpcList string, delegate RpcReachabilityDelegate) string {
+	r.stoped = false
+	successCall, successOk := delegate.(interface {
+		ReachabilityDidReceiveNode(tester *RpcReachability, latency *RpcLatency)
+	})
+	failCall, failOk := delegate.(interface {
+		ReachabilityDidFailNode(tester *RpcReachability, latency *RpcLatency)
+	})
+	finishCall, finishOk := delegate.(interface {
+		ReachabilityDidFinish(tester *RpcReachability, overview string)
+	})
+
 	rpcUrlList := strings.Split(rpcList, ",")
 	list := make([]interface{}, len(rpcUrlList))
 	for i, s := range rpcUrlList {
@@ -46,25 +86,35 @@ func (r *RpcReachability) StartConnectivityTest(rpcList string) string {
 	temp, _ := base.MapListConcurrent(list, func(i interface{}) (interface{}, error) {
 		var totalCost int64 = 0
 		var latestLatency *RpcLatency
-		successTimes := r.ReachCount
+		successTimes := 0
 		url := i.(string)
 		for c := 0; c < r.ReachCount; c++ {
-			latestLatency = r.latencyOf(url)
-			// fmt.Printf("... connect %v %v, cost: %v \n", c, url, cost)
-			if latestLatency.Latency == reachFailedTime {
-				successTimes--
+			if r.stoped {
+				break
+			}
+			latency, err := r.latencyOf(url)
+			// fmt.Printf("... connect %v %v, cost: %v \n", c, url, latency.Latency)
+			if err != nil {
+				if failOk {
+					failCall.ReachabilityDidFailNode(r, latency)
+				}
 			} else {
-				totalCost += latestLatency.Latency
+				if successOk {
+					successCall.ReachabilityDidReceiveNode(r, latency)
+				}
+				successTimes++
+				totalCost += latency.Latency
 			}
 			if c < r.ReachCount-1 {
 				time.Sleep(time.Duration(r.Delay * int64(time.Millisecond)))
 			}
+			latestLatency = latency
 		}
 		if successTimes == 0 {
 			latestLatency.Latency = reachFailedTime
 		} else {
 			latestLatency.Latency = totalCost / int64(successTimes)
-			// fmt.Printf("... connect finish %v, total: %v, avg: %v \n", url, totalCost, latency.Latency)
+			// fmt.Printf("... connect finish %v, total: %v, avg: %v \n", url, totalCost, latestLatency.Latency)
 		}
 		return latestLatency, nil
 	})
@@ -81,23 +131,31 @@ func (r *RpcReachability) StartConnectivityTest(rpcList string) string {
 		return ii.Latency < jj.Latency
 	})
 	data, err := json.Marshal(temp)
-	if err != nil {
-		return ""
+	res := ""
+	if err == nil {
+		res = string(data)
 	}
 
-	return string(data)
+	if finishOk {
+		finishCall.ReachabilityDidFinish(r, res)
+	}
+	return res
 }
 
 // @return latency (ms) of rpc query blockNumber. -1 means the connection failed.
-func (r *RpcReachability) latencyOf(rpc string) (l *RpcLatency) {
+func (r *RpcReachability) latencyOf(rpc string) (l *RpcLatency, err error) {
 	l = &RpcLatency{
 		RpcUrl:  rpc,
 		Latency: reachFailedTime,
 		Height:  -1,
 	}
-	chain, err := GetConnection(rpc)
+	var connectTimeout int64 = 3000
+	if r.Timeout > connectTimeout {
+		connectTimeout = r.Timeout
+	}
+	chain, err := getConnectionWithTimeout(rpc, connectTimeout)
 	if err != nil {
-		return
+		return l, err
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(r.Timeout*int64(time.Millisecond)))
@@ -106,10 +164,10 @@ func (r *RpcReachability) latencyOf(rpc string) (l *RpcLatency) {
 	height, err := chain.RemoteRpcClient.BlockNumber(ctx)
 	timeCost := time.Since(timeStart)
 	if err != nil {
-		return
+		return l, err
 	}
 
 	l.Height = int64(height)
 	l.Latency = timeCost.Milliseconds()
-	return l
+	return l, nil
 }
