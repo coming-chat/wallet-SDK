@@ -1,12 +1,19 @@
 package eth
 
-import "sync"
+import (
+	"sync"
+)
 
 var chainConnections = make(map[string]*EthChain)
 var lock sync.RWMutex
 
 // 通过 rpcUrl, 获取 eth 的连接对象
 func GetConnection(rpcUrl string) (*EthChain, error) {
+	return getConnectionWithTimeout(rpcUrl, 0)
+}
+
+// @param timeout time unit millsecond, zero instead use default.
+func getConnectionWithTimeout(rpcUrl string, timeout int64) (*EthChain, error) {
 	chain, ok := chainConnections[rpcUrl]
 	if ok {
 		return chain, nil
@@ -23,7 +30,7 @@ func GetConnection(rpcUrl string) (*EthChain, error) {
 	}
 
 	// 创建并存储
-	chain, err := NewEthChain().CreateRemote(rpcUrl)
+	chain, err := NewEthChain().CreateRemoteWithTimeout(rpcUrl, timeout)
 	if err != nil {
 		return nil, err
 	}
