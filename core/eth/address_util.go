@@ -27,7 +27,7 @@ func (u *Util) DecodeAddressToPublicKey(address string) (string, error) {
 	return "", errors.New("eth cannot support decode address to public key")
 }
 
-// It will check based on eip55 rules
+// Check if address is 40 hexadecimal characters
 func (u *Util) IsValidAddress(address string) bool {
 	return IsValidAddress(address)
 }
@@ -52,8 +52,13 @@ func DecodeAddressToPublicKey(address string) (string, error) {
 	return "", errors.New("eth cannot support decode address to public key")
 }
 
-// It will check based on eip55 rules
+// Check if address is 40 hexadecimal characters
 func IsValidAddress(address string) bool {
+	return common.IsHexAddress(address)
+}
+
+// It will check based on eip55 rules
+func IsValidEIP55Address(address string) bool {
 	eip55Address, err := TransformEIP55Address(address)
 	if err != nil {
 		return false
