@@ -64,3 +64,49 @@ func TestChain_BalanceOfAddress(t *testing.T) {
 		})
 	}
 }
+
+func TestChain_FetchTransactionDetail(t *testing.T) {
+	tests := []struct {
+		name     string
+		chain    chainInfo
+		hash     string
+		wantTime int64
+		wantErr  bool
+	}{
+		{
+			name:     "doge main",
+			chain:    chains.mainnet,
+			hash:     "7bc313903372776e1eb81d321e3fe27c9721ce8e71a9bcfee1bde6baea31b5c2",
+			wantTime: 1656058561,
+		},
+		{
+			name:     "doge main with 0x",
+			chain:    chains.mainnet,
+			hash:     "0x7bc313903372776e1eb81d321e3fe27c9721ce8e71a9bcfee1bde6baea31b5c2",
+			wantTime: 1656058561,
+		},
+		{
+			name:    "doge main error hash",
+			chain:   chains.mainnet,
+			hash:    "7bc313903372776e1eb81d321e3fe27c9721ce8e71a9bcfee1bde",
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			chain := tt.chain.Chain()
+			got, err := chain.FetchTransactionDetail(tt.hash)
+			if err != nil {
+				if !tt.wantErr {
+					t.Errorf("FetchTransactionDetail() error = %v, wantErr %v", err, tt.wantErr)
+				}
+				return
+			}
+			if got.FinishTimestamp != tt.wantTime {
+				t.Errorf("FetchTransactionDetail() got = %v, wantTime %v", got, tt.wantTime)
+			} else {
+				t.Logf("FetchTransactionDetail() got = %v, maybe you can check at %v/tx/%v", got, tt.chain.scan, tt.hash)
+			}
+		})
+	}
+}

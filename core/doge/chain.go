@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/coming-chat/wallet-SDK/pkg/httpUtil"
@@ -50,21 +52,30 @@ func (c *Chain) SendRawTransaction(signedTx string) (string, error) {
 }
 
 // Fetch transaction details through transaction hash
-// Note: The input parsing of bitcoin is very complex and the network cost is relatively high,
-// So only the status and timestamp can be queried.
 func (c *Chain) FetchTransactionDetail(hash string) (*base.TransactionDetail, error) {
-	// return fetchTransactionDetail(hash, c.Chainnet)
-	return nil, nil
+	d, err := fetchTransactionDetail(hash, c.Chainnet)
+	if err != nil {
+		return nil, err
+	} else {
+		return d.SdkDetail(), nil
+	}
 }
 
 func (c *Chain) FetchTransactionStatus(hash string) base.TransactionStatus {
-	return base.TransactionStatusNone
-	// return fetchTransactionStatus(hash, c.Chainnet)
+	d, err := fetchTransactionDetail(hash, c.Chainnet)
+	if err != nil {
+		return base.TransactionStatusFailure
+	} else {
+		return d.Status()
+	}
 }
 
 func (c *Chain) BatchFetchTransactionStatus(hashListString string) string {
-	// return sdkBatchTransactionStatus(hashListString, c.Chainnet)
-	return ""
+	hashList := strings.Split(hashListString, ",")
+	statuses, _ := base.MapListConcurrentStringToString(hashList, func(s string) (string, error) {
+		return strconv.Itoa(c.FetchTransactionStatus(s)), nil
+	})
+	return strings.Join(statuses, ",")
 }
 
 type FeeRate struct {

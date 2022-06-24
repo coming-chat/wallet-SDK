@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/coming-chat/wallet-SDK/pkg/httpUtil"
@@ -32,7 +33,6 @@ func queryBalance(address, chainnet string) (b *base.Balance, err error) {
 	if err != nil {
 		return
 	}
-
 	if response.Code != http.StatusOK {
 		return b, fmt.Errorf("code: %d, body: %s", response.Code, string(response.Body))
 	}
@@ -48,4 +48,28 @@ func queryBalance(address, chainnet string) (b *base.Balance, err error) {
 	b.Total = strconv.FormatUint(balance.Balance, 10)
 	b.Usable = b.Total
 	return b, nil
+}
+
+func fetchTransactionDetail(hash, chainnet string) (d *Transaction, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
+
+	restUrl, err := restUrlOf(chainnet)
+	if err != nil {
+		return
+	}
+
+	// https://api.blockcypher.com/v1/doge/main/txs/7bc313903372776e1eb81d321e3fe27c9721ce8e71a9bcfee1bde6baea31b5c2
+	hash = strings.TrimPrefix(hash, "0x")
+	url := fmt.Sprintf("%v/txs/%v", restUrl, hash)
+	response, err := httpUtil.Request(http.MethodGet, url, nil, nil)
+	if err != nil {
+		return
+	}
+	if response.Code != http.StatusOK {
+		return nil, fmt.Errorf("code: %d, body: %s", response.Code, string(response.Body))
+	}
+
+	var detail = Transaction{}
+	err = json.Unmarshal(response.Body, &detail)
+	return &detail, err
 }
