@@ -29,29 +29,17 @@ func (c *Chain) MainToken() base.Token {
 }
 
 func (c *Chain) BalanceOfAddress(address string) (*base.Balance, error) {
-	return nil, nil
-	// b, err := queryBalance(address, c.Chainnet)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// return &base.Balance{
-	// 	Total:  b,
-	// 	Usable: b,
-	// }, nil
+	return queryBalance(address, c.Chainnet)
 }
 func (c *Chain) BalanceOfPublicKey(publicKey string) (*base.Balance, error) {
-	return nil, nil
-	// b, err := queryBalancePubkey(publicKey, c.Chainnet)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// return &base.Balance{
-	// 	Total:  b,
-	// 	Usable: b,
-	// }, nil
+	address, err := EncodePublicKeyToAddress(publicKey, c.Chainnet)
+	if err != nil {
+		return nil, err
+	}
+	return c.BalanceOfAddress(address)
 }
 func (c *Chain) BalanceOfAccount(account base.Account) (*base.Balance, error) {
-	return c.BalanceOfPublicKey(account.PublicKeyHex())
+	return c.BalanceOfAddress(account.Address())
 }
 
 // Send the raw transaction on-chain

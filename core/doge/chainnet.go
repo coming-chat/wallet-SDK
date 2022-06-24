@@ -63,6 +63,17 @@ func netParamsOf(chainnet string) (*chaincfg.Params, error) {
 	return nil, ErrUnsupportedChain
 }
 
+func restUrlOf(chainnet string) (string, error) {
+	switch chainnet {
+	case ChainMainnet:
+		return "https://api.blockcypher.com/v1/doge/main", nil
+	case ChainTestnet:
+		return "", ErrUnsupportedChain
+	default:
+		return "", ErrUnsupportedChain
+	}
+}
+
 func scanHostOf(chainnet string) (string, error) {
 	switch chainnet {
 	case ChainTestnet:
