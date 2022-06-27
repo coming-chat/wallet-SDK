@@ -121,7 +121,14 @@ func suggestFeeRate(chainnet string) (f *FeeRate, err error) {
 
 	f = &FeeRate{}
 	err = json.Unmarshal(response.Body, f)
-	return f, err
+	if err != nil {
+		return nil, err
+	}
+
+	f.High = f.High / 1024
+	f.Average = f.Average / 1024
+	f.Low = f.Low / 1024
+	return f, nil
 }
 
 func sendRawTransaction(txHex, chainnet string) (t *Transaction, err error) {
