@@ -27,6 +27,7 @@ type Transaction struct {
 	Confirmations int64                `json:"confirmations"`
 	Inputs        []*TransactionInput  `json:"inputs"`
 	Outputs       []*TransactionOutput `json:"outputs"`
+	OpReturn      string               `json:"data_protocol"`
 }
 
 func (t *Transaction) From() string {

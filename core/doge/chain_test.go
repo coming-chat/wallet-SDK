@@ -110,3 +110,14 @@ func TestChain_FetchTransactionDetail(t *testing.T) {
 		})
 	}
 }
+
+func TestChain_FetchUtxos(t *testing.T) {
+	address := "D8aDCsK4TA9NYhmwiqw1BjZ4CP8LQ814Ea"
+	chain := chains.mainnet.Chain()
+
+	jsonString, err := chain.FetchUtxos(address, 20)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(jsonString.Value)
+}

@@ -73,3 +73,30 @@ func fetchTransactionDetail(hash, chainnet string) (d *Transaction, err error) {
 	err = json.Unmarshal(response.Body, &detail)
 	return &detail, err
 }
+
+// @param limit Specify how many the latest utxos to fetch
+func fetchUtxos(address, chainnet string, limit int) (l *UTXOList, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
+
+	restUrl, err := restUrlOf(chainnet)
+	if err != nil {
+		return
+	}
+	if IsValidAddress(address, chainnet) == false {
+		return nil, errors.New("Invalid address")
+	}
+
+	// https://api.blockcypher.com/v1/doge/main/addrs/D8aDCsK4TA9NYhmwiqw1BjZ4CP8LQ814Ea?limit=5&unspentOnly=true
+	url := fmt.Sprintf("%v/addrs/%v?limit=%v&unspentOnly=true", restUrl, address, limit)
+	response, err := httpUtil.Request(http.MethodGet, url, nil, nil)
+	if err != nil {
+		return
+	}
+	if response.Code != http.StatusOK {
+		return nil, fmt.Errorf("code: %d, body: %s", response.Code, string(response.Body))
+	}
+
+	var list = UTXOList{}
+	err = json.Unmarshal(response.Body, &list)
+	return &list, err
+}

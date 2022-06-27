@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -76,6 +77,33 @@ func (c *Chain) BatchFetchTransactionStatus(hashListString string) string {
 		return strconv.Itoa(c.FetchTransactionStatus(s)), nil
 	})
 	return strings.Join(statuses, ",")
+}
+
+// @param limit Specify how many the latest utxos to fetch, The minimum value of the limit is 100.
+func (c *Chain) FetchUtxos(address string, limit int) (*base.OptionalString, error) {
+	if limit < 100 {
+		limit = 100
+	}
+	res, err := fetchUtxos(address, c.Chainnet, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	utxos := res.Utxos
+	sort.Slice(utxos, func(i, j int) bool {
+		return utxos[i].Value.Cmp(utxos[j].Value) == 1
+	})
+
+	sdklist := &SDKUTXOList{
+		Txids:      utxos,
+		FastestFee: 1,
+	}
+	data, err := json.Marshal(sdklist)
+	if err != nil {
+		return nil, err
+	}
+
+	return &base.OptionalString{Value: string(data)}, nil
 }
 
 type FeeRate struct {
