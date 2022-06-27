@@ -10,6 +10,7 @@ import (
 
 	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/coming-chat/wallet-SDK/pkg/httpUtil"
+	"github.com/coming-chat/wallet-SDK/util/hexutil"
 )
 
 func queryBalance(address, chainnet string) (b *base.Balance, err error) {
@@ -99,4 +100,56 @@ func fetchUtxos(address, chainnet string, limit int) (l *UTXOList, err error) {
 	var list = UTXOList{}
 	err = json.Unmarshal(response.Body, &list)
 	return &list, err
+}
+
+func suggestFeeRate(chainnet string) (f *FeeRate, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
+
+	restUrl, err := restUrlOf(chainnet)
+	if err != nil {
+		return
+	}
+
+	// https://api.blockcypher.com/v1/doge/main
+	response, err := httpUtil.Request(http.MethodGet, restUrl, nil, nil)
+	if err != nil {
+		return
+	}
+	if response.Code != http.StatusOK {
+		return nil, fmt.Errorf("code: %d, body: %s", response.Code, string(response.Body))
+	}
+
+	f = &FeeRate{}
+	err = json.Unmarshal(response.Body, f)
+	return f, err
+}
+
+func sendRawTransaction(txHex, chainnet string) (t *Transaction, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
+
+	restUrl, err := restUrlOf(chainnet)
+	if err != nil {
+		return
+	}
+	txHex = strings.TrimPrefix(txHex, "0x")
+	if !hexutil.ValidHex(txHex) {
+		return nil, errors.New("Invalid raw transaction hex string")
+	}
+
+	url := restUrl + "/txs/push"
+	params := map[string]string{
+		"tx": txHex,
+	}
+	data, err := json.Marshal(params)
+	if err != nil {
+		return nil, err
+	}
+	response, err := httpUtil.Request(http.MethodPost, url, nil, data)
+	if response.Code != http.StatusOK && response.Code != 201 {
+		return nil, fmt.Errorf("code: %d, body: %s", response.Code, string(response.Body))
+	}
+
+	t = &Transaction{}
+	err = json.Unmarshal(response.Body, t)
+	return t, err
 }

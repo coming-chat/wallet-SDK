@@ -2,14 +2,11 @@ package doge
 
 import (
 	"encoding/json"
-	"fmt"
-	"net/http"
 	"sort"
 	"strconv"
 	"strings"
 
 	"github.com/coming-chat/wallet-SDK/core/base"
-	"github.com/coming-chat/wallet-SDK/pkg/httpUtil"
 )
 
 type Chain struct {
@@ -48,8 +45,11 @@ func (c *Chain) BalanceOfAccount(account base.Account) (*base.Balance, error) {
 // Send the raw transaction on-chain
 // @return the hex hash string
 func (c *Chain) SendRawTransaction(signedTx string) (string, error) {
-	// return sendRawTransaction(signedTx, c.Chainnet)
-	return "", nil
+	transaction, err := sendRawTransaction(signedTx, c.Chainnet)
+	if err != nil {
+		return "", err
+	}
+	return transaction.Hash, nil
 }
 
 // Fetch transaction details through transaction hash
@@ -94,9 +94,14 @@ func (c *Chain) FetchUtxos(address string, limit int) (*base.OptionalString, err
 		return utxos[i].Value.Cmp(utxos[j].Value) == 1
 	})
 
+	feeRate, err := c.SuggestFeeRate()
+	if err != nil {
+		return nil, err
+	}
+
 	sdklist := &SDKUTXOList{
 		Txids:      utxos,
-		FastestFee: 1,
+		FastestFee: int(feeRate.Average),
 	}
 	data, err := json.Marshal(sdklist)
 	if err != nil {
@@ -107,42 +112,11 @@ func (c *Chain) FetchUtxos(address string, limit int) (*base.OptionalString, err
 }
 
 type FeeRate struct {
-	Low     int64
-	Average int64
-	High    int64
+	Low     int64 `json:"low_fee_per_kb"`
+	Average int64 `json:"medium_fee_per_kb"`
+	High    int64 `json:"high_fee_per_kb"`
 }
 
-func SuggestFeeRate() (*FeeRate, error) {
-	url := "https://mempool-mainnet.coming.chat/api/v1/fees/recommended"
-
-	response, err := httpUtil.Request(http.MethodGet, url, nil, nil)
-	if err != nil {
-		return nil, base.MapAnyToBasicError(err)
-	}
-
-	if response.Code != http.StatusOK {
-		return nil, fmt.Errorf("code: %d, body: %s", response.Code, string(response.Body))
-	}
-	respDict := make(map[string]interface{})
-	err = json.Unmarshal(response.Body, &respDict)
-	if err != nil {
-		return nil, err
-	}
-
-	var low, avg, high float64
-	var ok bool
-	if low, ok = respDict["minimumFee"].(float64); !ok {
-		low = 1
-	}
-	if avg, ok = respDict["halfHourFee"].(float64); !ok {
-		avg = low
-	}
-	if high, ok = respDict["fastestFee"].(float64); !ok {
-		high = avg
-	}
-	return &FeeRate{
-		Low:     int64(low),
-		Average: int64(avg),
-		High:    int64(high),
-	}, nil
+func (c *Chain) SuggestFeeRate() (*FeeRate, error) {
+	return suggestFeeRate(c.Chainnet)
 }
