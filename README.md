@@ -1,20 +1,20 @@
 # wallet-SDK
 
-|                       | Bitcoin | Ethereum | Polka | Cosmos |
-| --------------------- | ------- | -------- | ----- | ------ |
-| import mnemonic       | ✅     | ✅      | ✅   |✅   |
-| import keystore       | ❌     | ❌      | ✅  |❌   |
-| pri/pub key & address | ✅     | ✅      | ✅   |✅   |
-| multi network         | ✅     | ✅      | ✅   |✅   |
-| publicKey to address  | ✅     | ✅      | ✅   |✅   |
-| address to publicKey  | ❌     | ❌      | ✅   |❌   |
-| sign data             | ☑️    | ☑️     | ✅   |☑️   |
-|                       |         |          |       |   |
-| query balance | ✅ | ✅ | ✅ |✅   |
-| fetch transaction detail | ✅ | ✅ | ✅ |✅   |
-| gas fee | ❌ | ✅ | ✅ |☑️   |
-| send taw transaction | ✅ | ✅ ☑️ | ✅ ☑️ |✅   |
-| multi token | ❌ | ✅ erc20 | ✅ XBTC |✅   |
+|                       | Bitcoin | Ethereum | Polka | Cosmos | Doge |
+| --------------------- | ------- | -------- | ----- | ------ | ------ |
+| import mnemonic       | ✅     | ✅      | ✅   |✅   |✅   |
+| import keystore       | ❌     | ❌      | ✅  |❌   |❌   |
+| pri/pub key & address | ✅     | ✅      | ✅   |✅   |✅   |
+| multi network         | ✅     | ✅      | ✅   |✅   |❌   |
+| publicKey to address  | ✅     | ✅      | ✅   |✅   |✅   |
+| address to publicKey  | ❌     | ❌      | ✅   |❌   |❌   |
+| sign data             | ☑️    | ☑️     | ✅   |☑️   |☑️   |
+|                       |         |          |       |   |   |
+| query balance | ✅ | ✅ | ✅ |✅   |✅   |
+| fetch transaction detail | ✅ | ✅ | ✅ |✅   |✅   |
+| gas fee | ❌ | ✅ | ✅ |☑️   |✅   |
+| send taw transaction | ✅ | ✅ ☑️ | ✅ ☑️ |✅   |✅   |
+| multi token | ❌ | ✅ erc20 | ✅ XBTC |✅   |❌   |
 
 *If there are two icons, the first icon indicates development status, and the second icon indicates test status.*
 ✅: Completed      ☑️: TODO    ❌: Unsupported

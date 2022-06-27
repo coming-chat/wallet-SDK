@@ -12,9 +12,10 @@ pkgPolka = ${pkgCore}/polka
 pkgBtc = ${pkgCore}/btc
 pkgEth =  $(pkgCore)/eth
 pkgCosmos =  $(pkgCore)/cosmos
+pkgDoge =  $(pkgCore)/doge
 pkgMSCheck = ${pkgCore}/multi-signature-check
 
-pkgAll = ${pkgBase} ${pkgWallet} ${pkgPolka} ${pkgBtc} ${pkgEth} ${pkgCosmos} ${pkgMSCheck}
+pkgAll = ${pkgBase} ${pkgWallet} ${pkgPolka} ${pkgBtc} ${pkgEth} ${pkgCosmos} ${pkgMSCheck} ${pkgDoge}
 
 buildAllSDKAndroid:
 	gomobile bind -ldflags "-s -w" -target=android/arm,android/arm64 -o=${outdir}/wallet.aar ${pkgAll}
