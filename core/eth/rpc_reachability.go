@@ -83,7 +83,7 @@ func (r *RpcReachability) startConnectivity(rpcList string, delegate RpcReachabi
 	for i, s := range rpcUrlList {
 		list[i] = s
 	}
-	temp, _ := base.MapListConcurrent(list, func(i interface{}) (interface{}, error) {
+	temp, _ := base.MapListConcurrent(list, 0, func(i interface{}) (interface{}, error) {
 		var totalCost int64 = 0
 		var latestLatency *RpcLatency
 		successTimes := 0

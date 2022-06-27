@@ -8,8 +8,9 @@ import (
 )
 
 // This method will traverse the array concurrently and map each object in the array.
-// @param list : [TYPE1], a list that all item is TYPE1
-// @param maper : func(TYPE1) (TYPE2, error), a function that input TYPE1, return TYPE2
+// @param list: [TYPE1], a list that all item is TYPE1
+// @param limit: maximum number of tasks to execute, 0 means no limit
+// @param maper: func(TYPE1) (TYPE2, error), a function that input TYPE1, return TYPE2
 //                you can throw an error to finish task.
 // @return : [TYPE2], a list that all item is TYPE2
 // @example : ```
@@ -19,9 +20,9 @@ import (
 //     })
 //     println(res) // ["100" "200" "300" "400" "500" "600"]
 // ```
-func MapListConcurrent(list []interface{}, maper func(interface{}) (interface{}, error)) ([]interface{}, error) {
+func MapListConcurrent(list []interface{}, limit int, maper func(interface{}) (interface{}, error)) ([]interface{}, error) {
 	thread := 0
-	max := 10
+	max := limit
 	wg := sync.WaitGroup{}
 
 	mapContainer := newSafeMap()
@@ -30,12 +31,17 @@ func MapListConcurrent(list []interface{}, maper func(interface{}) (interface{},
 		if firstError != nil {
 			continue
 		}
-		if thread == max {
-			wg.Wait()
-			thread = 0
-		}
-		if thread < max {
+		if max == 0 {
 			wg.Add(1)
+			// no limit
+		} else {
+			if thread == max {
+				wg.Wait()
+				thread = 0
+			}
+			if thread < max {
+				wg.Add(1)
+			}
 		}
 
 		go func(w *sync.WaitGroup, item interface{}, mapContainer *safeMap, firstError *error) {
@@ -67,7 +73,7 @@ func MapListConcurrentStringToString(strList []string, maper func(string) (strin
 	for i, s := range strList {
 		list[i] = s
 	}
-	temp, err := MapListConcurrent(list, func(i interface{}) (interface{}, error) {
+	temp, err := MapListConcurrent(list, 10, func(i interface{}) (interface{}, error) {
 		return maper(i.(string))
 	})
 	if err != nil {

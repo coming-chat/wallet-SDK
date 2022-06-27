@@ -31,7 +31,7 @@ func dangerousCode() (i int, e error) {
 func TestMapConcurrent(t *testing.T) {
 	nums := []interface{}{1, 2, 3, 4, 5, 6}
 	// nums := []interface{}{"1", "2", "3", "4"}
-	res, _ := MapListConcurrent(nums, func(i interface{}) (interface{}, error) {
+	res, _ := MapListConcurrent(nums, 10, func(i interface{}) (interface{}, error) {
 		return strconv.Itoa(i.(int) * 100), nil
 	})
 	t.Log(res)
