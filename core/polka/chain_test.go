@@ -64,6 +64,9 @@ func TestChain_BalanceOfAddress(t *testing.T) {
 		{name: "chainx prod error address", rpcInfo: rpcs.chainxTest, address: accountCase.address44 + "s",
 			wantErr: true,
 		},
+		{name: "chainx prod empty address", rpcInfo: rpcs.chainxTest, address: "",
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -44,6 +44,9 @@ func (c *Chain) XBTCToken() *XBTCToken {
 
 func (c *Chain) BalanceOfAddress(address string) (*base.Balance, error) {
 	ss58Format := base58.Decode(address)
+	if len(ss58Format) == 0 {
+		return nil, errors.New("The address ss58 format is invalid")
+	}
 	pubkey, err := hex.DecodeString(ss58.Decode(address, int(ss58Format[0])))
 	if err != nil {
 		return base.EmptyBalance(), err
