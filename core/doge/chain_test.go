@@ -3,7 +3,7 @@ package doge
 import (
 	"testing"
 
-	"github.com/coming-chat/wallet-SDK/ignored"
+	"github.com/coming-chat/wallet-SDK/core/testcase"
 )
 
 type chainInfo struct {
@@ -115,7 +115,7 @@ func TestChain_FetchTransactionDetail(t *testing.T) {
 
 func TestChain_FetchUtxos(t *testing.T) {
 	address := "D8aDCsK4TA9NYhmwiqw1BjZ4CP8LQ814Ea"
-	address = ignored.Accounts.DogeMainnet.Address
+	address = testcase.Accounts.DogeMainnet.Address
 	chain := chains.mainnet.Chain()
 
 	jsonString, err := chain.FetchUtxos(address, 20)
