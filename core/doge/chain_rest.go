@@ -156,7 +156,10 @@ func sendRawTransaction(txHex, chainnet string) (t *Transaction, err error) {
 		return nil, fmt.Errorf("code: %d, body: %s", response.Code, string(response.Body))
 	}
 
-	t = &Transaction{}
-	err = json.Unmarshal(response.Body, t)
-	return t, err
+	var res = struct {
+		Tx Transaction `json:"tx"`
+	}{}
+
+	err = json.Unmarshal(response.Body, &res)
+	return &res.Tx, err
 }
