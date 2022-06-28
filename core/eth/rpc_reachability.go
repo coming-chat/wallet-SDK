@@ -74,9 +74,6 @@ func (r *RpcReachability) startConnectivity(rpcList string, delegate RpcReachabi
 	failCall, failOk := delegate.(interface {
 		ReachabilityDidFailNode(tester *RpcReachability, latency *RpcLatency)
 	})
-	finishCall, finishOk := delegate.(interface {
-		ReachabilityDidFinish(tester *RpcReachability, overview string)
-	})
 
 	rpcUrlList := strings.Split(rpcList, ",")
 	list := make([]interface{}, len(rpcUrlList))
@@ -136,6 +133,9 @@ func (r *RpcReachability) startConnectivity(rpcList string, delegate RpcReachabi
 		res = string(data)
 	}
 
+	finishCall, finishOk := delegate.(interface {
+		ReachabilityDidFinish(tester *RpcReachability, overview string)
+	})
 	if finishOk {
 		finishCall.ReachabilityDidFinish(r, res)
 	}
