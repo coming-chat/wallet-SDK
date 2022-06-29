@@ -59,6 +59,10 @@ func (t *Transaction) ToAddressAndTransferAmount() (string, *big.Int) {
 			to = fmt.Sprintf("%v, %v", to, address)
 		}
 	}
+	if to == "" {
+		// If there are no other recipients, we consider the user to transfer to himself
+		to = from
+	}
 
 	return to, total
 }
@@ -73,13 +77,21 @@ func (t *Transaction) Status() base.TransactionStatus {
 
 func (t *Transaction) SdkDetail() *base.TransactionDetail {
 	to, amount := t.ToAddressAndTransferAmount()
+	var finishTime int64
+	if t.Confirmed != nil {
+		finishTime = t.Confirmed.Unix()
+	}
+	var amountString string
+	if amount != nil {
+		amountString = amount.String()
+	}
 	return &base.TransactionDetail{
 		HashString:      t.Hash,
-		Amount:          amount.String(),
+		Amount:          amountString,
 		EstimateFees:    t.Fees.String(),
 		FromAddress:     t.From(),
 		ToAddress:       to,
 		Status:          t.Status(),
-		FinishTimestamp: t.Confirmed.Unix(),
+		FinishTimestamp: finishTime,
 	}
 }
