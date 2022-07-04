@@ -28,6 +28,11 @@ type rpcConfig struct {
 	arbitrumTest rpcInfo
 	kccProd      rpcInfo
 	kccTest      rpcInfo
+
+	avaxProd    rpcInfo
+	avaxTest    rpcInfo
+	polygonProd rpcInfo
+	polygonTest rpcInfo
 }
 
 var rpcs = rpcConfig{
@@ -97,7 +102,6 @@ var rpcs = rpcConfig{
 		"https://testnet.arbiscan.io",
 		nil,
 	},
-
 	kccProd: rpcInfo{
 		"https://rpc-mainnet.kcc.network",
 		"https://scan.kcc.io",
@@ -106,6 +110,27 @@ var rpcs = rpcConfig{
 	kccTest: rpcInfo{
 		"https://rpc-testnet.kcc.network",
 		"https://scan-testnet.kcc.network",
+		nil,
+	},
+
+	avaxProd: rpcInfo{
+		"https://rpc.ankr.com/avalanche",
+		"https://snowtrace.io",
+		nil,
+	},
+	avaxTest: rpcInfo{
+		"https://rpc.ankr.com/avalanche_fuji",
+		"https://testnet.snowtrace.io",
+		nil,
+	},
+	polygonProd: rpcInfo{
+		"https://polygon-rpc.com",
+		"https://polygonscan.com",
+		nil,
+	},
+	polygonTest: rpcInfo{
+		"https://rpc.ankr.com/polygon_mumbai",
+		"https://mumbai.polygonscan.com",
 		nil,
 	},
 }

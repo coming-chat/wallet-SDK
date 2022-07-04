@@ -53,6 +53,16 @@ func TestChain_SuggestGasPriceEIP1559(t *testing.T) {
 			rpcInfo: rpcs.binanceProd,
 			wantErr: true,
 		},
+		{
+			name:    "avax prod gas price",
+			rpcInfo: rpcs.avaxProd,
+			checker: "https://snowtrace.io/gastracker",
+		},
+		{
+			name:    "polygon prod",
+			rpcInfo: rpcs.polygonProd,
+			checker: "https://polygonscan.com/gastracker",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -77,66 +87,58 @@ func TestChain_SuggestGasPriceEIP1559(t *testing.T) {
 }
 
 func TestChain_EstimateGasLimit(t *testing.T) {
-	addressZero := &common.Address{}
 	e36Wei, _ := big.NewInt(0).SetString("1000000000000000000000000000000000000", 10)
-	ethEnoughGasPrice := big.NewInt(100000000000) // 100 Gwei
-
-	addressUSDTContract := common.HexToAddress(rpcs.ethereumProd.contracts.USDT)
-	addressUSDTFrom := common.HexToAddress("0x22fFF189C37302C02635322911c3B64f80CE7203")
-	usdtTransferData, _ := types.HexDecodeString("0xa9059cbb000000000000000000000000dac17f958d2ee523a2206206994597c13d831ec70000000000000000000000000000000000000000000000000000000000200b20")
 	tests := []struct {
 		name    string
 		rpcInfo rpcInfo
+		amount  *big.Int
 		msg     *CallMsg
 		wantErr bool
 	}{
 		{
 			name:    "eth prod transfer very big amount",
 			rpcInfo: rpcs.ethereumProd,
-			msg: &CallMsg{msg: ethereum.CallMsg{
-				From:     *addressZero,
-				To:       addressZero,
-				Value:    e36Wei, // 10^18 Ether
-				GasPrice: ethEnoughGasPrice,
-			}},
+			amount:  e36Wei, // 10^18 Ether
 			wantErr: true,
 		},
 		{
 			name:    "eth prod transfer nomal amount",
 			rpcInfo: rpcs.ethereumProd,
-			msg: &CallMsg{msg: ethereum.CallMsg{
-				From:     *addressZero,
-				To:       addressZero,
-				Value:    big.NewInt(1000000000), // 1 Gwei
-				GasPrice: ethEnoughGasPrice,
-			}},
+			amount:  big.NewInt(1e9), // 1 Gwei
 		},
 		{
 			name:    "eth prod transfer small amount",
 			rpcInfo: rpcs.ethereumProd,
-			msg: &CallMsg{msg: ethereum.CallMsg{
-				From:     *addressZero,
-				To:       addressZero,
-				Value:    big.NewInt(1), // 1 wei
-				GasPrice: ethEnoughGasPrice,
-			}},
+			amount:  big.NewInt(1), // 1 wei
 		},
 		{
-			name:    "eth prod usdt transfer",
-			rpcInfo: rpcs.ethereumProd,
-			msg: &CallMsg{msg: ethereum.CallMsg{
-				From:     addressUSDTFrom,
-				To:       &addressUSDTContract,
-				Value:    big.NewInt(0),
-				GasPrice: ethEnoughGasPrice,
-				Data:     usdtTransferData,
-			}},
+			name:    "avax prod normal",
+			rpcInfo: rpcs.avaxProd,
+			amount:  big.NewInt(1e9),
+		},
+		{
+			name:    "avax test normal",
+			rpcInfo: rpcs.avaxTest,
+			amount:  big.NewInt(1e9),
+		},
+		{
+			name:    "polygon prod normal",
+			rpcInfo: rpcs.polygonProd,
+			amount:  big.NewInt(1e9),
 		},
 	}
+	ethEnoughGasPrice := big.NewInt(1e11) // 100 Gwei
+	addressZero := common.Address{}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := tt.rpcInfo.Chain()
-			got, err := c.EstimateGasLimit(tt.msg)
+			msg := &CallMsg{msg: ethereum.CallMsg{
+				From:     addressZero,
+				To:       &addressZero,
+				Value:    tt.amount,
+				GasPrice: ethEnoughGasPrice,
+			}}
+			got, err := c.EstimateGasLimit(msg)
 			if err != nil {
 				if !tt.wantErr {
 					t.Errorf("EstimateGasLimit() error = %v, wantErr %v", err, tt.wantErr)
@@ -146,4 +148,62 @@ func TestChain_EstimateGasLimit(t *testing.T) {
 			t.Log("EstimateGasLimit() estimate gas limit =", got.Value)
 		})
 	}
+}
+
+func TestChain_EstimateGasLimit_Erc20(t *testing.T) {
+	tests := []struct {
+		name    string
+		rpcInfo rpcInfo
+		from    string
+		to      string
+		wantErr bool
+	}{
+		{
+			name:    "eth prod usdt transfer",
+			rpcInfo: rpcs.ethereumProd,
+			from:    "0x22fFF189C37302C02635322911c3B64f80CE7203",
+			to:      rpcs.ethereumProd.contracts.USDT,
+		},
+		{
+			name:    "avax prod erc20 transfer",
+			rpcInfo: rpcs.avaxProd,
+			from:    "0xCF08fB3925900bdbc07B9CC8dF87efD7BCD3BdbA",
+			to:      "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E",
+		},
+		{
+			name:    "polygon prod erc20 transfer",
+			rpcInfo: rpcs.polygonProd,
+			from:    "0xbB9480FDB174063a2DeDF31b50A4f06aE13ed964",
+			to:      "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
+		},
+	}
+
+	valueZero := big.NewInt(0)
+	ethEnoughGasPrice := big.NewInt(1e11) // 100 Gwei
+	erc20TransferData, _ := types.HexDecodeString("0xa9059cbb000000000000000000000000dac17f958d2ee523a2206206994597c13d831ec70000000000000000000000000000000000000000000000000000000000200b20")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := tt.rpcInfo.Chain()
+			msg := &CallMsg{msg: ethereum.CallMsg{
+				From:     common.HexToAddress(tt.from),
+				To:       addressPointer(tt.to),
+				Value:    valueZero,
+				GasPrice: ethEnoughGasPrice,
+				Data:     erc20TransferData,
+			}}
+			got, err := c.EstimateGasLimit(msg)
+			if err != nil {
+				if !tt.wantErr {
+					t.Errorf("EstimateGasLimit() error = %v, wantErr %v", err, tt.wantErr)
+				}
+				return
+			}
+			t.Log("EstimateGasLimit() estimate gas limit =", got.Value)
+		})
+	}
+}
+
+func addressPointer(hex string) *common.Address {
+	a := common.HexToAddress(hex)
+	return &a
 }

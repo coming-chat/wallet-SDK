@@ -82,6 +82,9 @@ func (c *Chain) SuggestGasPriceEIP1559() (*GasPrice, error) {
 	if err != nil {
 		return nil, err
 	}
+	if priorityFee.Cmp(big.NewInt(0)) == 0 {
+		priorityFee = big.NewInt(1e9) // 1 Gwei
+	}
 
 	return (&GasPrice{
 		BaseFee:            header.BaseFee.String(),

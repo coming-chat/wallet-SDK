@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/coming-chat/wallet-SDK/core/base"
+	"github.com/coming-chat/wallet-SDK/core/testcase"
 )
 
 func TestChainDetail(t *testing.T) {
@@ -84,6 +85,26 @@ func TestChain_BalanceOfAddress(t *testing.T) {
 			net:     rpcs.kccProd,
 			address: addressBlackHole,
 		},
+		{
+			name:    "avax prod",
+			net:     rpcs.avaxProd,
+			address: addressBlackHole,
+		},
+		{
+			name:    "avax test",
+			net:     rpcs.avaxTest,
+			address: addressBlackHole,
+		},
+		{
+			name:    "polygon prod",
+			net:     rpcs.polygonProd,
+			address: addressBlackHole,
+		},
+		{
+			name:    "polygon test",
+			net:     rpcs.polygonTest,
+			address: addressBlackHole,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -95,7 +116,7 @@ func TestChain_BalanceOfAddress(t *testing.T) {
 				return
 			}
 			totalFloat, _ := big.NewFloat(0).SetString(got.Total)
-			totalFloat.Quo(totalFloat, big.NewFloat(1000000000000000000))
+			totalFloat.Quo(totalFloat, big.NewFloat(1e18))
 			t.Logf("BalanceOfAddress() balance ≈ %v, full = %v", totalFloat.String(), got.Total)
 			t.Log("Unable to verify balance, maybe you should check with this address which may be useful: " + tt.net.scan + "/address/" + tt.address)
 		})
@@ -241,6 +262,21 @@ func TestChain_FetchTransactionDetail_Cover_Multi_Rpcs(t *testing.T) {
 			args:     args{rpcs.kccProd, "0xb118c7957aacf4c63c8b723776ade76fd77d5411ea799741ce9edf80d6a5739f"},
 			wantTime: 1654119340,
 		},
+		{
+			name:     "avax prod succeed transfer",
+			args:     args{rpcs.avaxProd, "0x4e7ec461ab759c1b6f042c6676ef4ec928cc1f8adabb302df8aa44ebd314a6d0"},
+			wantTime: 1656820690,
+		},
+		{
+			name:     "polygon prod succeed transfer",
+			args:     args{rpcs.polygonProd, "0xe26d28e25bdb82f67e993ac8491249707361f044f6de5ba3d47d5b41ab8feb3e"},
+			wantTime: 1656922893,
+		},
+		{
+			name:     "polygon prod erc20 transfer",
+			args:     args{rpcs.polygonProd, "0x02b1d1e48584dfffa89d17e87548d8e2dd0b882942a909c6955ac2961262ac11"},
+			wantTime: 1656932999,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -344,6 +380,20 @@ func TestTransferArbitrum(t *testing.T) {
 	to := "0x8De5fF2edeD4d897da535ab0F379Ec1b9257eBaB"
 	amount := "10000000000000" // 0.00001
 	t.Log(TransferCoin(&rpcs.kccTest, from, to, amount))
+}
+
+func TestTransferAvax(t *testing.T) {
+	from, _ := NewAccountWithMnemonic(testcase.M1)
+	to := "0x2352D20fC81225c8ECD8f6FaA1B37F24FEd450c9"
+	amount := "1000000000000000" // 0.001
+	t.Log(TransferCoin(&rpcs.avaxTest, from, to, amount))
+}
+
+func TestTransferPolygon(t *testing.T) {
+	from, _ := NewAccountWithMnemonic(testcase.M1)
+	to := accountCase1.address
+	amount := "100000000000000" // 0.0001
+	t.Log(TransferCoin(&rpcs.polygonTest, from, to, amount))
 }
 
 func TransferCoin(at *rpcInfo, from *Account, toAddress string, amount string) (string, error) {
