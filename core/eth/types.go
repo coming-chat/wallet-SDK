@@ -1,6 +1,7 @@
 package eth
 
 import (
+	"encoding/hex"
 	"errors"
 	"math/big"
 	"strconv"
@@ -126,6 +127,27 @@ type Transaction struct {
 
 func NewTransaction(nonce, gasPrice, gasLimit, to, value, data string) *Transaction {
 	return &Transaction{nonce, gasPrice, gasLimit, to, value, data, ""}
+}
+
+func NewTransactionFromHex(hexData string) (*Transaction, error) {
+	rawBytes, err := hex.DecodeString(hexData)
+	if err != nil {
+		return nil, err
+	}
+	decodeTx := types.NewTx(&types.DynamicFeeTx{})
+	err = decodeTx.UnmarshalBinary(rawBytes)
+	if err != nil {
+		return nil, err
+	}
+	tx := NewTransaction(
+		strconv.Itoa(int(decodeTx.Nonce())),
+		decodeTx.GasFeeCap().String(),
+		strconv.Itoa(int(decodeTx.Gas())),
+		decodeTx.To().String(),
+		decodeTx.Value().String(),
+		hex.EncodeToString(decodeTx.Data()))
+	tx.MaxPriorityFeePerGas = decodeTx.GasTipCap().String()
+	return tx, nil
 }
 
 // This is an alias property for GasPrice in order to support EIP1559
