@@ -146,7 +146,10 @@ func NewTransactionFromHex(hexData string) (*Transaction, error) {
 		decodeTx.To().String(),
 		decodeTx.Value().String(),
 		hex.EncodeToString(decodeTx.Data()))
-	tx.MaxPriorityFeePerGas = decodeTx.GasTipCap().String()
+	// not equal, is eip1559; legacy feecap equal tipcap
+	if decodeTx.GasTipCap().Cmp(decodeTx.GasFeeCap()) != 0 {
+		tx.MaxPriorityFeePerGas = decodeTx.GasTipCap().String()
+	}
 	return tx, nil
 }
 
