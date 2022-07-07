@@ -12,6 +12,12 @@ func TestAccount(t *testing.T) {
 	t.Log(acc.PrivateKeyHex())
 	t.Log(acc.PublicKeyHex())
 	t.Log(acc.Address())
+
+	prihex, _ := acc.PrivateKeyHex()
+	acc2, _ := NewAccountWithPrivateKey(prihex)
+	t.Log(acc2.PrivateKeyHex())
+	t.Log(acc2.PublicKeyHex())
+	t.Log(acc2.Address())
 }
 
 func TestValidAddress(t *testing.T) {

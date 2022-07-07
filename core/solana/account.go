@@ -1,6 +1,8 @@
 package solana
 
 import (
+	"strings"
+
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/cosmos/go-bip39"
@@ -25,6 +27,15 @@ func NewAccountWithMnemonic(mnemonic string) (*Account, error) {
 		return nil, err
 	}
 
+	return &Account{&account}, nil
+}
+
+func NewAccountWithPrivateKey(prikey string) (*Account, error) {
+	prikey = strings.TrimPrefix(prikey, "0x")
+	account, err := solana.AccountFromHex(prikey)
+	if err != nil {
+		return nil, err
+	}
 	return &Account{&account}, nil
 }
 
