@@ -18,6 +18,7 @@ type AccountGroup struct {
 	Polka0      AccountCase
 	Polka2      AccountCase
 	Polka44     AccountCase
+	Solana      AccountCase
 }
 
 // 你需要在你的电脑环境中配置助记词的环境变量，并更新对应的币种地址
@@ -37,9 +38,14 @@ var Accounts = AccountGroup{
 	Polka0:      AccountCase{M1, "12eV7FtPbXBgDG6mX4zwPaJdQKgigVtnYofSpS8mgEQbX623"},
 	Polka2:      AccountCase{M1, "EDodEyCN6w8XNuhL8kz9NqUhHyJns9pvgmi3oRNbwba5hxN"},
 	Polka44:     AccountCase{M1, "5RHWUui8WKff5quBNVhz1E1Kqfyf6ZbgrC3DtWS23ra3u4vV"},
+	Solana:      AccountCase{M1, "AfBfH4ehvcXx66Y5YZozgTYPC1nieL9A3r2yT3vCXqPY"},
 }
 
 var Accounts2 = AccountGroup{
 	DogeMainnet: AccountCase{M2, "DLGwnBwHB9FpFJw9apYato1kPXyeNYhq6H"},
 	DogeTestnet: AccountCase{M2, "njL1WCgC77iY8HWLceC39Cc3dQMwSbXugR"},
+	Solana:      AccountCase{M2, "GDqGCNxkZK3QWcWTnXK3TDuMBV168oUPUqd5spdRN8QW"},
 }
+
+var EmptyMnemonic = AccountCase{Mnemonic: ""}
+var ErrorMnemonic = AccountCase{Mnemonic: "unaware oxygen allow method allow property predict various slice travel please error"}

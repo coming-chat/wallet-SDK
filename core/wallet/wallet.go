@@ -9,6 +9,7 @@ import (
 	"github.com/coming-chat/wallet-SDK/core/doge"
 	"github.com/coming-chat/wallet-SDK/core/eth"
 	"github.com/coming-chat/wallet-SDK/core/polka"
+	"github.com/coming-chat/wallet-SDK/core/solana"
 )
 
 type Wallet struct {
@@ -23,6 +24,7 @@ type Wallet struct {
 	ethereumAccount *eth.Account
 	cosmosAccounts  map[string]*cosmos.Account
 	dogeAccounts    map[string]*doge.Account
+	solanaAccount   *solana.Account
 }
 
 func NewWalletWithMnemonic(mnemonic string) (*Wallet, error) {
@@ -68,7 +70,7 @@ func (w *Wallet) GetOrCreatePolkaAccount(network int) (*polka.Account, error) {
 	}
 	// save to cache
 	w.polkaAccounts[network] = account
-	return account, err
+	return account, nil
 }
 
 // Get or create the bitcoin account with specified chainnet.
@@ -93,7 +95,7 @@ func (w *Wallet) GetOrCreateBitcoinAccount(chainnet string) (*btc.Account, error
 
 	// save to cache
 	w.bitcoinAccounts[chainnet] = account
-	return account, err
+	return account, nil
 }
 
 // Get or create the ethereum account.
@@ -112,7 +114,7 @@ func (w *Wallet) GetOrCreateEthereumAccount() (*eth.Account, error) {
 	}
 	// save to cache
 	w.ethereumAccount = account
-	return account, err
+	return account, nil
 }
 
 // Get or create a wallet account based on cosmos architecture.
@@ -138,7 +140,7 @@ func (w *Wallet) GetOrCreateCosmosTypeAccount(cointype int64, addressPrefix stri
 
 	// save to cache
 	w.cosmosAccounts[key] = account
-	return account, err
+	return account, nil
 }
 
 func (w *Wallet) GetOrCreateDogeAccount(chainnet string) (*doge.Account, error) {
@@ -158,12 +160,31 @@ func (w *Wallet) GetOrCreateDogeAccount(chainnet string) (*doge.Account, error) 
 	}
 	// save to cache
 	w.dogeAccounts[chainnet] = account
-	return account, err
+	return account, nil
 }
 
 // Get or create cosmos chain account
 func (w *Wallet) GetOrCreateCosmosAccount() (*cosmos.Account, error) {
 	return w.GetOrCreateCosmosTypeAccount(cosmos.CosmosCointype, cosmos.CosmosPrefix)
+}
+
+// Get or create the ethereum account.
+func (w *Wallet) GetOrCreateSolanaAccount() (*solana.Account, error) {
+	cache := w.solanaAccount
+	if cache != nil {
+		return cache, nil
+	}
+	if len(w.Mnemonic) <= 0 {
+		return nil, ErrInvalidMnemonic
+	}
+
+	account, err := solana.NewAccountWithMnemonic(w.Mnemonic)
+	if err != nil {
+		return nil, err
+	}
+	// save to cache
+	w.solanaAccount = account
+	return account, nil
 }
 
 // check keystore password
