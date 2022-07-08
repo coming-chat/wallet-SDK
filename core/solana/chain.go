@@ -11,9 +11,16 @@ import (
 	"github.com/portto/solana-go-sdk/client"
 	"github.com/portto/solana-go-sdk/common"
 	"github.com/portto/solana-go-sdk/program/sysprog"
+	"github.com/portto/solana-go-sdk/rpc"
 
 	hexTypes "github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/portto/solana-go-sdk/types"
+)
+
+const (
+	DevnetRPCEndpoint  = rpc.DevnetRPCEndpoint
+	TestnetRPCEndpoint = rpc.TestnetRPCEndpoint
+	MainnetRPCEndpoint = rpc.MainnetRPCEndpoint
 )
 
 type Chain struct {
@@ -124,20 +131,20 @@ func decodeTransaction(tx *client.GetTransactionResponse, to *base.TransactionDe
 		// We only support decode amount transfer currently.
 		data := instruction.Data
 		instruct := binary.LittleEndian.Uint32(data[:4])
-		isTransfer := false
+		toidx := -1
 		switch sysprog.Instruction(instruct) {
 		case sysprog.InstructionTransfer:
-			isTransfer = true
-			to.ToAddress = message.Accounts[1].ToBase58()
+			toidx = instruction.Accounts[1]
 		case sysprog.InstructionTransferWithSeed:
-			isTransfer = true
-			to.ToAddress = message.Accounts[2].ToBase58()
+			toidx = instruction.Accounts[2]
 		}
-		if !isTransfer {
+		if toidx == -1 {
 			continue
 		}
 
-		to.FromAddress = message.Accounts[0].ToBase58()
+		fromidx := instruction.Accounts[0]
+		to.FromAddress = message.Accounts[fromidx].ToBase58()
+		to.ToAddress = message.Accounts[toidx].ToBase58()
 		amount := binary.LittleEndian.Uint64(data[4:12])
 		to.Amount = strconv.FormatUint(amount, 10)
 		to.EstimateFees = strconv.FormatUint(tx.Meta.Fee, 10)

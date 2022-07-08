@@ -45,6 +45,9 @@ func DecodeAddressToPublicKey(address string) (string, error) {
 }
 
 func IsValidAddress(address string) bool {
+	if len(address) != 44 {
+		return false
+	}
 	pub := common.PublicKeyFromString(address)
 	addr2 := pub.ToBase58()
 	return address == addr2

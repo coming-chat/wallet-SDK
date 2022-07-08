@@ -2,6 +2,7 @@ package solana
 
 import (
 	"context"
+	"reflect"
 	"testing"
 
 	"github.com/coming-chat/wallet-SDK/core/base"
@@ -27,14 +28,14 @@ func TestAirdrop(t *testing.T) {
 	t.Log(txhash)
 }
 
-func TestBalance(t *testing.T) {
-	chain, acc := newChainAndAccount()
+func TestEstimateFee(t *testing.T) {
+	chain := NewChainWithRpc(rpc.DevnetRPCEndpoint)
+	token := &Token{chain: chain}
 
-	balance, err := chain.client().GetBalance(context.Background(), acc.Address())
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log(balance)
+	receiver := "9B5XszUGdMaxCZ7uSQhPzdks5ZQSmWxrmzCSvtJ6Ns6g"
+	amount := "10000000"
+	fee, err := token.EstimateFees(receiver, amount)
+	t.Log(fee, err)
 }
 
 func TestBuildtxAndSendTransaction(t *testing.T) {
@@ -57,31 +58,107 @@ func TestBuildtxAndSendTransaction(t *testing.T) {
 	t.Log(txHash)
 }
 
-func TestEstimateFee(t *testing.T) {
-	chain := NewChainWithRpc(rpc.DevnetRPCEndpoint)
-	token := &Token{chain: chain}
-
-	receiver := "9B5XszUGdMaxCZ7uSQhPzdks5ZQSmWxrmzCSvtJ6Ns6g"
-	amount := "10000000"
-	fee, err := token.EstimateFees(receiver, amount)
-	t.Log(fee, err)
+func TestChain_BalanceOfAddress(t *testing.T) {
+	// https://explorer.solana.com/address/AfBfH4ehvcXx66Y5YZozgTYPC1nieL9A3r2yT3vCXqPY
+	// https://explorer.solana.com/address/AfBfH4ehvcXx66Y5YZozgTYPC1nieL9A3r2yT3vCXqPY?cluster=devnet
+	scan := "https://explorer.solana.com"
+	tests := []struct {
+		name    string
+		rpc     string
+		address string
+		wantErr bool
+	}{
+		{
+			name:    "mainnet empty account",
+			rpc:     MainnetRPCEndpoint,
+			address: "AfBfH4ehvcXx66Y5YZozgTYPC1nieL9A3r2yT3vCXqPY",
+		},
+		{
+			name:    "devnet normal account",
+			rpc:     DevnetRPCEndpoint,
+			address: "AfBfH4ehvcXx66Y5YZozgTYPC1nieL9A3r2yT3vCXqPY",
+		},
+		{
+			name:    "invalid address",
+			rpc:     DevnetRPCEndpoint,
+			address: "AfBfH4ehvcXx66Y5YZozgTYPC1nieL9A3r2yT3vCXqP",
+			wantErr: false, //
+		},
+		{
+			name:    "invalid address base58 char 0OIl",
+			rpc:     DevnetRPCEndpoint,
+			address: "AfBfH4ehvcXx66Y5YZozgTYPC1nieL9A3r2yT3vCXq0O",
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := NewChainWithRpc(tt.rpc)
+			got, err := c.BalanceOfAddress(tt.address)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Chain.BalanceOfAddress() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			} else {
+				t.Logf("Chain.BalanceOfAddress() We cannot assert the balance %v, maybe you can check at %v/address/%v", got.Total, scan, tt.address)
+			}
+		})
+	}
 }
 
-func TestTransactionDetail(t *testing.T) {
-	chain := NewChainWithRpc(rpc.DevnetRPCEndpoint)
-	txhash := "2CLc8VSHsS67JT6a4UQZMMwFzcgnriHL4d1rpwu9WBwAqzucj6XPBcL2AYJy7n6xvmrnXTgGRKoThHizN8E8NTFN" // 我的普通的
-	// txhash := "2LkRwB9QyttUYmCjfCx39QyMHWzcWrDsM2nkjbK4EN2AGmTeZW6TBNfe5rQ9pjMgCsVecGz1a9vPmXNsSy7gTYJQ" // 错误的
-	// txhash := "33yLja4FF9ZZQWMwdb72KroV4qQrmjTiKHcrR4KNRT3rK75mY2TPVQxMs9YGiQPhK5vxxqS5d5sjfJXCM2E8urFB" // 有两个人扣钱的
-	// txhash := "3eETnjk4jSTudYe3tyZR7VKd9E5gy3r9c149f78drfJoq52yo4bnJGmyU5NNvpxF3JmQNYHF2SA8RxmNYySiVkgN" // 有两人扣钱，两人收钱
-	response, err := chain.client().GetTransaction(context.Background(), txhash)
-	if err != nil {
-		t.Fatal(err)
+func TestChain_FetchTransactionDetail(t *testing.T) {
+	tests := []struct {
+		name    string
+		rpc     string
+		hash    string
+		want    *base.TransactionDetail
+		wantErr bool
+	}{
+		{
+			name: "mainnet succeed transfer",
+			rpc:  MainnetRPCEndpoint,
+			hash: "2RFRkcx8biPpfrSeZvtiWVihGWLrK5GF9J2GnD8xJvR5sGrF7jsVZHQcXpqCLSZEmP2zi7PqUngz5W6mfeDKNy9w",
+			want: &base.TransactionDetail{
+				HashString:      "2RFRkcx8biPpfrSeZvtiWVihGWLrK5GF9J2GnD8xJvR5sGrF7jsVZHQcXpqCLSZEmP2zi7PqUngz5W6mfeDKNy9w",
+				FromAddress:     "AXUChvpRwUUPMJhA4d23WcoyAL7W8zgAeo7KoH57c75F",
+				ToAddress:       "AXUChvpRwUUPMJhA4d23WcoyAL7W8zgAeo7KoH57c75F",
+				Amount:          "7360",
+				EstimateFees:    "5000",
+				Status:          base.TransactionStatusSuccess,
+				FinishTimestamp: 1657249797,
+			},
+		},
+		{
+			name: "devnet succeed transfer",
+			rpc:  DevnetRPCEndpoint,
+			hash: "2CLc8VSHsS67JT6a4UQZMMwFzcgnriHL4d1rpwu9WBwAqzucj6XPBcL2AYJy7n6xvmrnXTgGRKoThHizN8E8NTFN",
+			want: &base.TransactionDetail{
+				HashString:      "2CLc8VSHsS67JT6a4UQZMMwFzcgnriHL4d1rpwu9WBwAqzucj6XPBcL2AYJy7n6xvmrnXTgGRKoThHizN8E8NTFN",
+				FromAddress:     "AfBfH4ehvcXx66Y5YZozgTYPC1nieL9A3r2yT3vCXqPY",
+				ToAddress:       "9B5XszUGdMaxCZ7uSQhPzdks5ZQSmWxrmzCSvtJ6Ns6g",
+				Amount:          "100000000",
+				EstimateFees:    "5000",
+				Status:          base.TransactionStatusSuccess,
+				FinishTimestamp: 1657177658,
+			},
+		},
+		{
+			name:    "devnet succeed but not contain an transfer",
+			rpc:     DevnetRPCEndpoint,
+			hash:    "3VjZjLrinNbHnkoTcvFi37nZgBcLdpCeHtmuXxqWS21stBbfKMCNhqmtG46BpPnWav16zPjNoSgM2eDn6w9k6bDN",
+			wantErr: true,
+		},
 	}
-
-	detail := &base.TransactionDetail{HashString: txhash}
-	err = decodeTransaction(response, detail)
-	if err != nil {
-		t.Fatal(err)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := NewChainWithRpc(tt.rpc)
+			got, err := c.FetchTransactionDetail(tt.hash)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Chain.FetchTransactionDetail() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Chain.FetchTransactionDetail() = %v, want %v", got, tt.want)
+			}
+		})
 	}
-	t.Log(detail)
 }
