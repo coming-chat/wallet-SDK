@@ -26,9 +26,8 @@ type Token struct {
 	chain *Chain
 }
 
-// Warning: initial unavailable, You must create based on Chain.MainToken()
-func NewToken() (*Token, error) {
-	return nil, errors.New("Token initial unavailable, You must create based on Chain.MainToken()")
+func NewToken(chain *Chain) *Token {
+	return &Token{chain}
 }
 
 // MARK - Implement the protocol Token

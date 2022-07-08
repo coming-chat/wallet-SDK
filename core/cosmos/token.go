@@ -24,9 +24,12 @@ type Token struct {
 	Denom  string
 }
 
-// Warning: initial unavailable, You must create based on Chain.DenomToken()
-func NewToken() (*Token, error) {
-	return nil, errors.New("Token initial unavailable, You must create based on Chain.DenomToken()")
+func NewToken(chain *Chain, prefix, denom string) *Token {
+	return &Token{
+		chain:  chain,
+		Prefix: prefix,
+		Denom:  denom,
+	}
 }
 
 // MARK - Implement the protocol Token
