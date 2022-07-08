@@ -30,7 +30,9 @@ func NewAccountWithMnemonic(mnemonic string) (*Account, error) {
 	return &Account{&account}, nil
 }
 
-func NewAccountWithPrivateKey(prikey string) (*Account, error) {
+// rename for support android.
+// Android cant support both NewAccountWithMnemonic(string) and NewAccountWithPrivateKey(string)
+func AccountWithPrivateKey(prikey string) (*Account, error) {
 	prikey = strings.TrimPrefix(prikey, "0x")
 	account, err := solana.AccountFromHex(prikey)
 	if err != nil {

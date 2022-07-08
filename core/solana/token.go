@@ -50,7 +50,7 @@ func (t *Token) BalanceOfAccount(account base.Account) (*base.Balance, error) {
 // MARK - Solana token
 
 func (t *Token) BuildTransferTx(privateKey, receiverAddress, amount string) (*base.OptionalString, error) {
-	account, err := NewAccountWithPrivateKey(privateKey)
+	account, err := AccountWithPrivateKey(privateKey)
 	if err != nil {
 		return nil, err
 	}
