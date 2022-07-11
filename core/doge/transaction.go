@@ -45,10 +45,10 @@ func (t *Transaction) ToAddressAndTransferAmount() (string, *big.Int) {
 	to := ""
 	total := big.NewInt(0).SetBytes(t.Total.Bytes())
 	for idx, out := range t.Outputs {
-		address := ""
-		if len(out.Addresses) > 0 {
-			address = out.Addresses[0]
+		if len(out.Addresses) <= 0 {
+			continue
 		}
+		address := out.Addresses[0]
 		if address == from {
 			total.Sub(total, out.Value)
 			continue
