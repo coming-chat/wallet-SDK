@@ -104,6 +104,9 @@ func (c *Chain) FetchTransactionStatus(hash string) base.TransactionStatus {
 	if err != nil {
 		return base.TransactionStatusFailure
 	}
+	if response == nil || response.Meta == nil {
+		return base.TransactionStatusPending
+	}
 	if response.Meta.Err == nil {
 		return base.TransactionStatusSuccess
 	}
@@ -120,6 +123,11 @@ func (c *Chain) BatchFetchTransactionStatus(hashListString string) string {
 
 func decodeTransaction(tx *client.GetTransactionResponse, to *base.TransactionDetail) error {
 	base.CatchPanicAndMapToBasicError(nil)
+
+	if tx == nil || tx.BlockTime == nil {
+		to.Status = base.TransactionStatusPending
+		return nil
+	}
 
 	message := tx.Transaction.Message
 	for _, instruction := range message.Instructions {

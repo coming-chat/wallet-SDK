@@ -162,3 +162,33 @@ func TestChain_FetchTransactionDetail(t *testing.T) {
 		})
 	}
 }
+
+func TestChain_FetchTransactionStatus(t *testing.T) {
+	tests := []struct {
+		name string
+		rpc  string
+		hash string
+		want base.TransactionStatus
+	}{
+		{
+			name: "devnet normal1",
+			rpc:  DevnetRPCEndpoint,
+			hash: "3L8qPd9cTFj3KSe8bBhjdopik2xb7m2gE1ji6oWpZWgu6RgAKxA7Z8b6o11uBSYc8MmwFpeE4EoRtd2q14d4ePWe",
+			want: base.TransactionStatusSuccess,
+		},
+		{
+			name: "devnet normal2",
+			rpc:  DevnetRPCEndpoint,
+			hash: "xV56yXtPnxnzgvf5uNp3es5znqNt2FerXiVxWvEDZxLzsNkK2zy6vUYZhcLLQYbswfpbUBXnmdVnDZ3dAR5YSYm",
+			want: base.TransactionStatusSuccess,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := NewChainWithRpc(tt.rpc)
+			if got := c.FetchTransactionStatus(tt.hash); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Chain.FetchTransactionStatus() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
