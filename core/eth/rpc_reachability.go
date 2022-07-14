@@ -1,13 +1,14 @@
 package eth
 
 import (
-	"context"
 	"encoding/json"
+	"math/big"
 	"sort"
 	"strings"
 	"time"
 
 	"github.com/coming-chat/wallet-SDK/core/base"
+	"github.com/coming-chat/wallet-SDK/pkg/httpUtil"
 )
 
 type RpcReachabilityDelegate interface {
@@ -85,11 +86,16 @@ func (r *RpcReachability) startConnectivity(rpcList string, delegate RpcReachabi
 		var latestLatency *RpcLatency
 		successTimes := 0
 		url := i.(string)
-		for c := 0; c < r.ReachCount; c++ {
+		// The result of the first request may be highly skewed, So we need to request one more time
+		for c := 0; c < r.ReachCount+1; c++ {
 			if r.stoped {
 				break
 			}
 			latency, err := r.latencyOf(url)
+			if c == 0 {
+				// Ignore the result of the first request
+				continue
+			}
 			// fmt.Printf("... connect %v %v, cost: %v \n", c, url, latency.Latency)
 			if err != nil {
 				if failOk {
@@ -149,25 +155,32 @@ func (r *RpcReachability) latencyOf(rpc string) (l *RpcLatency, err error) {
 		Latency: reachFailedTime,
 		Height:  -1,
 	}
-	var connectTimeout int64 = 3000
-	if r.Timeout > connectTimeout {
-		connectTimeout = r.Timeout
+
+	timeStart := time.Now() // Time Start
+	params := httpUtil.RequestParams{
+		Header:  map[string]string{"Content-Type": "application/json"},
+		Body:    []byte(`{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":13}`),
+		Timeout: time.Duration(r.Timeout * int64(time.Millisecond)),
 	}
-	chain, err := getConnectionWithTimeout(rpc, connectTimeout)
+	response, err := httpUtil.Post(rpc, params)
 	if err != nil {
 		return l, err
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(r.Timeout*int64(time.Millisecond)))
-	defer cancel()
-	timeStart := time.Now()
-	height, err := chain.RemoteRpcClient.BlockNumber(ctx)
-	timeCost := time.Since(timeStart)
+	model := struct {
+		Result string `json:"result"`
+	}{}
+	err = json.Unmarshal(response, &model)
 	if err != nil {
 		return l, err
 	}
+	heightInt, ok := big.NewInt(0).SetString(model.Result, 0)
+	if !ok {
+		heightInt = big.NewInt(0)
+	}
+	timeCost := time.Since(timeStart) // Time End
 
-	l.Height = int64(height)
+	l.Height = heightInt.Int64()
 	l.Latency = timeCost.Milliseconds()
 	return l, nil
 }
