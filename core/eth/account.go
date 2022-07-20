@@ -3,6 +3,7 @@ package eth
 import (
 	"crypto/ecdsa"
 	"fmt"
+	"strings"
 
 	"github.com/btcsuite/btcd/btcutil/hdkeychain"
 	"github.com/btcsuite/btcd/chaincfg"
@@ -50,6 +51,21 @@ func NewAccountWithMnemonic(mnemonic string) (*Account, error) {
 	privateKeyECDSA := privateKey.ToECDSA()
 	address := crypto.PubkeyToAddress(privateKeyECDSA.PublicKey).Hex()
 
+	return &Account{
+		Util:            NewUtil(),
+		privateKeyECDSA: privateKeyECDSA,
+		address:         address,
+	}, nil
+}
+
+// We cannot use name `NewAccountWithPrivateKey`, because android not support.
+func EthAccountWithPrivateKey(privateKey string) (*Account, error) {
+	privateKey = strings.TrimPrefix(privateKey, "0x")
+	privateKeyECDSA, err := crypto.HexToECDSA(privateKey)
+	if err != nil {
+		return nil, err
+	}
+	address := crypto.PubkeyToAddress(privateKeyECDSA.PublicKey).Hex()
 	return &Account{
 		Util:            NewUtil(),
 		privateKeyECDSA: privateKeyECDSA,

@@ -40,11 +40,6 @@ func PrivateKeyToAddress(privateKey string) (string, error) {
 
 // Encode erc20 transfer data
 func EncodeErc20Transfer(toAddress, amount string) ([]byte, error) {
-	parsedAbi, err := abi.JSON(strings.NewReader(Erc20AbiStr))
-	if err != nil {
-		return nil, err
-	}
-
 	if !common.IsHexAddress(toAddress) {
 		return nil, errors.New("Invalid receiver address")
 	}
@@ -52,5 +47,20 @@ func EncodeErc20Transfer(toAddress, amount string) ([]byte, error) {
 	if !valid {
 		return nil, errors.New("Invalid transfer amount")
 	}
-	return parsedAbi.Pack(ERC20_METHOD_TRANSFER, common.HexToAddress(toAddress), amountInt)
+	return EncodeAbiData(Erc20AbiStr, ERC20_METHOD_TRANSFER, common.HexToAddress(toAddress), amountInt)
+}
+
+func EncodeErc20Approve(spender string, amount *big.Int) ([]byte, error) {
+	if !common.IsHexAddress(spender) {
+		return nil, errors.New("Invalid receiver address")
+	}
+	return EncodeAbiData(Erc20AbiStr, ERC20_METHOD_APPROVE, common.HexToAddress(spender), amount)
+}
+
+func EncodeAbiData(abiString, method string, params ...interface{}) ([]byte, error) {
+	parsedAbi, err := abi.JSON(strings.NewReader(abiString))
+	if err != nil {
+		return nil, err
+	}
+	return parsedAbi.Pack(method, params...)
 }

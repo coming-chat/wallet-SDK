@@ -95,7 +95,9 @@ var rpcs = rpcConfig{
 	arbitrumProd: rpcInfo{
 		"https://arb1.arbitrum.io/rpc",
 		"https://arbiscan.io",
-		nil,
+		&contracts{
+			USDT: "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
+		},
 	},
 	arbitrumTest: rpcInfo{
 		"https://rinkeby.arbitrum.io/rpc",

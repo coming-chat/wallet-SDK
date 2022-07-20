@@ -3,9 +3,11 @@ package eth
 import (
 	"crypto/ecdsa"
 	"errors"
+	"math/big"
 	"strings"
 
 	"github.com/coming-chat/wallet-SDK/core/base"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/shopspring/decimal"
 )
@@ -27,9 +29,11 @@ type Erc20Token struct {
 	ContractAddress string
 }
 
-// Warning: initial unavailable, You must create based on Chain.Erc20Token()
-func NewErc20Token() (*Erc20Token, error) {
-	return nil, errors.New("Token initial unavailable, You must create based on Chain.MainToken()")
+func NewErc20Token(chain *Chain, contractAddress string) *Erc20Token {
+	return &Erc20Token{
+		Token:           &Token{chain: chain},
+		ContractAddress: contractAddress,
+	}
 }
 
 // MARK - Implement the protocol Token, Override
@@ -72,6 +76,14 @@ func (t *Erc20Token) TokenInfo() (*base.TokenInfo, error) {
 		return nil, err
 	}
 	return info, nil
+}
+
+func (t *Erc20Token) Decimal() (int16, error) {
+	chain, err := GetConnection(t.chain.RpcUrl)
+	if err != nil {
+		return 18, err
+	}
+	return chain.TokenDecimal(t.ContractAddress)
 }
 
 func (t *Erc20Token) BalanceOfAddress(address string) (*base.Balance, error) {
@@ -141,5 +153,55 @@ func (t *Erc20Token) buildTransfer(privateKey *ecdsa.PrivateKey, transaction *Tr
 	if err != nil {
 		return nil, err
 	}
-	return t.Token.buildTransfer(privateKey, transaction)
+	return t.chain.buildTransfer(privateKey, transaction)
+}
+
+func (t *Erc20Token) Allowance(owner, spender string) (*big.Int, error) {
+	chain, err := GetConnection(t.chain.RpcUrl)
+	if err != nil {
+		return nil, err
+	}
+	res := big.NewInt(0)
+	ownerAddress := common.HexToAddress(owner)
+	spenderAddress := common.HexToAddress(spender)
+	err = chain.CallContractConstant(&res, t.ContractAddress, Erc20AbiStr, "allowance", nil, ownerAddress, spenderAddress)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func (t *Erc20Token) Approve(account *Account, spender string, amount *big.Int) (string, error) {
+	err := errors.New("Approve failed")
+
+	approveData, err := EncodeErc20Approve(spender, amount)
+	if err != nil {
+		return "", err
+	}
+
+	gasPrice, err := t.chain.SuggestGasPrice()
+	if err != nil {
+		return "", err
+	}
+	msg := NewCallMsg()
+	msg.SetFrom(account.Address())
+	msg.SetTo(t.ContractAddress)
+	msg.SetGasPrice(gasPrice.Value)
+	msg.SetData(approveData)
+	msg.SetValue("0")
+
+	gasLimit, err := t.chain.EstimateGasLimit(msg)
+	if err != nil {
+		gasLimit = &base.OptionalString{Value: "100000"}
+		err = nil
+	}
+	msg.SetGasLimit(gasLimit.Value)
+
+	transaction := msg.TransferToTransaction()
+	rawTx, err := t.chain.buildTransfer(account.privateKeyECDSA, transaction)
+	if err != nil {
+		return "", err
+	}
+
+	return t.chain.SendRawTransaction(rawTx.Value)
 }

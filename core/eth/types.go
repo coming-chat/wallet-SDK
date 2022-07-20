@@ -113,6 +113,16 @@ func (msg *CallMsg) SetTo(address string) {
 	}
 }
 
+func (msg *CallMsg) TransferToTransaction() *Transaction {
+	return &Transaction{
+		GasPrice: msg.GetGasPrice(),
+		GasLimit: msg.GetGasLimit(),
+		To:       msg.GetTo(),
+		Value:    msg.GetValue(),
+		Data:     msg.GetDataHex(),
+	}
+}
+
 type Transaction struct {
 	Nonce    string // nonce of sender account
 	GasPrice string // wei per gas
@@ -246,4 +256,21 @@ func (tx *Transaction) TransformToErc20Transaction(contractAddress string) error
 	tx.Value = "0"
 	tx.Data = HexType.HexEncodeToString(data)
 	return nil
+}
+
+// @return gasPrice * gasLimit + value
+func (tx *Transaction) TotalAmount() string {
+	priceInt, ok := big.NewInt(0).SetString(tx.GasPrice, 10)
+	if !ok {
+		return "0"
+	}
+	limitInt, ok := big.NewInt(0).SetString(tx.GasLimit, 10)
+	if !ok {
+		return "0"
+	}
+	amount, ok := big.NewInt(0).SetString(tx.Value, 10)
+	if !ok {
+		return "0"
+	}
+	return amount.Add(amount, priceInt.Mul(priceInt, limitInt)).String()
 }

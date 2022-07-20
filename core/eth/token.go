@@ -1,7 +1,6 @@
 package eth
 
 import (
-	"crypto/ecdsa"
 	"encoding/json"
 	"errors"
 	"math/big"
@@ -75,40 +74,11 @@ func (t *Token) BuildTransferTx(privateKey string, transaction *Transaction) (*b
 	if err != nil {
 		return nil, err
 	}
-	return t.buildTransfer(privateKeyECDSA, transaction)
+	return t.chain.buildTransfer(privateKeyECDSA, transaction)
 }
 
 func (t *Token) BuildTransferTxWithAccount(account *Account, transaction *Transaction) (*base.OptionalString, error) {
-	return t.buildTransfer(account.privateKeyECDSA, transaction)
-}
-
-func (t *Token) buildTransfer(privateKey *ecdsa.PrivateKey, transaction *Transaction) (*base.OptionalString, error) {
-	chain, err := GetConnection(t.chain.RpcUrl)
-	if err != nil {
-		return nil, err
-	}
-
-	if transaction.Nonce == "" || transaction.Nonce == "0" {
-		address := crypto.PubkeyToAddress(privateKey.PublicKey).Hex()
-		nonce, err := chain.Nonce(address)
-		if err != nil {
-			nonce = "0"
-			err = nil
-		}
-		transaction.Nonce = nonce
-	}
-
-	rawTx, err := transaction.GetRawTx()
-	if err != nil {
-		return nil, err
-	}
-
-	txResult, err := chain.buildTxWithTransaction(rawTx, privateKey)
-	if err != nil {
-		return nil, err
-	}
-
-	return &base.OptionalString{Value: txResult.TxHex}, nil
+	return t.chain.buildTransfer(account.privateKeyECDSA, transaction)
 }
 
 type OptimismLayer2Gas struct {

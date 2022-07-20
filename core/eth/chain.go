@@ -1,6 +1,12 @@
 package eth
 
-import "github.com/coming-chat/wallet-SDK/core/base"
+import (
+	"crypto/ecdsa"
+	"strings"
+
+	"github.com/coming-chat/wallet-SDK/core/base"
+	"github.com/ethereum/go-ethereum/crypto"
+)
 
 type Chain struct {
 	RpcUrl string
@@ -98,4 +104,46 @@ func (c *Chain) BatchFetchTransactionStatus(hashListString string) string {
 		return ""
 	}
 	return chain.SdkBatchTransactionStatus(hashListString)
+}
+
+func (c *Chain) BuildTransferTx(privateKey string, transaction *Transaction) (*base.OptionalString, error) {
+	privateKey = strings.TrimPrefix(privateKey, "0x")
+	privateKeyECDSA, err := crypto.HexToECDSA(privateKey)
+	if err != nil {
+		return nil, err
+	}
+	return c.buildTransfer(privateKeyECDSA, transaction)
+}
+
+func (c *Chain) BuildTransferTxWithAccount(account *Account, transaction *Transaction) (*base.OptionalString, error) {
+	return c.buildTransfer(account.privateKeyECDSA, transaction)
+}
+
+func (c *Chain) buildTransfer(privateKey *ecdsa.PrivateKey, transaction *Transaction) (*base.OptionalString, error) {
+	chain, err := GetConnection(c.RpcUrl)
+	if err != nil {
+		return nil, err
+	}
+
+	if transaction.Nonce == "" || transaction.Nonce == "0" {
+		address := crypto.PubkeyToAddress(privateKey.PublicKey).Hex()
+		nonce, err := chain.Nonce(address)
+		if err != nil {
+			nonce = "0"
+			err = nil
+		}
+		transaction.Nonce = nonce
+	}
+
+	rawTx, err := transaction.GetRawTx()
+	if err != nil {
+		return nil, err
+	}
+
+	txResult, err := chain.buildTxWithTransaction(rawTx, privateKey)
+	if err != nil {
+		return nil, err
+	}
+
+	return &base.OptionalString{Value: txResult.TxHex}, nil
 }
