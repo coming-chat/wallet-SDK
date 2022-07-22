@@ -51,31 +51,3 @@ func TestEstimateGasLimit(t *testing.T) {
 
 	t.Log("TestEstimateGasLimit success", gasLimit)
 }
-
-func TestContractGasLimit(t *testing.T) {
-	// rpcUrl := rpcs.binanceTest.url
-	// contractAddress := "0xdAC17F958D2ee523a2206206994597C13D831ec7"
-	// walletAddress := "0x1988EbF818FF475f680AF72cf44BBEe1A7CEA666"
-	// toAddress := "0x1988EbF818FF475f680AF72cf44BBEe1A7CEA666"
-	// amount := "111000000"
-	id := 2
-	println(id)
-
-	rpcInfo := rpcs.ethereumProd
-	// rpcUrl := rpcs.binanceProd.url
-	// walletAddress := "0x46D608080FF930D847185Ea6811CC0652457E76c"
-	walletAddress := "0x1F05e1419D511C5f1Df9a624FC31Afe24170b4A2"
-	toAddress := "0x1F05e1419D511C5f1Df9a624FC31Afe24170b4A2"
-	amount := "10000"
-
-	u := &CoinUtil{
-		RpcUrl:          rpcInfo.url,
-		ContractAddress: rpcInfo.contracts.USDT,
-		WalletAddress:   walletAddress,
-	}
-	gasLimit, err := u.EstimateGasLimit(toAddress, "34891", amount)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log("gas  limit = ", gasLimit)
-}
