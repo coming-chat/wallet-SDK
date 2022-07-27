@@ -10,7 +10,6 @@ import (
 
 	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/ethereum/go-ethereum"
-	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -28,8 +27,8 @@ type Jsonable interface {
 
 // 获取交易的详情
 // @param hashString 交易的 hash
-// @return 详情对象，该对象无法提供 CID 信息
-func (e *EthChain) FetchTransactionDetail(hashString string) (detail *base.TransactionDetail, err error) {
+// @return 交易详情 和 交易原文信息
+func (e *EthChain) FetchTransactionDetail(hashString string) (detail *base.TransactionDetail, msg types.Message, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
 
 	ctx, cancel := context.WithTimeout(context.Background(), e.timeout)
@@ -38,27 +37,17 @@ func (e *EthChain) FetchTransactionDetail(hashString string) (detail *base.Trans
 	if err != nil {
 		return
 	}
-	msg, err := tx.AsMessage(types.NewLondonSigner(e.chainId), nil)
+	msg, err = tx.AsMessage(types.NewLondonSigner(e.chainId), nil)
 	if err != nil {
 		return
-	}
-
-	address := msg.To().String()
-	amount := msg.Value().String()
-
-	if len(tx.Data()) != 0 {
-		address, amount, err = decodeErc20TransferInput(tx.Data())
-		if err != nil {
-			return
-		}
 	}
 
 	gasFeeInt := big.NewInt(0).Mul(msg.GasPrice(), big.NewInt(0).SetUint64(msg.Gas()))
 	detail = &base.TransactionDetail{
 		HashString:   hashString,
 		FromAddress:  msg.From().String(),
-		ToAddress:    address,
-		Amount:       amount,
+		ToAddress:    msg.To().String(),
+		Amount:       msg.Value().String(),
 		EstimateFees: gasFeeInt.String(),
 	}
 
@@ -112,7 +101,7 @@ func (e *EthChain) FetchTransactionDetail(hashString string) (detail *base.Trans
 	detail.EstimateFees = gasFeeInt.String()
 	detail.FinishTimestamp = int64(blockHeader.Time)
 
-	return detail, nil
+	return detail, msg, nil
 }
 
 // 获取交易的状态
@@ -158,33 +147,6 @@ func (e *EthChain) SdkBatchTransactionStatus(hashListString string) string {
 	hashList := strings.Split(hashListString, ",")
 	statuses := e.BatchTransactionStatus(hashList)
 	return strings.Join(statuses, ",")
-}
-
-// 解析 erc20 转账的 input data
-// @return 返回转账地址和金额
-func decodeErc20TransferInput(data []byte) (string, string, error) {
-	if len(data) == 0 {
-		// 主币
-		return "", "", nil
-	}
-
-	parsedAbi, err := abi.JSON(strings.NewReader(Erc20AbiStr))
-	if err != nil {
-		return "", "", err
-	}
-
-	method, err := parsedAbi.MethodById(data[:4])
-	if err != nil {
-		return "", "", err
-	}
-	if method.RawName != ERC20_METHOD_TRANSFER {
-		return "", "", nil
-	}
-
-	params, err := method.Inputs.Unpack(data[4:])
-	address := params[0].(common.Address).String()
-	amount := params[1].(*big.Int).String()
-	return address, amount, nil
 }
 
 // 根据交易hash查询交易状态

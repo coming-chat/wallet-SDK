@@ -1,6 +1,7 @@
 package eth
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/big"
 
@@ -134,7 +135,7 @@ func (rpa *RedPacketAction) EnsureApprovedTokens(account *Account, chain *Chain,
 // @param contractAddress 红包合约地址
 // @param chain 要发红包的链
 func (rpa *RedPacketAction) TransactionFrom(fromAddress, contractAddress string, chain *Chain) (*Transaction, error) {
-	data, err := EncodeAbiData(RedPacketABI, rpa.Method, rpa.Params...)
+	data, err := EncodeContractData(RedPacketABI, rpa.Method, rpa.Params...)
 	if err != nil {
 		return nil, err
 	}
@@ -159,4 +160,56 @@ func (rpa *RedPacketAction) TransactionFrom(fromAddress, contractAddress string,
 	msg.SetGasLimit(gasLimit.Value)
 
 	return msg.TransferToTransaction(), nil
+}
+
+type RedPacketDetail struct {
+	*base.TransactionDetail
+
+	AmountName    string
+	AmountDecimal int16
+}
+
+func (d *RedPacketDetail) JsonString() string {
+	bytes, err := json.Marshal(d)
+	if err != nil {
+		return ""
+	}
+	return string(bytes)
+}
+
+func NewRedPacketDetailWithJsonString(s string) *RedPacketDetail {
+	bytes := []byte(s)
+	var d = RedPacketDetail{}
+	err := json.Unmarshal(bytes, &d)
+	if err != nil {
+		return nil
+	}
+	return &d
+}
+
+func (c *Chain) FetchRedPacketCreationDetail(hash string) (*RedPacketDetail, error) {
+	chain, err := GetConnection(c.RpcUrl)
+	if err != nil {
+		return nil, err
+	}
+
+	detail, msg, err := chain.FetchTransactionDetail(hash)
+	if err != nil {
+		return nil, err
+	}
+	redDetail := &RedPacketDetail{detail, "", 0}
+	if data := msg.Data(); len(data) > 0 {
+		method, params, err_ := DecodeContractParams(RedPacketABI, data)
+		if err_ != nil {
+			return nil, err_
+		}
+		if method == RPAMethodCreate {
+			redDetail.Amount = params[2].(*big.Int).String()
+			erc20Address := params[0].(common.Address).String()
+			redDetail.AmountName, _ = chain.TokenName(erc20Address)
+			redDetail.AmountDecimal, _ = chain.TokenDecimal(erc20Address)
+		}
+	}
+
+	return redDetail, nil
 }

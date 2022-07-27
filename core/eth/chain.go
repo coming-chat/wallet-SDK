@@ -2,9 +2,11 @@ package eth
 
 import (
 	"crypto/ecdsa"
+	"math/big"
 	"strings"
 
 	"github.com/coming-chat/wallet-SDK/core/base"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 )
 
@@ -77,12 +79,24 @@ func (c *Chain) SendRawTransaction(signedTx string) (string, error) {
 }
 
 // Fetch transaction details through transaction hash
+// Support normal or erc20 transfer
 func (c *Chain) FetchTransactionDetail(hash string) (*base.TransactionDetail, error) {
 	chain, err := GetConnection(c.RpcUrl)
 	if err != nil {
 		return nil, err
 	}
-	return chain.FetchTransactionDetail(hash)
+	detail, msg, err := chain.FetchTransactionDetail(hash)
+	if err != nil {
+		return nil, err
+	}
+	if data := msg.Data(); len(data) > 0 {
+		method, params, err := DecodeContractParams(Erc20AbiStr, data)
+		if err == nil && method == ERC20_METHOD_TRANSFER {
+			detail.ToAddress = params[0].(common.Address).String()
+			detail.Amount = params[1].(*big.Int).String()
+		}
+	}
+	return detail, nil
 }
 
 // Fetch transaction status through transaction hash

@@ -66,3 +66,22 @@ func TestRedPacketProcess(t *testing.T) {
 	}
 	t.Logf("Red packet process success! txHash = %v", txHash)
 }
+
+func TestFetchRedPacketCreationDetail(t *testing.T) {
+	hash := "0x598ed72d6ddcc1a4b378acd9b6d1917dc0eea0eb905de4aca27ce50e61b1539c"
+	chain := rpcs.sherpaxProd.Chain()
+	detail, err := chain.FetchRedPacketCreationDetail(hash)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(detail, detail.TransactionDetail)
+
+	jsonString := detail.JsonString()
+	t.Log("json string = ", jsonString)
+
+	model2 := NewRedPacketDetailWithJsonString(jsonString)
+	if model2 == nil {
+		t.Fatal("faile")
+	}
+	t.Log(model2, model2.TransactionDetail)
+}

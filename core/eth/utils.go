@@ -47,20 +47,38 @@ func EncodeErc20Transfer(toAddress, amount string) ([]byte, error) {
 	if !valid {
 		return nil, errors.New("Invalid transfer amount")
 	}
-	return EncodeAbiData(Erc20AbiStr, ERC20_METHOD_TRANSFER, common.HexToAddress(toAddress), amountInt)
+	return EncodeContractData(Erc20AbiStr, ERC20_METHOD_TRANSFER, common.HexToAddress(toAddress), amountInt)
 }
 
 func EncodeErc20Approve(spender string, amount *big.Int) ([]byte, error) {
 	if !common.IsHexAddress(spender) {
 		return nil, errors.New("Invalid receiver address")
 	}
-	return EncodeAbiData(Erc20AbiStr, ERC20_METHOD_APPROVE, common.HexToAddress(spender), amount)
+	return EncodeContractData(Erc20AbiStr, ERC20_METHOD_APPROVE, common.HexToAddress(spender), amount)
 }
 
-func EncodeAbiData(abiString, method string, params ...interface{}) ([]byte, error) {
+func EncodeContractData(abiString, method string, params ...interface{}) ([]byte, error) {
 	parsedAbi, err := abi.JSON(strings.NewReader(abiString))
 	if err != nil {
 		return nil, err
 	}
 	return parsedAbi.Pack(method, params...)
+}
+
+func DecodeContractParams(abiString string, data []byte) (string, []interface{}, error) {
+	if len(data) <= 4 {
+		return "", nil, nil
+	}
+	parsedAbi, err := abi.JSON(strings.NewReader(abiString))
+	if err != nil {
+		return "", nil, err
+	}
+
+	method, err := parsedAbi.MethodById(data[:4])
+	if err != nil {
+		return "", nil, err
+	}
+
+	params, err := method.Inputs.Unpack(data[4:])
+	return method.RawName, params, err
 }
