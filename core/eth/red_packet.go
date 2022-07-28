@@ -177,6 +177,12 @@ func (d *RedPacketDetail) JsonString() string {
 	return string(bytes)
 }
 
+func NewRedPacketDetail() *RedPacketDetail {
+	return &RedPacketDetail{
+		TransactionDetail: &base.TransactionDetail{},
+	}
+}
+
 func NewRedPacketDetailWithJsonString(s string) *RedPacketDetail {
 	bytes := []byte(s)
 	var d = RedPacketDetail{}
