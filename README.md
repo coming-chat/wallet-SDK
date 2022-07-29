@@ -245,10 +245,9 @@ signedHashString = signedTxObj.Value // signed transaction hash string
 --------------------------------------------------------------------------------
 
 
-
 ComingChat substrate wallet SDK
 
-## build android && ios
+## Build Android && Ios
 
 * make buildAllAndroid
 * make buildAllIOS
