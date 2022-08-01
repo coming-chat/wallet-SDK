@@ -79,9 +79,9 @@ func TestFetchRedPacketCreationDetail(t *testing.T) {
 	jsonString := detail.JsonString()
 	t.Log("json string = ", jsonString)
 
-	model2 := NewRedPacketDetailWithJsonString(jsonString)
-	if model2 == nil {
-		t.Fatal("faile")
+	model2, err := NewRedPacketDetailWithJsonString(jsonString)
+	if err != nil {
+		t.Fatal(err)
 	}
 	t.Log(model2, model2.TransactionDetail)
 }

@@ -183,14 +183,14 @@ func NewRedPacketDetail() *RedPacketDetail {
 	}
 }
 
-func NewRedPacketDetailWithJsonString(s string) *RedPacketDetail {
+func NewRedPacketDetailWithJsonString(s string) (*RedPacketDetail, error) {
 	bytes := []byte(s)
 	var d = RedPacketDetail{}
 	err := json.Unmarshal(bytes, &d)
 	if err != nil {
-		return nil
+		return nil, err
 	}
-	return &d
+	return &d, nil
 }
 
 func (c *Chain) FetchRedPacketCreationDetail(hash string) (*RedPacketDetail, error) {
