@@ -34,9 +34,9 @@ func netParamsOf(chainnet string) (*chaincfg.Params, error) {
 func scanHostOf(chainnet string) (string, error) {
 	switch chainnet {
 	case ChainSignet:
-		return "https://electrs-pre.coming.chat", nil
+		return "https://electrs.coming.chat/signet", nil
 	case ChainMainnet, ChainBitcoin:
-		return "https://electrs-mainnet.coming.chat", nil
+		return "https://electrs.coming.chat/mainnet", nil
 	default:
 		return "", ErrUnsupportedChain
 	}

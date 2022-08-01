@@ -51,13 +51,14 @@ func TestChain_BalanceOfAddress(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			chain, _ := NewChainWithChainnet(tt.chainnet)
 			got, err := chain.BalanceOfAddress(tt.address)
+
+			host, _ := scanHostOf(tt.chainnet)
+			url := host + "/address/" + tt.address
 			if (err != nil) != tt.wantErr {
-				t.Errorf("BalanceOfAddress() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("BalanceOfAddress() error = %v, wantErr %v, url = %v", err, tt.wantErr, url)
 				return
 			}
 			if err == nil {
-				host, _ := scanHostOf(tt.chainnet)
-				url := host + "/address/" + tt.address
 				t.Log("result: ", got.Total, ", Maybe you should verify via the link: ", url)
 			}
 		})
