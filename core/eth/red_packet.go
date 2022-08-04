@@ -210,6 +210,17 @@ func (c *Chain) FetchRedPacketCreationDetail(hash string) (*RedPacketDetail, err
 			return nil, err_
 		}
 		if method == RPAMethodCreate {
+			feeInt, ok := big.NewInt(0).SetString(detail.EstimateFees, 10)
+			if !ok {
+				feeInt = big.NewInt(0)
+			}
+			valueInt, ok := big.NewInt(0).SetString(detail.Amount, 10)
+			if !ok {
+				valueInt = big.NewInt(0)
+			}
+			feeInt = feeInt.Add(feeInt, valueInt)
+
+			redDetail.EstimateFees = feeInt.String()
 			redDetail.Amount = params[2].(*big.Int).String()
 			erc20Address := params[0].(common.Address).String()
 			redDetail.AmountName, _ = chain.TokenName(erc20Address)
