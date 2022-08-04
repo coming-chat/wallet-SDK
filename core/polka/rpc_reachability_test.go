@@ -1,4 +1,4 @@
-package eth
+package polka
 
 import (
 	"fmt"
@@ -32,7 +32,7 @@ func TestRpcReachability_Test(t *testing.T) {
 	monitor.Timeout = 1500
 	t.Log(reach)
 
-	rpcUrls := []string{rpcs.ethereumProd.url, rpcs.binanceTest.url}
+	rpcUrls := []string{rpcs.polkadot.url, rpcs.chainxProd.url}
 	rpcListString := strings.Join(rpcUrls, ",")
 	// res := reach.StartConnectivitySync(rpcListString)
 	// t.Log(res)

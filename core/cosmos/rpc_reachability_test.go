@@ -1,4 +1,4 @@
-package eth
+package cosmos
 
 import (
 	"fmt"
@@ -32,7 +32,7 @@ func TestRpcReachability_Test(t *testing.T) {
 	monitor.Timeout = 1500
 	t.Log(reach)
 
-	rpcUrls := []string{rpcs.ethereumProd.url, rpcs.binanceTest.url}
+	rpcUrls := []string{rpcs.cosmosProd.rpc, rpcs.luncProd.rpc}
 	rpcListString := strings.Join(rpcUrls, ",")
 	// res := reach.StartConnectivitySync(rpcListString)
 	// t.Log(res)

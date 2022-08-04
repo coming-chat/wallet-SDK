@@ -4,7 +4,6 @@ import (
 	"errors"
 
 	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/btcsuite/btcd/rpcclient"
 )
 
 const (
@@ -72,41 +71,6 @@ func restUrlOf(chainnet string) (string, error) {
 	default:
 		return "", ErrUnsupportedChain
 	}
-}
-
-func scanHostOf(chainnet string) (string, error) {
-	switch chainnet {
-	case ChainTestnet:
-		return "https://electrs-pre.coming.chat", nil
-	case ChainMainnet:
-		return "https://electrs-mainnet.coming.chat", nil
-	default:
-		return "", ErrUnsupportedChain
-	}
-}
-
-func rpcClientOf(chainnet string) (*rpcclient.Client, error) {
-	switch chainnet {
-	case ChainTestnet:
-		return rpcclient.New(&rpcclient.ConnConfig{
-			Host:         "115.29.163.193:38332",
-			User:         "auth",
-			Pass:         "bitcoin-b2dd077",
-			HTTPPostMode: true,
-			DisableTLS:   true,
-		}, nil)
-
-	case ChainMainnet:
-		return rpcclient.New(&rpcclient.ConnConfig{
-			Host:         "115.29.163.193:8332",
-			User:         "auth",
-			Pass:         "bitcoin-b2dd077",
-			HTTPPostMode: true,
-			DisableTLS:   true,
-		}, nil)
-	}
-
-	return nil, ErrUnsupportedChain
 }
 
 func nameOf(chainnet string) (string, error) {
