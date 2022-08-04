@@ -96,6 +96,24 @@ func MaxBigInt(x, y *big.Int) *big.Int {
 	}
 }
 
+// @note float64 should use `math.Max()`
+func Max[T int | int8 | int16 | int32 | int64 | uint | uint8 | uint16 | uint32 | uint64 | float32 | string](x, y T) T {
+	if x >= y {
+		return x
+	} else {
+		return y
+	}
+}
+
+// @note float64 should use `math.Min()`
+func Min[T int | int8 | int16 | int32 | int64 | uint | uint8 | uint16 | uint32 | uint64 | float32 | string](x, y T) T {
+	if x <= y {
+		return x
+	} else {
+		return y
+	}
+}
+
 /* [zh] 该方法会捕捉 panic 抛出的值，并转成一个 error 对象通过参数指针返回
  *      注意: 如果想要返回它抓住的 error, 必须使用命名返回值！！
  * [en] This method will catch the value thrown by panic, and turn it into an error object and return it through the parameter pointer
