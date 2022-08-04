@@ -126,7 +126,15 @@ func (c *Chain) EstimateGasLimit(msg *CallMsg) (gas *base.OptionalString, err er
 	if err != nil {
 		return
 	}
-	gasStr := strconv.FormatUint(gasLimit, 10)
+	gasString := ""
+	if len(msg.msg.Data) > 0 {
+		gasFloat := big.NewFloat(0).SetUint64(gasLimit)
+		gasFloat = gasFloat.Mul(gasFloat, big.NewFloat(client.gasFactor()))
+		gasInt, _ := gasFloat.Int(nil)
+		gasString = gasInt.String()
+	} else {
+		gasString = strconv.FormatUint(gasLimit, 10)
+	}
 
-	return &base.OptionalString{Value: gasStr}, nil
+	return &base.OptionalString{Value: gasString}, nil
 }

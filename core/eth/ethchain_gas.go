@@ -16,7 +16,7 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-func (e *EthChain) gasFactor() float32 {
+func (e *EthChain) gasFactor() float64 {
 	if strings.HasPrefix(e.rpcUrl, "https://mainnet.infura.io/v3") {
 		return 1.8
 	}
@@ -99,7 +99,7 @@ func (e *EthChain) EstimateContractGasLimit(
 	if err != nil {
 		return
 	}
-	gasLimit := uint64(float64(tempGasLimitUint) * float64(e.gasFactor()))
+	gasLimit := uint64(float64(tempGasLimitUint) * e.gasFactor())
 	gasLimit = base.Max(60000, gasLimit)
 	gasLimitStr := strconv.FormatUint(gasLimit, 10)
 	return gasLimitStr, nil
@@ -157,5 +157,5 @@ func (e *EthChain) EstimateGasLimit(fromAddress string, receiverAddress string, 
 	if err != nil {
 		return
 	}
-	return gasLimitDecimal.Mul(decimal.NewFromFloat32(e.gasFactor())).Round(0).String(), nil
+	return gasLimitDecimal.Mul(decimal.NewFromFloat(e.gasFactor())).Round(0).String(), nil
 }
