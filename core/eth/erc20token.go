@@ -9,7 +9,6 @@ import (
 	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/shopspring/decimal"
 )
 
 type Erc20TokenInfo struct {
@@ -117,6 +116,7 @@ func (t *Erc20Token) EstimateGasLimit(fromAddress, receiverAddress, gasPrice, am
 	msg.SetFrom(fromAddress)
 	msg.SetTo(t.ContractAddress)
 	msg.SetGasPrice(gasPrice)
+	msg.SetValue("0")
 
 	data, err := EncodeErc20Transfer(receiverAddress, amount)
 	if err != nil {
@@ -128,11 +128,7 @@ func (t *Erc20Token) EstimateGasLimit(fromAddress, receiverAddress, gasPrice, am
 	if err != nil {
 		return "", err
 	}
-	gasLimitDecimal, err := decimal.NewFromString(gasLimit.Value)
-	if err != nil {
-		return "", err
-	}
-	return gasLimitDecimal.Mul(decimal.NewFromFloat32(1.3)).Round(0).String(), nil
+	return gasLimit.Value, nil
 }
 
 func (t *Erc20Token) BuildTransferTx(privateKey string, transaction *Transaction) (*base.OptionalString, error) {
