@@ -55,7 +55,7 @@ func rpcClientOf(chainnet string) (*rpcclient.Client, error) {
 
 	case ChainMainnet, ChainBitcoin:
 		return rpcclient.New(&rpcclient.ConnConfig{
-			Host:         "115.29.163.193:8332",
+			Host:         "bitcoin.coming.chat/mainnet",
 			User:         "auth",
 			Pass:         "bitcoin-b2dd077",
 			HTTPPostMode: true,

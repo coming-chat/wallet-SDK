@@ -21,12 +21,12 @@ type RpcReachability interface {
 
 type ReachMonitorDelegate interface {
 	// A node has received a response
-	ReachabilityDidReceiveNode(tester *ReachMonitor, latency *RpcLatency)
+	ReachabilityDidReceiveNode(monitor *ReachMonitor, latency *RpcLatency)
 	// A node request failed
-	ReachabilityDidFailNode(tester *ReachMonitor, latency *RpcLatency)
+	ReachabilityDidFailNode(monitor *ReachMonitor, latency *RpcLatency)
 	// The entire network connection test task is over
 	// @param overview Overview of the results of all connection tests
-	ReachabilityDidFinish(tester *ReachMonitor, overview string)
+	ReachabilityDidFinish(monitor *ReachMonitor, overview string)
 }
 
 type ReachMonitor struct {
