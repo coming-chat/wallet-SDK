@@ -14,9 +14,10 @@ pkgEth =  $(pkgCore)/eth
 pkgCosmos =  $(pkgCore)/cosmos
 pkgDoge =  $(pkgCore)/doge
 pkgSolana =  $(pkgCore)/solana
+pkgAptos =  $(pkgCore)/aptos
 pkgMSCheck = ${pkgCore}/multi-signature-check
 
-pkgAll = ${pkgBase} ${pkgWallet} ${pkgPolka} ${pkgBtc} ${pkgEth} ${pkgCosmos} ${pkgMSCheck} ${pkgDoge} ${pkgSolana}
+pkgAll = ${pkgBase} ${pkgWallet} ${pkgPolka} ${pkgBtc} ${pkgEth} ${pkgCosmos} ${pkgMSCheck} ${pkgDoge} ${pkgSolana} ${pkgAptos}
 
 iosPackageName=Wallet.xcframework
 

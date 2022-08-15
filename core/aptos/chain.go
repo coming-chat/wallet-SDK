@@ -172,8 +172,8 @@ func (c *Chain) BatchFetchTransactionStatus(hashListString string) string {
  * @param faucetUrl default https://faucet.devnet.aptoslabs.com
  * @returns Hashes of submitted transactions, e.g. "hash1,has2,hash3,..."
  */
-func FaucetFundAccount(address string, amount uint64, faucetUrl string) (*base.OptionalString, error) {
-	hashs, err := aptosclient.FaucetFundAccount(address, amount, faucetUrl)
+func FaucetFundAccount(address string, amount int64, faucetUrl string) (*base.OptionalString, error) {
+	hashs, err := aptosclient.FaucetFundAccount(address, uint64(amount), faucetUrl)
 	if err != nil {
 		return nil, err
 	}
