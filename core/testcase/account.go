@@ -19,6 +19,7 @@ type AccountGroup struct {
 	Polka2      AccountCase
 	Polka44     AccountCase
 	Solana      AccountCase
+	Aptos       AccountCase
 }
 
 // 你需要在你的电脑环境中配置助记词的环境变量，并更新对应的币种地址
@@ -39,6 +40,7 @@ var Accounts = AccountGroup{
 	Polka2:      AccountCase{M1, "EDodEyCN6w8XNuhL8kz9NqUhHyJns9pvgmi3oRNbwba5hxN"},
 	Polka44:     AccountCase{M1, "5RHWUui8WKff5quBNVhz1E1Kqfyf6ZbgrC3DtWS23ra3u4vV"},
 	Solana:      AccountCase{M1, "AfBfH4ehvcXx66Y5YZozgTYPC1nieL9A3r2yT3vCXqPY"},
+	Aptos:       AccountCase{M1, "0xcf4ddd208bbbbefb3227cafa5c917fc6541d26b1869276ea80d99ee0505fc6f8"},
 }
 
 var Accounts2 = AccountGroup{
