@@ -69,6 +69,21 @@ func TestChain_FetchTransactionDetail(t *testing.T) {
 			},
 		},
 		{
+			name:    "testnet failed tx",
+			restUrl: testnetRestUrl,
+			hash:    "0x0a5720b278708820eb46c24af485858da8668e183a27ee57f3eed402cdda7436",
+			want: &base.TransactionDetail{
+				HashString:      "0x0a5720b278708820eb46c24af485858da8668e183a27ee57f3eed402cdda7436",
+				FromAddress:     "0x56252ac5625573224bcaf89119b046f4a35a5c23bbf3d0f3eaa43311fbd2b2b3",
+				ToAddress:       "0x903056ed3ddd9c7b9d5231ac96c8e6a218fe2a7cf26f17f04a96edb2cb832566",
+				Amount:          "100",
+				EstimateFees:    "4",
+				Status:          base.TransactionStatusFailure,
+				FinishTimestamp: 1660617399,
+				FailureMessage:  "Move abort by ECOIN_STORE_NOT_PUBLISHED\n When an account hasn't registered `CoinStore` for `CoinType`.",
+			},
+		},
+		{
 			name:    "set address to hash",
 			restUrl: testnetRestUrl,
 			hash:    "0xcf4ddd208bbbbefb3227cafa5c917fc6541d26b1869276ea80d99ee0505fc6f8",

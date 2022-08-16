@@ -71,9 +71,11 @@ func (t *Token) BuildTransferTxWithAccount(account *Account, receiverAddress, am
 	}
 
 	payload := &aptostypes.Payload{
-		Type:          "script_function_payload",
-		Function:      "0x1::coin::transfer",
-		TypeArguments: []string{"0x1::aptos_coin::AptosCoin"},
+		Type: "script_function_payload",
+		// Function:      "0x1::coin::transfer",
+		// TypeArguments: []string{"0x1::aptos_coin::AptosCoin"},
+		Function:      "0x1::account::transfer",
+		TypeArguments: []string{},
 		Arguments: []interface{}{
 			receiverAddress, amount,
 		},
