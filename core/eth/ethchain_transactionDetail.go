@@ -123,6 +123,9 @@ func (e *EthChain) FetchTransactionStatus(hashString string) base.TransactionSta
 
 	// 交易receipt 状态信息，0表示失败，1表示成功
 	receipt, err := e.TransactionReceiptByHash(hashString)
+	if err != nil {
+		return base.TransactionStatusFailure
+	}
 	if receipt.Status == 0 {
 		return base.TransactionStatusFailure
 	} else {
