@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"fmt"
 
+	"github.com/coming-chat/wallet-SDK/core/aptos"
 	"github.com/coming-chat/wallet-SDK/core/btc"
 	"github.com/coming-chat/wallet-SDK/core/cosmos"
 	"github.com/coming-chat/wallet-SDK/core/doge"
@@ -25,6 +26,7 @@ type Wallet struct {
 	cosmosAccounts  map[string]*cosmos.Account
 	dogeAccounts    map[string]*doge.Account
 	solanaAccount   *solana.Account
+	aptosAccount    *aptos.Account
 }
 
 func NewWalletWithMnemonic(mnemonic string) (*Wallet, error) {
@@ -45,6 +47,14 @@ func NewWalletWithKeyStore(keyStoreJson string, password string) (*Wallet, error
 		Keystore: keyStoreJson,
 		password: password,
 	}, nil
+}
+
+func (w *Wallet) IsMnemonicWallet() bool {
+	return len(w.Mnemonic) > 0
+}
+
+func (w *Wallet) IsKeystoreWallet() bool {
+	return len(w.Keystore) > 0
 }
 
 // Get or create the polka account with specified network.
@@ -184,6 +194,25 @@ func (w *Wallet) GetOrCreateSolanaAccount() (*solana.Account, error) {
 	}
 	// save to cache
 	w.solanaAccount = account
+	return account, nil
+}
+
+// Get or create the ethereum account.
+func (w *Wallet) GetOrCreateAptosAccount() (*aptos.Account, error) {
+	cache := w.aptosAccount
+	if cache != nil {
+		return cache, nil
+	}
+	if len(w.Mnemonic) <= 0 {
+		return nil, ErrInvalidMnemonic
+	}
+
+	account, err := aptos.NewAccountWithMnemonic(w.Mnemonic)
+	if err != nil {
+		return nil, err
+	}
+	// save to cache
+	w.aptosAccount = account
 	return account, nil
 }
 
