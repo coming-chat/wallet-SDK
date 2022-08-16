@@ -108,8 +108,7 @@ func (c *Chain) FetchTransactionDetail(hash string) (*base.TransactionDetail, er
 	}
 
 	if transaction.Type != aptostypes.TypeUserTransaction ||
-		transaction.Payload.Type != aptostypes.ScriptFunctionPayload ||
-		transaction.Payload.Function != "0x1::coin::transfer" {
+		transaction.Payload.Type != aptostypes.ScriptFunctionPayload {
 		return nil, errors.New("Invalid transfer transaction.")
 	}
 
