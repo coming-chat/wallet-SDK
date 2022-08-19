@@ -108,7 +108,7 @@ func (c *Chain) FetchTransactionDetail(hash string) (detail *base.TransactionDet
 		return
 	}
 
-	transaction, err := client.GetTransaction(hash)
+	transaction, err := client.GetTransactionByHash(hash)
 	if err != nil {
 		return
 	}
@@ -120,7 +120,7 @@ func (c *Chain) FetchTransactionStatus(hash string) base.TransactionStatus {
 	if err != nil {
 		return base.TransactionStatusFailure
 	}
-	transaction, err := client.GetTransaction(hash)
+	transaction, err := client.GetTransactionByHash(hash)
 	if err != nil {
 		return base.TransactionStatusFailure
 	}
@@ -157,8 +157,8 @@ func FaucetFundAccount(address string, amount int64, faucetUrl string) (h *base.
 }
 
 func toBaseTransaction(transaction *aptostypes.Transaction) (*base.TransactionDetail, error) {
-	if transaction.Type != aptostypes.TypeUserTransaction ||
-		transaction.Payload.Type != aptostypes.ScriptFunctionPayload {
+  if transaction.Type != aptostypes.TypeUserTransaction ||
+		transaction.Payload.Type != aptostypes.EntryFunctionPayload {
 		return nil, errors.New("Invalid transfer transaction.")
 	}
 

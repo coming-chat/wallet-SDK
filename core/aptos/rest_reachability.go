@@ -31,14 +31,13 @@ func (r *RestReachability) LatencyOf(rpc string, timeout int64) (l *base.RpcLate
 	}
 
 	model := struct {
-		LedgerVersion string `json:"ledger_version"`
-		// BlockHeight   string `json:"block_height"`
+		BlockHeight string `json:"block_height"`
 	}{}
 	err = json.Unmarshal(body, &model)
 	if err != nil {
 		return l, err
 	}
-	heightInt, err := strconv.ParseInt(model.LedgerVersion, 10, 64)
+	heightInt, err := strconv.ParseInt(model.BlockHeight, 10, 64)
 	if err != nil {
 		heightInt = 0
 	}
