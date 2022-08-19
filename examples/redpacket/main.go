@@ -22,7 +22,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	txHash, err := action.Do(chain, account, contract, "")
+	txHash, err := contract.SendTransaction(account, action)
 	if err != nil {
 		panic(err)
 	}

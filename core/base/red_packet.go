@@ -13,7 +13,7 @@ const (
 )
 
 type RedPacketContract interface {
-	PackTransaction(Account, *RedPacketAction) (*OptionalString, error)
+	SendTransaction(Account, *RedPacketAction) (string, error)
 	FetchRedPacketCreationDetail(hash string) (*RedPacketDetail, error)
 	EstimateFee(*RedPacketAction) (string, error) // create red packet fee
 }
@@ -96,18 +96,26 @@ func NewRedPacketActionClose(packetId int64, creator string) (*RedPacketAction, 
 	}, nil
 }
 
-func (rpa *RedPacketAction) Do(chain Chain, account Account, contract RedPacketContract, password string) (string, error) {
-	signedTx, err := contract.PackTransaction(account, rpa)
-	if err != nil {
-		return "", err
-	}
-	return chain.SendRawTransaction(signedTx.Value)
-}
-
 func (d *RedPacketDetail) JsonString() string {
 	bytes, err := json.Marshal(d)
 	if err != nil {
 		return ""
 	}
 	return string(bytes)
+}
+
+func NewRedPacketDetail() *RedPacketDetail {
+	return &RedPacketDetail{
+		TransactionDetail: &TransactionDetail{},
+	}
+}
+
+func NewRedPacketDetailWithJsonString(s string) (*RedPacketDetail, error) {
+	bytes := []byte(s)
+	var d = RedPacketDetail{}
+	err := json.Unmarshal(bytes, &d)
+	if err != nil {
+		return nil, err
+	}
+	return &d, nil
 }

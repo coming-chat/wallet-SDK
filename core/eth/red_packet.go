@@ -2,6 +2,7 @@ package eth
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math/big"
 
@@ -23,6 +24,8 @@ type RedPacketAction struct {
 }
 
 // 用户发红包 的操作
+//
+// Deprecated: use base.NewRedPacketActionCreate
 func NewRedPacketActionCreate(erc20TokenAddress string, count int, amount string) (*RedPacketAction, error) {
 	addr := common.HexToAddress(erc20TokenAddress)
 	c := big.NewInt(int64(count))
@@ -37,6 +40,8 @@ func NewRedPacketActionCreate(erc20TokenAddress string, count int, amount string
 }
 
 // 批量打开红包 的操作
+//
+// Deprecated: use base.NewRedPacketActionOpen
 func NewRedPacketActionOpen(packetId int64, addresses []string, amounts []string) (*RedPacketAction, error) {
 	id := big.NewInt(packetId)
 	if len(addresses) != len(amounts) {
@@ -61,6 +66,8 @@ func NewRedPacketActionOpen(packetId int64, addresses []string, amounts []string
 }
 
 // 结束红包领取 的操作
+//
+// Deprecated: use base.NewRedPacketActionClose
 func NewRedPacketActionClose(packetId int64, creator string) (*RedPacketAction, error) {
 	id := big.NewInt(packetId)
 	addr := common.HexToAddress(creator)
@@ -98,6 +105,8 @@ func (rpa *RedPacketAction) EstimateAmount() string {
 // @param erc20Contract 要用作发红包的币种
 // @param coins 如果需要发起新授权，指定要授权的币个数 default 10^6
 // @return 如果授权成功，不会返回错误，如果有新授权，会返回授权交易的 hash
+//
+// Deprecated: use chain.EnsureApprovedTokens
 func (rpa *RedPacketAction) EnsureApprovedTokens(account *Account, chain *Chain, spender string, coins int) (string, error) {
 	// only red packet **create** need approve
 	if rpa.Method != RPAMethodCreate {
@@ -134,6 +143,8 @@ func (rpa *RedPacketAction) EnsureApprovedTokens(account *Account, chain *Chain,
 // @param fromAddress 要调用红包业务的操作者
 // @param contractAddress 红包合约地址
 // @param chain 要发红包的链
+//
+// Deprecated: use NewRedPacketContract() get base.RedPacketContract, and SendTransaction(base.Account, *base.RedPacketAction)
 func (rpa *RedPacketAction) TransactionFrom(fromAddress, contractAddress string, chain *Chain) (*Transaction, error) {
 	data, err := EncodeContractData(RedPacketABI, rpa.Method, rpa.Params...)
 	if err != nil {
@@ -162,6 +173,7 @@ func (rpa *RedPacketAction) TransactionFrom(fromAddress, contractAddress string,
 	return msg.TransferToTransaction(), nil
 }
 
+// Deprecated: use base.RedPacketDetail
 type RedPacketDetail struct {
 	*base.TransactionDetail
 
@@ -177,12 +189,14 @@ func (d *RedPacketDetail) JsonString() string {
 	return string(bytes)
 }
 
+// Deprecated: use base.NewRedPacketDetail
 func NewRedPacketDetail() *RedPacketDetail {
 	return &RedPacketDetail{
 		TransactionDetail: &base.TransactionDetail{},
 	}
 }
 
+// Deprecated: use base.NewRedPacketDetailWithJsonString
 func NewRedPacketDetailWithJsonString(s string) (*RedPacketDetail, error) {
 	bytes := []byte(s)
 	var d = RedPacketDetail{}
@@ -229,4 +243,42 @@ func (c *Chain) FetchRedPacketCreationDetail(hash string) (*RedPacketDetail, err
 	}
 
 	return redDetail, nil
+}
+
+// 保证用户发 erc20 的红包时，红包合约可以有权限操作用户的资产
+// @param account 要发红包的用户的账号，也许需要用到私钥来发起授权交易
+// @param chain evm 链
+// @param erc20Contract 要用作发红包的币种
+// @param coins 如果需要发起新授权，指定要授权的币个数 default 10^6
+// @param tokenAddress 代币地址
+// @param minAmount 最低应 approve 的数量，即合约需要的 approve 数量
+// @return 如果授权成功，不会返回错误，如果有新授权，会返回授权交易的 hash
+func (c *Chain) EnsureApprovedTokens(account *Account, spender string, coins int, tokenAddress string, minAmount string) (string, error) {
+	amount, b := big.NewInt(0).SetString(minAmount, 10)
+	if !b {
+		return "", errors.New("minAmount should be integer string")
+	}
+
+	token := NewErc20Token(c, tokenAddress)
+	approved, err := token.Allowance(account.Address(), spender)
+	if err != nil {
+		return "", err
+	}
+	if approved.Cmp(amount) >= 0 {
+		return "", nil
+	}
+
+	decimal, err := token.Decimal()
+	if err != nil {
+		decimal = 18
+		err = nil
+	}
+	if coins <= 0 {
+		coins = 1e6 // default 1 million coins
+	}
+	oneCoin := big.NewInt(0).Exp(big.NewInt(10), big.NewInt(int64(decimal)), nil)
+	approveValue := big.NewInt(0).Mul(oneCoin, big.NewInt(int64(coins)))
+	approveValue = base.MaxBigInt(approveValue, amount)
+
+	return token.Approve(account, spender, approveValue)
 }

@@ -31,10 +31,26 @@ func (contract *aptosRedPacketContract) EstimateFee(rpa *base.RedPacketAction) (
 		if err != nil {
 			return "", err
 		}
-		return strconv.FormatUint(amount/10000*250, 10), nil
+		feePoint, err := contract.getFeePoint()
+		if err != nil {
+			return "", err
+		}
+		total := calcTotal(amount, uint64(feePoint))
+		return strconv.FormatUint(total-amount, 10), nil
 	default:
 		return "", errors.New("method invalid")
 	}
+}
+
+// getFeePoint get fee_point from contract by resouce
+// when api support call move public function, should not use resouce
+func (contract *aptosRedPacketContract) getFeePoint() (uint64, error) {
+	resource, err := contract.chain.restClient.GetAccountResource(contract.address, contract.address+"::red_packet::RedPackets", 0)
+	if err != nil {
+		return 0, err
+	}
+	feePoint, _ := resource.Data["fee_point"].(float64)
+	return uint64(feePoint), nil
 }
 
 func (contract *aptosRedPacketContract) FetchRedPacketCreationDetail(hash string) (*base.RedPacketDetail, error) {
@@ -64,26 +80,26 @@ func (contract *aptosRedPacketContract) FetchRedPacketCreationDetail(hash string
 	return redPacketDetail, nil
 }
 
-func (contract *aptosRedPacketContract) PackTransaction(account base.Account, rpa *base.RedPacketAction) (*base.OptionalString, error) {
+func (contract *aptosRedPacketContract) SendTransaction(account base.Account, rpa *base.RedPacketAction) (string, error) {
 	fromAddress := account.Address()
 
 	client, err := contract.chain.client()
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	accountData, err := client.GetAccount(fromAddress)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	ledgerInfo, err := client.LedgerInfo()
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	payload, err := contract.createPayload(rpa)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	transaction := &aptostypes.Transaction{
@@ -97,7 +113,7 @@ func (contract *aptosRedPacketContract) PackTransaction(account base.Account, rp
 
 	signingMessage, err := client.CreateTransactionSigningMessage(transaction)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	signatureData, _ := account.Sign(signingMessage, "")
 
@@ -109,10 +125,10 @@ func (contract *aptosRedPacketContract) PackTransaction(account base.Account, rp
 
 	signedTransactionData, err := json.Marshal(transaction)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	return &base.OptionalString{Value: types.HexEncodeToString(signedTransactionData)}, nil
+	return contract.chain.SendRawTransaction(string(signedTransactionData))
 }
 
 func (contract *aptosRedPacketContract) estimateGas(rpa *base.RedPacketAction) uint64 {
@@ -141,13 +157,22 @@ func (contract *aptosRedPacketContract) createPayload(rpa *base.RedPacketAction)
 		if nil == rpa.CreateParams {
 			return nil, fmt.Errorf("create params is nil")
 		}
+		amount, err := strconv.ParseUint(rpa.CreateParams.Amount, 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("amount params is not uint64")
+		}
+		feePoint, err := contract.getFeePoint()
+		if err != nil {
+			return nil, err
+		}
+		amountTotal := calcTotal(amount, feePoint)
 		return &aptostypes.Payload{
 			Type:          "script_function_payload",
 			Function:      contract.address + "::red_packet::create",
 			TypeArguments: []string{},
 			Arguments: []interface{}{
 				strconv.FormatInt(int64(rpa.CreateParams.Count), 10),
-				rpa.CreateParams.Amount,
+				strconv.FormatUint(amountTotal, 10),
 			},
 		}, nil
 	case base.RPAMethodOpen:
@@ -179,4 +204,31 @@ func (contract *aptosRedPacketContract) createPayload(rpa *base.RedPacketAction)
 	default:
 		return nil, fmt.Errorf("unsopported red packet method %s", rpa.Method)
 	}
+}
+
+// calcTotal caculate totalAmount should send, when user want create a red packet with amount
+func calcTotal(amount uint64, feePoint uint64) uint64 {
+	if feePoint == 0 {
+		feePoint = 250
+	}
+	if amount < 10000 {
+		return amount
+	}
+	fee := amount / 10000 * feePoint
+	left := uint64(0)
+	right := amount / feePoint
+	for left <= right {
+		center := (left + right) / 2
+		tmpFee := center*feePoint + fee
+		tmpTotal := tmpFee + amount
+		tmpC := tmpTotal - tmpTotal/10000*feePoint
+		if tmpC > amount {
+			right = center - 1
+		} else if tmpC < amount {
+			left = center + 1
+		} else {
+			return tmpTotal
+		}
+	}
+	return amount
 }
