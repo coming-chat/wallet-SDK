@@ -58,7 +58,7 @@ func (contract *aptosRedPacketContract) FetchRedPacketCreationDetail(hash string
 	if err != nil {
 		return nil, err
 	}
-	transaction, err := client.GetTransaction(hash)
+	transaction, err := client.GetTransactionByHash(hash)
 	if err != nil {
 		return nil, err
 	}
