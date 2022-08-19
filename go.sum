@@ -250,6 +250,8 @@ github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd/go.mod h1:sE
 github.com/coinbase/rosetta-sdk-go v0.7.0 h1:lmTO/JEpCvZgpbkOITL95rA80CPKb5CtMzLaqF2mCNg=
 github.com/coming-chat/go-aptos v0.0.0-20220815074233-6c962b7ad426 h1:Mos+9QlEzC0LAfa3VnzAgogR31vV28bDNUSEkC5frkw=
 github.com/coming-chat/go-aptos v0.0.0-20220815074233-6c962b7ad426/go.mod h1:3dLPXwaoPS2zCCAL+hRRfMhVISz/tqPFaxcMYDOU8+g=
+github.com/coming-chat/go-aptos v0.0.0-20220819095700-7f0d0d9dc97a h1:oHbFw/8Ch14Cx94AIoEJO1yWW0DdAMvKuPVVMjqWgJM=
+github.com/coming-chat/go-aptos v0.0.0-20220819095700-7f0d0d9dc97a/go.mod h1:3dLPXwaoPS2zCCAL+hRRfMhVISz/tqPFaxcMYDOU8+g=
 github.com/coming-chat/keyring v1.3.0 h1:dMVtKkbVIzPMpMOrCQydAD5YeDCbvYBc7XLMEJqY9g0=
 github.com/coming-chat/keyring v1.3.0/go.mod h1:fc+wB5KTk9wQ9sDx0kFXB3A0MaeGHM9AwRStKOQ5vOA=
 github.com/coming-chat/merlin v0.1.2-0.20211216101619-d46ce5719651 h1:LNfM9mFVlvoKPbK46AwJ0QuglNkkozbG+qgYmGElAt8=

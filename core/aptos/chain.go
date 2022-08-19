@@ -108,13 +108,13 @@ func (c *Chain) FetchTransactionDetail(hash string) (detail *base.TransactionDet
 		return
 	}
 
-	transaction, err := client.GetTransaction(hash)
+	transaction, err := client.GetTransactionByHash(hash)
 	if err != nil {
 		return
 	}
 
 	if transaction.Type != aptostypes.TypeUserTransaction ||
-		transaction.Payload.Type != aptostypes.ScriptFunctionPayload {
+		transaction.Payload.Type != aptostypes.EntryFunctionPayload {
 		return nil, errors.New("Invalid transfer transaction.")
 	}
 
@@ -150,7 +150,7 @@ func (c *Chain) FetchTransactionStatus(hash string) base.TransactionStatus {
 	if err != nil {
 		return base.TransactionStatusFailure
 	}
-	transaction, err := client.GetTransaction(hash)
+	transaction, err := client.GetTransactionByHash(hash)
 	if err != nil {
 		return base.TransactionStatusFailure
 	}

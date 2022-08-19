@@ -38,7 +38,7 @@ require (
 	github.com/btcsuite/websocket v0.0.0-20150119174127-31079b680792 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
-	github.com/coming-chat/go-aptos v0.0.0-20220815074233-6c962b7ad426 // indirect
+	github.com/coming-chat/go-aptos v0.0.0-20220819095700-7f0d0d9dc97a // indirect
 	github.com/confio/ics23/go v0.6.6 // indirect
 	github.com/cosmos/btcutil v1.0.4 // indirect
 	github.com/cosmos/iavl v0.17.3 // indirect

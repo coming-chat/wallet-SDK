@@ -8,7 +8,7 @@ import (
 	"github.com/coming-chat/wallet-SDK/core/testcase"
 )
 
-const testnetRestUrl = "https://fullnode.devnet.aptoslabs.com"
+const testnetRestUrl = "https://fullnode.devnet.aptoslabs.com/v1"
 
 func TestFaucet(t *testing.T) {
 	account, _ := NewAccountWithMnemonic(testcase.M1)
@@ -44,6 +44,16 @@ func TestTransafer(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log(txHash)
+}
+
+func TestFetchTransactionDetail(t *testing.T) {
+	chain := NewChainWithRestUrl(testnetRestUrl)
+	hash := "0xbe86d90b331d9db8002f7e435647bd108074cd4bd81ef0933ea3144ce82fc566"
+	detail, err := chain.FetchTransactionDetail(hash)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(detail)
 }
 
 func TestChain_FetchTransactionDetail(t *testing.T) {
