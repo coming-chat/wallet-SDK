@@ -162,8 +162,8 @@ func toBaseTransaction(transaction *aptostypes.Transaction) (*base.TransactionDe
 		return nil, errors.New("Invalid transfer transaction.")
 	}
 
-	detail = &base.TransactionDetail{
-		HashString:  hash,
+	detail := &base.TransactionDetail{
+		HashString:  transaction.Hash,
 		FromAddress: transaction.Sender,
 	}
 
