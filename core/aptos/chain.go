@@ -42,15 +42,17 @@ func (c *Chain) MainToken() base.Token {
 	return &Token{chain: c}
 }
 
-func (c *Chain) BalanceOfAddress(address string) (*base.Balance, error) {
+func (c *Chain) BalanceOfAddress(address string) (b *base.Balance, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
+
 	client, err := c.client()
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	balance, err := client.BalanceOf(address)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	return &base.Balance{
@@ -72,39 +74,43 @@ func (c *Chain) BalanceOfAccount(account base.Account) (*base.Balance, error) {
 
 // Send the raw transaction on-chain
 // @return the hex hash string
-func (c *Chain) SendRawTransaction(signedTx string) (string, error) {
+func (c *Chain) SendRawTransaction(signedTx string) (hash string, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
+
 	bytes, err := types.HexDecodeString(signedTx)
 	if err != nil {
-		return "", err
+		return
 	}
 	var transaction = &aptostypes.Transaction{}
 	err = json.Unmarshal(bytes, transaction)
 	if err != nil {
-		return "", err
+		return
 	}
 
 	client, err := c.client()
 	if err != nil {
-		return "", err
+		return
 	}
 	resultTx, err := client.SubmitTransaction(transaction)
 	if err != nil {
-		return "", err
+		return
 	}
 
 	return resultTx.Hash, nil
 }
 
 // Fetch transaction details through transaction hash
-func (c *Chain) FetchTransactionDetail(hash string) (*base.TransactionDetail, error) {
+func (c *Chain) FetchTransactionDetail(hash string) (detail *base.TransactionDetail, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
+
 	client, err := c.client()
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	transaction, err := client.GetTransaction(hash)
 	if err != nil {
-		return nil, err
+		return
 	}
 	return toBaseTransaction(transaction)
 }
@@ -141,10 +147,11 @@ func (c *Chain) BatchFetchTransactionStatus(hashListString string) string {
  * @param faucetUrl default https://faucet.devnet.aptoslabs.com
  * @returns Hashes of submitted transactions, e.g. "hash1,has2,hash3,..."
  */
-func FaucetFundAccount(address string, amount int64, faucetUrl string) (*base.OptionalString, error) {
+func FaucetFundAccount(address string, amount int64, faucetUrl string) (h *base.OptionalString, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
 	hashs, err := aptosclient.FaucetFundAccount(address, uint64(amount), faucetUrl)
 	if err != nil {
-		return nil, err
+		return
 	}
 	return &base.OptionalString{Value: strings.Join(hashs[:], ",")}, nil
 }
@@ -152,11 +159,11 @@ func FaucetFundAccount(address string, amount int64, faucetUrl string) (*base.Op
 func toBaseTransaction(transaction *aptostypes.Transaction) (*base.TransactionDetail, error) {
 	if transaction.Type != aptostypes.TypeUserTransaction ||
 		transaction.Payload.Type != aptostypes.ScriptFunctionPayload {
-		return nil, errors.New("invalid transfer transaction")
+		return nil, errors.New("Invalid transfer transaction.")
 	}
 
-	detail := &base.TransactionDetail{
-		HashString:  transaction.Hash,
+	detail = &base.TransactionDetail{
+		HashString:  hash,
 		FromAddress: transaction.Sender,
 	}
 
