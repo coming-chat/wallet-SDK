@@ -106,37 +106,7 @@ func (c *Chain) FetchTransactionDetail(hash string) (*base.TransactionDetail, er
 	if err != nil {
 		return nil, err
 	}
-
-	if transaction.Type != aptostypes.TypeUserTransaction ||
-		transaction.Payload.Type != aptostypes.ScriptFunctionPayload {
-		return nil, errors.New("Invalid transfer transaction.")
-	}
-
-	detail := &base.TransactionDetail{
-		HashString:  hash,
-		FromAddress: transaction.Sender,
-	}
-
-	gasFee := transaction.GasUnitPrice * transaction.GasUsed
-	detail.EstimateFees = strconv.FormatUint(gasFee, 10)
-
-	args := transaction.Payload.Arguments
-	if len(args) >= 2 {
-		detail.ToAddress = args[0].(string)
-		detail.Amount = args[1].(string)
-	}
-
-	if transaction.Success {
-		detail.Status = base.TransactionStatusSuccess
-	} else {
-		detail.Status = base.TransactionStatusFailure
-		detail.FailureMessage = transaction.VmStatus
-	}
-
-	timestamp := transaction.Timestamp / 1e6
-	detail.FinishTimestamp = int64(timestamp)
-
-	return detail, nil
+	return toBaseTransaction(transaction)
 }
 
 func (c *Chain) FetchTransactionStatus(hash string) base.TransactionStatus {
@@ -177,4 +147,37 @@ func FaucetFundAccount(address string, amount int64, faucetUrl string) (*base.Op
 		return nil, err
 	}
 	return &base.OptionalString{Value: strings.Join(hashs[:], ",")}, nil
+}
+
+func toBaseTransaction(transaction *aptostypes.Transaction) (*base.TransactionDetail, error) {
+	if transaction.Type != aptostypes.TypeUserTransaction ||
+		transaction.Payload.Type != aptostypes.ScriptFunctionPayload {
+		return nil, errors.New("invalid transfer transaction")
+	}
+
+	detail := &base.TransactionDetail{
+		HashString:  transaction.Hash,
+		FromAddress: transaction.Sender,
+	}
+
+	gasFee := transaction.GasUnitPrice * transaction.GasUsed
+	detail.EstimateFees = strconv.FormatUint(gasFee, 10)
+
+	args := transaction.Payload.Arguments
+	if len(args) >= 2 {
+		detail.ToAddress = args[0].(string)
+		detail.Amount = args[1].(string)
+	}
+
+	if transaction.Success {
+		detail.Status = base.TransactionStatusSuccess
+	} else {
+		detail.Status = base.TransactionStatusFailure
+		detail.FailureMessage = transaction.VmStatus
+	}
+
+	timestamp := transaction.Timestamp / 1e6
+	detail.FinishTimestamp = int64(timestamp)
+
+	return detail, nil
 }

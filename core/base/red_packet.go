@@ -1,6 +1,7 @@
 package base
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/big"
 )
@@ -13,6 +14,8 @@ const (
 
 type RedPacketContract interface {
 	PackTransaction(Account, *RedPacketAction) (*OptionalString, error)
+	FetchRedPacketCreationDetail(hash string) (*RedPacketDetail, error)
+	EstimateFee(*RedPacketAction) (string, error) // create red packet fee
 }
 
 type RedPacketAction struct {
@@ -36,6 +39,13 @@ type RedPacketOpenParams struct {
 type RedPacketCloseParams struct {
 	PacketId int64
 	Creator  string
+}
+
+type RedPacketDetail struct {
+	*TransactionDetail
+
+	AmountName    string
+	AmountDecimal int16
 }
 
 // 用户发红包 的操作
@@ -92,4 +102,12 @@ func (rpa *RedPacketAction) Do(chain Chain, account Account, contract RedPacketC
 		return "", err
 	}
 	return chain.SendRawTransaction(signedTx.Value)
+}
+
+func (d *RedPacketDetail) JsonString() string {
+	bytes, err := json.Marshal(d)
+	if err != nil {
+		return ""
+	}
+	return string(bytes)
 }

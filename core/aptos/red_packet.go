@@ -2,6 +2,7 @@ package aptos
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/coming-chat/wallet-SDK/core/base"
 )
 
+// aptosRedPacketContract implement base.RedPacketContract interface
 type aptosRedPacketContract struct {
 	chain   *Chain
 	address string
@@ -17,6 +19,49 @@ type aptosRedPacketContract struct {
 
 func NewRedPacketContract(chain *Chain, contractAddress string) base.RedPacketContract {
 	return &aptosRedPacketContract{chain: chain, address: contractAddress}
+}
+
+func (contract *aptosRedPacketContract) EstimateFee(rpa *base.RedPacketAction) (string, error) {
+	switch rpa.Method {
+	case base.RPAMethodCreate:
+		if nil == rpa.CreateParams {
+			return "", errors.New("invalid create params")
+		}
+		amount, err := strconv.ParseUint(rpa.CreateParams.Amount, 10, 64)
+		if err != nil {
+			return "", err
+		}
+		return strconv.FormatUint(amount/10000*250, 10), nil
+	default:
+		return "", errors.New("method invalid")
+	}
+}
+
+func (contract *aptosRedPacketContract) FetchRedPacketCreationDetail(hash string) (*base.RedPacketDetail, error) {
+	client, err := contract.chain.client()
+	if err != nil {
+		return nil, err
+	}
+	transaction, err := client.GetTransaction(hash)
+	if err != nil {
+		return nil, err
+	}
+	baseTransaction, err := toBaseTransaction(transaction)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(transaction.Payload.Arguments) < 2 {
+		return nil, fmt.Errorf("invalid payload arguments, len %d", len(transaction.Payload.Arguments))
+	}
+	baseTransaction.Amount = transaction.Payload.Arguments[1].(string)
+	redPacketDetail := &base.RedPacketDetail{
+		TransactionDetail: baseTransaction,
+		AmountName:        AptosName,
+		AmountDecimal:     AptosDecimal,
+	}
+
+	return redPacketDetail, nil
 }
 
 func (contract *aptosRedPacketContract) PackTransaction(account base.Account, rpa *base.RedPacketAction) (*base.OptionalString, error) {
