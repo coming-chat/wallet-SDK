@@ -60,26 +60,8 @@ func (t *Token) BuildTransferTx(privateKey, receiverAddress, amount string) (*ba
 }
 
 func (t *Token) BuildTransferTxWithAccount(account *Account, receiverAddress, amount string) (*base.OptionalString, error) {
-	fromAddress := account.Address()
-
-	client, err := t.chain.client()
-	if err != nil {
-		return nil, err
-	}
-
-	accountData, err := client.GetAccount(fromAddress)
-	if err != nil {
-		return nil, err
-	}
-	ledgerInfo, err := client.LedgerInfo()
-	if err != nil {
-		return nil, err
-	}
-
 	payload := &aptostypes.Payload{
-		Type: aptostypes.EntryFunctionPayload,
-		// Function:      "0x1::coin::transfer",
-		// TypeArguments: []string{"0x1::aptos_coin::AptosCoin"},
+		Type:          aptostypes.EntryFunctionPayload,
 		Function:      "0x1::account::transfer",
 		TypeArguments: []string{},
 		Arguments: []interface{}{
@@ -87,25 +69,14 @@ func (t *Token) BuildTransferTxWithAccount(account *Account, receiverAddress, am
 		},
 	}
 
-	transaction := &aptostypes.Transaction{
-		Sender:                  fromAddress,
-		SequenceNumber:          accountData.SequenceNumber,
-		MaxGasAmount:            MaxGasAmount,
-		GasUnitPrice:            GasPrice,
-		Payload:                 payload,
-		ExpirationTimestampSecs: ledgerInfo.LedgerTimestamp + 600, // timeout 10 mins
-	}
-
-	signingMessage, err := client.CreateTransactionSigningMessage(transaction)
+	transaction, err := t.chain.createTransactionFromPayload(account, payload)
 	if err != nil {
 		return nil, err
 	}
-	signatureData, _ := account.Sign(signingMessage, "")
 
-	transaction.Signature = &aptostypes.Signature{
-		Type:      "ed25519_signature",
-		PublicKey: account.PublicKeyHex(),
-		Signature: types.HexEncodeToString(signatureData),
+	transaction, err = t.chain.signTransaction(account, transaction)
+	if err != nil {
+		return nil, err
 	}
 
 	signedTransactionData, err := json.Marshal(transaction)
