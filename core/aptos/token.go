@@ -9,6 +9,12 @@ import (
 	"github.com/coming-chat/wallet-SDK/core/base"
 )
 
+const (
+	AptosName    = "Aptos"
+	AptosSymbol  = "Aptos"
+	AptosDecimal = 0
+)
+
 type Token struct {
 	chain *Chain
 }
@@ -25,9 +31,9 @@ func (t *Token) Chain() base.Chain {
 
 func (t *Token) TokenInfo() (*base.TokenInfo, error) {
 	return &base.TokenInfo{
-		Name:    "Aptos",
-		Symbol:  "Aptos",
-		Decimal: 0,
+		Name:    AptosName,
+		Symbol:  AptosSymbol,
+		Decimal: AptosDecimal,
 	}, nil
 }
 
