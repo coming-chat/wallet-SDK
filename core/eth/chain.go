@@ -10,6 +10,12 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 )
 
+type IChain interface {
+	base.Chain
+	SubmitTransactionData(account base.Account, to string, data []byte, value string) (string, error)
+	GetEthChain() (*EthChain, error)
+}
+
 type Chain struct {
 	RpcUrl string
 }
@@ -160,4 +166,40 @@ func (c *Chain) buildTransfer(privateKey *ecdsa.PrivateKey, transaction *Transac
 	}
 
 	return &base.OptionalString{Value: txResult.TxHex}, nil
+}
+
+// MARK - Implement the protocol IChain
+
+func (c *Chain) SubmitTransactionData(account base.Account, to string, data []byte, value string) (string, error) {
+	gasPrice, err := c.SuggestGasPrice()
+	if err != nil {
+		return "", err
+	}
+	msg := NewCallMsg()
+	msg.SetFrom(account.Address())
+	msg.SetTo(to)
+	msg.SetGasPrice(gasPrice.Value)
+	msg.SetData(data)
+	msg.SetValue(value)
+
+	gasLimit, err := c.EstimateGasLimit(msg)
+	if err != nil {
+		gasLimit = &base.OptionalString{Value: "200000"}
+		err = nil
+	}
+	msg.SetGasLimit(gasLimit.Value)
+	tx := msg.TransferToTransaction()
+	privateKeyHex, err := account.PrivateKeyHex()
+	if err != nil {
+		return "", err
+	}
+	signedTx, err := c.SignTransaction(privateKeyHex, tx)
+	if err != nil {
+		return "", err
+	}
+	return c.SendRawTransaction(signedTx.Value)
+}
+
+func (c *Chain) GetEthChain() (*EthChain, error) {
+	return GetConnection(c.RpcUrl)
 }
