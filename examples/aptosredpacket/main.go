@@ -9,16 +9,17 @@ import (
 
 const (
 	testNetUrl = "https://fullnode.devnet.aptoslabs.com"
+	faucetUrl  = "https://faucet.devnet.aptoslabs.com"
 )
 
 func main() {
 	chain := aptos.NewChainWithRestUrl(testNetUrl)
-	account, err := aptos.NewAccountWithMnemonic(os.Getenv("mnemonic"))
+	account, err := aptos.AccountWithPrivateKey(os.Getenv("private"))
 	if err != nil {
 		panic(err)
 	}
 	contract := aptos.NewRedPacketContract(chain, os.Getenv("red_packet"))
-	action, err := base.NewRedPacketActionCreate("", 3, "1000")
+	action, err := base.NewRedPacketActionCreate("", 5, "100000")
 	if err != nil {
 		panic(err)
 	}

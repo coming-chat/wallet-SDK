@@ -1,6 +1,7 @@
 package aptos
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -128,7 +129,7 @@ func (contract *aptosRedPacketContract) SendTransaction(account base.Account, rp
 		return "", err
 	}
 
-	return contract.chain.SendRawTransaction(string(signedTransactionData))
+	return contract.chain.SendRawTransaction(hex.EncodeToString(signedTransactionData))
 }
 
 func (contract *aptosRedPacketContract) estimateGas(rpa *base.RedPacketAction) uint64 {
@@ -167,7 +168,7 @@ func (contract *aptosRedPacketContract) createPayload(rpa *base.RedPacketAction)
 		}
 		amountTotal := calcTotal(amount, feePoint)
 		return &aptostypes.Payload{
-			Type:          "script_function_payload",
+			Type:          aptostypes.EntryFunctionPayload,
 			Function:      contract.address + "::red_packet::create",
 			TypeArguments: []string{},
 			Arguments: []interface{}{
@@ -180,7 +181,7 @@ func (contract *aptosRedPacketContract) createPayload(rpa *base.RedPacketAction)
 			return nil, fmt.Errorf("open params is nil")
 		}
 		return &aptostypes.Payload{
-			Type:          "script_function_payload",
+			Type:          aptostypes.EntryFunctionPayload,
 			Function:      contract.address + "::red_packet::open",
 			TypeArguments: []string{},
 			Arguments: []interface{}{
@@ -194,7 +195,7 @@ func (contract *aptosRedPacketContract) createPayload(rpa *base.RedPacketAction)
 			return nil, fmt.Errorf("close params is nil")
 		}
 		return &aptostypes.Payload{
-			Type:          "script_function_payload",
+			Type:          aptostypes.EntryFunctionPayload,
 			Function:      contract.address + "::red_packet::close",
 			TypeArguments: []string{},
 			Arguments: []interface{}{
