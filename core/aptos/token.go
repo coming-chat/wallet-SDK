@@ -131,11 +131,8 @@ func (t *Token) buildSigningTransaction(client *aptosclient.RestClient, account 
 	if err != nil {
 		return
 	}
-
 	payload := &aptostypes.Payload{
-		Type: aptostypes.EntryFunctionPayload,
-		// Function:      "0x1::coin::transfer",
-		// TypeArguments: []string{"0x1::aptos_coin::AptosCoin"},
+		Type:          aptostypes.EntryFunctionPayload,
 		Function:      "0x1::account::transfer",
 		TypeArguments: []string{},
 		Arguments: []interface{}{

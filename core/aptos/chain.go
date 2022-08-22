@@ -18,6 +18,16 @@ const (
 	GasPrice     = 1
 )
 
+type TransactionOption interface {
+	Process(tx *aptostypes.Transaction) (*aptostypes.Transaction, error)
+}
+
+type IChain interface {
+	base.Chain
+	SubmitTransactionPayload(account base.Account, payload *aptostypes.Payload, option TransactionOption) (string, error)
+	GetClient() (*aptosclient.RestClient, error)
+}
+
 type Chain struct {
 	restClient *aptosclient.RestClient
 	RestUrl    string
@@ -139,6 +149,86 @@ func (c *Chain) BatchFetchTransactionStatus(hashListString string) string {
 	return strings.Join(statuses, ",")
 }
 
+// MARK - Implement the protocol IChain
+
+func (c *Chain) GetClient() (*aptosclient.RestClient, error) {
+	return c.client()
+}
+
+func (c *Chain) SubmitTransactionPayload(account base.Account, payload *aptostypes.Payload, option TransactionOption) (string, error) {
+	transaction, err := c.createTransactionFromPayload(account, payload)
+	if err != nil {
+		return "", err
+	}
+
+	if nil != option {
+		transaction, err = option.Process(transaction)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	transaction, err = c.signTransaction(account, transaction)
+	if err != nil {
+		return "", err
+	}
+
+	client, err := c.client()
+	if err != nil {
+		return "", err
+	}
+	resultTx, err := client.SubmitTransaction(transaction)
+	if err != nil {
+		return "", err
+	}
+
+	return resultTx.Hash, nil
+}
+
+func (c *Chain) signTransaction(account base.Account, transaction *aptostypes.Transaction) (*aptostypes.Transaction, error) {
+	client, err := c.client()
+	if err != nil {
+		return nil, err
+	}
+	signingMessage, err := client.CreateTransactionSigningMessage(transaction)
+	if err != nil {
+		return nil, err
+	}
+	signatureData, _ := account.Sign(signingMessage, "")
+	transaction.Signature = &aptostypes.Signature{
+		Type:      "ed25519_signature",
+		PublicKey: account.PublicKeyHex(),
+		Signature: types.HexEncodeToString(signatureData),
+	}
+	return transaction, nil
+}
+
+func (c *Chain) createTransactionFromPayload(account base.Account, payload *aptostypes.Payload) (*aptostypes.Transaction, error) {
+	client, err := c.client()
+	if err != nil {
+		return nil, err
+	}
+
+	fromAddress := account.Address()
+	accountData, err := client.GetAccount(fromAddress)
+	if err != nil {
+		return nil, err
+	}
+	ledgerInfo, err := client.LedgerInfo()
+	if err != nil {
+		return nil, err
+	}
+
+	return &aptostypes.Transaction{
+		Sender:                  fromAddress,
+		SequenceNumber:          accountData.SequenceNumber,
+		MaxGasAmount:            MaxGasAmount,
+		GasUnitPrice:            GasPrice,
+		Payload:                 payload,
+		ExpirationTimestampSecs: ledgerInfo.LedgerTimestamp + 600, // timeout 10 mins
+	}, nil
+}
+
 /**
  * This creates an account if it does not exist and mints the specified amount of
  * coins into that account
@@ -157,7 +247,7 @@ func FaucetFundAccount(address string, amount int64, faucetUrl string) (h *base.
 }
 
 func toBaseTransaction(transaction *aptostypes.Transaction) (*base.TransactionDetail, error) {
-  if transaction.Type != aptostypes.TypeUserTransaction ||
+	if transaction.Type != aptostypes.TypeUserTransaction ||
 		transaction.Payload.Type != aptostypes.EntryFunctionPayload {
 		return nil, errors.New("Invalid transfer transaction.")
 	}
