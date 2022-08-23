@@ -20,7 +20,7 @@ const (
 
 type IChain interface {
 	base.Chain
-	SubmitTransactionPayload(account base.Account, payloadJson string) (string, error)
+	SubmitTransactionPayload(account base.Account, data []byte) (string, error)
 	GetClient() (*aptosclient.RestClient, error)
 }
 
