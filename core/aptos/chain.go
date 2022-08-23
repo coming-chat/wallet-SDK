@@ -18,13 +18,9 @@ const (
 	GasPrice     = 1
 )
 
-type TransactionOption interface {
-	Process(tx *aptostypes.Transaction) (*aptostypes.Transaction, error)
-}
-
 type IChain interface {
 	base.Chain
-	SubmitTransactionPayload(account base.Account, payload *aptostypes.Payload, option TransactionOption) (string, error)
+	SubmitTransactionPayload(account base.Account, payloadJson string) (string, error)
 	GetClient() (*aptosclient.RestClient, error)
 }
 
@@ -155,17 +151,15 @@ func (c *Chain) GetClient() (*aptosclient.RestClient, error) {
 	return c.client()
 }
 
-func (c *Chain) SubmitTransactionPayload(account base.Account, payload *aptostypes.Payload, option TransactionOption) (string, error) {
-	transaction, err := c.createTransactionFromPayload(account, payload)
+func (c *Chain) SubmitTransactionPayload(account base.Account, data []byte) (string, error) {
+	payload := aptostypes.Payload{}
+	err := json.Unmarshal(data, &payload)
 	if err != nil {
 		return "", err
 	}
-
-	if nil != option {
-		transaction, err = option.Process(transaction)
-		if err != nil {
-			return "", err
-		}
+	transaction, err := c.createTransactionFromPayload(account, &payload)
+	if err != nil {
+		return "", err
 	}
 
 	transaction, err = c.signTransaction(account, transaction)
