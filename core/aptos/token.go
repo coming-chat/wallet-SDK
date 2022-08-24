@@ -2,7 +2,6 @@ package aptos
 
 import (
 	"encoding/json"
-	"strconv"
 
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/coming-chat/go-aptos/aptosclient"
@@ -102,21 +101,7 @@ func (t *Token) EstimateFees(account *Account, receiverAddress, amount string) (
 	if err != nil {
 		return
 	}
-
-	commitedTxs, err := client.SimulateTransaction(transaction, account.PublicKeyHex())
-	if err != nil {
-		return
-	}
-	if len(commitedTxs) <= 0 {
-		return
-	}
-
-	tx := commitedTxs[0]
-	gasFee := tx.GasUnitPrice * tx.GasUsed
-	gasFee = (gasFee*15 + 9) / 10 // ceil(fee * 1.5)
-	gasFeeString := strconv.FormatUint(gasFee, 10)
-
-	return &base.OptionalString{Value: gasFeeString}, nil
+	return t.chain.EstimateGasFee(account, transaction)
 }
 
 func (t *Token) buildSigningTransaction(client *aptosclient.RestClient, account *Account, receiverAddress, amount string) (tx *aptostypes.Transaction, err error) {
