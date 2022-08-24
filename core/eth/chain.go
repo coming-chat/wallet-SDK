@@ -14,6 +14,7 @@ type IChain interface {
 	base.Chain
 	SubmitTransactionData(account base.Account, to string, data []byte, value string) (string, error)
 	GetEthChain() (*EthChain, error)
+	EstimateGasLimit(msg *CallMsg) (gas *base.OptionalString, err error)
 }
 
 type Chain struct {
