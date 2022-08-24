@@ -21,6 +21,7 @@ const (
 type IChain interface {
 	base.Chain
 	SubmitTransactionPayload(account base.Account, data []byte) (string, error)
+	EstimatePayloadGasFee(account base.Account, data []byte) (*base.OptionalString, error)
 	GetClient() (*aptosclient.RestClient, error)
 }
 
@@ -149,6 +150,39 @@ func (c *Chain) BatchFetchTransactionStatus(hashListString string) string {
 
 func (c *Chain) GetClient() (*aptosclient.RestClient, error) {
 	return c.client()
+}
+
+func (c *Chain) EstimatePayloadGasFee(account base.Account, data []byte) (*base.OptionalString, error) {
+	payload := aptostypes.Payload{}
+	err := json.Unmarshal(data, &payload)
+	if err != nil {
+		return nil, err
+	}
+	transaction, err := c.createTransactionFromPayload(account, &payload)
+	if err != nil {
+		return nil, err
+	}
+	return c.EstimateGasFee(account, transaction)
+}
+
+func (c *Chain) EstimateGasFee(account base.Account, transaction *aptostypes.Transaction) (*base.OptionalString, error) {
+	client, err := c.client()
+	if err != nil {
+		panic(err)
+	}
+	commitedTxs, err := client.SimulateTransaction(transaction, account.PublicKeyHex())
+	if err != nil {
+		return nil, err
+	}
+	if len(commitedTxs) <= 0 {
+		return nil, err
+	}
+
+	tx := commitedTxs[0]
+	gasFee := tx.GasUnitPrice * tx.GasUsed
+	gasFee = (gasFee*15 + 9) / 10 // ceil(fee * 1.5)
+	gasFeeString := strconv.FormatUint(gasFee, 10)
+	return &base.OptionalString{Value: gasFeeString}, nil
 }
 
 func (c *Chain) SubmitTransactionPayload(account base.Account, data []byte) (string, error) {
