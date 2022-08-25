@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	AptosName    = "Aptos"
-	AptosSymbol  = "Aptos"
+	AptosName    = "APT"
+	AptosSymbol  = "APT"
 	AptosDecimal = 0
 )
 
