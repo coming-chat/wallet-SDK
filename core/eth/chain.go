@@ -190,6 +190,16 @@ func (c *Chain) SubmitTransactionData(account base.Account, to string, data []by
 	}
 	msg.SetGasLimit(gasLimit.Value)
 	tx := msg.TransferToTransaction()
+	chain, err := GetConnection(c.RpcUrl)
+	if err != nil {
+		return "", err
+	}
+	nonce, err := chain.Nonce(account.Address())
+	if err != nil {
+		nonce = "0"
+		err = nil
+	}
+	tx.Nonce = nonce
 	privateKeyHex, err := account.PrivateKeyHex()
 	if err != nil {
 		return "", err
