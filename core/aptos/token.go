@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
-	"github.com/coming-chat/go-aptos/aptosclient"
 	"github.com/coming-chat/go-aptos/aptostypes"
 	"github.com/coming-chat/wallet-SDK/core/base"
 )
@@ -60,63 +59,35 @@ func (t *Token) BuildTransferTx(privateKey, receiverAddress, amount string) (*ba
 }
 
 func (t *Token) BuildTransferTxWithAccount(account *Account, receiverAddress, amount string) (*base.OptionalString, error) {
-	client, err := t.chain.client()
+	payload := t.buildTransferPayload(receiverAddress, amount)
+	transaction, err := t.chain.createTransactionFromPayload(account, payload)
 	if err != nil {
 		return nil, err
 	}
-
-	transaction, err := t.buildSigningTransaction(client, account, receiverAddress, amount)
+	signedTransaction, err := t.chain.signTransaction(account, transaction)
 	if err != nil {
 		return nil, err
 	}
-
-	signingMessage, err := client.CreateTransactionSigningMessage(transaction)
+	signedTransactionData, err := json.Marshal(signedTransaction)
 	if err != nil {
 		return nil, err
 	}
-	signatureData, _ := account.Sign(signingMessage, "")
-	transaction.Signature = &aptostypes.Signature{
-		Type:      "ed25519_signature",
-		PublicKey: account.PublicKeyHex(),
-		Signature: types.HexEncodeToString(signatureData),
-	}
-
-	signedTransactionData, err := json.Marshal(transaction)
-	if err != nil {
-		return nil, err
-	}
-
 	return &base.OptionalString{Value: types.HexEncodeToString(signedTransactionData)}, nil
 }
 
 func (t *Token) EstimateFees(account *Account, receiverAddress, amount string) (f *base.OptionalString, err error) {
 	f = &base.OptionalString{Value: "2000"}
 
-	client, err := t.chain.client()
-	if err != nil {
-		return
-	}
-
-	transaction, err := t.buildSigningTransaction(client, account, receiverAddress, amount)
+	payload := t.buildTransferPayload(receiverAddress, amount)
+	transaction, err := t.chain.createTransactionFromPayload(account, payload)
 	if err != nil {
 		return
 	}
 	return t.chain.EstimateGasFee(account, transaction)
 }
 
-func (t *Token) buildSigningTransaction(client *aptosclient.RestClient, account *Account, receiverAddress, amount string) (tx *aptostypes.Transaction, err error) {
-	defer base.CatchPanicAndMapToBasicError(&err)
-
-	fromAddress := account.Address()
-	accountData, err := client.GetAccount(fromAddress)
-	if err != nil {
-		return
-	}
-	ledgerInfo, err := client.LedgerInfo()
-	if err != nil {
-		return
-	}
-	payload := &aptostypes.Payload{
+func (t *Token) buildTransferPayload(receiverAddress, amount string) *aptostypes.Payload {
+	return &aptostypes.Payload{
 		Type:          aptostypes.EntryFunctionPayload,
 		Function:      "0x1::account::transfer",
 		TypeArguments: []string{},
@@ -124,14 +95,4 @@ func (t *Token) buildSigningTransaction(client *aptosclient.RestClient, account 
 			receiverAddress, amount,
 		},
 	}
-	transaction := &aptostypes.Transaction{
-		Sender:                  fromAddress,
-		SequenceNumber:          accountData.SequenceNumber,
-		MaxGasAmount:            MaxGasAmount,
-		GasUnitPrice:            GasPrice,
-		Payload:                 payload,
-		ExpirationTimestampSecs: ledgerInfo.LedgerTimestamp + 600, // timeout 10 mins
-	}
-
-	return transaction, nil
 }

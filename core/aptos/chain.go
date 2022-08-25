@@ -168,7 +168,7 @@ func (c *Chain) EstimatePayloadGasFee(account base.Account, data []byte) (*base.
 func (c *Chain) EstimateGasFee(account base.Account, transaction *aptostypes.Transaction) (*base.OptionalString, error) {
 	client, err := c.client()
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	commitedTxs, err := client.SimulateTransaction(transaction, account.PublicKeyHex())
 	if err != nil {
