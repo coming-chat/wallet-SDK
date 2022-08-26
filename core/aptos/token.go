@@ -89,8 +89,8 @@ func (t *Token) EstimateFees(account *Account, receiverAddress, amount string) (
 func (t *Token) buildTransferPayload(receiverAddress, amount string) *aptostypes.Payload {
 	return &aptostypes.Payload{
 		Type:          aptostypes.EntryFunctionPayload,
-		Function:      "0x1::account::transfer",
-		TypeArguments: []string{},
+		Function:      "0x1::coin::transfer",
+		TypeArguments: []string{"0x1::aptos_coin::AptosCoin"},
 		Arguments: []interface{}{
 			receiverAddress, amount,
 		},
