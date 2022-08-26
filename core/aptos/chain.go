@@ -125,11 +125,11 @@ func (c *Chain) FetchTransactionDetail(hash string) (detail *base.TransactionDet
 func (c *Chain) FetchTransactionStatus(hash string) base.TransactionStatus {
 	client, err := c.client()
 	if err != nil {
-		return base.TransactionStatusFailure
+		return base.TransactionStatusNone
 	}
 	transaction, err := client.GetTransactionByHash(hash)
 	if err != nil {
-		return base.TransactionStatusFailure
+		return base.TransactionStatusNone
 	}
 	if transaction.Success {
 		return base.TransactionStatusSuccess

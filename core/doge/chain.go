@@ -65,7 +65,7 @@ func (c *Chain) FetchTransactionDetail(hash string) (*base.TransactionDetail, er
 func (c *Chain) FetchTransactionStatus(hash string) base.TransactionStatus {
 	d, err := fetchTransactionDetail(hash, c.Chainnet)
 	if err != nil {
-		return base.TransactionStatusFailure
+		return base.TransactionStatusNone
 	} else {
 		return d.Status()
 	}

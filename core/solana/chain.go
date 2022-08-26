@@ -102,7 +102,7 @@ func (c *Chain) FetchTransactionDetail(hash string) (*base.TransactionDetail, er
 func (c *Chain) FetchTransactionStatus(hash string) base.TransactionStatus {
 	response, err := c.client().GetTransaction(context.Background(), hash)
 	if err != nil {
-		return base.TransactionStatusFailure
+		return base.TransactionStatusNone
 	}
 	if response == nil || response.Meta == nil {
 		return base.TransactionStatusPending
