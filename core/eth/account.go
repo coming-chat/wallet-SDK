@@ -107,12 +107,7 @@ func (a *Account) Address() string {
 func (a *Account) Sign(message []byte, password string) ([]byte, error) {
 	dataString := string(message)
 	hashBytes := SignHashForMsg(dataString)
-	signature, err := crypto.Sign(hashBytes, a.privateKeyECDSA)
-	if err != nil {
-		return nil, err
-	}
-	signature[crypto.RecoveryIDOffset] += 27 // Transform V from 0/1 to 27/28 according to the yellow paper
-	return signature, nil
+	return a.SignHash(hashBytes)
 }
 
 func (a *Account) SignHex(messageHex string, password string) (*base.OptionalString, error) {
@@ -126,6 +121,15 @@ func (a *Account) SignHex(messageHex string, password string) (*base.OptionalStr
 	}
 	signedString := types.HexEncodeToString(signed)
 	return &base.OptionalString{Value: signedString}, nil
+}
+
+func (a *Account) SignHash(hash []byte) ([]byte, error) {
+	signature, err := crypto.Sign(hash, a.privateKeyECDSA)
+	if err != nil {
+		return nil, err
+	}
+	signature[crypto.RecoveryIDOffset] += 27 // Transform V from 0/1 to 27/28 according to the yellow paper
+	return signature, nil
 }
 
 // 以太坊的 hash 专门在数据前面加上了一段话
