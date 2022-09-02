@@ -247,14 +247,24 @@ func (c *Chain) createTransactionFromPayload(account base.Account, payload *apto
 		return nil, err
 	}
 
-	return &aptostypes.Transaction{
+	txn := &aptostypes.Transaction{
 		Sender:                  fromAddress,
 		SequenceNumber:          accountData.SequenceNumber,
 		MaxGasAmount:            MaxGasAmount,
 		GasUnitPrice:            GasPrice,
 		Payload:                 payload,
 		ExpirationTimestampSecs: ledgerInfo.LedgerTimestamp + 600, // timeout 10 mins
-	}, nil
+	}
+	gas, err := c.EstimateGasFee(account, txn)
+	if err != nil {
+		return nil, err
+	}
+	gasInt, err := strconv.ParseUint(gas.Value, 10, 64)
+	if err != nil {
+		return nil, err
+	}
+	txn.MaxGasAmount = gasInt
+	return txn, nil
 }
 
 /**
