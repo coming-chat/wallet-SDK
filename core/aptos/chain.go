@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	MaxGasAmount = 1000
+	MaxGasAmount = 2000
 	GasPrice     = 1
 )
 
@@ -162,27 +162,29 @@ func (c *Chain) EstimatePayloadGasFee(account base.Account, data []byte) (*base.
 	if err != nil {
 		return nil, err
 	}
-	return c.EstimateGasFee(account, transaction)
+	gasFee := transaction.MaxGasAmount * transaction.GasUnitPrice
+	gasString := strconv.FormatUint(gasFee, 10)
+	return &base.OptionalString{Value: gasString}, nil
 }
 
-func (c *Chain) EstimateGasFee(account base.Account, transaction *aptostypes.Transaction) (*base.OptionalString, error) {
+func (c *Chain) EstimateMaxGasAmount(account base.Account, transaction *aptostypes.Transaction) (uint64, error) {
 	client, err := c.client()
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
+	transaction.MaxGasAmount = base.Max(transaction.MaxGasAmount, 5000) // as big as possible
+
 	commitedTxs, err := client.SimulateTransaction(transaction, account.PublicKeyHex())
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
 	if len(commitedTxs) <= 0 {
-		return nil, err
+		return 0, errors.New("Query gas fee failed.")
 	}
 
 	tx := commitedTxs[0]
-	gasFee := tx.GasUnitPrice * tx.GasUsed
-	gasFee = (gasFee*15 + 9) / 10 // ceil(fee * 1.5)
-	gasFeeString := strconv.FormatUint(gasFee, 10)
-	return &base.OptionalString{Value: gasFeeString}, nil
+	maxGas := (tx.GasUsed*15 + 9) / 10 // ceil(fee * 1.5)
+	return maxGas, nil
 }
 
 func (c *Chain) SubmitTransactionPayload(account base.Account, data []byte) (string, error) {
@@ -231,6 +233,7 @@ func (c *Chain) signTransaction(account base.Account, transaction *aptostypes.Tr
 	return transaction, nil
 }
 
+// @return The `MaxGasAmount` in the returned transaction is already the real gas fee obtained from the online real-time.
 func (c *Chain) createTransactionFromPayload(account base.Account, payload *aptostypes.Payload) (*aptostypes.Transaction, error) {
 	client, err := c.client()
 	if err != nil {
@@ -255,15 +258,12 @@ func (c *Chain) createTransactionFromPayload(account base.Account, payload *apto
 		Payload:                 payload,
 		ExpirationTimestampSecs: ledgerInfo.LedgerTimestamp + 600, // timeout 10 mins
 	}
-	gas, err := c.EstimateGasFee(account, txn)
+
+	maxGas, err := c.EstimateMaxGasAmount(account, txn)
 	if err != nil {
 		return nil, err
 	}
-	gasInt, err := strconv.ParseUint(gas.Value, 10, 64)
-	if err != nil {
-		return nil, err
-	}
-	txn.MaxGasAmount = gasInt
+	txn.MaxGasAmount = maxGas
 	return txn, nil
 }
 

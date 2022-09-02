@@ -2,6 +2,7 @@ package aptos
 
 import (
 	"encoding/json"
+	"strconv"
 
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/coming-chat/go-aptos/aptostypes"
@@ -83,7 +84,9 @@ func (t *Token) EstimateFees(account *Account, receiverAddress, amount string) (
 	if err != nil {
 		return
 	}
-	return t.chain.EstimateGasFee(account, transaction)
+	gasFee := transaction.MaxGasAmount * transaction.GasUnitPrice
+	gasString := strconv.FormatUint(gasFee, 10)
+	return &base.OptionalString{Value: gasString}, nil
 }
 
 func (t *Token) buildTransferPayload(receiverAddress, amount string) *aptostypes.Payload {
