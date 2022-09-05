@@ -262,6 +262,9 @@ func (c *Chain) SubmitTransactionPayloadBCS(account base.Account, data []byte) (
 		submittedTx *aptostypes.Transaction
 		signedTxn   []byte
 	)
+	if client, err = c.client(); err != nil {
+		return "", err
+	}
 	payload := txbuilder.TransactionPayloadEntryFunction{}
 	if err := lcs.Unmarshal(data, &payload); err != nil {
 		return "", err
