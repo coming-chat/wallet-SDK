@@ -1,9 +1,12 @@
 package aptos
 
 import (
+	"encoding/hex"
 	"reflect"
 	"testing"
 
+	txbuilder "github.com/coming-chat/go-aptos/transaction_builder"
+	"github.com/coming-chat/lcs"
 	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/coming-chat/wallet-SDK/core/testcase"
 )
@@ -55,6 +58,50 @@ func TestEstimateFee(t *testing.T) {
 	token := NewToken(chain)
 
 	fee, err := token.EstimateFees(account, toAddress, amount)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(fee)
+}
+
+func TestEstimatePayloadGasFeeBCS(t *testing.T) {
+	account, err := NewAccountWithMnemonic("spoon cinnamon ketchup original lizard cupboard opinion slot vanish water turkey govern")
+	if err != nil {
+		t.Fatal(err)
+	}
+	contractAddress := "0xb6d5bb1291ae2739b5341e860b8f42cd7e579a0d90057dba3651bc4d1492c7eb"
+	chain := NewChainWithRestUrl(testnetRestUrl)
+
+	var createABI = "0106637265617465b6d5bb1291ae2739b5341e860b8f42cd7e579a0d90057dba3651bc4d1492c7eb0a7265645f7061636b657400000205636f756e74020d746f74616c5f62616c616e636502"
+	abiBytes := make([][]byte, 0)
+	abiStrs := []string{createABI}
+	for _, s := range abiStrs {
+		bs, err := hex.DecodeString(s)
+		if err != nil {
+			t.Fatal(err)
+		}
+		abiBytes = append(abiBytes, bs)
+	}
+	abi, err := txbuilder.NewTransactionBuilderABI(abiBytes)
+	if err != nil {
+		t.Fatal(err)
+	}
+	functionName := contractAddress + "::red_packet::create"
+	payloadAbi, err := abi.BuildTransactionPayload(
+		functionName,
+		[]string{},
+		[]any{
+			uint64(5), uint64(10000),
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	bs, err := lcs.Marshal(payloadAbi)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fee, err := chain.EstimatePayloadGasFeeBCS(account, bs)
 	if err != nil {
 		t.Fatal(err)
 	}
