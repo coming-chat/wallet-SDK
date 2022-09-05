@@ -9,6 +9,7 @@ require (
 	github.com/btcsuite/btcd/btcutil v1.1.1
 	github.com/btcsuite/btcd/chaincfg/chainhash v1.0.1
 	github.com/centrifuge/go-substrate-rpc-client/v4 v4.0.0
+	github.com/coming-chat/go-aptos v0.0.0-20220905032519-35edce9c5b6b
 	github.com/coming-chat/merlin v0.1.2-0.20211216101619-d46ce5719651
 	github.com/cosmos/cosmos-sdk v0.45.4
 	github.com/cosmos/go-bip39 v1.0.0
@@ -17,6 +18,7 @@ require (
 	github.com/gtank/ristretto255 v0.1.2
 	github.com/itering/subscan v0.1.0
 	github.com/pierrec/xxHash v0.1.5
+	github.com/portto/solana-go-sdk v1.18.0
 	github.com/shopspring/decimal v1.2.0
 	github.com/tendermint/tendermint v0.34.19
 	github.com/tyler-smith/go-bip39 v1.1.0
@@ -40,7 +42,6 @@ require (
 	github.com/btcsuite/websocket v0.0.0-20150119174127-31079b680792 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
-	github.com/coming-chat/go-aptos v0.0.0-20220825104502-61728966084f // indirect
 	github.com/confio/ics23/go v0.6.6 // indirect
 	github.com/cosmos/btcutil v1.0.4 // indirect
 	github.com/cosmos/iavl v0.17.3 // indirect
@@ -98,7 +99,6 @@ require (
 	github.com/petermattis/goid v0.0.0-20180202154549-b0b1615b78e5 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/portto/solana-go-sdk v1.18.0 // indirect
 	github.com/prometheus/client_golang v1.12.1 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/prometheus/common v0.32.1 // indirect
@@ -117,7 +117,7 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.10.1 // indirect
-	github.com/stretchr/testify v1.7.1 // indirect
+	github.com/stretchr/testify v1.8.0 // indirect
 	github.com/subosito/gotenv v1.2.0 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7 // indirect
 	github.com/tecbot/gorocksdb v0.0.0-20191217155057-f0fad39f321c // indirect
@@ -130,21 +130,17 @@ require (
 	github.com/tyler-smith/go-bip32 v1.0.0 // indirect
 	github.com/zondax/hid v0.9.0 // indirect
 	go.etcd.io/bbolt v1.3.6 // indirect
-	golang.org/x/mobile v0.0.0-20220518205345-8578da9835fd // indirect
-	golang.org/x/mod v0.6.0-dev.0.20211013180041-c96bc1413d57 // indirect
 	golang.org/x/net v0.0.0-20211208012354-db4efeb81f4b // indirect
 	golang.org/x/sys v0.0.0-20220330033206-e17cdc41300f // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	golang.org/x/text v0.3.7 // indirect
-	golang.org/x/tools v0.1.8-0.20211029000441-d6a9af8af023 // indirect
-	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/genproto v0.0.0-20211223182754-3ac035c7e7cb // indirect
 	google.golang.org/grpc v1.45.0 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/ini.v1 v1.66.2 // indirect
 	gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
