@@ -19,35 +19,19 @@ const (
 	NetworkNameOptimism  = "optimism"
 	NetworkNameAvalanche = "avalanche"
 
-	rss3Host = "https://pregod.rss3.dev/v1.0.0"
+	TagCollectible = "collectible"
+
+	rss3Host = "https://pregod.rss3.dev/v1"
 )
 
-type NftMetadata struct {
-	Name        string `json:"name"`
-	Image       string `json:"image"`
-	Description string `json:"description"`
-}
-
-type Nft struct {
-	Timestamp  int64  `json:"timestamp"`
-	HashString string `json:"hashString"`
-
-	TokenId       string `json:"tokenId"`
-	TokenAddress  string `json:"tokenAddress"`
-	TokenStandard string `json:"tokenStandard"`
-
-	// Metadata
-
-	Name   string `json:"name"`
-	Image  string `json:"image"`
-	Detail string `json:"detail"`
-}
-
-type nft_temp struct {
-	TokenId       string       `json:"token_id"`
-	TokenAddress  string       `json:"token_address"`
-	TokenStandard string       `json:"token_standard"`
-	Metadata      *NftMetadata `json:"nft_metadata"`
+type RSS3Metadata struct {
+	Id              string `json:"id"`
+	Name            string `json:"name"`
+	Image           string `json:"image"`
+	Standard        string `json:"standard"`
+	Collection      string `json:"collection"`
+	Description     string `json:"description"`
+	ContractAddress string `json:"contract_address"`
 }
 
 type RSS3NoteAction struct {
@@ -56,14 +40,50 @@ type RSS3NoteAction struct {
 	Tag  string `json:"tag"`
 	Type string `json:"type"`
 
-	Metadata map[string]interface{}
+	Metadata    *RSS3Metadata `json:"metadata"`
+	RelatedUrls []string      `json:"related_urls"`
+
+	Timestamp int64
+	Hash      string
 }
 
 type RSS3Note struct {
 	Timestamp time.Time         `json:"timestamp"`
 	Hash      string            `json:"hash"`
 	Success   bool              `json:"success"`
+	Network   string            `json:"network"`
 	Actions   []*RSS3NoteAction `json:"actions"`
+}
+
+func (a *RSS3NoteAction) IsNftAction() bool {
+	return a.Tag == TagCollectible
+}
+
+// @return nft identifierKey if the action is a nft action, else return empty
+func (a *RSS3NoteAction) NftIdentifierKey() string {
+	if a.Tag == TagCollectible {
+		return a.Metadata.Standard + a.Metadata.ContractAddress + a.Metadata.Id
+	}
+	return ""
+}
+
+func (a *RSS3NoteAction) Nft() *Nft {
+	if a.Tag != TagCollectible {
+		return nil
+	}
+
+	n := &Nft{}
+	n.Id = a.Metadata.Id
+	n.Name = a.Metadata.Name
+	n.Image = strings.Replace(a.Metadata.Image, "ipfs://", "https://ipfs.io/ipfs/", 1)
+	n.Standard = a.Metadata.Standard
+	n.Collection = a.Metadata.Collection
+	n.Description = a.Metadata.Description
+	n.ContractAddress = a.Metadata.ContractAddress
+	n.RelatedUrl = a.RelatedUrls[0]
+	n.Timestamp = a.Timestamp
+	n.HashString = a.Hash
+	return n
 }
 
 type RSS3Fetcher struct {
@@ -79,39 +99,6 @@ type RSS3Fetcher struct {
 	// PreCursor  string
 }
 
-func (n *Nft) IdentifierKey() string {
-	return n.TokenStandard + n.TokenAddress + n.TokenId
-}
-
-func (a *RSS3NoteAction) Nft() *Nft {
-	if a.Tag != "collectible" {
-		return nil
-	}
-
-	bytes, err := json.Marshal(a.Metadata["token"])
-	if err != nil {
-		return nil
-	}
-	var nftTemp = nft_temp{}
-	err = json.Unmarshal(bytes, &nftTemp)
-	if err != nil {
-		println("decode nft error", err)
-		return nil
-	}
-
-	nft := Nft{}
-	nft.TokenStandard = nftTemp.TokenStandard
-	nft.TokenAddress = nftTemp.TokenAddress
-	nft.TokenId = nftTemp.TokenId
-	if m := nftTemp.Metadata; m != nil {
-		nft.Name = m.Name
-		nft.Image = strings.Replace(m.Image, "ipfs://", "https://ipfs.io/ipfs/", 1)
-		nft.Detail = m.Description
-	}
-
-	return &nft
-}
-
 func NewRSS3FetcherWithNetwork(network string, owner string) *RSS3Fetcher {
 	return &RSS3Fetcher{
 		Network: network,
@@ -125,7 +112,7 @@ func (f *RSS3Fetcher) FetchNotes(cursor string) ([]RSS3Note, error) {
 		return nil, fmt.Errorf("Invalid owner address %v", f.Owner)
 	}
 	// https://pregod.rss3.dev/v1.0.0/notes/0x8c951f58F63C0018BFBb47A29e55e84507eD63Bd?tag=collectible
-	url := fmt.Sprintf("%v/notes/%v?network=%v&limit=%v&tag=%v", rss3Host, f.Owner, f.Network, f.Limit, "collectible")
+	url := fmt.Sprintf("%v/notes/%v?network=%v&limit=%v&tag=%v", rss3Host, f.Owner, f.Network, f.Limit, TagCollectible)
 	if len(cursor) > 0 {
 		url = url + "&cursor=" + cursor
 	}
@@ -158,49 +145,85 @@ func (f *RSS3Fetcher) FetchNotesNext() ([]RSS3Note, error) {
 // 	return f.FetchNotes(f.PreCursor)
 // }
 
-func (f *RSS3Fetcher) FetchNtfs() ([]*Nft, error) {
+type Nft struct {
+	// from Note
+
+	Timestamp  int64  `json:"timestamp"`
+	HashString string `json:"hashString"`
+
+	// from Action.Metadata
+
+	Id              string `json:"id"`
+	Name            string `json:"name"`
+	Image           string `json:"image"`
+	Standard        string `json:"standard"`
+	Collection      string `json:"collection"`
+	Description     string `json:"description"`
+	ContractAddress string `json:"contract_address"`
+
+	// from Action
+
+	RelatedUrl string `json:"related_url"`
+}
+
+func (n *Nft) IdentifierKey() string {
+	return n.Standard + n.ContractAddress + n.Id
+}
+
+func (n *Nft) groupName() string {
+	if n.Collection == "" {
+		return "Others"
+	} else {
+		return n.Collection
+	}
+}
+
+func (f *RSS3Fetcher) FetchNtfs() (map[string][]*Nft, error) {
 	f.Limit = 500
 	f.NextCursor = ""
 	f.Owner = strings.ToLower(f.Owner)
 
-	nfts := make(map[string]*Nft)
-	willTradeInFutureNfts := []*Nft{}
+	actions := make(map[string]*RSS3NoteAction)
+	willTradeInFutureActions := []*RSS3NoteAction{}
 	for true {
 		notes, err := f.FetchNotesNext()
 		if err != nil {
 			return nil, err
 		}
 
-		for i := len(willTradeInFutureNfts) - 1; i >= 0; i-- {
-			nft := willTradeInFutureNfts[i]
-			_, exits := nfts[nft.IdentifierKey()]
-			if exits {
-				delete(nfts, nft.IdentifierKey())
-				willTradeInFutureNfts = append(willTradeInFutureNfts[:i], willTradeInFutureNfts[i+1:]...)
-			}
-		}
-
 		for i := len(notes) - 1; i >= 0; i-- {
 			note := notes[i]
+			if !note.Success {
+				continue
+			}
 			for _, action := range note.Actions {
-				nft := action.Nft()
-				if nft == nil {
+				nftKey := action.NftIdentifierKey()
+				if nftKey == "" {
 					continue
 				}
 				if action.To == f.Owner {
-					nfts[nft.IdentifierKey()] = nft
-					nft.Timestamp = note.Timestamp.Unix()
-					nft.HashString = note.Hash
+					actions[nftKey] = action
+					action.Timestamp = note.Timestamp.Unix()
+					action.Hash = note.Hash
 				} else if action.From == f.Owner {
-					_, exits := nfts[nft.IdentifierKey()]
-					if !exits {
-						willTradeInFutureNfts = append(willTradeInFutureNfts, nft)
+					_, exits := actions[nftKey]
+					if exits {
+						delete(actions, nftKey)
 					} else {
-						delete(nfts, nft.IdentifierKey())
+						willTradeInFutureActions = append(willTradeInFutureActions, action)
 					}
 				} else {
 					println("Invalid data, not in or out", action)
 				}
+			}
+		}
+
+		for i := len(willTradeInFutureActions) - 1; i >= 0; i-- {
+			action := willTradeInFutureActions[i]
+			_, exits := actions[action.NftIdentifierKey()]
+			if exits {
+				delete(actions, action.NftIdentifierKey())
+				willTradeInFutureActions = append(willTradeInFutureActions[:i], willTradeInFutureActions[i+1:]...)
 			}
 		}
 
@@ -211,29 +234,31 @@ func (f *RSS3Fetcher) FetchNtfs() ([]*Nft, error) {
 		}
 	}
 
-	for i := len(willTradeInFutureNfts) - 1; i >= 0; i-- {
-		nft := willTradeInFutureNfts[i]
-		_, exits := nfts[nft.IdentifierKey()]
-		if exits {
-			delete(nfts, nft.IdentifierKey())
-			willTradeInFutureNfts = append(willTradeInFutureNfts[:i], willTradeInFutureNfts[i+1:]...)
+	if len(willTradeInFutureActions) != 0 {
+		println("Invalid status that trade nft have not clean", willTradeInFutureActions)
+	}
+
+	nftGroupd := make(map[string][]*Nft)
+	for _, action := range actions {
+		if nft := action.Nft(); nft != nil {
+			key := nft.groupName()
+			group, exist := nftGroupd[key]
+			if exist {
+				nftGroupd[key] = append(group, nft)
+			} else {
+				nftGroupd[key] = []*Nft{nft}
+			}
 		}
 	}
-
-	if len(willTradeInFutureNfts) != 0 {
-		println("Invalid status that trade nft have not clean", willTradeInFutureNfts)
+	for _, group := range nftGroupd {
+		sort.Slice(group, func(i, j int) bool {
+			return group[i].Timestamp > group[j].Timestamp
+		})
 	}
-
-	nftList := []*Nft{}
-	for _, nft := range nfts {
-		nftList = append(nftList, nft)
-	}
-	sort.Slice(nftList, func(i, j int) bool {
-		return nftList[i].Timestamp > nftList[j].Timestamp
-	})
-	return nftList, nil
+	return nftGroupd, nil
 }
 
+// @return json string that grouped by nft's collection
 func (f *RSS3Fetcher) FetchNftsJsonString() (*base.OptionalString, error) {
 	nfts, err := f.FetchNtfs()
 	if err != nil {

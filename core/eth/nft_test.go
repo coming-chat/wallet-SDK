@@ -6,8 +6,8 @@ import (
 
 func TestRSS3Notes(t *testing.T) {
 	fetcher := RSS3Fetcher{
-		Owner: "0x8c951f58F63C0018BFBb47A29e55e84507eD63Bd",
-		// Owner:   "0xFCC3299Eb11790d36836F1A9aBDbE3D2435794C1",
+		// Owner: "0x8c951f58F63C0018BFBb47A29e55e84507eD63Bd",
+		Owner:   "0xFCC3299Eb11790d36836F1A9aBDbE3D2435794C1",
 		Limit:   100,
 		Network: NetworkNameEthereum,
 	}
