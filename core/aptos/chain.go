@@ -329,12 +329,7 @@ func (c *Chain) createTransactionFromPayloadBCS(account base.Account, payload tx
 		ExpirationTimestampSecs: ledgerInfo.LedgerTimestamp + TxExpireSec,
 		ChainId:                 uint8(ledgerInfo.ChainId),
 	}
-
-	aptAccount, ok := account.(*Account)
-	if !ok {
-		return nil, errors.New("invalid account type")
-	}
-	signedTxn, err := txbuilder.GenerateBCSSimulation(aptAccount.account, txAbi)
+	signedTxn, err := txbuilder.GenerateBCSSimulation(account.PublicKey(), txAbi)
 	if err != nil {
 		return nil, err
 	}

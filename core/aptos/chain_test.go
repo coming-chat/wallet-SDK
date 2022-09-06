@@ -65,7 +65,7 @@ func TestEstimateFee(t *testing.T) {
 }
 
 func TestEstimatePayloadGasFeeBCS(t *testing.T) {
-	account, err := NewAccountWithMnemonic("spoon cinnamon ketchup original lizard cupboard opinion slot vanish water turkey govern")
+	account, err := NewAccountWithMnemonic(testcase.M1)
 	if err != nil {
 		t.Fatal(err)
 	}
