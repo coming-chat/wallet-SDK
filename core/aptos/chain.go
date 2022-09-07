@@ -2,6 +2,7 @@ package aptos
 
 import (
 	"context"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"strconv"
@@ -10,18 +11,23 @@ import (
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/coming-chat/go-aptos/aptosclient"
 	"github.com/coming-chat/go-aptos/aptostypes"
+	txbuilder "github.com/coming-chat/go-aptos/transaction_builder"
+	"github.com/coming-chat/lcs"
 	"github.com/coming-chat/wallet-SDK/core/base"
 )
 
 const (
 	MaxGasAmount = 2000
 	GasPrice     = 1
+	TxExpireSec  = 600
 )
 
 type IChain interface {
 	base.Chain
 	SubmitTransactionPayload(account base.Account, data []byte) (string, error)
 	EstimatePayloadGasFee(account base.Account, data []byte) (*base.OptionalString, error)
+	SubmitTransactionPayloadBCS(account base.Account, data []byte) (string, error)
+	EstimatePayloadGasFeeBCS(account base.Account, data []byte) (*base.OptionalString, error)
 	GetClient() (*aptosclient.RestClient, error)
 }
 
@@ -57,7 +63,7 @@ func (c *Chain) BalanceOfAddress(address string) (b *base.Balance, err error) {
 		return
 	}
 
-	balance, err := client.BalanceOf(address)
+	balance, err := client.AptosBalanceOf(address)
 	if err != nil {
 		return
 	}
@@ -167,6 +173,21 @@ func (c *Chain) EstimatePayloadGasFee(account base.Account, data []byte) (*base.
 	return &base.OptionalString{Value: gasString}, nil
 }
 
+func (c *Chain) EstimatePayloadGasFeeBCS(account base.Account, data []byte) (*base.OptionalString, error) {
+	var (
+		err   error
+		txAbi *txbuilder.RawTransaction
+	)
+	payload := txbuilder.TransactionPayloadEntryFunction{}
+	if err := lcs.Unmarshal(data, &payload); err != nil {
+		return nil, err
+	}
+	if txAbi, err = c.createTransactionFromPayloadBCS(account, payload); err != nil {
+		return nil, err
+	}
+	return &base.OptionalString{Value: strconv.FormatUint(txAbi.MaxGasAmount, 10)}, nil
+}
+
 func (c *Chain) EstimateMaxGasAmount(account base.Account, transaction *aptostypes.Transaction) (uint64, error) {
 	client, err := c.client()
 	if err != nil {
@@ -175,6 +196,24 @@ func (c *Chain) EstimateMaxGasAmount(account base.Account, transaction *aptostyp
 	transaction.MaxGasAmount = base.Max(transaction.MaxGasAmount, 5000) // as big as possible
 
 	commitedTxs, err := client.SimulateTransaction(transaction, account.PublicKeyHex())
+	if err != nil {
+		return 0, err
+	}
+	if len(commitedTxs) <= 0 {
+		return 0, errors.New("Query gas fee failed.")
+	}
+
+	tx := commitedTxs[0]
+	maxGas := (tx.GasUsed*15 + 9) / 10 // ceil(fee * 1.5)
+	return maxGas, nil
+}
+
+func (c *Chain) EstimateMaxGasAmountBCS(account base.Account, signedTx []byte) (uint64, error) {
+	client, err := c.client()
+	if err != nil {
+		return 0, err
+	}
+	commitedTxs, err := client.SimulateSignedBCSTransaction(signedTx)
 	if err != nil {
 		return 0, err
 	}
@@ -215,6 +254,37 @@ func (c *Chain) SubmitTransactionPayload(account base.Account, data []byte) (str
 	return resultTx.Hash, nil
 }
 
+func (c *Chain) SubmitTransactionPayloadBCS(account base.Account, data []byte) (string, error) {
+	var (
+		err         error
+		client      *aptosclient.RestClient
+		txAbi       *txbuilder.RawTransaction
+		submittedTx *aptostypes.Transaction
+		signedTxn   []byte
+	)
+	if client, err = c.client(); err != nil {
+		return "", err
+	}
+	payload := txbuilder.TransactionPayloadEntryFunction{}
+	if err := lcs.Unmarshal(data, &payload); err != nil {
+		return "", err
+	}
+	if txAbi, err = c.createTransactionFromPayloadBCS(account, payload); err != nil {
+		return "", err
+	}
+	aptAccount, ok := account.(*Account)
+	if !ok {
+		return "", errors.New("invalid account type")
+	}
+	if signedTxn, err = txbuilder.GenerateBCSTransaction(aptAccount.account, txAbi); err != nil {
+		return "", err
+	}
+	if submittedTx, err = client.SubmitSignedBCSTransaction(signedTxn); err != nil {
+		return "", err
+	}
+	return submittedTx.Hash, err
+}
+
 func (c *Chain) signTransaction(account base.Account, transaction *aptostypes.Transaction) (*aptostypes.Transaction, error) {
 	client, err := c.client()
 	if err != nil {
@@ -231,6 +301,45 @@ func (c *Chain) signTransaction(account base.Account, transaction *aptostypes.Tr
 		Signature: types.HexEncodeToString(signatureData),
 	}
 	return transaction, nil
+}
+
+func (c *Chain) createTransactionFromPayloadBCS(account base.Account, payload txbuilder.TransactionPayload) (*txbuilder.RawTransaction, error) {
+	var (
+		err         error
+		client      *aptosclient.RestClient
+		accountData *aptostypes.AccountCoreData
+		ledgerInfo  *aptostypes.LedgerInfo
+	)
+
+	if client, err = c.client(); err != nil {
+		return nil, err
+	}
+	if accountData, err = client.GetAccount(account.Address()); err != nil {
+		return nil, err
+	}
+	if ledgerInfo, err = client.LedgerInfo(); err != nil {
+		return nil, err
+	}
+	txAbi := &txbuilder.RawTransaction{
+		Sender:                  getAuthKey(account),
+		SequenceNumber:          accountData.SequenceNumber,
+		MaxGasAmount:            MaxGasAmount,
+		GasUnitPrice:            GasPrice,
+		Payload:                 payload,
+		ExpirationTimestampSecs: ledgerInfo.LedgerTimestamp + TxExpireSec,
+		ChainId:                 uint8(ledgerInfo.ChainId),
+	}
+	signedTxn, err := txbuilder.GenerateBCSSimulation(account.PublicKey(), txAbi)
+	if err != nil {
+		return nil, err
+	}
+	// estimate gas and resign
+	maxGas, err := c.EstimateMaxGasAmountBCS(account, signedTxn)
+	if err != nil {
+		return nil, err
+	}
+	txAbi.MaxGasAmount = maxGas
+	return txAbi, nil
 }
 
 // @return The `MaxGasAmount` in the returned transaction is already the real gas fee obtained from the online real-time.
@@ -315,4 +424,11 @@ func toBaseTransaction(transaction *aptostypes.Transaction) (*base.TransactionDe
 	detail.FinishTimestamp = int64(timestamp)
 
 	return detail, nil
+}
+
+func getAuthKey(account base.Account) txbuilder.AccountAddress {
+	key, _ := hex.DecodeString(account.Address()[2:])
+	var a txbuilder.AccountAddress
+	copy(a[:], key)
+	return a
 }
