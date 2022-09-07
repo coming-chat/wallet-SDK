@@ -62,9 +62,22 @@ func (a *RSS3NoteAction) IsNftAction() bool {
 // @return nft identifierKey if the action is a nft action, else return empty
 func (a *RSS3NoteAction) NftIdentifierKey() string {
 	if a.Tag == TagCollectible {
-		return a.Metadata.Standard + a.Metadata.ContractAddress + a.Metadata.Id
+		return strings.ToLower(a.Metadata.Standard + a.Metadata.ContractAddress + a.Metadata.Id)
 	}
 	return ""
+}
+
+func (a *RSS3NoteAction) RelatedScanUrl() string {
+	if len(a.RelatedUrls) == 0 {
+		return ""
+	}
+	scanComponent := "/tx/" + a.Hash
+	for _, url := range a.RelatedUrls {
+		if strings.Contains(url, scanComponent) {
+			return url
+		}
+	}
+	return a.RelatedUrls[0]
 }
 
 func (a *RSS3NoteAction) Nft() *Nft {
@@ -80,7 +93,7 @@ func (a *RSS3NoteAction) Nft() *Nft {
 	n.Collection = a.Metadata.Collection
 	n.Description = a.Metadata.Description
 	n.ContractAddress = a.Metadata.ContractAddress
-	n.RelatedUrl = a.RelatedUrls[0]
+	n.RelatedUrl = a.RelatedScanUrl()
 	n.Timestamp = a.Timestamp
 	n.HashString = a.Hash
 	return n
@@ -166,10 +179,6 @@ type Nft struct {
 	RelatedUrl string `json:"related_url"`
 }
 
-func (n *Nft) IdentifierKey() string {
-	return n.Standard + n.ContractAddress + n.Id
-}
-
 func (n *Nft) groupName() string {
 	if n.Collection == "" {
 		return "Others"
@@ -201,11 +210,11 @@ func (f *RSS3Fetcher) FetchNtfs() (map[string][]*Nft, error) {
 				if nftKey == "" {
 					continue
 				}
-				if action.To == f.Owner {
+				if action.To == f.Owner { // receive a nft
 					actions[nftKey] = action
 					action.Timestamp = note.Timestamp.Unix()
 					action.Hash = note.Hash
-				} else if action.From == f.Owner {
+				} else if action.From == f.Owner { // send a nft
 					_, exits := actions[nftKey]
 					if exits {
 						delete(actions, nftKey)
