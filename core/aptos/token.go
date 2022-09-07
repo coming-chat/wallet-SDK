@@ -1,6 +1,7 @@
 package aptos
 
 import (
+	"encoding/json"
 	"errors"
 	"strconv"
 
@@ -42,10 +43,33 @@ func (t *Token) Chain() base.Chain {
 }
 
 func (t *Token) TokenInfo() (*base.TokenInfo, error) {
+	contractAddress := t.token.Address.ToShortString()
+	tag := "0x1::coin::CoinInfo<" + t.token.ShortFunctionName() + ">"
+	client, err := t.chain.client()
+	if err != nil {
+		return nil, err
+	}
+	res, err := client.GetAccountResource(contractAddress, tag, 0)
+	if err != nil {
+		return nil, err
+	}
+	jsonData, err := json.Marshal(res.Data)
+	if err != nil {
+		return nil, err
+	}
+	info := struct {
+		Decimals int16  `json:"decimals"`
+		Name     string `json:"name"`
+		Symbol   string `json:"symbol"`
+	}{}
+	err = json.Unmarshal(jsonData, &info)
+	if err != nil {
+		return nil, err
+	}
 	return &base.TokenInfo{
-		Name:    AptosName,
-		Symbol:  AptosSymbol,
-		Decimal: AptosDecimal,
+		Name:    info.Name,
+		Symbol:  info.Symbol,
+		Decimal: info.Decimals,
 	}, nil
 }
 
