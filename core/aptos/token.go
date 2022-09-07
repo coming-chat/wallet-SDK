@@ -1,11 +1,10 @@
 package aptos
 
 import (
-	"encoding/json"
 	"strconv"
 
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
-	"github.com/coming-chat/go-aptos/aptostypes"
+	txbuilder "github.com/coming-chat/go-aptos/transaction_builder"
 	"github.com/coming-chat/wallet-SDK/core/base"
 )
 
@@ -60,27 +59,29 @@ func (t *Token) BuildTransferTx(privateKey, receiverAddress, amount string) (*ba
 }
 
 func (t *Token) BuildTransferTxWithAccount(account *Account, receiverAddress, amount string) (*base.OptionalString, error) {
-	payload := t.buildTransferPayload(receiverAddress, amount)
-	transaction, err := t.chain.createTransactionFromPayload(account, payload)
+	payload, err := t.buildTransferPayload(receiverAddress, amount)
 	if err != nil {
 		return nil, err
 	}
-	signedTransaction, err := t.chain.signTransaction(account, transaction)
+	transaction, err := t.chain.createTransactionFromPayloadBCS(account, payload)
 	if err != nil {
 		return nil, err
 	}
-	signedTransactionData, err := json.Marshal(signedTransaction)
+	signedTx, err := txbuilder.GenerateBCSTransaction(account.account, transaction)
 	if err != nil {
 		return nil, err
 	}
-	return &base.OptionalString{Value: types.HexEncodeToString(signedTransactionData)}, nil
+	return &base.OptionalString{Value: types.HexEncodeToString(signedTx)}, nil
 }
 
 func (t *Token) EstimateFees(account *Account, receiverAddress, amount string) (f *base.OptionalString, err error) {
 	f = &base.OptionalString{Value: "2000"}
 
-	payload := t.buildTransferPayload(receiverAddress, amount)
-	transaction, err := t.chain.createTransactionFromPayload(account, payload)
+	payload, err := t.buildTransferPayload(receiverAddress, amount)
+	if err != nil {
+		return
+	}
+	transaction, err := t.chain.createTransactionFromPayloadBCS(account, payload)
 	if err != nil {
 		return
 	}
@@ -89,13 +90,30 @@ func (t *Token) EstimateFees(account *Account, receiverAddress, amount string) (
 	return &base.OptionalString{Value: gasString}, nil
 }
 
-func (t *Token) buildTransferPayload(receiverAddress, amount string) *aptostypes.Payload {
-	return &aptostypes.Payload{
-		Type:          aptostypes.EntryFunctionPayload,
-		Function:      "0x1::coin::transfer",
-		TypeArguments: []string{"0x1::aptos_coin::AptosCoin"},
-		Arguments: []interface{}{
-			receiverAddress, amount,
-		},
+func (t *Token) buildTransferPayload(receiverAddress, amount string) (p txbuilder.TransactionPayload, err error) {
+	moduleName, err := txbuilder.NewModuleIdFromString("0x1::coin")
+	if err != nil {
+		return
 	}
+	token, err := txbuilder.NewTypeTagStructFromString("0x1::aptos_coin::AptosCoin")
+	if err != nil {
+		return
+	}
+	toAddr, err := txbuilder.NewAccountAddressFromHex(receiverAddress)
+	if err != nil {
+		return
+	}
+	amountInt, err := strconv.ParseUint(amount, 10, 64)
+	if err != nil {
+		return
+	}
+	amountBytes := txbuilder.BCSSerializeBasicValue(amountInt)
+	return txbuilder.TransactionPayloadEntryFunction{
+		ModuleName:   *moduleName,
+		FunctionName: "transfer",
+		TyArgs:       []txbuilder.TypeTag{*token},
+		Args: [][]byte{
+			toAddr[:], amountBytes,
+		},
+	}, nil
 }

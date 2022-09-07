@@ -110,7 +110,7 @@ func TestEstimatePayloadGasFeeBCS(t *testing.T) {
 
 func TestFetchTransactionDetail(t *testing.T) {
 	chain := NewChainWithRestUrl(testnetRestUrl)
-	hash := "0xbe86d90b331d9db8002f7e435647bd108074cd4bd81ef0933ea3144ce82fc566"
+	hash := "0x94fffd1e9301afd905665dae4ffa40167f5faf28308d1600344eb0d20d10245d"
 	detail, err := chain.FetchTransactionDetail(hash)
 	if err != nil {
 		t.Fatal(err)
