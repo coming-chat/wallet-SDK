@@ -22,48 +22,6 @@ func TestFaucet(t *testing.T) {
 	t.Log(hashs.Value)
 }
 
-func TestTransafer(t *testing.T) {
-	account, _ := NewAccountWithMnemonic(testcase.M1)
-	toAddress := "0xcdbe33da8d218e97a9bec6443ba4a1b1858494f29142976d357f4770c384e015"
-	amount := "100"
-
-	chain := NewChainWithRestUrl(testnetRestUrl)
-	token := NewToken(chain)
-
-	balance, err := token.BalanceOfAccount(account)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log(balance)
-
-	signedTx, err := token.BuildTransferTxWithAccount(account, toAddress, amount)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log(signedTx.Value)
-
-	txHash, err := chain.SendRawTransaction(signedTx.Value)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log(txHash)
-}
-
-func TestEstimateFee(t *testing.T) {
-	account, _ := NewAccountWithMnemonic(testcase.M1)
-	toAddress := "0xcdbe33da8d218e97a9bec6443ba4a1b1858494f29142976d357f4770c384e015"
-	amount := "100"
-
-	chain := NewChainWithRestUrl(testnetRestUrl)
-	token := NewToken(chain)
-
-	fee, err := token.EstimateFees(account, toAddress, amount)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log(fee)
-}
-
 func TestEstimatePayloadGasFeeBCS(t *testing.T) {
 	account, err := NewAccountWithMnemonic(testcase.M1)
 	if err != nil {
@@ -110,7 +68,7 @@ func TestEstimatePayloadGasFeeBCS(t *testing.T) {
 
 func TestFetchTransactionDetail(t *testing.T) {
 	chain := NewChainWithRestUrl(testnetRestUrl)
-	hash := "0x94fffd1e9301afd905665dae4ffa40167f5faf28308d1600344eb0d20d10245d"
+	hash := "0x252e1bee1b5b534d44f59ca4ce3bb9742a454ca85692b0ef71894f8568fb9ef3"
 	detail, err := chain.FetchTransactionDetail(hash)
 	if err != nil {
 		t.Fatal(err)

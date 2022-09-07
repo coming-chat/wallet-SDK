@@ -1,6 +1,7 @@
 package aptos
 
 import (
+	"errors"
 	"strconv"
 
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
@@ -16,10 +17,22 @@ const (
 
 type Token struct {
 	chain *Chain
+
+	token txbuilder.TypeTagStruct
 }
 
-func NewToken(chain *Chain) *Token {
-	return &Token{chain}
+func NewMainToken(chain *Chain) *Token {
+	token, _ := NewToken(chain, "0x1::aptos_coin::AptosCoin")
+	return token
+}
+
+// @param tag format `address::module_name::name`, e.g. "0x1::aptos_coin::AptosCoin"
+func NewToken(chain *Chain, tag string) (*Token, error) {
+	token, err := txbuilder.NewTypeTagStructFromString(tag)
+	if err != nil {
+		return nil, err
+	}
+	return &Token{chain, *token}, nil
 }
 
 // MARK - Implement the protocol Token
@@ -36,16 +49,34 @@ func (t *Token) TokenInfo() (*base.TokenInfo, error) {
 	}, nil
 }
 
-func (t *Token) BalanceOfAddress(address string) (*base.Balance, error) {
-	return t.chain.BalanceOfAddress(address)
+func (t *Token) BalanceOfAddress(address string) (b *base.Balance, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
+
+	client, err := t.chain.client()
+	if err != nil {
+		return
+	}
+	balance, err := client.BalanceOf(address, t.token.ShortFunctionName())
+	if err != nil {
+		return
+	}
+
+	return &base.Balance{
+		Total:  balance.String(),
+		Usable: balance.String(),
+	}, nil
 }
 
 func (t *Token) BalanceOfPublicKey(publicKey string) (*base.Balance, error) {
-	return t.chain.BalanceOfPublicKey(publicKey)
+	address, err := EncodePublicKeyToAddress(publicKey)
+	if err != nil {
+		return nil, err
+	}
+	return t.BalanceOfAddress(address)
 }
 
 func (t *Token) BalanceOfAccount(account base.Account) (*base.Balance, error) {
-	return t.chain.BalanceOfAddress(account.Address())
+	return t.BalanceOfAddress(account.Address())
 }
 
 // MARK - token
@@ -91,11 +122,10 @@ func (t *Token) EstimateFees(account *Account, receiverAddress, amount string) (
 }
 
 func (t *Token) buildTransferPayload(receiverAddress, amount string) (p txbuilder.TransactionPayload, err error) {
-	moduleName, err := txbuilder.NewModuleIdFromString("0x1::coin")
-	if err != nil {
-		return
+	if t.token.Address.ToShortString() == "0x" {
+		return nil, errors.New("Invalid token tag: " + t.token.ShortFunctionName())
 	}
-	token, err := txbuilder.NewTypeTagStructFromString("0x1::aptos_coin::AptosCoin")
+	moduleName, err := txbuilder.NewModuleIdFromString("0x1::coin")
 	if err != nil {
 		return
 	}
@@ -111,9 +141,49 @@ func (t *Token) buildTransferPayload(receiverAddress, amount string) (p txbuilde
 	return txbuilder.TransactionPayloadEntryFunction{
 		ModuleName:   *moduleName,
 		FunctionName: "transfer",
-		TyArgs:       []txbuilder.TypeTag{*token},
+		TyArgs:       []txbuilder.TypeTag{t.token},
 		Args: [][]byte{
 			toAddr[:], amountBytes,
 		},
 	}, nil
+}
+
+func (t *Token) EnsureOwnerRegistedToken(ownerAddress string, from *Account) error {
+	tag := "0x1::coin::CoinStore<" + t.token.ShortFunctionName() + ">"
+	client, err := t.chain.client()
+	if err != nil {
+		return err
+	}
+	registed, err := client.IsAccountHasResource(ownerAddress, tag, 0)
+	if err != nil {
+		return err
+	}
+	if registed {
+		return nil
+	}
+	_, err = t.RegisterTokenForOwner(ownerAddress, from)
+	return err
+}
+
+// @return transaction hash if register token succeed.
+func (t *Token) RegisterTokenForOwner(ownerAddress string, from *Account) (string, error) {
+	moduleName, err := txbuilder.NewModuleIdFromString("0x1::managed_coin")
+	if err != nil {
+		return "", err
+	}
+	payload := txbuilder.TransactionPayloadEntryFunction{
+		ModuleName:   *moduleName,
+		FunctionName: "register",
+		TyArgs:       []txbuilder.TypeTag{t.token},
+	}
+	transaction, err := t.chain.createTransactionFromPayloadBCS(from, payload)
+	if err != nil {
+		return "", err
+	}
+	signedTx, err := txbuilder.GenerateBCSTransaction(from.account, transaction)
+	if err != nil {
+		return "", err
+	}
+	txString := types.HexEncodeToString(signedTx)
+	return t.chain.SendRawTransaction(txString)
 }

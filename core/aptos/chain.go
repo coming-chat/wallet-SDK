@@ -49,7 +49,7 @@ func (c *Chain) client() (*aptosclient.RestClient, error) {
 // MARK - Implement the protocol Chain
 
 func (c *Chain) MainToken() base.Token {
-	return &Token{chain: c}
+	return NewMainToken(c)
 }
 
 func (c *Chain) BalanceOfAddress(address string) (b *base.Balance, err error) {

@@ -258,6 +258,8 @@ github.com/coming-chat/go-aptos v0.0.0-20220906045107-3fb486fe66b5 h1:k8EPw2J8nF
 github.com/coming-chat/go-aptos v0.0.0-20220906045107-3fb486fe66b5/go.mod h1:T9ThFBZ2IJB09o0OEuWR4vAqO8WnFsu5aHRgmF4oVcI=
 github.com/coming-chat/go-aptos v0.0.0-20220906103625-f30b9ebd525a h1:0qKH90OjSx3wkEH2q1fWOzXiIfBNSQEWYCZ0lWYPdII=
 github.com/coming-chat/go-aptos v0.0.0-20220906103625-f30b9ebd525a/go.mod h1:T9ThFBZ2IJB09o0OEuWR4vAqO8WnFsu5aHRgmF4oVcI=
+github.com/coming-chat/go-aptos v0.0.0-20220907084835-9d6cc4fe9481 h1:WxFaUO3kA3yJmaKVim8BZ+R6jXF0v0ff9fymfHiHGYk=
+github.com/coming-chat/go-aptos v0.0.0-20220907084835-9d6cc4fe9481/go.mod h1:T9ThFBZ2IJB09o0OEuWR4vAqO8WnFsu5aHRgmF4oVcI=
 github.com/coming-chat/keyring v1.3.0 h1:dMVtKkbVIzPMpMOrCQydAD5YeDCbvYBc7XLMEJqY9g0=
 github.com/coming-chat/keyring v1.3.0/go.mod h1:fc+wB5KTk9wQ9sDx0kFXB3A0MaeGHM9AwRStKOQ5vOA=
 github.com/coming-chat/lcs v0.0.0-20220829063658-0fa8432d2bdf h1:HrK16SFZnoxATieE+UHFSHZ6D2+XApv9g752MgvW7es=
