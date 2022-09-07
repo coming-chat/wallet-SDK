@@ -63,7 +63,7 @@ func (c *Chain) BalanceOfAddress(address string) (b *base.Balance, err error) {
 		return
 	}
 
-	balance, err := client.BalanceOf(address)
+	balance, err := client.AptosBalanceOf(address)
 	if err != nil {
 		return
 	}
