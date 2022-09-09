@@ -47,7 +47,7 @@ func TestTokenBalance(t *testing.T) {
 	assert.Nil(t, err)
 	usdtBalance, err := usdtToken.BalanceOfAddress(address)
 	assert.Nil(t, err)
-	t.Logf("BTC Balance = %v", usdtBalance.Total)
+	t.Logf("USDT Balance = %v", usdtBalance.Total)
 }
 
 func TestTransafer(t *testing.T) {

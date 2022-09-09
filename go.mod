@@ -9,7 +9,7 @@ require (
 	github.com/btcsuite/btcd/btcutil v1.1.1
 	github.com/btcsuite/btcd/chaincfg/chainhash v1.0.1
 	github.com/centrifuge/go-substrate-rpc-client/v4 v4.0.0
-	github.com/coming-chat/go-aptos v0.0.0-20220907084835-9d6cc4fe9481
+	github.com/coming-chat/go-aptos v0.0.0-20220909053157-0ad7b59e159e
 	github.com/coming-chat/lcs v0.0.0-20220829063658-0fa8432d2bdf
 	github.com/coming-chat/merlin v0.1.2-0.20211216101619-d46ce5719651
 	github.com/cosmos/cosmos-sdk v0.45.4
@@ -21,6 +21,7 @@ require (
 	github.com/pierrec/xxHash v0.1.5
 	github.com/portto/solana-go-sdk v1.18.0
 	github.com/shopspring/decimal v1.2.0
+	github.com/stretchr/testify v1.8.0
 	github.com/tendermint/tendermint v0.34.19
 	github.com/tyler-smith/go-bip39 v1.1.0
 	github.com/vedhavyas/go-subkey v1.0.2
@@ -31,8 +32,6 @@ require (
 	filippo.io/edwards25519 v1.0.0-rc.1 // indirect
 	github.com/99designs/keyring v1.1.6 // indirect
 	github.com/DataDog/zstd v1.4.5 // indirect
-	github.com/FactomProject/basen v0.0.0-20150613233007-fe3947df716e // indirect
-	github.com/FactomProject/btcutilecc v0.0.0-20130527213604-d3a63a5752ec // indirect
 	github.com/StackExchange/wmi v0.0.0-20190523213315-cbe66965904d // indirect
 	github.com/armon/go-metrics v0.3.10 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
@@ -118,7 +117,6 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.10.1 // indirect
-	github.com/stretchr/testify v1.8.0 // indirect
 	github.com/subosito/gotenv v1.2.0 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7 // indirect
 	github.com/tecbot/gorocksdb v0.0.0-20191217155057-f0fad39f321c // indirect
@@ -128,7 +126,6 @@ require (
 	github.com/tendermint/tm-db v0.6.6 // indirect
 	github.com/tklauser/go-sysconf v0.3.5 // indirect
 	github.com/tklauser/numcpus v0.2.2 // indirect
-	github.com/tyler-smith/go-bip32 v1.0.0 // indirect
 	github.com/zondax/hid v0.9.0 // indirect
 	go.etcd.io/bbolt v1.3.6 // indirect
 	golang.org/x/net v0.0.0-20211208012354-db4efeb81f4b // indirect
