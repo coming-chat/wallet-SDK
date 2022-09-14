@@ -237,8 +237,37 @@ func (c *Chain) SubmitTransactionPayloadBCS(account base.Account, data []byte) (
 	return submittedTx.Hash, err
 }
 
-func (c *Chain) signTransaction(account *Account, transaction *txbuilder.RawTransaction) ([]byte, error) {
-	return txbuilder.GenerateBCSTransaction(account.account, transaction)
+func (c *Chain) SignAndSendTransaction(account base.Account, hexData string) (*base.OptionalString, error) {
+	var (
+		err         error
+		client      *aptosclient.RestClient
+		txAbi       *txbuilder.RawTransaction
+		submittedTx *aptostypes.Transaction
+		signedTxn   []byte
+	)
+	txData, err := hex.DecodeString(hexData)
+	if err != nil {
+		return nil, err
+	}
+	txAbi = &txbuilder.RawTransaction{}
+	err = lcs.Unmarshal(txData, txAbi)
+	if err != nil {
+		return nil, err
+	}
+	if client, err = c.client(); err != nil {
+		return nil, err
+	}
+	aptAccount, ok := account.(*Account)
+	if !ok {
+		return nil, errors.New("invalid account type")
+	}
+	if signedTxn, err = txbuilder.GenerateBCSTransaction(aptAccount.account, txAbi); err != nil {
+		return nil, err
+	}
+	if submittedTx, err = client.SubmitSignedBCSTransaction(signedTxn); err != nil {
+		return nil, err
+	}
+	return &base.OptionalString{Value: submittedTx.Hash}, err
 }
 
 // @return The raw transaction that `MaxGasAmount` has obtained from the chain in real time.
