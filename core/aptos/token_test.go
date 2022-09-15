@@ -90,11 +90,10 @@ func TestTokenRegister(t *testing.T) {
 	token, err := NewToken(chain, btcTag)
 	assert.Nil(t, err)
 
-	owner := account.Address()
-	err = token.EnsureOwnerRegistedToken(owner, account)
+	_, err = token.EnsureOwnerRegistedToken(account)
 	assert.Nil(t, err)
 
 	// test duplicate registration
-	hash, err := token.RegisterTokenForOwner(owner, account)
+	hash, err := token.RegisterTokenForOwner(account)
 	t.Log(hash, err)
 }

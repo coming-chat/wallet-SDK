@@ -172,42 +172,53 @@ func (t *Token) buildTransferPayload(receiverAddress, amount string) (p txbuilde
 	}, nil
 }
 
-func (t *Token) EnsureOwnerRegistedToken(ownerAddress string, from *Account) error {
+func (t *Token) HasRegisted(ownerAddress string) (*base.OptionalBool, error) {
 	tag := "0x1::coin::CoinStore<" + t.token.ShortFunctionName() + ">"
 	client, err := t.chain.client()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	registed, err := client.IsAccountHasResource(ownerAddress, tag, 0)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	if registed {
-		return nil
+	return &base.OptionalBool{Value: registed}, nil
+}
+
+func (t *Token) EnsureOwnerRegistedToken(owner *Account) (*base.OptionalString, error) {
+	registed, err := t.HasRegisted(owner.Address())
+	if err != nil {
+		return nil, err
 	}
-	_, err = t.RegisterTokenForOwner(ownerAddress, from)
-	return err
+	if registed.Value {
+		return nil, nil
+	}
+	return t.RegisterTokenForOwner(owner)
 }
 
 // @return transaction hash if register token succeed.
-func (t *Token) RegisterTokenForOwner(ownerAddress string, from *Account) (string, error) {
+func (t *Token) RegisterTokenForOwner(owner *Account) (*base.OptionalString, error) {
 	moduleName, err := txbuilder.NewModuleIdFromString("0x1::managed_coin")
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	payload := txbuilder.TransactionPayloadEntryFunction{
 		ModuleName:   *moduleName,
 		FunctionName: "register",
 		TyArgs:       []txbuilder.TypeTag{t.token},
 	}
-	transaction, err := t.chain.createTransactionFromPayloadBCS(from, payload)
+	transaction, err := t.chain.createTransactionFromPayloadBCS(owner, payload)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	signedTx, err := txbuilder.GenerateBCSTransaction(from.account, transaction)
+	signedTx, err := txbuilder.GenerateBCSTransaction(owner.account, transaction)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	txString := types.HexEncodeToString(signedTx)
-	return t.chain.SendRawTransaction(txString)
+	hash, err := t.chain.SendRawTransaction(txString)
+	if err != nil {
+		return nil, err
+	}
+	return &base.OptionalString{Value: hash}, nil
 }
