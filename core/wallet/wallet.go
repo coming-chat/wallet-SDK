@@ -11,6 +11,7 @@ import (
 	"github.com/coming-chat/wallet-SDK/core/eth"
 	"github.com/coming-chat/wallet-SDK/core/polka"
 	"github.com/coming-chat/wallet-SDK/core/solana"
+	"github.com/coming-chat/wallet-SDK/core/sui"
 )
 
 type Wallet struct {
@@ -27,6 +28,7 @@ type Wallet struct {
 	dogeAccounts    map[string]*doge.Account
 	solanaAccount   *solana.Account
 	aptosAccount    *aptos.Account
+	suiAccount      *sui.Account
 }
 
 func NewWalletWithMnemonic(mnemonic string) (*Wallet, error) {
@@ -213,6 +215,25 @@ func (w *Wallet) GetOrCreateAptosAccount() (*aptos.Account, error) {
 	}
 	// save to cache
 	w.aptosAccount = account
+	return account, nil
+}
+
+// Get or create the ethereum account.
+func (w *Wallet) GetOrCreateSuiAccount() (*sui.Account, error) {
+	cache := w.suiAccount
+	if cache != nil {
+		return cache, nil
+	}
+	if len(w.Mnemonic) <= 0 {
+		return nil, ErrInvalidMnemonic
+	}
+
+	account, err := sui.NewAccountWithMnemonic(w.Mnemonic)
+	if err != nil {
+		return nil, err
+	}
+	// save to cache
+	w.suiAccount = account
 	return account, nil
 }
 
