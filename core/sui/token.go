@@ -114,57 +114,43 @@ func (t *Token) BuildTransferTxWithAccount(account *Account, receiverAddress, am
 	if err != nil {
 		return
 	}
-	signer, _ := types.NewAddressFromHex(account.Address())
 
+	signer, _ := types.NewAddressFromHex(account.Address())
 	firstCoin := pickedCoin.Coins[0]
-	var signedTxns = ""
-	var txn *types.TransactionBytes
-	var bytes []byte
 	if len(pickedCoin.Coins) >= 2 {
+		var txn *types.TransactionBytes
+		var response *types.TransactionResponse
 		// firstly, we should merge all coin's balance to firstCoin
-		params := []map[string]interface{}{}
 		for i := 1; i < len(pickedCoin.Coins); i++ {
 			coin := pickedCoin.Coins[i]
-			oneParams := map[string]interface{}{
-				"moveCallRequestParams": map[string]interface{}{
-					"arguments": []string{
-						firstCoin.ObjectId.String(),
-						coin.ObjectId.String(),
-					},
-					"function":        "join",
-					"module":          "coin",
-					"packageObjectId": "0x0000000000000000000000000000000000000002",
-					"typeArguments":   []interface{}{"0x2::sui::SUI"},
-				},
+			txn, err = cli.MergeCoins(context.Background(), *signer, firstCoin.ObjectId, coin.ObjectId, nil, MaxGasForMerge)
+			if err != nil {
+				return
 			}
-			params = append(params, oneParams)
+			signedTxn := txn.SignWith(account.account.PrivateKey)
+			response, err = cli.ExecuteTransaction(context.Background(), *signedTxn)
+			if err != nil {
+				return
+			}
+			if response.Effects.Status.Status != types.TransactionStatusSuccess {
+				return nil, fmt.Errorf(`Merge coin failed: %v`, response.Effects.Status.Error)
+			}
 		}
-		maxGas := base.Max(pickedCoin.EstimateGas(), MaxGasBudget)
-		txn, err = cli.BatchTransaction(context.Background(), *signer, params, &firstCoin.ObjectId, maxGas)
-		if err != nil {
-			return
-		}
-		signedTxn := txn.SignWith(account.account.PrivateKey)
-		bytes, err = json.Marshal(signedTxn)
-		if err != nil {
-			return
-		}
-		signedTxns = types.Bytes(bytes).GetBase64Data().String() + ";"
 	}
 
 	// send sui coin
-	txn, err = cli.TransferSui(context.Background(), *signer, *recipient, firstCoin.ObjectId, amountInt, MaxGasForTransfer)
+	txn, err := cli.TransferSui(context.Background(), *signer, *recipient, firstCoin.ObjectId, amountInt, MaxGasForTransfer)
 	if err != nil {
 		return
 	}
 	signedTxn := txn.SignWith(account.account.PrivateKey)
-	bytes, err = json.Marshal(signedTxn)
+	bytes, err := json.Marshal(signedTxn)
 	if err != nil {
 		return
 	}
-	signedTxns = signedTxns + types.Bytes(bytes).GetBase64Data().String()
+	txnString := types.Bytes(bytes).GetBase64Data().String()
 
-	return &base.OptionalString{Value: signedTxns}, nil
+	return &base.OptionalString{Value: txnString}, nil
 }
 
 func (t *Token) EstimateFees(account *Account, receiverAddress, amount string) (f *base.OptionalString, err error) {

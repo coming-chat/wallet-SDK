@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -59,43 +60,29 @@ func (c *Chain) BalanceOfAccount(account base.Account) (*base.Balance, error) {
 func (c *Chain) SendRawTransaction(signedTx string) (hash string, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
 
+	bytes, err := types.NewBase64Data(signedTx)
+	if err != nil {
+		return
+	}
+	signedTxn := types.SignedTransaction{}
+	err = json.Unmarshal(bytes.Data(), &signedTxn)
+	if err != nil {
+		return
+	}
 	cli, err := c.client()
 	if err != nil {
 		return
 	}
-
-	txns := strings.Split(signedTx, ";")
-	lastHash := ""
-	var bytes *types.Base64Data
-	var response *types.TransactionResponse
-	for _, txnStr := range txns {
-		txnStr = strings.TrimSpace(txnStr)
-		if txnStr == "" {
-			continue
-		}
-
-		bytes, err = types.NewBase64Data(txnStr)
-		if err != nil {
-			return
-		}
-		signedTxn := types.SignedTransaction{}
-		err = json.Unmarshal(bytes.Data(), &signedTxn)
-		if err != nil {
-			return
-		}
-
-		response, err = cli.ExecuteTransaction(context.Background(), signedTxn)
-		if err != nil {
-			return
-		}
-		lastHash = response.Certificate.TransactionDigest.String()
+	response, err := cli.ExecuteTransaction(context.Background(), signedTxn)
+	if err != nil {
+		return
+	}
+	if response.Effects.Status.Status != types.TransactionStatusSuccess {
+		return "", fmt.Errorf(`chain error: %v`, response.Effects.Status.Error)
 	}
 
-	if lastHash != "" {
-		return lastHash, nil
-	} else {
-		return "", errors.New("Invalid signed transaction hash")
-	}
+	hash = response.Certificate.TransactionDigest.String()
+	return
 }
 
 // Fetch transaction details through transaction hash

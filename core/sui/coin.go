@@ -118,7 +118,7 @@ type PickedCoins struct {
 }
 
 func (cs *PickedCoins) EstimateGas() uint64 {
-	return uint64(len(cs.Coins)) * MaxGasBudget
+	return uint64(len(cs.Coins)) * MaxGasForMerge
 }
 
 func (cs *PickedCoins) LastCoin() *Coin {
