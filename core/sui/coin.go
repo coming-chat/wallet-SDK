@@ -2,7 +2,6 @@ package sui
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"math/big"
 	"sort"
@@ -11,9 +10,8 @@ import (
 	"github.com/coming-chat/wallet-SDK/core/base"
 )
 
-func (t *Token) getCoins(address string) (cs Coins, err error) {
+func (t *Token) getCoins(address string) (coins types.Coins, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
-	cs = []*Coin{}
 
 	cli, err := t.chain.client()
 	if err != nil {
@@ -23,70 +21,19 @@ func (t *Token) getCoins(address string) (cs Coins, err error) {
 	if err != nil {
 		return
 	}
-	objects, err := cli.GetObjectsOwnedByAddress(context.Background(), *addr)
+	coins, err = cli.GetSuiCoinsOwnedByAddress(context.Background(), *addr)
 	if err != nil {
 		return
 	}
 
-	type coinData struct {
-		Fields struct {
-			Balance uint64 `json:"balance"`
-		} `json:"fields"`
-	}
-	cointype := t.coinType()
-	var res *types.ObjectRead
-	var bytes []byte
-	for _, obj := range objects {
-		if obj.Type != cointype {
-			continue
-		}
-
-		res, err = cli.GetObject(context.Background(), *obj.ObjectId)
-		if err != nil {
-			return
-		}
-		if res.Status != types.ObjectStatusExists {
-			continue
-		}
-		bytes, err = json.Marshal(res.Details.Data)
-		if err != nil {
-			return
-		}
-		coindata := coinData{}
-		err = json.Unmarshal(bytes, &coindata)
-		if err != nil {
-			return
-		}
-
-		cs = append(cs, &Coin{
-			ObjectId: *obj.ObjectId,
-			Balance:  coindata.Fields.Balance,
-		})
-	}
-
 	// sort by balance descend
-	sort.Slice(cs, func(i, j int) bool {
-		return cs[i].Balance > cs[j].Balance
+	sort.Slice(coins, func(i, j int) bool {
+		return coins[i].Balance > coins[j].Balance
 	})
-	return cs, nil
+	return coins, nil
 }
 
-type Coin struct {
-	ObjectId types.ObjectId
-	Balance  uint64
-}
-
-type Coins []*Coin
-
-func (cs Coins) Total() *big.Int {
-	total := big.NewInt(0)
-	for _, c := range cs {
-		total = total.Add(total, big.NewInt(int64(c.Balance)))
-	}
-	return total
-}
-
-func (cs Coins) PickupTransferCoin(amount string) (*PickedCoins, error) {
+func pickupTransferCoin(coins types.Coins, amount string) (*PickedCoins, error) {
 	amountInt, ok := big.NewInt(0).SetString(amount, 10)
 	if !ok {
 		return nil, fmt.Errorf(`Invalid transfer amount "%v".`, amount)
@@ -95,8 +42,8 @@ func (cs Coins) PickupTransferCoin(amount string) (*PickedCoins, error) {
 
 	estimateGasPerCoin := big.NewInt(MaxGasForMerge)
 	total := big.NewInt(0)
-	pickedCoins := Coins{}
-	for _, coin := range cs {
+	pickedCoins := types.Coins{}
+	for _, coin := range coins {
 		need = need.Add(need, estimateGasPerCoin)
 		total = total.Add(total, big.NewInt(int64(coin.Balance)))
 		pickedCoins = append(pickedCoins, coin)
@@ -112,7 +59,7 @@ func (cs Coins) PickupTransferCoin(amount string) (*PickedCoins, error) {
 }
 
 type PickedCoins struct {
-	Coins  Coins
+	Coins  types.Coins
 	Total  *big.Int
 	Amount *big.Int
 }
@@ -121,14 +68,9 @@ func (cs *PickedCoins) EstimateGas() uint64 {
 	return uint64(len(cs.Coins)) * MaxGasForMerge
 }
 
-func (cs *PickedCoins) LastCoin() *Coin {
+func (cs *PickedCoins) LastCoin() *types.Coin {
 	if len(cs.Coins) == 0 {
 		return nil
 	}
-	return cs.Coins[len(cs.Coins)-1]
-}
-
-func (cs *PickedCoins) LastCoinTransferAmount() uint64 {
-	surplus := big.NewInt(0).Sub(cs.Total, cs.Amount).Uint64()
-	return cs.LastCoin().Balance - surplus
+	return &cs.Coins[len(cs.Coins)-1]
 }

@@ -60,7 +60,7 @@ func (t *Token) BalanceOfAddress(address string) (b *base.Balance, err error) {
 	if err != nil {
 		return nil, err
 	}
-	total := coins.Total().String()
+	total := coins.TotalBalance().String()
 	return &base.Balance{
 		Total:  total,
 		Usable: total,
@@ -105,7 +105,7 @@ func (t *Token) BuildTransferTxWithAccount(account *Account, receiverAddress, am
 	if err != nil {
 		return nil, errors.New("Failed to get coins information.")
 	}
-	pickedCoin, err := coins.PickupTransferCoin(amount)
+	pickedCoin, err := pickupTransferCoin(coins, amount)
 	if err != nil {
 		return
 	}
@@ -123,7 +123,7 @@ func (t *Token) BuildTransferTxWithAccount(account *Account, receiverAddress, am
 		// firstly, we should merge all coin's balance to firstCoin
 		for i := 1; i < len(pickedCoin.Coins); i++ {
 			coin := pickedCoin.Coins[i]
-			txn, err = cli.MergeCoins(context.Background(), *signer, firstCoin.ObjectId, coin.ObjectId, nil, MaxGasForMerge)
+			txn, err = cli.MergeCoins(context.Background(), *signer, firstCoin.Reference.ObjectId, coin.Reference.ObjectId, nil, MaxGasForMerge)
 			if err != nil {
 				return
 			}
@@ -139,7 +139,7 @@ func (t *Token) BuildTransferTxWithAccount(account *Account, receiverAddress, am
 	}
 
 	// send sui coin
-	txn, err := cli.TransferSui(context.Background(), *signer, *recipient, firstCoin.ObjectId, amountInt, MaxGasForTransfer)
+	txn, err := cli.TransferSui(context.Background(), *signer, *recipient, firstCoin.Reference.ObjectId, amountInt, MaxGasForTransfer)
 	if err != nil {
 		return
 	}

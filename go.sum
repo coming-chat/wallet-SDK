@@ -252,6 +252,8 @@ github.com/coming-chat/go-sui v0.0.0-20220915133754-aea2415adaab h1:ukSaiG1nks78
 github.com/coming-chat/go-sui v0.0.0-20220915133754-aea2415adaab/go.mod h1:P1zxLfNPHlB7iRokSQwOLIgBu3+L5GEwFTjxa9XKZFQ=
 github.com/coming-chat/go-sui v0.0.0-20220916074241-4dc1134d8afe h1:O0cGgtOwmH28U5vJu5DAVJeyJt3TxSdX+lV/p4g8MWs=
 github.com/coming-chat/go-sui v0.0.0-20220916074241-4dc1134d8afe/go.mod h1:P1zxLfNPHlB7iRokSQwOLIgBu3+L5GEwFTjxa9XKZFQ=
+github.com/coming-chat/go-sui v0.0.0-20220919082932-fd7de94fe454 h1:I/TV1bwPxtQRghK46pz+al7shDgKFJNKdhbknODukBc=
+github.com/coming-chat/go-sui v0.0.0-20220919082932-fd7de94fe454/go.mod h1:P1zxLfNPHlB7iRokSQwOLIgBu3+L5GEwFTjxa9XKZFQ=
 github.com/coming-chat/keyring v1.3.0 h1:dMVtKkbVIzPMpMOrCQydAD5YeDCbvYBc7XLMEJqY9g0=
 github.com/coming-chat/keyring v1.3.0/go.mod h1:fc+wB5KTk9wQ9sDx0kFXB3A0MaeGHM9AwRStKOQ5vOA=
 github.com/coming-chat/lcs v0.0.0-20220829063658-0fa8432d2bdf h1:HrK16SFZnoxATieE+UHFSHZ6D2+XApv9g752MgvW7es=

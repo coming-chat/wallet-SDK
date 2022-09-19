@@ -19,10 +19,10 @@ func TestTransfer(t *testing.T) {
 	chain := DevnetChain()
 	token := NewTokenMain(chain)
 
-	// toAddress := "0xc4173a804406a365e69dfb297d4eaaf002546ebd"
-	// amount := "1"
-	toAddress := M1Account().Address()
-	amount := "120000"
+	toAddress := "0xc4173a804406a365e69dfb297d4eaaf002546ebd"
+	amount := "10"
+	// toAddress := M1Account().Address()
+	// amount := "120000"
 
 	signedTxn, err := token.BuildTransferTxWithAccount(account, toAddress, amount)
 	require.Nil(t, err)
