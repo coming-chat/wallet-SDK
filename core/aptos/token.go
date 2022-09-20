@@ -191,7 +191,7 @@ func (t *Token) EnsureOwnerRegistedToken(owner *Account) (*base.OptionalString, 
 		return nil, err
 	}
 	if registed.Value {
-		return nil, nil
+		return &base.OptionalString{}, nil
 	}
 	return t.RegisterTokenForOwner(owner)
 }
