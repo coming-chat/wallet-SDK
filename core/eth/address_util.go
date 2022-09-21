@@ -59,20 +59,15 @@ func IsValidAddress(address string) bool {
 
 // It will check based on eip55 rules
 func IsValidEIP55Address(address string) bool {
-	eip55Address, err := TransformEIP55Address(address)
-	if err != nil {
+	if !IsValidAddress(address) {
 		return false
 	}
-
+	eip55Address := TransformEIP55Address(address)
 	return strings.HasSuffix(eip55Address, address)
 }
 
-func TransformEIP55Address(address string) (string, error) {
+func TransformEIP55Address(address string) string {
 	address = strings.TrimPrefix(address, "0x")
-	if !common.IsHexAddress(address) {
-		return "", errors.New("Invalid hex address")
-	}
-
 	addressBytes := []byte(strings.ToLower(address))
 	checksumBytes := crypto.Keccak256(addressBytes)
 
@@ -88,5 +83,5 @@ func TransformEIP55Address(address string) (string, error) {
 		}
 	}
 
-	return "0x" + string(addressBytes), nil
+	return "0x" + string(addressBytes)
 }

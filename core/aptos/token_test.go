@@ -71,7 +71,7 @@ func TestTransafer(t *testing.T) {
 func TestEstimateFee(t *testing.T) {
 	account, err := NewAccountWithMnemonic(testcase.M1)
 	assert.Nil(t, err)
-	toAddress := "0xcdbe33da8d218e97a9bec6443ba4a1b1858494f29142976d357f4770c384e015"
+	toAddress := "0x559c26e61a74a1c40244212e768ab282a2cbe2ed679ad8421f7d5ebfb2b79fb5"
 	amount := "100"
 
 	chain := NewChainWithRestUrl(devnetRestUrl)

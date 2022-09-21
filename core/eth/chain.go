@@ -2,6 +2,7 @@ package eth
 
 import (
 	"crypto/ecdsa"
+	"errors"
 	"math/big"
 	"strings"
 
@@ -47,17 +48,15 @@ func (c *Chain) Erc20Token(contractAddress string) TokenProtocol {
 func (c *Chain) BalanceOfAddress(address string) (*base.Balance, error) {
 	b := base.EmptyBalance()
 
-	eip55Address, err := TransformEIP55Address(address)
-	if err != nil {
-		return b, err
+	if !IsValidAddress(address) {
+		return b, errors.New("Invalid hex address")
 	}
 
 	chain, err := GetConnection(c.RpcUrl)
 	if err != nil {
 		return b, err
 	}
-
-	balance, err := chain.Balance(eip55Address)
+	balance, err := chain.Balance(address)
 	if err != nil {
 		return b, err
 	}
