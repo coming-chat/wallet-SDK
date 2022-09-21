@@ -11,6 +11,7 @@ import (
 	"github.com/coming-chat/wallet-SDK/core/eth"
 	"github.com/coming-chat/wallet-SDK/core/polka"
 	"github.com/coming-chat/wallet-SDK/core/solana"
+	"github.com/coming-chat/wallet-SDK/core/starcoin"
 	"github.com/coming-chat/wallet-SDK/core/sui"
 )
 
@@ -29,6 +30,7 @@ type Wallet struct {
 	solanaAccount   *solana.Account
 	aptosAccount    *aptos.Account
 	suiAccount      *sui.Account
+	starcoinAccount *starcoin.Account
 }
 
 func NewWalletWithMnemonic(mnemonic string) (*Wallet, error) {
@@ -180,7 +182,7 @@ func (w *Wallet) GetOrCreateCosmosAccount() (*cosmos.Account, error) {
 	return w.GetOrCreateCosmosTypeAccount(cosmos.CosmosCointype, cosmos.CosmosPrefix)
 }
 
-// Get or create the ethereum account.
+// Get or create the solana account.
 func (w *Wallet) GetOrCreateSolanaAccount() (*solana.Account, error) {
 	cache := w.solanaAccount
 	if cache != nil {
@@ -199,7 +201,7 @@ func (w *Wallet) GetOrCreateSolanaAccount() (*solana.Account, error) {
 	return account, nil
 }
 
-// Get or create the ethereum account.
+// Get or create the aptos account.
 func (w *Wallet) GetOrCreateAptosAccount() (*aptos.Account, error) {
 	cache := w.aptosAccount
 	if cache != nil {
@@ -218,7 +220,7 @@ func (w *Wallet) GetOrCreateAptosAccount() (*aptos.Account, error) {
 	return account, nil
 }
 
-// Get or create the ethereum account.
+// Get or create the sui account.
 func (w *Wallet) GetOrCreateSuiAccount() (*sui.Account, error) {
 	cache := w.suiAccount
 	if cache != nil {
@@ -234,6 +236,25 @@ func (w *Wallet) GetOrCreateSuiAccount() (*sui.Account, error) {
 	}
 	// save to cache
 	w.suiAccount = account
+	return account, nil
+}
+
+// Get or create the starcoin account.
+func (w *Wallet) GetOrCreateStarcoinAccount() (*starcoin.Account, error) {
+	cache := w.starcoinAccount
+	if cache != nil {
+		return cache, nil
+	}
+	if len(w.Mnemonic) <= 0 {
+		return nil, ErrInvalidMnemonic
+	}
+
+	account, err := starcoin.NewAccountWithMnemonic(w.Mnemonic)
+	if err != nil {
+		return nil, err
+	}
+	// save to cache
+	w.starcoinAccount = account
 	return account, nil
 }
 
