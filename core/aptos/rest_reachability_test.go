@@ -32,7 +32,7 @@ func TestRpcReachability_Test(t *testing.T) {
 	monitor.Timeout = 1500
 	t.Log(reach)
 
-	rpcUrls := []string{testnetRestUrl}
+	rpcUrls := []string{devnetRestUrl}
 	rpcListString := strings.Join(rpcUrls, ",")
 	// res := reach.StartConnectivitySync(rpcListString)
 	// t.Log(res)

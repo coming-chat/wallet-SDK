@@ -11,11 +11,11 @@ import (
 	"github.com/coming-chat/wallet-SDK/core/testcase"
 )
 
-const testnetRestUrl = "https://fullnode.devnet.aptoslabs.com"
+const devnetRestUrl = "https://fullnode.devnet.aptoslabs.com"
 
 func TestFaucet(t *testing.T) {
 	account, _ := NewAccountWithMnemonic(testcase.M1)
-	hashs, err := FaucetFundAccount(account.Address(), 2000, "")
+	hashs, err := FaucetFundAccount(account.Address(), 10000000000, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -28,7 +28,7 @@ func TestEstimatePayloadGasFeeBCS(t *testing.T) {
 		t.Fatal(err)
 	}
 	contractAddress := "0xb6d5bb1291ae2739b5341e860b8f42cd7e579a0d90057dba3651bc4d1492c7eb"
-	chain := NewChainWithRestUrl(testnetRestUrl)
+	chain := NewChainWithRestUrl(devnetRestUrl)
 
 	var createABI = "0106637265617465b6d5bb1291ae2739b5341e860b8f42cd7e579a0d90057dba3651bc4d1492c7eb0a7265645f7061636b657400000205636f756e74020d746f74616c5f62616c616e636502"
 	abiBytes := make([][]byte, 0)
@@ -67,7 +67,7 @@ func TestEstimatePayloadGasFeeBCS(t *testing.T) {
 }
 
 func TestFetchTransactionDetail(t *testing.T) {
-	chain := NewChainWithRestUrl(testnetRestUrl)
+	chain := NewChainWithRestUrl(devnetRestUrl)
 	hash := "0x252e1bee1b5b534d44f59ca4ce3bb9742a454ca85692b0ef71894f8568fb9ef3"
 	detail, err := chain.FetchTransactionDetail(hash)
 	if err != nil {
@@ -86,7 +86,7 @@ func TestChain_FetchTransactionDetail(t *testing.T) {
 	}{
 		{
 			name:    "testnet normal",
-			restUrl: testnetRestUrl,
+			restUrl: devnetRestUrl,
 			hash:    "0xfd496b3dccae000096d4bf4aef581863ce2600c8867be9c2fe5b82a3408441af",
 			want: &base.TransactionDetail{
 				HashString:      "0xfd496b3dccae000096d4bf4aef581863ce2600c8867be9c2fe5b82a3408441af",
@@ -100,7 +100,7 @@ func TestChain_FetchTransactionDetail(t *testing.T) {
 		},
 		{
 			name:    "testnet failed tx",
-			restUrl: testnetRestUrl,
+			restUrl: devnetRestUrl,
 			hash:    "0x0a5720b278708820eb46c24af485858da8668e183a27ee57f3eed402cdda7436",
 			want: &base.TransactionDetail{
 				HashString:      "0x0a5720b278708820eb46c24af485858da8668e183a27ee57f3eed402cdda7436",
@@ -115,19 +115,19 @@ func TestChain_FetchTransactionDetail(t *testing.T) {
 		},
 		{
 			name:    "set address to hash",
-			restUrl: testnetRestUrl,
+			restUrl: devnetRestUrl,
 			hash:    "0xcf4ddd208bbbbefb3227cafa5c917fc6541d26b1869276ea80d99ee0505fc6f8",
 			wantErr: true,
 		},
 		{
 			name:    "not transfer",
-			restUrl: testnetRestUrl,
+			restUrl: devnetRestUrl,
 			hash:    "0xb7c06248b83bb7854d75f8d09a56ce4f5d7f799445fdb8781fccc536a01cd971",
 			wantErr: true,
 		},
 		{
 			name:    "mint tx",
-			restUrl: testnetRestUrl,
+			restUrl: devnetRestUrl,
 			hash:    "0x6934afd26b2e371f69ed2095dab30961b4c5c4b40fca2351966cbcd6add96a69",
 			wantErr: true,
 		},

@@ -130,7 +130,7 @@ func (t *Token) BuildTransferTxWithAccount(account *Account, receiverAddress, am
 }
 
 func (t *Token) EstimateFees(account *Account, receiverAddress, amount string) (f *base.OptionalString, err error) {
-	f = &base.OptionalString{Value: "2000"}
+	f = &base.OptionalString{Value: "200000"}
 
 	payload, err := t.buildTransferPayload(receiverAddress, amount)
 	if err != nil {

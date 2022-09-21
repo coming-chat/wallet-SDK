@@ -16,8 +16,8 @@ import (
 )
 
 const (
-	MaxGasAmount = 2000
-	GasPrice     = 1
+	MaxGasAmount = 10000
+	GasPrice     = 100
 	TxExpireSec  = 600
 )
 
@@ -277,6 +277,7 @@ func (c *Chain) createTransactionFromPayloadBCS(account base.Account, payload tx
 		client      *aptosclient.RestClient
 		accountData *aptostypes.AccountCoreData
 		ledgerInfo  *aptostypes.LedgerInfo
+		gasPrice    uint64
 	)
 
 	if client, err = c.client(); err != nil {
@@ -288,11 +289,14 @@ func (c *Chain) createTransactionFromPayloadBCS(account base.Account, payload tx
 	if ledgerInfo, err = client.LedgerInfo(); err != nil {
 		return nil, err
 	}
+	if gasPrice, err = client.EstimateGasPrice(); err != nil {
+		return nil, err
+	}
 	txAbi := &txbuilder.RawTransaction{
 		Sender:                  getAuthKey(account),
 		SequenceNumber:          accountData.SequenceNumber,
 		MaxGasAmount:            MaxGasAmount,
-		GasUnitPrice:            GasPrice,
+		GasUnitPrice:            gasPrice,
 		Payload:                 payload,
 		ExpirationTimestampSecs: ledgerInfo.LedgerTimestamp + TxExpireSec,
 		ChainId:                 uint8(ledgerInfo.ChainId),

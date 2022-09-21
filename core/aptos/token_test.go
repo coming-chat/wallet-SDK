@@ -13,7 +13,7 @@ const (
 )
 
 func TestTokenInfo(t *testing.T) {
-	chain := NewChainWithRestUrl(testnetRestUrl)
+	chain := NewChainWithRestUrl(devnetRestUrl)
 
 	token := NewMainToken(chain)
 	info, err := token.TokenInfo()
@@ -30,7 +30,7 @@ func TestTokenInfo(t *testing.T) {
 
 func TestTokenBalance(t *testing.T) {
 	address := "0xe1c1deec04ed6d7f92f867875c5c9733b64e376ca5a7f5da5b6bdaf3dd28eb9c"
-	chain := NewChainWithRestUrl(testnetRestUrl)
+	chain := NewChainWithRestUrl(devnetRestUrl)
 
 	aptToken := NewMainToken(chain)
 	aptBalance, err := aptToken.BalanceOfAddress(address)
@@ -53,10 +53,10 @@ func TestTokenBalance(t *testing.T) {
 func TestTransafer(t *testing.T) {
 	account, err := NewAccountWithMnemonic(testcase.M1)
 	assert.Nil(t, err)
-	toAddress := "0xcdbe33da8d218e97a9bec6443ba4a1b1858494f29142976d357f4770c384e015"
+	toAddress := "0x559c26e61a74a1c40244212e768ab282a2cbe2ed679ad8421f7d5ebfb2b79fb5"
 	amount := "100"
 
-	chain := NewChainWithRestUrl(testnetRestUrl)
+	chain := NewChainWithRestUrl(devnetRestUrl)
 	token := NewMainToken(chain)
 
 	signedTx, err := token.BuildTransferTxWithAccount(account, toAddress, amount)
@@ -74,7 +74,7 @@ func TestEstimateFee(t *testing.T) {
 	toAddress := "0xcdbe33da8d218e97a9bec6443ba4a1b1858494f29142976d357f4770c384e015"
 	amount := "100"
 
-	chain := NewChainWithRestUrl(testnetRestUrl)
+	chain := NewChainWithRestUrl(devnetRestUrl)
 	token := NewMainToken(chain)
 
 	fee, err := token.EstimateFees(account, toAddress, amount)
@@ -83,7 +83,7 @@ func TestEstimateFee(t *testing.T) {
 }
 
 func TestTokenRegister(t *testing.T) {
-	chain := NewChainWithRestUrl(testnetRestUrl)
+	chain := NewChainWithRestUrl(devnetRestUrl)
 	account, err := NewAccountWithMnemonic(testcase.M1)
 	assert.Nil(t, err)
 
