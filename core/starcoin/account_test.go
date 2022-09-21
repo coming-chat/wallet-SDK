@@ -27,3 +27,15 @@ func TestAccount(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, addr2, account.address)
 }
+
+func M1Account(t *testing.T) *Account {
+	account, err := NewAccountWithMnemonic(testcase.M1)
+	require.Nil(t, err)
+	return account
+}
+
+func M2Account(t *testing.T) *Account {
+	account, err := NewAccountWithMnemonic(testcase.M2)
+	require.Nil(t, err)
+	return account
+}

@@ -10,6 +10,7 @@ import (
 	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/coming-chat/wallet-SDK/core/eth"
 	"github.com/cosmos/go-bip39"
+	starTypes "github.com/starcoinorg/starcoin-go/types"
 	"golang.org/x/crypto/sha3"
 )
 
@@ -112,4 +113,18 @@ func (a *Account) DecodeAddressToPublicKey(address string) (string, error) {
 
 func (a *Account) IsValidAddress(address string) bool {
 	return IsValidAddress(address)
+}
+
+func (a *Account) AccountAddress() starTypes.AccountAddress {
+	addr := starTypes.AccountAddress{}
+	copy(addr[:], a.AuthKey[len(a.AuthKey)-addressLength:])
+	return addr
+}
+
+func (a *Account) StarcoinPrivateKey() starTypes.Ed25519PrivateKey {
+	return starTypes.Ed25519PrivateKey(a.privateKey[:ed25519.SeedSize])
+}
+
+func (a *Account) StarcoinPublicKey() starTypes.Ed25519PublicKey {
+	return starTypes.Ed25519PublicKey(a.PublicKey())
 }
