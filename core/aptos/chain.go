@@ -19,6 +19,9 @@ const (
 	MaxGasAmount = 10000
 	GasPrice     = 100
 	TxExpireSec  = 600
+
+	FaucetUrlDevnet  = "https://faucet.devnet.aptoslabs.com"
+	FaucetUrlTestnet = "https://faucet.testnet.aptoslabs.com"
 )
 
 type IChain interface {
