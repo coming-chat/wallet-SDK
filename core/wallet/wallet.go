@@ -15,6 +15,7 @@ import (
 	"github.com/coming-chat/wallet-SDK/core/sui"
 )
 
+// Deprecated: 这个钱包对象缓存了助记词、密码、私钥等信息，继续使用有泄露资产的风险 ⚠️
 type Wallet struct {
 	Mnemonic string
 
