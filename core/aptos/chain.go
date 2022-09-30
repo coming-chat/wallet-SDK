@@ -328,7 +328,7 @@ func FaucetFundAccount(address string, amount int64, faucetUrl string) (h *base.
 		return
 	}
 	hashs, _ = base.MapListConcurrentStringToString(hashs, func(s string) (string, error) {
-		if !strings.HasPrefix("0x", s) {
+		if !strings.HasPrefix(s, "0x") {
 			s = "0x" + s
 		}
 		return s, nil
