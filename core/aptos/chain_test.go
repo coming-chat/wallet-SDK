@@ -11,7 +11,10 @@ import (
 	"github.com/coming-chat/wallet-SDK/core/testcase"
 )
 
-const devnetRestUrl = "https://fullnode.devnet.aptoslabs.com"
+const (
+	devnetRestUrl  = "https://fullnode.devnet.aptoslabs.com"
+	testnetRestUrl = "https://testnet.aptoslabs.com"
+)
 
 func TestFaucet(t *testing.T) {
 	account, _ := NewAccountWithMnemonic(testcase.M1)
