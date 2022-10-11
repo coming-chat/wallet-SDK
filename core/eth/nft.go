@@ -80,12 +80,12 @@ func (a *RSS3NoteAction) RelatedScanUrl() string {
 	return a.RelatedUrls[0]
 }
 
-func (a *RSS3NoteAction) Nft() *Nft {
+func (a *RSS3NoteAction) Nft() *base.NFT {
 	if a.Tag != TagCollectible {
 		return nil
 	}
 
-	n := &Nft{}
+	n := &base.NFT{}
 	n.Id = a.Metadata.Id
 	n.Name = a.Metadata.Name
 	n.Image = strings.Replace(a.Metadata.Image, "ipfs://", "https://ipfs.io/ipfs/", 1)
@@ -158,39 +158,10 @@ func (f *RSS3Fetcher) FetchNotesNext() ([]RSS3Note, error) {
 // 	return f.FetchNotes(f.PreCursor)
 // }
 
-type Nft struct {
-	// from Note
-
-	Timestamp  int64  `json:"timestamp"`
-	HashString string `json:"hashString"`
-
-	// from Action.Metadata
-
-	Id              string `json:"id"`
-	Name            string `json:"name"`
-	Image           string `json:"image"`
-	Standard        string `json:"standard"`
-	Collection      string `json:"collection"`
-	Description     string `json:"description"`
-	ContractAddress string `json:"contract_address"`
-
-	// from Action
-
-	RelatedUrl string `json:"related_url"`
-}
-
-func (n *Nft) groupName() string {
-	if n.Collection == "" {
-		return "Others"
-	} else {
-		return n.Collection
-	}
-}
-
-func (f *RSS3Fetcher) FetchNtfs() (map[string][]*Nft, error) {
+func (f *RSS3Fetcher) FetchNFTs(owner string) (map[string][]*base.NFT, error) {
 	f.Limit = 500
 	f.NextCursor = ""
-	f.Owner = strings.ToLower(f.Owner)
+	f.Owner = strings.ToLower(owner)
 
 	actions := make(map[string]*RSS3NoteAction)
 	willTradeInFutureActions := []*RSS3NoteAction{}
@@ -247,15 +218,15 @@ func (f *RSS3Fetcher) FetchNtfs() (map[string][]*Nft, error) {
 		println("Invalid status that trade nft have not clean", willTradeInFutureActions)
 	}
 
-	nftGroupd := make(map[string][]*Nft)
+	nftGroupd := make(map[string][]*base.NFT)
 	for _, action := range actions {
 		if nft := action.Nft(); nft != nil {
-			key := nft.groupName()
+			key := nft.GroupName()
 			group, exist := nftGroupd[key]
 			if exist {
 				nftGroupd[key] = append(group, nft)
 			} else {
-				nftGroupd[key] = []*Nft{nft}
+				nftGroupd[key] = []*base.NFT{nft}
 			}
 		}
 	}
@@ -268,8 +239,8 @@ func (f *RSS3Fetcher) FetchNtfs() (map[string][]*Nft, error) {
 }
 
 // @return json string that grouped by nft's collection
-func (f *RSS3Fetcher) FetchNftsJsonString() (*base.OptionalString, error) {
-	nfts, err := f.FetchNtfs()
+func (f *RSS3Fetcher) FetchNFTsJsonString(owner string) (*base.OptionalString, error) {
+	nfts, err := f.FetchNFTs(owner)
 	if err != nil {
 		return nil, err
 	}

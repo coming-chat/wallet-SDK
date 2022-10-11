@@ -27,7 +27,7 @@ buildAllSDKAndroid:
 	gomobile bind -ldflags "-s -w" -target=android/arm,android/arm64 -o=${outdir}/wallet.aar ${pkgAll}
 
 buildAllSDKIOS:
-	GOOS=ios gomobile bind -ldflags "-s -w" -target=ios  -o=${outdir}/${iosPackageName} ${pkgAll}
+	GOOS=ios gomobile bind -ldflags "-s -w" -v -target=ios/arm64  -o=${outdir}/${iosPackageName} ${pkgAll}
 
 # 使用: make packageAll v=1.4
 # 结果: out 目录下将产生两个压缩包 wallet-SDK-ios.1.4.zip 和 wallet-SDK-android.1.4.zip 
