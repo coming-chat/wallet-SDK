@@ -55,7 +55,7 @@ func TestSignMessageJson(t *testing.T) {
 		Address:     true,
 		ChainId:     true,
 		Message:     "ComingChat message",
-		Nonce:       "2132",
+		Nonce:       2132,
 	}
 	bytes, err := json.Marshal(payload)
 	require.Nil(t, err)
@@ -73,6 +73,7 @@ func TestSignMessageJson(t *testing.T) {
 
 	require.Equal(t, resp1, resp2)
 	t.Log(resp1)
+	t.Log(resp1.JsonString())
 }
 
 func payloadDemo() aptostypes.Payload {

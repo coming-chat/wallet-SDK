@@ -12,27 +12,43 @@ import (
 
 type SignMessagePayload struct {
 	// Should we include the address of the account in the message
-	Address bool `json:"address"`
+	Address bool `json:"address,omitempty"`
 	// Should we include the domain of the dApp
-	Application bool `json:"application"`
+	Application bool `json:"application,omitempty"`
 	// Should we include the current chain id the wallet is connected to
-	ChainId bool `json:"chainId"`
+	ChainId bool `json:"chainId,omitempty"`
 	// The message to be signed and displayed to the user
 	Message string `json:"message"`
 	// A nonce the dApp should generate
-	Nonce string `json:"nonce"`
+	Nonce int64 `json:"nonce"`
 }
 
 type SignMessageResponse struct {
-	Address     string `json:"address"`
-	Application string `json:"application"`
-	ChainId     int64  `json:"chainId"`
+	Address     string `json:"address,omitempty"`
+	Application string `json:"application,omitempty"`
+	ChainId     int64  `json:"chainId,omitempty"`
 	Message     string `json:"message"` // The message passed in by the user
-	Nonce       string `json:"nonce"`
-	Prefix      string `json:"prefix"`      // Should always be APTOS
-	FullMessage string `json:"fullMessage"` // The message that was generated to sign
-	Signature   string `json:"signature"`   // The signed full message
-	Bitmap      []byte `json:"bitmap"`      // a 4-byte (32 bits) bit-vector of length N
+	Nonce       int64  `json:"nonce"`
+	Prefix      string `json:"prefix"`           // Should always be APTOS
+	FullMessage string `json:"fullMessage"`      // The message that was generated to sign
+	Signature   string `json:"signature"`        // The signed full message
+	Bitmap      []byte `json:"bitmap,omitempty"` // a 4-byte (32 bits) bit-vector of length N
+}
+
+func (j *SignMessagePayload) JsonString() string {
+	bytes, err := json.Marshal(j)
+	if err != nil {
+		return ""
+	}
+	return string(bytes)
+}
+
+func (j *SignMessageResponse) JsonString() string {
+	bytes, err := json.Marshal(j)
+	if err != nil {
+		return ""
+	}
+	return string(bytes)
 }
 
 func (c *Chain) GenerateTransaction(senderPublicKey string, payload aptostypes.Payload) (txn *aptostypes.Transaction, err error) {
@@ -157,9 +173,7 @@ func (c *Chain) SignMessage(account base.Account, payload *SignMessagePayload) (
 		if payload.Message != "" {
 			msg += "\nmessage: " + resp.Message
 		}
-		if payload.Nonce != "" {
-			msg += "\nnonce: " + resp.Nonce
-		}
+		msg += "\nnonce: " + fmt.Sprintf("%v", resp.Nonce)
 	}
 
 	bytes := []byte(resp.FullMessage)
