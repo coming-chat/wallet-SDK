@@ -125,17 +125,42 @@ func (c *Chain) SubmitTransaction(signedTxn aptostypes.Transaction) (txhash stri
 }
 
 func (c *Chain) SignMessage(account base.Account, payload *SignMessagePayload) (*SignMessageResponse, error) {
+	chainId := 0
+	client, err := c.client()
+	if err != nil {
+		err = nil
+	} else {
+		chainId = client.ChainId()
+	}
+
 	resp := &SignMessageResponse{
 		Address:     account.Address(),
 		Application: "",
-		ChainId:     0,
+		ChainId:     int64(chainId),
 		Message:     payload.Message,
 		Nonce:       payload.Nonce,
 		Prefix:      "APTOS",
 		Bitmap:      nil,
 	}
-	msg := fmt.Sprintf(`APTOS\naddress: %v\napplication: %v\nchainId: %v\nmessage: %v\nnonce: %v`,
-		resp.Address, resp.Application, resp.ChainId, resp.Message, resp.Nonce)
+	msg := resp.Prefix
+	if payload != nil {
+		if payload.Address {
+			msg += "\naddress: " + resp.Address
+		}
+		if payload.Application {
+			msg += "\napplication: " + resp.Application
+		}
+		if payload.ChainId {
+			msg += "\nchainId: " + fmt.Sprintf("%v", resp.ChainId)
+		}
+		if payload.Message != "" {
+			msg += "\nmessage: " + resp.Message
+		}
+		if payload.Nonce != "" {
+			msg += "\nnonce: " + resp.Nonce
+		}
+	}
+
 	bytes := []byte(resp.FullMessage)
 	signature, err := account.Sign(bytes, "")
 	if err != nil {
