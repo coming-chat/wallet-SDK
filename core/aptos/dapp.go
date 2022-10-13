@@ -82,6 +82,7 @@ func (c *Chain) GenerateTransaction(senderPublicKey string, payload aptostypes.P
 		}
 	}
 
+	txn.Signature = nil // clean simulate signature.
 	return txn, nil
 }
 
@@ -173,14 +174,14 @@ func (c *Chain) SignMessage(account base.Account, payload *SignMessagePayload) (
 
 // function for mobile client
 
-func (c *Chain) GenerateTransactionJson(sender string, payload string) (*base.OptionalString, error) {
+func (c *Chain) GenerateTransactionJson(senderPublicKey string, payload string) (*base.OptionalString, error) {
 	bytes := []byte(payload)
 	var payloadObj aptostypes.Payload
 	err := json.Unmarshal(bytes, &payloadObj)
 	if err != nil {
 		return nil, err
 	}
-	res, err := c.GenerateTransaction(sender, payloadObj)
+	res, err := c.GenerateTransaction(senderPublicKey, payloadObj)
 	if err != nil {
 		return nil, err
 	}
@@ -223,4 +224,14 @@ func (c *Chain) SubmitTransactionJson(signedTxn string) (*base.OptionalString, e
 		return nil, err
 	}
 	return &base.OptionalString{Value: res}, nil
+}
+
+func (c *Chain) SignMessageJson(account base.Account, payload string) (*SignMessageResponse, error) {
+	bytes := []byte(payload)
+	var payloadObj SignMessagePayload
+	err := json.Unmarshal(bytes, &payloadObj)
+	if err != nil {
+		return nil, err
+	}
+	return c.SignMessage(account, &payloadObj)
 }
