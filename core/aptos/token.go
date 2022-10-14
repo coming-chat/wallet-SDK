@@ -14,6 +14,7 @@ const (
 	AptosName    = "APT"
 	AptosSymbol  = "APT"
 	AptosDecimal = 0
+	mainTokenTag = "0x1::aptos_coin::AptosCoin"
 )
 
 type Token struct {
@@ -23,7 +24,7 @@ type Token struct {
 }
 
 func NewMainToken(chain *Chain) *Token {
-	token, _ := NewToken(chain, "0x1::aptos_coin::AptosCoin")
+	token, _ := NewToken(chain, mainTokenTag)
 	return token
 }
 
@@ -149,10 +150,6 @@ func (t *Token) buildTransferPayload(receiverAddress, amount string) (p txbuilde
 	if t.token.Address.ToShortString() == "0x" {
 		return nil, errors.New("Invalid token tag: " + t.token.ShortFunctionName())
 	}
-	moduleName, err := txbuilder.NewModuleIdFromString("0x1::coin")
-	if err != nil {
-		return
-	}
 	toAddr, err := txbuilder.NewAccountAddressFromHex(receiverAddress)
 	if err != nil {
 		return
@@ -162,14 +159,31 @@ func (t *Token) buildTransferPayload(receiverAddress, amount string) (p txbuilde
 		return
 	}
 	amountBytes := txbuilder.BCSSerializeBasicValue(amountInt)
-	return txbuilder.TransactionPayloadEntryFunction{
-		ModuleName:   *moduleName,
-		FunctionName: "transfer",
-		TyArgs:       []txbuilder.TypeTag{t.token},
-		Args: [][]byte{
-			toAddr[:], amountBytes,
-		},
-	}, nil
+
+	payloadBuilder := func(moduleName string, args []txbuilder.TypeTag) (txbuilder.TransactionPayload, error) {
+		module, err := txbuilder.NewModuleIdFromString(moduleName)
+		if err != nil {
+			return nil, err
+		}
+		return txbuilder.TransactionPayloadEntryFunction{
+			ModuleName:   *module,
+			FunctionName: "transfer",
+			TyArgs:       args,
+			Args: [][]byte{
+				toAddr[:], amountBytes,
+			},
+		}, nil
+	}
+
+	if t.token.ShortFunctionName() == mainTokenTag {
+		hasRegisted, e := t.HasRegisted(receiverAddress)
+		if e != nil || !hasRegisted.Value {
+			// call "0x1::aptos_account::transfer"
+			return payloadBuilder("0x1::aptos_account", []txbuilder.TypeTag{})
+		}
+	}
+	// call "0x1::coin::transfer"
+	return payloadBuilder("0x1::coin", []txbuilder.TypeTag{t.token})
 }
 
 func (t *Token) HasRegisted(ownerAddress string) (*base.OptionalBool, error) {
