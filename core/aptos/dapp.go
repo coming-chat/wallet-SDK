@@ -94,7 +94,9 @@ func (c *Chain) GenerateTransaction(senderPublicKey string, payload aptostypes.P
 		if !simTxn[0].Success {
 			return nil, errors.New(simTxn[0].VmStatus)
 		} else {
-			txn.MaxGasAmount = simTxn[0].GasUsed
+			gasUsed := simTxn[0].GasUsed
+			gasUsed = gasUsed/10*15 + 14 // ceil(gasUsed * 1.5)
+			txn.MaxGasAmount = gasUsed
 		}
 	}
 
