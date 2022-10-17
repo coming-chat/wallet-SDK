@@ -10,6 +10,7 @@ require (
 	github.com/btcsuite/btcd/chaincfg/chainhash v1.0.1
 	github.com/centrifuge/go-substrate-rpc-client/v4 v4.0.0
 	github.com/coming-chat/go-aptos v0.0.0-20221013022715-39f91035c785
+	github.com/coming-chat/go-sui v0.0.0-20221017092321-94b0d1e5c88a
 	github.com/coming-chat/lcs v0.0.0-20220829063658-0fa8432d2bdf
 	github.com/coming-chat/merlin v0.1.2-0.20211216101619-d46ce5719651
 	github.com/cosmos/cosmos-sdk v0.45.4
@@ -18,9 +19,11 @@ require (
 	github.com/ethereum/go-ethereum v1.10.18
 	github.com/gtank/ristretto255 v0.1.2
 	github.com/itering/subscan v0.1.0
+	github.com/novifinancial/serde-reflection/serde-generate/runtime/golang v0.0.0-20210526181959-1694c58d103e
 	github.com/pierrec/xxHash v0.1.5
 	github.com/portto/solana-go-sdk v1.18.0
 	github.com/shopspring/decimal v1.2.0
+	github.com/starcoinorg/starcoin-go v0.0.0-20220821052347-0e482a42c59e
 	github.com/stretchr/testify v1.8.0
 	github.com/tendermint/tendermint v0.34.19
 	github.com/tyler-smith/go-bip39 v1.1.0
@@ -44,7 +47,6 @@ require (
 	github.com/buger/jsonparser v1.1.1 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
-	github.com/coming-chat/go-sui v0.0.0-20220919082932-fd7de94fe454 // indirect
 	github.com/confio/ics23/go v0.6.6 // indirect
 	github.com/cosmos/btcutil v1.0.4 // indirect
 	github.com/cosmos/iavl v0.17.3 // indirect
@@ -100,7 +102,6 @@ require (
 	github.com/mitchellh/mapstructure v1.4.3 // indirect
 	github.com/mr-tron/base58 v1.2.0 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
-	github.com/novifinancial/serde-reflection/serde-generate/runtime/golang v0.0.0-20210526181959-1694c58d103e // indirect
 	github.com/pelletier/go-toml v1.9.4 // indirect
 	github.com/petermattis/goid v0.0.0-20180202154549-b0b1615b78e5 // indirect
 	github.com/phoreproject/bls v0.0.0-20200525203911-a88a5ae26844 // indirect
@@ -124,7 +125,6 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.10.1 // indirect
-	github.com/starcoinorg/starcoin-go v0.0.0-20220821052347-0e482a42c59e // indirect
 	github.com/subosito/gotenv v1.2.0 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7 // indirect
 	github.com/tecbot/gorocksdb v0.0.0-20191217155057-f0fad39f321c // indirect
