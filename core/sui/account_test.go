@@ -10,7 +10,7 @@ import (
 func TestAccount(t *testing.T) {
 	account, err := NewAccountWithMnemonic(testcase.M1)
 	assert.Nil(t, err)
-	assert.Equal(t, account.Address(), "0x0bd43fc3aa4f62e8943d16f66beb7546fafb2bac")
+	assert.Equal(t, account.Address(), "0x6c5d2cd6e62734f61b4e318e58cbfd1c4b99dfaf")
 
 	t.Log(account.PrivateKeyHex())
 	t.Log(account.PublicKeyHex())
