@@ -1,10 +1,12 @@
 package polka
 
 import (
+	"crypto/ed25519"
 	"github.com/ChainSafe/go-schnorrkel"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/itering/subscan/util/base58"
 	"github.com/itering/subscan/util/ss58"
+	"golang.org/x/crypto/blake2b"
 )
 
 func addressStringToMultiAddress(dest string) (types.MultiAddress, error) {
@@ -39,24 +41,29 @@ func HexToByte(hex string) ([]byte, error) {
 	return types.HexDecodeString(hex)
 }
 
-func Verify(publicKey [32]byte, msg []byte, signature []byte) bool {
-	var sigs [64]byte
-	copy(sigs[:], signature)
-	sig := new(schnorrkel.Signature)
+type Sr25519Util struct{}
+
+func (s Sr25519Util) IsValidSignature(publicKey, msg, signature []byte) bool {
+	if len(msg) > 256 {
+		h := blake2b.Sum256(msg)
+		msg = h[:]
+	}
+	var (
+		sigs        [64]byte
+		fixedPubKey [32]byte
+		sig         = new(schnorrkel.Signature)
+	)
+	copy(fixedPubKey[:], publicKey[:32])
+	copy(sigs[:], signature[:64])
+	pubKey := schnorrkel.NewPublicKey(fixedPubKey)
 	if err := sig.Decode(sigs); err != nil {
 		return false
 	}
-	publicKeyD := schnorrkel.NewPublicKey(publicKey)
-	return publicKeyD.Verify(sig, schnorrkel.NewSigningContext([]byte("substrate"), msg))
+	return pubKey.Verify(sig, schnorrkel.NewSigningContext([]byte("substrate"), msg))
 }
 
-func VerifyWithPublicHex(publicKey string, msg []byte, signature []byte) bool {
-	publicData, err := types.HexDecodeString(publicKey)
-	if err != nil {
-		return false
-	}
+type Ed25519 struct{}
 
-	var public32 [32]byte
-	copy(public32[:], publicData)
-	return Verify(public32, msg, signature)
+func (e *Ed25519) IsValidSignature(publicKey, msg, signature []byte) bool {
+	return ed25519.Verify(publicKey, msg, signature)
 }
