@@ -1,6 +1,7 @@
 package polka
 
 import (
+	"github.com/coming-chat/wallet-SDK/crypto/sr25519"
 	"testing"
 
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
@@ -190,20 +191,20 @@ func TestAccount_Sign_And_Verify(t *testing.T) {
 
 		var public32 [32]byte
 		copy(public32[:], account.publicKey)
-		isValid := Verify(public32, messageData, signedData)
+		isValid := sr25519.IsValidSignature(public32[:], messageData, signedData)
 		if !isValid {
 			t.Fatal("Sign() Or Verify() error")
 		}
 
 		errorLengthSignature := signedData[1:]
-		isValid = Verify(public32, messageData, errorLengthSignature)
+		isValid = sr25519.IsValidSignature(public32[:], messageData, errorLengthSignature)
 		if isValid {
 			t.Fatal("Verify() error = should have gotten the error, but it succeeded.")
 		}
 
 		errorBitSignature := signedData
 		errorBitSignature[0] = errorBitSignature[0] + 1
-		isValid = Verify(public32, messageData, errorBitSignature)
+		isValid = sr25519.IsValidSignature(public32[:], messageData, errorBitSignature)
 		if isValid {
 			t.Fatal("Verify() error = should have gotten the error, but it succeeded.")
 		}

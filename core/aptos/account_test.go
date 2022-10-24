@@ -1,9 +1,8 @@
 package aptos
 
 import (
-	"testing"
-
 	"github.com/coming-chat/wallet-SDK/core/testcase"
+	"testing"
 )
 
 func TestAccount(t *testing.T) {
@@ -15,7 +14,6 @@ func TestAccount(t *testing.T) {
 	t.Log(account.PrivateKeyHex())
 	t.Log(account.PublicKeyHex())
 	t.Log(account.Address())
-
 	prihex, _ := account.PrivateKeyHex()
 	acc2, err := AccountWithPrivateKey(prihex)
 	if err != nil {
