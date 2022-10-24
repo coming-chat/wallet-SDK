@@ -26,7 +26,3 @@ type Account interface {
 	Sign(message []byte, password string) ([]byte, error)
 	SignHex(messageHex string, password string) (*OptionalString, error)
 }
-
-type CryptoUtil interface {
-	IsValidSignature(publicKey, message, signature []byte) bool
-}
