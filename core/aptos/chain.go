@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	MaxGasAmount = 10000
+	MaxGasAmount = 20000
 	GasPrice     = 100
 	TxExpireSec  = 600
 
