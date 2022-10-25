@@ -10,7 +10,7 @@ import (
 )
 
 func (c *Chain) OfferTokenTransactionNFT(sender *Account, receiver string, nft *base.NFT) (*base.OptionalString, error) {
-	return c.OfferTokenTransactionParams(sender, receiver, nft.ContractAddress, nft.Collection, nft.Name)
+	return c.tokenTxnBuild(sender, receiver, nft.ContractAddress, nft.Collection, nft.Name, "offer")
 }
 
 /** build transaction that offer token
@@ -21,38 +21,12 @@ func (c *Chain) OfferTokenTransactionNFT(sender *Account, receiver string, nft *
  * @param name the token's name
  * @return the offer token raw transaction that signed by sender.
  */
-func (c *Chain) OfferTokenTransactionParams(sender *Account, receiver, creator, collection, name string) (signedTxn *base.OptionalString, err error) {
-	defer base.CatchPanicAndMapToBasicError(&err)
+func (c *Chain) OfferTokenTransactionParams(sender *Account, receiver, creator, collection, name string) (*base.OptionalString, error) {
+	return c.tokenTxnBuild(sender, receiver, creator, collection, name, "offer")
+}
 
-	receiverAddress, err := txbuilder.NewAccountAddressFromHex(receiver)
-	if err != nil {
-		return
-	}
-	creatorAddress, err := txbuilder.NewAccountAddressFromHex(creator)
-	if err != nil {
-		return
-	}
-	if collection == "" || name == "" {
-		return nil, errors.New("The `collection` and `name` cannot be empty.")
-	}
-	builder, err := aptosnft.NewNFTPayloadBuilder()
-	if err != nil {
-		return
-	}
-	payload, err := builder.OfferToken(*receiverAddress, *creatorAddress, collection, name, 1, 0)
-	if err != nil {
-		return
-	}
-	txn, err := c.createTransactionFromPayloadBCS(sender, payload)
-	if err != nil {
-		return
-	}
-	signedBytes, err := txbuilder.GenerateBCSTransaction(sender.account, txn)
-	if err != nil {
-		return
-	}
-	hexString := "0x" + hex.EncodeToString(signedBytes)
-	return &base.OptionalString{Value: hexString}, nil
+func (c *Chain) CancelTokenOffer(sender *Account, receiver, creator, collection, name string) (*base.OptionalString, error) {
+	return c.tokenTxnBuild(sender, receiver, creator, collection, name, "cancelOffer")
 }
 
 /** build transaction that claim token, the nft info will be obtaining through offer hash.
@@ -93,7 +67,7 @@ func (c *Chain) ClaimTokenFromHash(receiver *Account, offerHash string) (signedT
 	tokenName := arguments[3].(string)
 	nftSender := offeredTxn.Sender
 
-	return c.ClaimTokenTransactionParams(receiver, nftSender, creator, collectionName, tokenName)
+	return c.tokenTxnBuild(receiver, nftSender, creator, collectionName, tokenName, "claim")
 }
 
 /** build transaction that claim token
@@ -105,9 +79,14 @@ func (c *Chain) ClaimTokenFromHash(receiver *Account, offerHash string) (signedT
  * @return the claim token raw transaction that signed by receiver.
  */
 func (c *Chain) ClaimTokenTransactionParams(receiver *Account, sender, creator, collection, name string) (signedTxn *base.OptionalString, err error) {
+	return c.tokenTxnBuild(receiver, sender, creator, collection, name, "claim")
+}
+
+// @param action enum of `offer`, `claim`, `cancelOffer`
+func (c *Chain) tokenTxnBuild(signer *Account, senderOrReceiver, creator, collection, name string, action string) (signedTxn *base.OptionalString, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
 
-	senderAddress, err := txbuilder.NewAccountAddressFromHex(sender)
+	senderOrReceiverAddress, err := txbuilder.NewAccountAddressFromHex(senderOrReceiver)
 	if err != nil {
 		return
 	}
@@ -122,15 +101,27 @@ func (c *Chain) ClaimTokenTransactionParams(receiver *Account, sender, creator, 
 	if err != nil {
 		return
 	}
-	payload, err := builder.ClaimToken(*senderAddress, *creatorAddress, collection, name, 0)
+
+	var payload txbuilder.TransactionPayload
+	switch action {
+	case "offer":
+		payload, err = builder.OfferToken(*senderOrReceiverAddress, *creatorAddress, collection, name, 1, 0)
+	case "claim":
+		payload, err = builder.ClaimToken(*senderOrReceiverAddress, *creatorAddress, collection, name, 0)
+	case "cancelOffer":
+		payload, err = builder.CancelTokenOffer(*senderOrReceiverAddress, *creatorAddress, collection, name, 0)
+	default:
+		return nil, errors.New("Invalid token action: " + action)
+	}
 	if err != nil {
 		return
 	}
-	txn, err := c.createTransactionFromPayloadBCS(receiver, payload)
+
+	txn, err := c.createTransactionFromPayloadBCS(signer, payload)
 	if err != nil {
 		return
 	}
-	signedBytes, err := txbuilder.GenerateBCSTransaction(receiver.account, txn)
+	signedBytes, err := txbuilder.GenerateBCSTransaction(signer.account, txn)
 	if err != nil {
 		return
 	}
