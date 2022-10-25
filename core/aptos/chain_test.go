@@ -14,6 +14,7 @@ import (
 const (
 	devnetRestUrl  = "https://fullnode.devnet.aptoslabs.com"
 	testnetRestUrl = "https://testnet.aptoslabs.com"
+	mainnetRestUrl = "https://fullnode.mainnet.aptoslabs.com"
 )
 
 func TestFaucet(t *testing.T) {

@@ -133,6 +133,8 @@ func (c *Chain) FetchTransactionStatus(hash string) base.TransactionStatus {
 	}
 	if transaction.Success {
 		return base.TransactionStatusSuccess
+	} else if transaction.VmStatus == "" {
+		return base.TransactionStatusPending
 	} else {
 		return base.TransactionStatusFailure
 	}

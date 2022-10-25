@@ -7,9 +7,9 @@ import (
 )
 
 func TestFetchNFTs(t *testing.T) {
-	chain := NewChainWithRestUrl(testnetRestUrl)
+	chain := NewChainWithRestUrl(mainnetRestUrl)
 	nftFetcher := NewNFTFetcher(chain)
-	owner := "0x559c26e61a74a1c40244212e768ab282a2cbe2ed679ad8421f7d5ebfb2b79fb5"
+	owner := "0x6ed6f83f1891e02c00c58bf8172e3311c982b1c4fbb1be2d85a55562d4085fb1"
 	run := false
 
 	// run = true
