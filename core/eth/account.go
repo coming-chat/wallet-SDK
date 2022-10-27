@@ -156,3 +156,9 @@ func VerifySignature(pubkey, message, signedMsg string) bool {
 	signedBytes = signedBytes[:len(signedBytes)-1]
 	return crypto.VerifySignature(pubBytes, originMsgHash, signedBytes)
 }
+
+func IsValidSignature(publicKey, msg, signature []byte) bool {
+	originMsgHash := SignHashForMsg(string(msg))
+	signature = signature[:len(signature)-1]
+	return crypto.VerifySignature(publicKey, originMsgHash, signature)
+}
