@@ -356,29 +356,48 @@ func toBaseTransaction(transaction *aptostypes.Transaction) (*base.TransactionDe
 		return nil, errors.New("Invalid transfer transaction.")
 	}
 
-	detail := &base.TransactionDetail{
-		HashString:  transaction.Hash,
-		FromAddress: transaction.Sender,
-	}
-
 	gasFee := transaction.GasUnitPrice * transaction.GasUsed
-	detail.EstimateFees = strconv.FormatUint(gasFee, 10)
-
-	args := transaction.Payload.Arguments
-	if len(args) >= 2 {
-		detail.ToAddress = args[0].(string)
-		detail.Amount = args[1].(string)
+	timestamp := transaction.Timestamp / 1e6
+	detail := &base.TransactionDetail{
+		HashString:      transaction.Hash,
+		FromAddress:     transaction.Sender,
+		EstimateFees:    strconv.FormatUint(gasFee, 10),
+		FinishTimestamp: int64(timestamp),
 	}
-
 	if transaction.Success {
 		detail.Status = base.TransactionStatusSuccess
+	} else if transaction.VmStatus == "" {
+		detail.Status = base.TransactionStatusPending
 	} else {
 		detail.Status = base.TransactionStatusFailure
 		detail.FailureMessage = transaction.VmStatus
 	}
 
-	timestamp := transaction.Timestamp / 1e6
-	detail.FinishTimestamp = int64(timestamp)
+	function := transaction.Payload.Function
+	args := transaction.Payload.Arguments
+	switch {
+	case function == "0x3::token_transfers::offer_script":
+		if len(args) >= 4 {
+			detail.ToAddress = args[0].(string)
+			detail.TokenName = args[3].(string)
+		}
+	case function == "0x3::token_transfers::claim_script":
+		if len(args) >= 4 {
+			detail.FromAddress = args[0].(string)
+			detail.ToAddress = transaction.Sender
+			detail.TokenName = args[3].(string)
+		}
+	case strings.HasSuffix(function, "cid::cid_token_transfer"):
+		if len(args) >= 2 {
+			detail.ToAddress = args[1].(string)
+			detail.CIDNumber = strings.TrimSuffix(args[0].(string), ".aptos")
+		}
+	case function == "0x1::coin::transfer" || function == "0x1::aptos_account::transfer":
+		if len(args) >= 2 {
+			detail.ToAddress = args[0].(string)
+			detail.Amount = args[1].(string)
+		}
+	}
 
 	return detail, nil
 }
