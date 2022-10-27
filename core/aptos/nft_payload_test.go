@@ -106,3 +106,39 @@ func TestClaimTokenFromHash(t *testing.T) {
 		t.Log("claim send succeed: hash =", txHash)
 	}
 }
+
+func TestChain_IsAccountAllowedDirectTransferToken(t *testing.T) {
+	chain := NewChainWithRestUrl(testnetRestUrl)
+
+	type args struct {
+		address string
+	}
+	tests := []struct {
+		name    string
+		address string
+		wantErr bool
+	}{
+		{
+			name:    "error address",
+			address: "0xopqrst",
+			wantErr: true,
+		},
+		{
+			name:    "may be is true",
+			address: "0x559c26e61a74a1c40244212e768ab282a2cbe2ed679ad8421f7d5ebfb2b79fb5",
+		},
+		{
+			name:    "maybe is false",
+			address: "0x1",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := chain.IsAllowedDirectTransferToken(tt.address)
+			require.Equal(t, err != nil, tt.wantErr, "Chain.IsAccountAllowedDirectTransferToken() error = %v, wantErr %v", err, tt.wantErr)
+			if err == nil {
+				t.Logf("allow = %v of address %v", got.Value, tt.address)
+			}
+		})
+	}
+}

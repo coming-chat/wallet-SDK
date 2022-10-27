@@ -17,8 +17,11 @@ import (
 	example for `CIDTokenTransferPayload`
 	```
 	var payload, err = builder.CIDTokenTransferPayload(1234, receiverAddress)
+	var gasPrice, err = chain.EstimateGasPrice()
+	var gasAmount, err := chain.EstimatePayloadGasFeeBCS(account, payload)
+	print("estimate gas fee = %s", gasPrice * gasAmount)
 	var hash, err = chain.SubmitTransactionPayloadBCS(account, payload)
-	print("submited hash = " + hash)
+	print("submited hash = %s", hash)
 	```
 */
 type NFTPayloadBCSBuilder struct {
@@ -209,4 +212,23 @@ func (b *NFTPayloadBCSBuilder) tokenPayloadBuild(senderOrReceiver, creator, coll
 		return
 	}
 	return lcs.Marshal(payload)
+}
+
+func (c *Chain) IsAllowedDirectTransferToken(account string) (*base.OptionalBool, error) {
+	client, err := c.client()
+	if err != nil {
+		return nil, err
+	}
+	tokenStore, err := client.GetAccountResourceHandle404(account, "0x3::token::TokenStore", 0)
+	if err != nil {
+		return nil, err
+	}
+	if tokenStore == nil {
+		return &base.OptionalBool{Value: false}, nil
+	}
+	if allow, ok := tokenStore.Data["direct_transfer"].(bool); ok {
+		return &base.OptionalBool{Value: allow}, nil
+	} else {
+		return nil, errors.New("The queried data is incorrect.")
+	}
 }

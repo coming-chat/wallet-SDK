@@ -9,7 +9,7 @@ require (
 	github.com/btcsuite/btcd/btcutil v1.1.1
 	github.com/btcsuite/btcd/chaincfg/chainhash v1.0.1
 	github.com/centrifuge/go-substrate-rpc-client/v4 v4.0.0
-	github.com/coming-chat/go-aptos v0.0.0-20221013022715-39f91035c785
+	github.com/coming-chat/go-aptos v0.0.0-20221027040226-6ee77c7bc09d
 	github.com/coming-chat/go-sui v0.0.0-20221019080621-8a05db9dc0c4
 	github.com/coming-chat/lcs v0.0.0-20220829063658-0fa8432d2bdf
 	github.com/coming-chat/merlin v0.1.2-0.20211216101619-d46ce5719651

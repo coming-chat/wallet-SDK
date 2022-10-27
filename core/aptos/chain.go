@@ -315,6 +315,18 @@ func (c *Chain) createTransactionFromPayloadBCS(account base.Account, payload tx
 	return txAbi, nil
 }
 
+func (c *Chain) EstimateGasPrice() (*base.OptionalString, error) {
+	client, err := c.client()
+	if err != nil {
+		return nil, err
+	}
+	price, err := client.EstimateGasPrice()
+	if err != nil {
+		return nil, err
+	}
+	return &base.OptionalString{Value: strconv.FormatUint(price, 10)}, nil
+}
+
 /**
  * This creates an account if it does not exist and mints the specified amount of
  * coins into that account
