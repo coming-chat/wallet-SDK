@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"strconv"
 	"strings"
 
@@ -15,10 +14,10 @@ import (
 )
 
 const (
-	MaxGasBudget = 2000
+	MaxGasBudget = 10000
 
-	MaxGasForMerge    = 500
-	MaxGasForTransfer = 100
+	MaxGasForMerge    = 10000
+	MaxGasForTransfer = 200
 )
 
 type Chain struct {
@@ -73,15 +72,12 @@ func (c *Chain) SendRawTransaction(signedTx string) (hash string, err error) {
 	if err != nil {
 		return
 	}
-	response, err := cli.ExecuteTransaction(context.Background(), signedTxn)
+	response, err := cli.ExecuteTransaction(context.Background(), signedTxn, types.TxnRequestTypeWaitForTxCert)
 	if err != nil {
 		return
 	}
-	if response.Effects.Status.Status != types.TransactionStatusSuccess {
-		return "", fmt.Errorf(`chain error: %v`, response.Effects.Status.Error)
-	}
 
-	hash = response.Certificate.TransactionDigest.String()
+	hash = response.TransactionDigest().String()
 	return
 }
 

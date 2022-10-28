@@ -119,7 +119,7 @@ func (t *Token) BuildTransferTxWithAccount(account *Account, receiverAddress, am
 	firstCoin := pickedCoin.Coins[0]
 	if len(pickedCoin.Coins) >= 2 {
 		var txn *types.TransactionBytes
-		var response *types.TransactionResponse
+		var response *types.ExecuteTransactionResponse
 		// firstly, we should merge all coin's balance to firstCoin
 		for i := 1; i < len(pickedCoin.Coins); i++ {
 			coin := pickedCoin.Coins[i]
@@ -128,12 +128,17 @@ func (t *Token) BuildTransferTxWithAccount(account *Account, receiverAddress, am
 				return
 			}
 			signedTxn := txn.SignWith(account.account.PrivateKey)
-			response, err = cli.ExecuteTransaction(context.Background(), *signedTxn)
+			response, err = cli.ExecuteTransaction(context.Background(), *signedTxn, types.TxnRequestTypeWaitForLocalExecution)
 			if err != nil {
 				return
 			}
-			if response.Effects.Status.Status != types.TransactionStatusSuccess {
-				return nil, fmt.Errorf(`Merge coin failed: %v`, response.Effects.Status.Error)
+			cert := response.EffectsCert
+			if cert == nil || cert.ConfirmedLocalExecution == false {
+				return nil, fmt.Errorf("Merge coin is no expected execution.")
+			}
+			status := cert.Effects.Effects.Status
+			if status.Status != types.TransactionStatusSuccess {
+				return nil, fmt.Errorf(`Merge coin failed: %v`, status.Error)
 			}
 		}
 	}
