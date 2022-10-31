@@ -3,21 +3,40 @@ package aptos
 import (
 	"encoding/json"
 	"sort"
+	"strconv"
 	"strings"
+	"time"
 
+	"github.com/coming-chat/go-aptos/graphql"
 	"github.com/coming-chat/go-aptos/nft"
 	txnBuilder "github.com/coming-chat/go-aptos/transaction_builder"
 	"github.com/coming-chat/wallet-SDK/core/base"
 )
 
+const (
+	GraphUrlMainnet = graphql.GraphUrlMainnet
+	GraphUrlTestnet = graphql.GraphUrlTestnet
+)
+
 type NFTFetcher struct {
-	Chain  *Chain
-	client *nft.TokenClient
+	Chain    *Chain
+	client   *nft.TokenClient
+	GraphUrl string
 }
 
+// Deprecated: use `NewNFTFetcherGraphUrl()`
 func NewNFTFetcher(chain *Chain) *NFTFetcher {
 	return &NFTFetcher{
 		Chain: chain,
+	}
+}
+
+func NewNFTFetcherGraphUrl(url string) *NFTFetcher {
+	if url == "" {
+		url = GraphUrlMainnet
+	}
+	return &NFTFetcher{
+		GraphUrl: url,
 	}
 }
 
@@ -33,6 +52,10 @@ func (f *NFTFetcher) tokenClient() (*nft.TokenClient, error) {
 }
 
 func (f *NFTFetcher) FetchNFTs(owner string) (map[string][]*base.NFT, error) {
+	if f.GraphUrl != "" {
+		return f.fetchNFTsUseGraphql(owner)
+	}
+
 	account, err := txnBuilder.NewAccountAddressFromHex(owner)
 	if err != nil {
 		return nil, err
@@ -92,4 +115,50 @@ func transformNFT(token *nft.NFTInfo) *base.NFT {
 		RelatedUrl:      "",
 	}
 	return &nft
+}
+
+func transformGraphToken(token nft.GraphQLToken) *base.NFT {
+	t, err := time.Parse(`2006-01-02T15:04:05`, token.LastTransactionTimestamp)
+	if err != nil {
+		t = time.Time{}
+	}
+	nft := base.NFT{
+		HashString: strconv.FormatUint(token.LastTransactionVersion, 10),
+		Timestamp:  t.Unix(),
+
+		Id:              "",
+		Name:            token.Name,
+		Image:           strings.Replace(token.CurrentTokenData.MetadataUri, "ipfs://", "https://ipfs.io/ipfs/", 1),
+		Standard:        "",
+		Collection:      token.CollectionName,
+		Description:     token.CurrentTokenData.Description,
+		ContractAddress: token.CreatorAddress,
+		RelatedUrl:      "",
+	}
+	return &nft
+}
+
+func (f *NFTFetcher) fetchNFTsUseGraphql(owner string) (map[string][]*base.NFT, error) {
+	tokens, err := nft.FetchGraphqlTokensOfOwner(owner, f.GraphUrl)
+	if err != nil {
+		return nil, err
+	}
+
+	nftGroupd := make(map[string][]*base.NFT)
+	for _, token := range tokens {
+		nft := transformGraphToken(token)
+		key := nft.GroupName()
+		group, exists := nftGroupd[key]
+		if exists {
+			nftGroupd[key] = append(group, nft)
+		} else {
+			nftGroupd[key] = []*base.NFT{nft}
+		}
+	}
+	for _, group := range nftGroupd {
+		sort.Slice(group, func(i, j int) bool {
+			return group[i].Timestamp > group[j].Timestamp
+		})
+	}
+	return nftGroupd, nil
 }
