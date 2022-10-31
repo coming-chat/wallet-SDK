@@ -186,15 +186,17 @@ func (t *Token) buildTransferPayload(receiverAddress, amount string) (p txbuilde
 	return payloadBuilder("0x1::coin", []txbuilder.TypeTag{t.token})
 }
 
-func (t *Token) HasRegisted(ownerAddress string) (*base.OptionalBool, error) {
+func (t *Token) HasRegisted(ownerAddress string) (b *base.OptionalBool, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
+
 	tag := "0x1::coin::CoinStore<" + t.token.ShortFunctionName() + ">"
 	client, err := t.chain.client()
 	if err != nil {
-		return nil, err
+		return
 	}
 	registed, err := client.IsAccountHasResource(ownerAddress, tag, 0)
 	if err != nil {
-		return nil, err
+		return
 	}
 	return &base.OptionalBool{Value: registed}, nil
 }
@@ -211,10 +213,12 @@ func (t *Token) EnsureOwnerRegistedToken(owner *Account) (*base.OptionalString, 
 }
 
 // @return transaction hash if register token succeed.
-func (t *Token) RegisterTokenForOwner(owner *Account) (*base.OptionalString, error) {
+func (t *Token) RegisterTokenForOwner(owner *Account) (s *base.OptionalString, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
+
 	moduleName, err := txbuilder.NewModuleIdFromString("0x1::managed_coin")
 	if err != nil {
-		return nil, err
+		return
 	}
 	payload := txbuilder.TransactionPayloadEntryFunction{
 		ModuleName:   *moduleName,
@@ -223,16 +227,16 @@ func (t *Token) RegisterTokenForOwner(owner *Account) (*base.OptionalString, err
 	}
 	transaction, err := t.chain.createTransactionFromPayloadBCS(owner, payload)
 	if err != nil {
-		return nil, err
+		return
 	}
 	signedTx, err := txbuilder.GenerateBCSTransaction(owner.account, transaction)
 	if err != nil {
-		return nil, err
+		return
 	}
 	txString := types.HexEncodeToString(signedTx)
 	hash, err := t.chain.SendRawTransaction(txString)
 	if err != nil {
-		return nil, err
+		return
 	}
 	return &base.OptionalString{Value: hash}, nil
 }
