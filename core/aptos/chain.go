@@ -107,27 +107,16 @@ func (c *Chain) SendRawTransaction(signedTx string) (hash string, err error) {
 }
 
 // Fetch transaction details through transaction hash
-func (c *Chain) FetchTransactionDetail(hash string) (detail *base.TransactionDetail, err error) {
-	defer base.CatchPanicAndMapToBasicError(&err)
-
-	client, err := c.client()
+func (c *Chain) FetchTransactionDetail(hash string) (*base.TransactionDetail, error) {
+	txn, err := c.fetchDetail(hash)
 	if err != nil {
-		return
+		return nil, err
 	}
-
-	transaction, err := client.GetTransactionByHash(hash)
-	if err != nil {
-		return
-	}
-	return toBaseTransaction(transaction)
+	return toBaseTransaction(txn)
 }
 
 func (c *Chain) FetchTransactionStatus(hash string) base.TransactionStatus {
-	client, err := c.client()
-	if err != nil {
-		return base.TransactionStatusNone
-	}
-	transaction, err := client.GetTransactionByHash(hash)
+	transaction, err := c.fetchDetail(hash)
 	if err != nil {
 		return base.TransactionStatusNone
 	}
@@ -137,6 +126,23 @@ func (c *Chain) FetchTransactionStatus(hash string) base.TransactionStatus {
 		return base.TransactionStatusPending
 	} else {
 		return base.TransactionStatusFailure
+	}
+}
+
+func (c *Chain) fetchDetail(hashOrVersion string) (txn *aptostypes.Transaction, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
+	client, err := c.client()
+	if err != nil {
+		return
+	}
+	if strings.HasPrefix(hashOrVersion, "0x") {
+		return client.GetTransactionByHash(hashOrVersion)
+	}
+	_, err = strconv.ParseUint(hashOrVersion, 10, 64)
+	if err == nil {
+		return client.GetTransactionByVersion(hashOrVersion)
+	} else {
+		return client.GetTransactionByHash(hashOrVersion)
 	}
 }
 
