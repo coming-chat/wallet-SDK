@@ -20,8 +20,9 @@ var (
 )
 
 type Res struct {
-	Body []byte
-	Code int
+	Header http.Header
+	Body   []byte
+	Code   int
 }
 
 type RequestParams struct {
@@ -108,8 +109,9 @@ func Request(method, url string, header map[string]string, body []byte) (*Res, e
 		return nil, errRead
 	}
 	return &Res{
-		Body: res,
-		Code: resp.StatusCode,
+		Header: resp.Header,
+		Body:   res,
+		Code:   resp.StatusCode,
 	}, nil
 }
 

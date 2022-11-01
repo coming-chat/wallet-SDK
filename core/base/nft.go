@@ -1,5 +1,13 @@
 package base
 
+import (
+	"encoding/json"
+	"net/http"
+	"strings"
+
+	"github.com/coming-chat/wallet-SDK/pkg/httpUtil"
+)
+
 type NFT struct {
 	Timestamp  int64  `json:"timestamp"`
 	HashString string `json:"hashString"`
@@ -47,4 +55,38 @@ type NFTFetcher interface {
 	 * @return This method directly calls `FetchNFTs()` and jsonifies the result and returns
 	 */
 	FetchNFTsJsonString(owner string) (*OptionalString, error)
+}
+
+// ExtractNFTImageUrl
+// Extract the nft's real image url.
+// If the content type of the given url is JSON, it's will return the `image` field specified url.
+func ExtractNFTImageUrl(url string) (u *OptionalString, err error) {
+	u = &OptionalString{Value: url}
+	resp, err := httpUtil.Request(http.MethodHead, url, nil, nil) // HEAD request
+	if err != nil {
+		return nil, err
+	}
+	if resp.Code != 200 {
+		return u, nil
+	}
+
+	contentType := resp.Header["Content-Type"][0]
+	if !strings.Contains(contentType, "application/json") {
+		// not json url, return directly
+		return u, nil
+	}
+
+	// It should be return the original url if have anything error
+	resp, err = httpUtil.Request(http.MethodGet, url, nil, nil) // GET request
+	if resp.Code != 200 {
+		return u, nil
+	}
+	jsonValue := struct {
+		Image string `json:"image"`
+	}{}
+	err = json.Unmarshal(resp.Body, &jsonValue)
+	if err != nil {
+		return u, nil
+	}
+	return &OptionalString{Value: jsonValue.Image}, nil
 }

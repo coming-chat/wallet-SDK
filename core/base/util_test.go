@@ -3,6 +3,8 @@ package base
 import (
 	"strconv"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestCatchPanic(t *testing.T) {
@@ -34,5 +36,16 @@ func TestMapConcurrent(t *testing.T) {
 	res, _ := MapListConcurrent(nums, 10, func(i interface{}) (interface{}, error) {
 		return strconv.Itoa(i.(int) * 100), nil
 	})
+	t.Log(res)
+}
+
+func TestNFTImage(t *testing.T) {
+	// url := "https://www.aptosnames.com/api/mainnet/v1/metadata/rolls-royce.apt" // json
+	// url := "https://coming.chat/api/v1/metadata/2333.aptos" // image
+	// url := "https://nft-market.coming.chat/api/v1/ipfsGateway" // no HEAD
+	url := "https://api.github.com/users/hadley/orgs" // json but no `image` field.
+
+	res, err := ExtractNFTImageUrl(url)
+	require.Nil(t, err)
 	t.Log(res)
 }
