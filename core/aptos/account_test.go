@@ -1,8 +1,16 @@
 package aptos
 
 import (
-	"github.com/coming-chat/wallet-SDK/core/testcase"
+	"os"
 	"testing"
+
+	"github.com/coming-chat/wallet-SDK/core/testcase"
+)
+
+var (
+	PriMartian1 = os.Getenv("PriMartian1")
+	PriMartian2 = os.Getenv("PriMartian2")
+	PriPetra1   = os.Getenv("PriPetra1")
 )
 
 func TestAccount(t *testing.T) {

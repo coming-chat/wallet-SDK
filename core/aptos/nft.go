@@ -134,6 +134,9 @@ func transformGraphToken(token nft.GraphQLToken) *base.NFT {
 		Description:     token.CurrentTokenData.Description,
 		ContractAddress: token.CreatorAddress,
 		RelatedUrl:      "",
+
+		AptTokenVersion: int64(token.PropertyVersion),
+		AptAmount:       int64(token.Amount),
 	}
 	return &nft
 }

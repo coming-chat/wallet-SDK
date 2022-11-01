@@ -13,6 +13,11 @@ type NFT struct {
 	ContractAddress string `json:"contract_address"`
 
 	RelatedUrl string `json:"related_url"`
+
+	// Aptos token's largest_property_version
+	AptTokenVersion int64 `json:"apt_token_version"`
+	// Aptos token's amount
+	AptAmount int64 `json:"apt_amount"`
 }
 
 func (n *NFT) GroupName() string {

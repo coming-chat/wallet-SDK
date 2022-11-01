@@ -1,31 +1,79 @@
 package aptos
 
 import (
-	"os"
 	"testing"
 	"time"
 
+	"github.com/coming-chat/go-aptos/nft"
 	txbuilder "github.com/coming-chat/go-aptos/transaction_builder"
 	"github.com/coming-chat/lcs"
 	"github.com/stretchr/testify/require"
 )
 
+func TestDirectTokenTransferUseCIDModule(t *testing.T) {
+	sender, err := AccountWithPrivateKey(PriMartian2)
+	require.Nil(t, err)
+	receiver, err := AccountWithPrivateKey(PriPetra1)
+	t.Logf("sender   address = %v", sender.Address())
+	t.Logf("receiver address = %v", receiver.Address())
+
+	// Query sender's tokens
+	if true { /*
+			if false { /**/
+		tokens, err := nft.FetchGraphqlTokensOfOwner(sender.Address(), GraphUrlTestnet)
+		require.Nil(t, err)
+		t.Log(tokens)
+	}
+
+	// if true { /*
+	if false { /**/
+		const (
+			creator        = "0xdfbc794c197e43d0e193fe31ec460a1ce7d2f3b6a3d2bb75e91988a53c61b870"
+			collectionName = "Martian Testnet63219"
+			tokenName      = "Martian NFT #63219"
+			tokenVersion   = 0
+			amount         = 1
+		)
+
+		chain := NewChainWithRestUrl(testnetRestUrl)
+
+		allowed, err := chain.IsAllowedDirectTransferToken(receiver.Address())
+		require.Nil(t, err)
+		if !allowed.Value {
+			t.Logf("The receiver not allowed direct transfer tokens. address = %v", receiver.Address())
+			return
+		}
+
+		nftBuilder := NewNFTPayloadBCSBuilder("")
+		payload, err := nftBuilder.TokenTransferPayload(receiver.Address(), creator, collectionName, tokenName, tokenVersion, amount)
+		require.Nil(t, err)
+		gasPrice, err := chain.EstimateGasPrice()
+		require.Nil(t, err)
+		gasAmount, err := chain.EstimatePayloadGasFeeBCS(sender, payload)
+		require.Nil(t, err)
+		t.Logf("estimate gasPrice = %v, gasAmount = %v", gasPrice.Value, gasAmount.Value)
+
+		txhash, err := chain.SubmitTransactionPayloadBCS(sender, payload)
+		require.Nil(t, err)
+		t.Logf("token transfer success, hash = %v", txhash)
+	}
+}
+
 func TestCIDPayload(t *testing.T) {
 	cidBuilder := NewNFTPayloadBCSBuilder("")
 	var payload txbuilder.TransactionPayloadEntryFunction
 
-	if true { /*
-			if false { /**/
+	// if true { /*
+	if false { /**/
 		bytes, err := cidBuilder.CIDAllowDirectTransferPayload()
 		require.Nil(t, err)
 		err = lcs.Unmarshal(bytes, &payload)
 		require.Nil(t, err)
 	}
 
-	if true { /*
-			if false { /**/
-		privateKey := os.Getenv("PriPetra1")
-		receiver, err := AccountWithPrivateKey(privateKey)
+	// if true { /*
+	if false { /**/
+		receiver, err := AccountWithPrivateKey(PriPetra1)
 		require.Nil(t, err)
 		t.Log("receiver address:", receiver.Address())
 
@@ -37,6 +85,18 @@ func TestCIDPayload(t *testing.T) {
 
 	if true { /*
 			if false { /**/
+		receiver, err := AccountWithPrivateKey(PriPetra1)
+		require.Nil(t, err)
+		t.Log("receiver address:", receiver.Address())
+
+		bytes, err := cidBuilder.TokenTransferPayload(receiver.Address(), receiver.Address(), "XXX", "abcsss", 1, 1)
+		require.Nil(t, err)
+		err = lcs.Unmarshal(bytes, &payload)
+		require.Nil(t, err)
+	}
+
+	// if true { /*
+	if false { /**/
 		bytes, err := cidBuilder.CIDRegister(2134)
 		require.Nil(t, err)
 		err = lcs.Unmarshal(bytes, &payload)
@@ -45,13 +105,11 @@ func TestCIDPayload(t *testing.T) {
 }
 
 func TestOfferAndCancelTokenTransactionParams(t *testing.T) {
-	privateKey := os.Getenv("PriMartian2")
-	sender, err := AccountWithPrivateKey(privateKey)
+	sender, err := AccountWithPrivateKey(PriMartian2)
 	require.Nil(t, err)
 	t.Log("sender address:", sender.Address())
 
-	privateKey = os.Getenv("PriPetra1")
-	receiver, err := AccountWithPrivateKey(privateKey)
+	receiver, err := AccountWithPrivateKey(PriPetra1)
 	require.Nil(t, err)
 	t.Log("receiver address:", receiver.Address())
 
@@ -86,8 +144,7 @@ func TestOfferAndCancelTokenTransactionParams(t *testing.T) {
 }
 
 func TestClaimTokenFromHash(t *testing.T) {
-	privateKey := os.Getenv("PriPetra1")
-	receiver, err := AccountWithPrivateKey(privateKey)
+	receiver, err := AccountWithPrivateKey(PriPetra1)
 	require.Nil(t, err)
 	t.Log("receiver address:", receiver.Address())
 
