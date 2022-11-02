@@ -36,6 +36,15 @@ func (n *NFT) GroupName() string {
 	}
 }
 
+func (n *NFT) ExtractedImageUrl() string {
+	url, err := ExtractNFTImageUrl(n.Image)
+	if err != nil {
+		return n.Image
+	} else {
+		return url.Value
+	}
+}
+
 type NFTFetcher interface {
 	/** Gets all NFTs for the specified account and groups them by Collection name
 	 * @owner The specified account address

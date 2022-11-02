@@ -24,19 +24,20 @@ type NFTFetcher struct {
 	GraphUrl string
 }
 
-// Deprecated: use `NewNFTFetcherGraphUrl()`
-func NewNFTFetcher(chain *Chain) *NFTFetcher {
+// Deprecated: use `NewNFTFetcher(graphUrl)`
+func NewNFTFetcherWithChain(chain *Chain) *NFTFetcher {
 	return &NFTFetcher{
 		Chain: chain,
 	}
 }
 
-func NewNFTFetcherGraphUrl(url string) *NFTFetcher {
-	if url == "" {
-		url = GraphUrlMainnet
+// Default is `GraphUrlMainnet` if graphUrl is emptry.
+func NewNFTFetcher(graphUrl string) *NFTFetcher {
+	if graphUrl == "" {
+		graphUrl = GraphUrlMainnet
 	}
 	return &NFTFetcher{
-		GraphUrl: url,
+		GraphUrl: graphUrl,
 	}
 }
 
