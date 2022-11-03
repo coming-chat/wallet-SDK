@@ -393,10 +393,15 @@ func toBaseTransaction(transaction *aptostypes.Transaction) (*base.TransactionDe
 			detail.ToAddress = transaction.Sender
 			detail.TokenName = args[3].(string)
 		}
-	case strings.HasSuffix(function, "cid::cid_token_transfer"):
+	case strings.HasSuffix(function, "::cid::cid_token_transfer"):
 		if len(args) >= 2 {
 			detail.ToAddress = args[1].(string)
 			detail.CIDNumber = strings.TrimSuffix(args[0].(string), ".aptos")
+		}
+	case strings.HasSuffix(function, "::cid::token_trasfer"):
+		if len(args) >= 5 {
+			detail.ToAddress = args[4].(string)
+			detail.TokenName = args[2].(string)
 		}
 	case function == "0x1::coin::transfer" || function == "0x1::aptos_account::transfer":
 		if len(args) >= 2 {

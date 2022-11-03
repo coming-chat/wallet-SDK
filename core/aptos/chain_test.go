@@ -84,7 +84,9 @@ func TestFetchTransactionDetail(t *testing.T) {
 	// showDetail("0x27285b6bb0284ec3b73770e77b53deeac1b9884afd23c8d75ea0ad505571b54f") // test cid transfer
 	// showDetail("0xd505d08fed506dc1f6d2e7878ce1a43e4ee33f9ff6fc809430e30e6effd66692") // test token offer
 	// showDetail("0x5341c1606b89edee57622f6ef0d8e0e09898ecea851ce03280e1518b38b1bd6a") // test token claim
-	showDetail("302207146") // test token claim use version
+	showDetail("0x97b4e0fbb785a3cda1c05014f74970184477d846ab0779c5de79de9a39ef9642") // test token transfer (offer by cid module)
+
+	// showDetail("302207146") // test token claim use version
 }
 
 func TestChain_FetchTransactionDetail(t *testing.T) {
