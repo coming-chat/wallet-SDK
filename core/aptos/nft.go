@@ -2,6 +2,7 @@ package aptos
 
 import (
 	"encoding/json"
+	"errors"
 	"sort"
 	"strconv"
 	"strings"
@@ -54,7 +55,27 @@ func (f *NFTFetcher) tokenClient() (*nft.TokenClient, error) {
 
 func (f *NFTFetcher) FetchNFTs(owner string) (map[string][]*base.NFT, error) {
 	if f.GraphUrl != "" {
-		return f.fetchNFTsUseGraphql(owner)
+		tokens, err := f.fetchNFTsUseGraphql(owner, "")
+		if err != nil {
+			return nil, err
+		}
+		nftGroupd := make(map[string][]*base.NFT)
+		for _, token := range tokens {
+			nft := transformGraphToken(token)
+			key := nft.GroupName()
+			group, exists := nftGroupd[key]
+			if exists {
+				nftGroupd[key] = append(group, nft)
+			} else {
+				nftGroupd[key] = []*base.NFT{nft}
+			}
+		}
+		for _, group := range nftGroupd {
+			sort.Slice(group, func(i, j int) bool {
+				return group[i].Timestamp > group[j].Timestamp
+			})
+		}
+		return nftGroupd, nil
 	}
 
 	account, err := txnBuilder.NewAccountAddressFromHex(owner)
@@ -87,6 +108,22 @@ func (f *NFTFetcher) FetchNFTs(owner string) (map[string][]*base.NFT, error) {
 		})
 	}
 	return nftGroupd, nil
+}
+
+func (f *NFTFetcher) FetchNFTsFilterByCreatorAddr(owner, creatorAddress string) ([]*base.NFT, error) {
+	if f.GraphUrl == "" {
+		return nil, errors.New("must has graph url")
+	}
+	tokens, err := f.fetchNFTsUseGraphql(owner, creatorAddress)
+	if err != nil {
+		return nil, err
+	}
+	var nftList []*base.NFT
+	for _, token := range tokens {
+		baseNft := transformGraphToken(token)
+		nftList = append(nftList, baseNft)
+	}
+	return nftList, nil
 }
 
 func (f *NFTFetcher) FetchNFTsJsonString(owner string) (*base.OptionalString, error) {
@@ -142,27 +179,10 @@ func transformGraphToken(token nft.GraphQLToken) *base.NFT {
 	return &nft
 }
 
-func (f *NFTFetcher) fetchNFTsUseGraphql(owner string) (map[string][]*base.NFT, error) {
-	tokens, err := nft.FetchGraphqlTokensOfOwner(owner, f.GraphUrl)
+func (f *NFTFetcher) fetchNFTsUseGraphql(owner, creatorAddress string) ([]nft.GraphQLToken, error) {
+	tokens, err := nft.FetchGraphqlTokensOfOwner(owner, f.GraphUrl, creatorAddress)
 	if err != nil {
 		return nil, err
 	}
-
-	nftGroupd := make(map[string][]*base.NFT)
-	for _, token := range tokens {
-		nft := transformGraphToken(token)
-		key := nft.GroupName()
-		group, exists := nftGroupd[key]
-		if exists {
-			nftGroupd[key] = append(group, nft)
-		} else {
-			nftGroupd[key] = []*base.NFT{nft}
-		}
-	}
-	for _, group := range nftGroupd {
-		sort.Slice(group, func(i, j int) bool {
-			return group[i].Timestamp > group[j].Timestamp
-		})
-	}
-	return nftGroupd, nil
+	return tokens, nil
 }
