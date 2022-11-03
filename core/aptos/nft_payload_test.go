@@ -20,7 +20,7 @@ func TestDirectTokenTransferUseCIDModule(t *testing.T) {
 	// Query sender's tokens
 	if true { /*
 			if false { /**/
-		tokens, err := nft.FetchGraphqlTokensOfOwner(sender.Address(), GraphUrlTestnet)
+		tokens, err := nft.FetchGraphqlTokensOfOwner(sender.Address(), GraphUrlTestnet, "")
 		require.Nil(t, err)
 		t.Log(tokens)
 	}
