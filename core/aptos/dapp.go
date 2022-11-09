@@ -6,7 +6,9 @@ import (
 	"errors"
 	"fmt"
 
+	hexType "github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/coming-chat/go-aptos/aptostypes"
+	txbuilder "github.com/coming-chat/go-aptos/transaction_builder"
 	"github.com/coming-chat/wallet-SDK/core/base"
 )
 
@@ -64,6 +66,14 @@ func (c *Chain) GenerateTransaction(senderPublicKey string, payload aptostypes.P
 	if err != nil {
 		return
 	}
+	remoteBuilder, err := txbuilder.NewTransactionBuilderRemoteABIWithFunc(payload.Function, client)
+	if err != nil {
+		return
+	}
+	bcsPayload, err := remoteBuilder.BuildTransactionPayload(payload.Function, payload.TypeArguments, payload.Arguments)
+	if err != nil {
+		return
+	}
 	accountData, err := client.GetAccount(sender)
 	if err != nil {
 		return
@@ -77,29 +87,36 @@ func (c *Chain) GenerateTransaction(senderPublicKey string, payload aptostypes.P
 		return
 	}
 
-	txn = &aptostypes.Transaction{
-		Sender:                  sender,
+	senderAddress, _ := txbuilder.NewAccountAddressFromHex(sender)
+	rawTxn := txbuilder.RawTransaction{
+		Sender:                  *senderAddress,
 		SequenceNumber:          accountData.SequenceNumber,
 		MaxGasAmount:            MaxGasAmount,
 		GasUnitPrice:            gasPrice,
-		Payload:                 &payload,
+		Payload:                 bcsPayload,
 		ExpirationTimestampSecs: ledgerInfo.LedgerTimestamp + 600, // 10 minutes timeout
+		ChainId:                 uint8(ledgerInfo.ChainId),
 	}
-
-	simTxn, err := client.SimulateTransaction(txn, senderPublicKey)
+	edPublicKey, _ := hexType.HexDecodeString(senderPublicKey)
+	signedTxn, err := txbuilder.GenerateBCSSimulation(edPublicKey, &rawTxn)
 	if err != nil {
-		return nil, err
+		return
 	}
-	if len(simTxn) > 0 {
-		if !simTxn[0].Success {
-			return nil, errors.New(simTxn[0].VmStatus)
-		} else {
-			gasUsed := simTxn[0].GasUsed
-			gasUsed = gasUsed/10*15 + 14 // ceil(gasUsed * 1.5)
-			txn.MaxGasAmount = gasUsed
-		}
+	txns, err := client.SimulateSignedBCSTransaction(signedTxn)
+	if err != nil {
+		return
 	}
+	if len(txns) <= 0 {
+		return nil, errors.New("Generate transaction failed.")
+	}
+	txn = txns[0]
+	if !txn.Success {
+		return nil, errors.New(txn.VmStatus)
+	}
+	gasUsed := txn.GasUsed/10*15 + 14 // ceil(gasUsed * 1.5)
+	txn.MaxGasAmount = gasUsed
 
+	txn.Hash = ""
 	txn.Signature = nil // clean simulate signature.
 	return txn, nil
 }
