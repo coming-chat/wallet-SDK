@@ -106,15 +106,11 @@ func (c *Chain) GenerateTransaction(senderPublicKey string, payload aptostypes.P
 	if err != nil {
 		return
 	}
-	if len(txns) <= 0 {
-		return nil, errors.New("Generate transaction failed.")
+	gasAmount, err := handleGasAmount(txns)
+	if err != nil {
+		return nil, err
 	}
-	txn = txns[0]
-	if !txn.Success {
-		return nil, errors.New(txn.VmStatus)
-	}
-	gasUsed := txn.GasUsed/10*15 + 14 // ceil(gasUsed * 1.5)
-	txn.MaxGasAmount = gasUsed
+	txn.MaxGasAmount = gasAmount
 
 	txn.Hash = ""
 	txn.Signature = nil // clean simulate signature.

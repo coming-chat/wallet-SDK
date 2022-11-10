@@ -182,17 +182,11 @@ func (c *Chain) EstimateMaxGasAmount(account base.Account, transaction *aptostyp
 	}
 	transaction.MaxGasAmount = base.Max(transaction.MaxGasAmount, 5000) // as big as possible
 
-	commitedTxs, err := client.SimulateTransaction(transaction, account.PublicKeyHex())
+	txns, err := client.SimulateTransaction(transaction, account.PublicKeyHex())
 	if err != nil {
 		return 0, err
 	}
-	if len(commitedTxs) <= 0 {
-		return 0, errors.New("Query gas fee failed.")
-	}
-
-	tx := commitedTxs[0]
-	maxGas := (tx.GasUsed*15 + 9) / 10 // ceil(fee * 1.5)
-	return maxGas, nil
+	return handleGasAmount(txns)
 }
 
 func (c *Chain) EstimateMaxGasAmountBCS(publicKey []byte, rawTxn *txbuilder.RawTransaction) (uint64, error) {
@@ -204,16 +198,22 @@ func (c *Chain) EstimateMaxGasAmountBCS(publicKey []byte, rawTxn *txbuilder.RawT
 	if err != nil {
 		return 0, err
 	}
-	commitedTxs, err := client.SimulateSignedBCSTransaction(signedTx)
+	txns, err := client.SimulateSignedBCSTransaction(signedTx)
 	if err != nil {
 		return 0, err
 	}
-	if len(commitedTxs) <= 0 {
+	return handleGasAmount(txns)
+}
+
+func handleGasAmount(txns []*aptostypes.Transaction) (uint64, error) {
+	if len(txns) <= 0 {
 		return 0, errors.New("Query gas fee failed.")
 	}
-
-	tx := commitedTxs[0]
-	maxGas := (tx.GasUsed*15 + 9) / 10 // ceil(fee * 1.5)
+	txn := txns[0]
+	if !txn.Success {
+		return 0, errors.New(txn.VmStatus)
+	}
+	maxGas := txn.GasUsed/10*15 + 14 // >= ceil(fee * 1.5)
 	return maxGas, nil
 }
 
