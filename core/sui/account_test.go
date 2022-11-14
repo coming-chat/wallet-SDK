@@ -29,3 +29,9 @@ func M1Account(t *testing.T) *Account {
 	require.Nil(t, err)
 	return account
 }
+
+func M2Account(t *testing.T) *Account {
+	account, err := NewAccountWithMnemonic(testcase.M2)
+	require.Nil(t, err)
+	return account
+}

@@ -3,13 +3,13 @@ package sui
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"sort"
 
 	"github.com/coming-chat/go-sui/types"
 	"github.com/coming-chat/wallet-SDK/core/base"
 )
 
-// Only support devnet now.
 func (c *Chain) FetchNFTs(owner string) (map[string][]*base.NFT, error) {
 	address, err := types.NewAddressFromHex(owner)
 	if err != nil {
@@ -19,7 +19,7 @@ func (c *Chain) FetchNFTs(owner string) (map[string][]*base.NFT, error) {
 	if err != nil {
 		return nil, err
 	}
-	nftObjects, err := client.GetDevnetNFTOwnedByAddress(context.Background(), *address)
+	nftObjects, err := client.GetNFTsOwnedByAddress(context.Background(), *address)
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +39,6 @@ func (c *Chain) FetchNFTs(owner string) (map[string][]*base.NFT, error) {
 	return group, nil
 }
 
-// Only support devnet now.
 func (c *Chain) FetchNFTsJsonString(owner string) (*base.OptionalString, error) {
 	nfts, err := c.FetchNFTs(owner)
 	if err != nil {
@@ -84,4 +83,64 @@ func transformNFT(nft *types.ObjectRead) *base.NFT {
 		Description: meta.Fields.Description,
 		Image:       meta.Fields.Url,
 	}
+}
+
+// @param gasId gas object to be used in this transaction, the gateway will pick one from the signer's possession if not provided
+func (c *Chain) MintNFT(creator, name, description, uri, gasId string, gasBudget int64) (txn *Transaction, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
+
+	signer, err := types.NewAddressFromHex(creator)
+	if err != nil {
+		return nil, errors.New("Invalid creator address")
+	}
+	var gas *types.ObjectId = nil
+	if gasId != "" {
+		gas, err = types.NewHexData(gasId)
+		if err != nil {
+			return nil, errors.New("Invalid gas object id")
+		}
+	}
+	client, err := c.client()
+	if err != nil {
+		return
+	}
+	tx, err := client.MintNFT(context.Background(), *signer, name, description, uri, gas, uint64(gasBudget))
+	if err != nil {
+		return
+	}
+	return &Transaction{Txn: *tx}, nil
+}
+
+// @param gasId gas object to be used in this transaction, the gateway will pick one from the signer's possession if not provided
+func (c *Chain) TransferNFT(sender, receiver, nftId, gasId string, gasBudget int64) (txn *Transaction, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
+
+	senderAddress, err := types.NewAddressFromHex(sender)
+	if err != nil {
+		return
+	}
+	receiverAddress, err := types.NewAddressFromHex(receiver)
+	if err != nil {
+		return
+	}
+	nftObject, err := types.NewHexData(nftId)
+	if err != nil {
+		return nil, err
+	}
+	var gas *types.ObjectId = nil
+	if gasId != "" {
+		gas, err = types.NewHexData(gasId)
+		if err != nil {
+			return nil, errors.New("Invalid gas object id")
+		}
+	}
+	client, err := c.client()
+	if err != nil {
+		return
+	}
+	tx, err := client.TransferObject(context.Background(), *senderAddress, *receiverAddress, *nftObject, gas, uint64(gasBudget))
+	if err != nil {
+		return
+	}
+	return &Transaction{Txn: *tx}, nil
 }

@@ -43,3 +43,12 @@ func TestFetchNFTs(t *testing.T) {
 		t.Log(jsonString)
 	}
 }
+
+func TestFetchNFTsTestnet(t *testing.T) {
+	owner := "0xd77e3ea8aa559bc7d5a238314201f0dfd2643a0fdd7ee32d7139d8b2310b4001"
+
+	nftFetcher := NewNFTFetcher(GraphUrlTestnet)
+	nfts, err := nftFetcher.FetchNFTs(owner)
+	require.Nil(t, err)
+	t.Log(nfts)
+}

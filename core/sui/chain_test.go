@@ -9,9 +9,14 @@ import (
 )
 
 const DevnetRpcUrl = "https://fullnode.devnet.sui.io"
+const TestnetRpcUrl = "https://fullnode.testnet.sui.io"
 
 func DevnetChain() *Chain {
 	return NewChainWithRpcUrl(DevnetRpcUrl)
+}
+
+func TestnetChain() *Chain {
+	return NewChainWithRpcUrl(TestnetRpcUrl)
 }
 
 func TestTransfer(t *testing.T) {
