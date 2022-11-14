@@ -5,12 +5,14 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 
 	"github.com/coming-chat/go-sui/client"
 	"github.com/coming-chat/go-sui/types"
 	"github.com/coming-chat/wallet-SDK/core/base"
+	"github.com/coming-chat/wallet-SDK/pkg/httpUtil"
 )
 
 const (
@@ -18,6 +20,8 @@ const (
 
 	MaxGasForMerge    = 10000
 	MaxGasForTransfer = 200
+
+	FaucetUrlTestnet = "https://faucet.testnet.sui.io/gas"
 )
 
 type Chain struct {
@@ -148,4 +152,53 @@ func (c *Chain) BatchFetchTransactionStatus(hashListString string) string {
 		return strconv.Itoa(c.FetchTransactionStatus(s)), nil
 	})
 	return strings.Join(statuses, ",")
+}
+
+/**
+ * @param address Hex-encoded 16 bytes Sui account address wich mints tokens
+ * @param faucetUrl default https://faucet.testnet.sui.io/gas
+ * @return digest of transfer transaction.
+ */
+func FaucetFundAccount(address string, faucetUrl string) (h *base.OptionalString, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
+	_, err = types.NewAddressFromHex(address)
+	if err != nil {
+		return
+	}
+	if faucetUrl == "" {
+		faucetUrl = FaucetUrlTestnet
+	}
+
+	paramJson := fmt.Sprintf(`{"FixedAmountRequest":{"recipient":"%v"}}`, address)
+	params := httpUtil.RequestParams{
+		Header: map[string]string{
+			"Content-Type": "application/json",
+		},
+		Body: []byte(paramJson),
+	}
+	res, err := httpUtil.Post(faucetUrl, params)
+	if err != nil {
+		return
+	}
+	response := struct {
+		TransferredObjects []struct {
+			Amount uint64         `json:"amount"`
+			Id     types.ObjectId `json:"id"`
+			Digest types.Digest   `json:"transfer_tx_digest"`
+		} `json:"transferred_gas_objects,omitempty"`
+		Error string `json:"error,omitempty"`
+	}{}
+	err = json.Unmarshal(res, &response)
+	if err != nil {
+		return
+	}
+	if strings.TrimSpace(response.Error) != "" {
+		return nil, errors.New(response.Error)
+	}
+	if len(response.TransferredObjects) <= 0 {
+		return nil, errors.New("Transaction not found.")
+	}
+
+	digest := response.TransferredObjects[0].Digest.String()
+	return &base.OptionalString{Value: digest}, nil
 }

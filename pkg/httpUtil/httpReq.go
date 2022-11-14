@@ -79,7 +79,7 @@ func Post(url string, params RequestParams) ([]byte, error) {
 	}
 
 	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != 200 && resp.StatusCode != 201 {
 		return nil, fmt.Errorf("post %v response code = %v", url, resp.Status)
 	}
 	res, errRead := io.ReadAll(resp.Body)

@@ -63,3 +63,14 @@ func TestSplit(t *testing.T) {
 	require.Nil(t, err)
 	t.Log(detail)
 }
+
+func TestFaucet(t *testing.T) {
+	address := "0x6c5d2cd6e62734f61b4e318e58cbfd1c4b99dfaf"
+	// address = "0x30d903963ceb4a5c74de9f87498fb467cae72008"
+	digest, err := FaucetFundAccount(address, "")
+	if err != nil {
+		t.Logf("error = %v", err)
+	} else {
+		t.Logf("digest = %v", digest)
+	}
+}
