@@ -2,6 +2,7 @@ package wallet
 
 import (
 	"encoding/hex"
+	"errors"
 	"fmt"
 
 	"github.com/coming-chat/wallet-SDK/core/aptos"
@@ -32,6 +33,8 @@ type Wallet struct {
 	aptosAccount    *aptos.Account
 	suiAccount      *sui.Account
 	starcoinAccount *starcoin.Account
+
+	Address string
 }
 
 func NewWalletWithMnemonic(mnemonic string) (*Wallet, error) {
@@ -54,12 +57,28 @@ func NewWalletWithKeyStore(keyStoreJson string, password string) (*Wallet, error
 	}, nil
 }
 
+func NewWalletWithWatchAddress(address string) (*Wallet, error) {
+	chainType := ChainTypeFrom(address)
+	if chainType.Count() == 0 {
+		return nil, errors.New("Invalid wallet address")
+	}
+	return &Wallet{Address: address}, nil
+}
+
 func (w *Wallet) IsMnemonicWallet() bool {
 	return len(w.Mnemonic) > 0
 }
 
 func (w *Wallet) IsKeystoreWallet() bool {
 	return len(w.Keystore) > 0
+}
+
+func (w *Wallet) IsWatchWallet() bool {
+	return len(w.Address) > 0
+}
+
+func (w *Wallet) GetWatchWallet() *WatchAccount {
+	return &WatchAccount{address: w.Address}
 }
 
 // Get or create the polka account with specified network.
