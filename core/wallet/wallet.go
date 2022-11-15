@@ -34,7 +34,7 @@ type Wallet struct {
 	suiAccount      *sui.Account
 	starcoinAccount *starcoin.Account
 
-	Address string
+	WatchAddress string
 }
 
 func NewWalletWithMnemonic(mnemonic string) (*Wallet, error) {
@@ -57,12 +57,12 @@ func NewWalletWithKeyStore(keyStoreJson string, password string) (*Wallet, error
 	}, nil
 }
 
-func NewWalletWithWatchAddress(address string) (*Wallet, error) {
+func WatchWallet(address string) (*Wallet, error) {
 	chainType := ChainTypeFrom(address)
 	if chainType.Count() == 0 {
 		return nil, errors.New("Invalid wallet address")
 	}
-	return &Wallet{Address: address}, nil
+	return &Wallet{WatchAddress: address}, nil
 }
 
 func (w *Wallet) IsMnemonicWallet() bool {
@@ -74,11 +74,11 @@ func (w *Wallet) IsKeystoreWallet() bool {
 }
 
 func (w *Wallet) IsWatchWallet() bool {
-	return len(w.Address) > 0
+	return len(w.WatchAddress) > 0
 }
 
 func (w *Wallet) GetWatchWallet() *WatchAccount {
-	return &WatchAccount{address: w.Address}
+	return &WatchAccount{address: w.WatchAddress}
 }
 
 // Get or create the polka account with specified network.
