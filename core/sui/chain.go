@@ -154,6 +154,40 @@ func (c *Chain) BatchFetchTransactionStatus(hashListString string) string {
 	return strings.Join(statuses, ",")
 }
 
+// @param gasId gas object to be used in this transaction, the gateway will pick one from the signer's possession if not provided
+func (c *Chain) TransferObject(sender, receiver, objectId, gasId string, gasBudget int64) (txn *Transaction, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
+
+	senderAddress, err := types.NewAddressFromHex(sender)
+	if err != nil {
+		return
+	}
+	receiverAddress, err := types.NewAddressFromHex(receiver)
+	if err != nil {
+		return
+	}
+	nftObject, err := types.NewHexData(objectId)
+	if err != nil {
+		return nil, err
+	}
+	var gas *types.ObjectId = nil
+	if gasId != "" {
+		gas, err = types.NewHexData(gasId)
+		if err != nil {
+			return nil, errors.New("Invalid gas object id")
+		}
+	}
+	client, err := c.client()
+	if err != nil {
+		return
+	}
+	tx, err := client.TransferObject(context.Background(), *senderAddress, *receiverAddress, *nftObject, gas, uint64(gasBudget))
+	if err != nil {
+		return
+	}
+	return &Transaction{Txn: *tx}, nil
+}
+
 /**
  * @param address Hex-encoded 16 bytes Sui account address wich mints tokens
  * @param faucetUrl default https://faucet.testnet.sui.io/gas
