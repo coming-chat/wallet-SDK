@@ -105,15 +105,17 @@ func (c *Chain) FetchTransactionDetail(hash string) (detail *base.TransactionDet
 	var firstRecipient *types.HexData
 	var total uint64
 	for _, txn := range resp.Certificate.Data.Transactions {
-		tsui := txn.TransferSui
-		if tsui == nil {
-			continue
-		}
-		if firstRecipient == nil {
-			firstRecipient = &tsui.Recipient
-			total = tsui.Amount
-		} else if bytes.Compare(firstRecipient.Data(), tsui.Recipient.Data()) == 0 {
-			total = total + tsui.Amount
+		if tsui := txn.TransferSui; tsui != nil {
+			if firstRecipient == nil {
+				firstRecipient = &tsui.Recipient
+				total = tsui.Amount
+			} else if bytes.Compare(firstRecipient.Data(), tsui.Recipient.Data()) == 0 {
+				total = total + tsui.Amount
+			}
+		} else if tobject := txn.TransferObject; tobject != nil {
+			if firstRecipient == nil {
+				firstRecipient = &tobject.Recipient
+			}
 		}
 	}
 	if firstRecipient == nil {

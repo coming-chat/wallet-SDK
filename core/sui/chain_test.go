@@ -40,8 +40,9 @@ func TestTransfer(t *testing.T) {
 
 func TestFetchTransactionDetail(t *testing.T) {
 	// digest := "4nMHqXi60PLxj/DxLCWwkiO3L41kIz89qMDEpStRdP8="
-	digest := "hPOfmwiRRsxleD0JGA67bWFBur+z1BdbLo6vYxzB+9w="
-	chain := DevnetChain()
+	// digest := "hPOfmwiRRsxleD0JGA67bWFBur+z1BdbLo6vYxzB+9w=" // normal coin transfer
+	digest := "uJYpq7vh/3dI4tzmc5wsecUGTMzYiae4829C1VBuQHM=" // testnet nft transfer
+	chain := TestnetChain()
 
 	detail, err := chain.FetchTransactionDetail(digest)
 	require.Nil(t, err)
