@@ -40,7 +40,7 @@ func pickupTransferCoin(coins types.Coins, amount string) (*PickedCoins, error) 
 	}
 	need := big.NewInt(0).Set(amountInt)
 
-	estimateGasPerCoin := big.NewInt(MaxGasForMerge)
+	estimateGasPerCoin := big.NewInt(MaxGasForPay)
 	total := big.NewInt(0)
 	pickedCoins := types.Coins{}
 	for _, coin := range coins {
@@ -64,13 +64,18 @@ type PickedCoins struct {
 	Amount *big.Int
 }
 
-func (cs *PickedCoins) EstimateGas() uint64 {
-	return uint64(len(cs.Coins)) * MaxGasForMerge
+func (cs *PickedCoins) CoinIds() []types.ObjectId {
+	coinIds := []types.ObjectId{}
+	for _, coin := range cs.Coins {
+		coinIds = append(coinIds, coin.Reference.ObjectId)
+	}
+	return coinIds
 }
 
-func (cs *PickedCoins) LastCoin() *types.Coin {
-	if len(cs.Coins) == 0 {
-		return nil
-	}
-	return &cs.Coins[len(cs.Coins)-1]
+func (cs *PickedCoins) EstimateTotalGas() uint64 {
+	return uint64(len(cs.Coins)) * MaxGasForPay
+}
+
+func (cs *PickedCoins) EstimateMergeGas() uint64 {
+	return uint64(len(cs.Coins)-1) * MaxGasForPay
 }

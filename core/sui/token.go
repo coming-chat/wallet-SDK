@@ -116,34 +116,29 @@ func (t *Token) BuildTransferTxWithAccount(account *Account, receiverAddress, am
 	}
 
 	signer, _ := types.NewAddressFromHex(account.Address())
-	firstCoin := pickedCoin.Coins[0]
 	if len(pickedCoin.Coins) >= 2 {
-		var txn *types.TransactionBytes
-		var response *types.ExecuteTransactionResponse
 		// firstly, we should merge all coin's balance to firstCoin
-		for i := 1; i < len(pickedCoin.Coins); i++ {
-			coin := pickedCoin.Coins[i]
-			txn, err = cli.MergeCoins(context.Background(), *signer, firstCoin.Reference.ObjectId, coin.Reference.ObjectId, nil, MaxGasForMerge)
-			if err != nil {
-				return
-			}
-			signedTxn := txn.SignWith(account.account.PrivateKey)
-			response, err = cli.ExecuteTransaction(context.Background(), *signedTxn, types.TxnRequestTypeWaitForLocalExecution)
-			if err != nil {
-				return
-			}
-			cert := response.EffectsCert
-			if cert == nil || cert.ConfirmedLocalExecution == false {
-				return nil, fmt.Errorf("Merge coin is no expected execution.")
-			}
-			status := cert.Effects.Effects.Status
-			if status.Status != types.TransactionStatusSuccess {
-				return nil, fmt.Errorf(`Merge coin failed: %v`, status.Error)
-			}
+		txn, err2 := cli.PayAllSui(context.Background(), *signer, *signer, pickedCoin.CoinIds(), pickedCoin.EstimateMergeGas())
+		if err != nil {
+			return nil, err2
+		}
+		signedTxn := txn.SignWith(account.account.PrivateKey)
+		response, err2 := cli.ExecuteTransaction(context.Background(), *signedTxn, types.TxnRequestTypeWaitForLocalExecution)
+		if err2 != nil {
+			return nil, err2
+		}
+		cert := response.EffectsCert
+		if cert == nil || cert.ConfirmedLocalExecution == false {
+			return nil, fmt.Errorf("Merge coins failed.")
+		}
+		status := cert.Effects.Effects.Status
+		if status.Status != types.TransactionStatusSuccess {
+			return nil, fmt.Errorf(`Merge coins failed: %v`, status.Error)
 		}
 	}
 
 	// send sui coin
+	firstCoin := pickedCoin.Coins[0]
 	txn, err := cli.TransferSui(context.Background(), *signer, *recipient, firstCoin.Reference.ObjectId, amountInt, MaxGasForTransfer)
 	if err != nil {
 		return
