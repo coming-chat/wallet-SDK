@@ -29,6 +29,12 @@ const (
 
 func ChainTypeFrom(address string) *base.StringArray {
 	res := &base.StringArray{}
+	for _, ch := range []byte(address) {
+		valid := (ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')
+		if !valid {
+			return res
+		}
+	}
 	if strings.HasPrefix(address, "0x") || strings.HasPrefix(address, "0X") {
 		if eth.IsValidAddress(address) {
 			res.Append(ChainTypeEthereum)

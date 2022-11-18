@@ -1,9 +1,11 @@
 package wallet
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestChainType(t *testing.T) {
-	address := "12eV7FtPbXBgDG6mX4zwPaJdQKgigVtnYofSpS8mgEQbX625"
+	address := "😁"
 
 	chains := ChainTypeFrom(address)
 	t.Log(chains.String())

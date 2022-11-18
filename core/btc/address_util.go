@@ -62,6 +62,12 @@ func EncodePublicDataToAddress(public []byte, chainnet string) (string, error) {
 
 // @param chainnet chain name
 func IsValidAddress(address, chainnet string) bool {
+	for _, ch := range []byte(address) {
+		valid := (ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')
+		if !valid {
+			return false
+		}
+	}
 	params, err := netParamsOf(chainnet)
 	if err != nil {
 		return false
