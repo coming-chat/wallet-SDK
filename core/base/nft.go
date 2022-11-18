@@ -79,8 +79,12 @@ func ExtractNFTImageUrl(url string) (u *OptionalString, err error) {
 		return u, nil
 	}
 
-	contentType := resp.Header["Content-Type"][0]
-	if !strings.Contains(contentType, "application/json") {
+	contentType := resp.Header["Content-Type"]
+	if contentType == nil || len(contentType) == 0 {
+		// no content type, return directly
+		return u, nil
+	}
+	if !strings.Contains(contentType[0], "application/json") {
 		// not json url, return directly
 		return u, nil
 	}

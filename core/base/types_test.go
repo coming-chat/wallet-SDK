@@ -26,3 +26,11 @@ func TestStringArray(t *testing.T) {
 	require.Equal(t, arr.Count(), 2)
 	require.Equal(t, arr.String(), `["ccc","ddd"]`)
 }
+
+func TestExtractNFTImageUrl(t *testing.T) {
+	url := "https://cdn-2.galxe.com/galaxy/images/alienswap/1667153514800858058.gif"
+
+	r, err := ExtractNFTImageUrl(url)
+	require.Nil(t, err)
+	t.Log(r)
+}
