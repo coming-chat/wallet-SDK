@@ -32,6 +32,19 @@ func NewAccountWithMnemonic(mnemonic string, cointype int64, addressPrefix strin
 	}, nil
 }
 
+func AccountWithPrivateKey(privatekey string, cointype int64, addressPrefix string) (*Account, error) {
+	priData, err := hexTypes.HexDecodeString(privatekey)
+	if err != nil {
+		return nil, err
+	}
+	privKey := hd.Secp256k1.Generate()(priData)
+	return &Account{
+		privKey:       privKey,
+		Cointype:      cointype,
+		AddressPrefix: addressPrefix,
+	}, nil
+}
+
 // return NewAccountWithMnemonic(mnemonic, 118, "cosmos")
 func NewCosmosAccountWithMnemonic(mnemonic string) (*Account, error) {
 	return NewAccountWithMnemonic(mnemonic, sdk.CoinType, sdk.Bech32MainPrefix)

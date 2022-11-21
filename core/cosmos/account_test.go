@@ -2,6 +2,9 @@ package cosmos
 
 import (
 	"testing"
+
+	"github.com/coming-chat/wallet-SDK/core/testcase"
+	"github.com/stretchr/testify/require"
 )
 
 type TestAccountCase struct {
@@ -63,4 +66,32 @@ func TestNewAccountWithMnemonic(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestAccountPrivatekeyAtDifferenceChain(t *testing.T) {
+	mnemonic := testcase.M1
+
+	cosmosAccount, err := NewAccountWithMnemonic(mnemonic, CosmosCointype, CosmosPrefix)
+	require.Nil(t, err)
+	terraAccount, err := NewAccountWithMnemonic(mnemonic, TerraCointype, TerraPrefix)
+	require.Nil(t, err)
+	p1, _ := cosmosAccount.PrivateKeyHex()
+	p2, _ := terraAccount.PrivateKeyHex()
+	t.Logf("cosmos private key = %v", p1)
+	t.Logf("terra private key = %v", p2)
+	t.Log(cosmosAccount.Address(), "\n", terraAccount.Address())
+	// result: same mnemonic generate difference private key at difference cosmos chain
+}
+
+func TestAccountWithPrivatekey(t *testing.T) {
+	mnemonic := testcase.M1
+	accountFromMnemonic, err := NewAccountWithMnemonic(mnemonic, CosmosCointype, CosmosPrefix)
+	require.Nil(t, err)
+	privateKey, err := accountFromMnemonic.PrivateKeyHex()
+	require.Nil(t, err)
+
+	accountFromPrikey, err := AccountWithPrivateKey(privateKey, CosmosCointype, CosmosPrefix)
+	require.Nil(t, err)
+
+	require.Equal(t, accountFromMnemonic.Address(), accountFromPrikey.Address())
 }

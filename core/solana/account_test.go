@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/coming-chat/wallet-SDK/core/testcase"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewAccountWithMnemonic(t *testing.T) {
@@ -87,4 +88,17 @@ func TestAccount_IsValidAddress(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestAccountWithPrivatekey(t *testing.T) {
+	mnemonic := testcase.M1
+	accountFromMnemonic, err := NewAccountWithMnemonic(mnemonic)
+	require.Nil(t, err)
+	privateKey, err := accountFromMnemonic.PrivateKeyHex()
+	require.Nil(t, err)
+
+	accountFromPrikey, err := AccountWithPrivateKey(privateKey)
+	require.Nil(t, err)
+
+	require.Equal(t, accountFromMnemonic.Address(), accountFromPrikey.Address())
 }

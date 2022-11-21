@@ -30,17 +30,39 @@ func NewAccountWithMnemonic(mnemonic string, network int) (*Account, error) {
 		return nil, err
 	}
 
-	publicKey := keyringPair.PublicKey
-	publicKeyHex := types.HexEncodeToString(publicKey)
-	address, err := EncodePublicKeyToAddress(publicKeyHex, network)
+	return &Account{
+		keypair:   &keyringPair,
+		publicKey: keyringPair.PublicKey,
+		address:   keyringPair.Address,
+		Network:   network,
+	}, nil
+}
+
+func AccountWithPrivateKey(prikey string, network int) (*Account, error) {
+	seed, err := types.HexDecodeString(prikey)
+	if err != nil {
+		return nil, err
+	}
+	kyr, err := sr25519.Scheme{}.FromSeed(seed)
 	if err != nil {
 		return nil, err
 	}
 
+	ss58Address, err := kyr.SS58Address(uint8(network))
+	if err != nil {
+		return nil, err
+	}
+	var pk = kyr.Public()
+	keypair := signature.KeyringPair{
+		URI:       prikey,
+		Address:   ss58Address,
+		PublicKey: pk,
+	}
+
 	return &Account{
-		keypair:   &keyringPair,
-		publicKey: publicKey,
-		address:   address,
+		keypair:   &keypair,
+		publicKey: keypair.PublicKey,
+		address:   keypair.Address,
 		Network:   network,
 	}, nil
 }

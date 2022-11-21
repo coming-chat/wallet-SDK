@@ -7,9 +7,11 @@ import (
 	"github.com/btcsuite/btcd/btcutil/hdkeychain"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
+	"github.com/coming-chat/wallet-SDK/core/testcase"
 	"github.com/cosmos/go-bip39"
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/stretchr/testify/require"
 )
 
 type TestAccountCase struct {
@@ -172,4 +174,17 @@ func TestSignAndVerify(t *testing.T) {
 	} else {
 		t.Fatal("Sign & Verify failured.")
 	}
+}
+
+func TestAccountWithPrivatekey(t *testing.T) {
+	mnemonic := testcase.M1
+	accountFromMnemonic, err := NewAccountWithMnemonic(mnemonic)
+	require.Nil(t, err)
+	privateKey, err := accountFromMnemonic.PrivateKeyHex()
+	require.Nil(t, err)
+
+	accountFromPrikey, err := AccountWithPrivateKey(privateKey)
+	require.Nil(t, err)
+
+	require.Equal(t, accountFromMnemonic.Address(), accountFromPrikey.Address())
 }

@@ -35,3 +35,16 @@ func M2Account(t *testing.T) *Account {
 	require.Nil(t, err)
 	return account
 }
+
+func TestAccountWithPrivatekey(t *testing.T) {
+	mnemonic := testcase.M1
+	accountFromMnemonic, err := NewAccountWithMnemonic(mnemonic)
+	require.Nil(t, err)
+	privateKey, err := accountFromMnemonic.PrivateKeyHex()
+	require.Nil(t, err)
+
+	accountFromPrikey, err := AccountWithPrivateKey(privateKey)
+	require.Nil(t, err)
+
+	require.Equal(t, accountFromMnemonic.Address(), accountFromPrikey.Address())
+}

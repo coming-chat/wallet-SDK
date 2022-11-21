@@ -7,7 +7,9 @@ import (
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
+	"github.com/coming-chat/wallet-SDK/core/testcase"
 	"github.com/cosmos/go-bip39"
+	"github.com/stretchr/testify/require"
 )
 
 type TestAccountCase struct {
@@ -218,4 +220,17 @@ func TestBTCWallet_Privatekey_Publickey_Address(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log("signet address = ", addressHash.EncodeAddress())
+}
+
+func TestAccountWithPrivatekey(t *testing.T) {
+	mnemonic := testcase.M1
+	accountFromMnemonic, err := NewAccountWithMnemonic(mnemonic, ChainMainnet)
+	require.Nil(t, err)
+	privateKey, err := accountFromMnemonic.PrivateKeyHex()
+	require.Nil(t, err)
+
+	accountFromPrikey, err := AccountWithPrivateKey(privateKey, ChainMainnet)
+	require.Nil(t, err)
+
+	require.Equal(t, accountFromMnemonic.Address(), accountFromPrikey.Address())
 }

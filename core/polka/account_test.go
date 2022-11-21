@@ -1,8 +1,11 @@
 package polka
 
 import (
-	"github.com/coming-chat/wallet-SDK/crypto/sr25519"
 	"testing"
+
+	"github.com/coming-chat/wallet-SDK/core/testcase"
+	"github.com/coming-chat/wallet-SDK/crypto/sr25519"
+	"github.com/stretchr/testify/require"
 
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 )
@@ -257,4 +260,17 @@ func TestIsValidAddress(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestAccountWithPrivatekey(t *testing.T) {
+	mnemonic := testcase.M1
+	accountFromMnemonic, err := NewAccountWithMnemonic(mnemonic, 44)
+	require.Nil(t, err)
+	privateKey, err := accountFromMnemonic.PrivateKeyHex()
+	require.Nil(t, err)
+
+	accountFromPrikey, err := AccountWithPrivateKey(privateKey, 44)
+	require.Nil(t, err)
+
+	require.Equal(t, accountFromMnemonic.Address(), accountFromPrikey.Address())
 }

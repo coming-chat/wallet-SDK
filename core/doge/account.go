@@ -39,6 +39,29 @@ func NewAccountWithMnemonic(mnemonic, chainnet string) (*Account, error) {
 	}, nil
 }
 
+func AccountWithPrivateKey(prikey string, chainnet string) (*Account, error) {
+	seed, err := types.HexDecodeString(prikey)
+	if err != nil {
+		return nil, err
+	}
+
+	pri, pub := btcec.PrivKeyFromBytes(seed)
+	priData := pri.Serialize()
+	pubData := pub.SerializeUncompressed()
+
+	address, err := EncodePublicDataToAddress(pubData, chainnet)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Account{
+		privateKey: priData,
+		publicKey:  pubData,
+		address:    address,
+		Chainnet:   chainnet,
+	}, nil
+}
+
 // MARK - Implement the protocol Account
 
 // @return privateKey data

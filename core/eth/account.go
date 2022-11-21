@@ -58,6 +58,25 @@ func NewAccountWithMnemonic(mnemonic string) (*Account, error) {
 	}, nil
 }
 
+func AccountWithPrivateKey(privatekey string) (*Account, error) {
+	priData, err := types.HexDecodeString(privatekey)
+	if err != nil {
+		return nil, err
+	}
+
+	privateKeyECDSA, err := crypto.ToECDSA(priData)
+	if err != nil {
+		return nil, err
+	}
+	address := crypto.PubkeyToAddress(privateKeyECDSA.PublicKey).Hex()
+
+	return &Account{
+		Util:            NewUtil(),
+		privateKeyECDSA: privateKeyECDSA,
+		address:         address,
+	}, nil
+}
+
 // We cannot use name `NewAccountWithPrivateKey`, because android not support.
 func EthAccountWithPrivateKey(privateKey string) (*Account, error) {
 	privateKey = strings.TrimPrefix(privateKey, "0x")

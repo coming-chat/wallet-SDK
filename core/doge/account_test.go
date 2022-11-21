@@ -1,6 +1,11 @@
 package doge
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/coming-chat/wallet-SDK/core/testcase"
+	"github.com/stretchr/testify/require"
+)
 
 type TestAccountCase struct {
 	mnemonic    string
@@ -28,10 +33,21 @@ const (
 
 func TestDoge(t *testing.T) {
 	account, err := NewAccountWithMnemonic(accountCase.mnemonic, ChainTestnet)
-	if err != nil {
-		t.Log(err)
-	}
+	require.Nil(t, err)
 	t.Log(account.PrivateKeyHex())
 	t.Log(account.PublicKeyHex())
 	t.Log(account.Address())
+}
+
+func TestAccountWithPrivatekey(t *testing.T) {
+	mnemonic := testcase.M1
+	accountFromMnemonic, err := NewAccountWithMnemonic(mnemonic, ChainMainnet)
+	require.Nil(t, err)
+	privateKey, err := accountFromMnemonic.PrivateKeyHex()
+	require.Nil(t, err)
+
+	accountFromPrikey, err := AccountWithPrivateKey(privateKey, ChainMainnet)
+	require.Nil(t, err)
+
+	require.Equal(t, accountFromMnemonic.Address(), accountFromPrikey.Address())
 }
