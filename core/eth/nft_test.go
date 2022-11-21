@@ -8,8 +8,8 @@ import (
 )
 
 func TestRSS3Notes(t *testing.T) {
-	// owner := "0x8c951f58F63C0018BFBb47A29e55e84507eD63Bd",
-	owner := "0xFCC3299Eb11790d36836F1A9aBDbE3D2435794C1"
+	owner := "0x8c951f58F63C0018BFBb47A29e55e84507eD63Bd"
+	// owner := "0xFCC3299Eb11790d36836F1A9aBDbE3D2435794C1"
 	rss3Fetcher := RSS3Fetcher{
 		Owner:   owner,
 		Limit:   100,
@@ -17,7 +17,7 @@ func TestRSS3Notes(t *testing.T) {
 	}
 	run := false
 
-	// run = true
+	run = true
 	if run {
 		res, err := rss3Fetcher.FetchNotes("")
 		require.Nil(t, err)
@@ -40,7 +40,7 @@ func TestRSS3Notes(t *testing.T) {
 		run = false
 	}
 
-	// run = true
+	run = true
 	if run {
 		var nftFetcher base.NFTFetcher = &rss3Fetcher
 		jsonString, err := nftFetcher.FetchNFTsJsonString(owner)

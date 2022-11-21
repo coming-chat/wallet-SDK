@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"sync"
 
 	"github.com/coming-chat/wallet-SDK/core/aptos"
 	"github.com/coming-chat/wallet-SDK/core/btc"
@@ -24,11 +25,8 @@ type Wallet struct {
 	password string
 
 	// cache
-	polkaAccounts   map[int]*polka.Account
-	bitcoinAccounts map[string]*btc.Account
+	multiAccounts   sync.Map
 	ethereumAccount *eth.Account
-	cosmosAccounts  map[string]*cosmos.Account
-	dogeAccounts    map[string]*doge.Account
 	solanaAccount   *solana.Account
 	aptosAccount    *aptos.Account
 	suiAccount      *sui.Account
@@ -83,13 +81,11 @@ func (w *Wallet) GetWatchWallet() *WatchAccount {
 
 // Get or create the polka account with specified network.
 func (w *Wallet) GetOrCreatePolkaAccount(network int) (*polka.Account, error) {
-	if w.polkaAccounts == nil {
-		w.polkaAccounts = make(map[int]*polka.Account)
-	}
-
-	cache := w.polkaAccounts[network]
-	if cache != nil {
-		return cache, nil
+	key := fmt.Sprintf("polka-%v", network)
+	if cache, ok := w.multiAccounts.Load(key); ok {
+		if acc, ok := cache.(*polka.Account); ok {
+			return acc, nil
+		}
 	}
 
 	var account *polka.Account
@@ -103,32 +99,29 @@ func (w *Wallet) GetOrCreatePolkaAccount(network int) (*polka.Account, error) {
 		return nil, err
 	}
 	// save to cache
-	w.polkaAccounts[network] = account
+	w.multiAccounts.Store(key, account)
 	return account, nil
 }
 
 // Get or create the bitcoin account with specified chainnet.
 func (w *Wallet) GetOrCreateBitcoinAccount(chainnet string) (*btc.Account, error) {
-	if w.bitcoinAccounts == nil {
-		w.bitcoinAccounts = make(map[string]*btc.Account)
-	}
-
-	cache := w.bitcoinAccounts[chainnet]
-	if cache != nil {
-		return cache, nil
+	key := "bitcoin-" + chainnet
+	if cache, ok := w.multiAccounts.Load(key); ok {
+		if acc, ok := cache.(*btc.Account); ok {
+			return acc, nil
+		}
 	}
 
 	if len(w.Mnemonic) <= 0 {
 		return nil, ErrInvalidMnemonic
 	}
-
 	account, err := btc.NewAccountWithMnemonic(w.Mnemonic, chainnet)
 	if err != nil {
 		return nil, err
 	}
 
 	// save to cache
-	w.bitcoinAccounts[chainnet] = account
+	w.multiAccounts.Store(key, account)
 	return account, nil
 }
 
@@ -153,37 +146,32 @@ func (w *Wallet) GetOrCreateEthereumAccount() (*eth.Account, error) {
 
 // Get or create a wallet account based on cosmos architecture.
 func (w *Wallet) GetOrCreateCosmosTypeAccount(cointype int64, addressPrefix string) (*cosmos.Account, error) {
-	key := fmt.Sprintf("%d-%s", cointype, addressPrefix)
-	if w.cosmosAccounts == nil {
-		w.cosmosAccounts = make(map[string]*cosmos.Account)
-	}
-
-	cache := w.cosmosAccounts[key]
-	if cache != nil {
-		return cache, nil
+	key := fmt.Sprintf("cosmos-%d-%s", cointype, addressPrefix)
+	if cache, ok := w.multiAccounts.Load(key); ok {
+		if acc, ok := cache.(*cosmos.Account); ok {
+			return acc, nil
+		}
 	}
 
 	if len(w.Mnemonic) <= 0 {
 		return nil, ErrInvalidMnemonic
 	}
-
 	account, err := cosmos.NewAccountWithMnemonic(w.Mnemonic, cointype, addressPrefix)
 	if err != nil {
 		return nil, err
 	}
 
 	// save to cache
-	w.cosmosAccounts[key] = account
+	w.multiAccounts.Store(key, account)
 	return account, nil
 }
 
 func (w *Wallet) GetOrCreateDogeAccount(chainnet string) (*doge.Account, error) {
-	if w.dogeAccounts == nil {
-		w.dogeAccounts = make(map[string]*doge.Account)
-	}
-	cache := w.dogeAccounts[chainnet]
-	if cache != nil {
-		return cache, nil
+	key := "Dogecoin" + chainnet
+	if cache, ok := w.multiAccounts.Load(key); ok {
+		if acc, ok := cache.(*doge.Account); ok {
+			return acc, nil
+		}
 	}
 	if len(w.Mnemonic) <= 0 {
 		return nil, ErrInvalidMnemonic
@@ -193,7 +181,7 @@ func (w *Wallet) GetOrCreateDogeAccount(chainnet string) (*doge.Account, error) 
 		return nil, err
 	}
 	// save to cache
-	w.dogeAccounts[chainnet] = account
+	w.multiAccounts.Store(key, account)
 	return account, nil
 }
 

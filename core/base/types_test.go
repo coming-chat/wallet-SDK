@@ -28,7 +28,8 @@ func TestStringArray(t *testing.T) {
 }
 
 func TestExtractNFTImageUrl(t *testing.T) {
-	url := "https://cdn-2.galxe.com/galaxy/images/alienswap/1667153514800858058.gif"
+	// url := "https://cdn-2.galxe.com/galaxy/images/alienswap/1667153514800858058.gif"
+	url := "https://ipfs.rss3.page/ipfs/QmbfuMdX9qiMmKVcDiWmQHYg6sk5yfmoAh7fYbQcvWd9gd/2951.png"
 
 	r, err := ExtractNFTImageUrl(url)
 	require.Nil(t, err)
