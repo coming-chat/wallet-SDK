@@ -10,18 +10,20 @@ import (
 	"github.com/coming-chat/wallet-SDK/core/base"
 )
 
-func (c *Chain) FetchNFTs(owner string) (map[string][]*base.NFT, error) {
+func (c *Chain) FetchNFTs(owner string) (res map[string][]*base.NFT, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
+
 	address, err := types.NewAddressFromHex(owner)
 	if err != nil {
-		return nil, err
+		return
 	}
 	client, err := c.client()
 	if err != nil {
-		return nil, err
+		return
 	}
 	nftObjects, err := client.GetNFTsOwnedByAddress(context.Background(), *address)
 	if err != nil {
-		return nil, err
+		return
 	}
 	nfts := []*base.NFT{}
 	for _, obj := range nftObjects {
