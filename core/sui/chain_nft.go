@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"sort"
+	"strings"
 
 	"github.com/coming-chat/go-sui/types"
 	"github.com/coming-chat/wallet-SDK/core/base"
@@ -83,7 +84,7 @@ func transformNFT(nft *types.ObjectRead) *base.NFT {
 		Id:          meta.Fields.Id.Id,
 		Name:        meta.Fields.Name,
 		Description: meta.Fields.Description,
-		Image:       meta.Fields.Url,
+		Image:       strings.Replace(meta.Fields.Url, "ipfs://", "https://ipfs.io/ipfs/", 1),
 	}
 }
 

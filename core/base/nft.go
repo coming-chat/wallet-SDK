@@ -70,6 +70,7 @@ type NFTFetcher interface {
 // Extract the nft's real image url.
 // If the content type of the given url is JSON, it's will return the `image` field specified url.
 func ExtractNFTImageUrl(url string) (u *OptionalString, err error) {
+	url = strings.Replace(url, "ipfs://", "https://ipfs.io/ipfs/", 1)
 	u = &OptionalString{Value: url}
 	resp, err := httpUtil.Request(http.MethodHead, url, nil, nil) // HEAD request
 	if err != nil {

@@ -9,8 +9,8 @@ import (
 )
 
 func TestFetchNfts(t *testing.T) {
-	// owner := "0xbb8f7e72ae99d371020a1ccfe703bfb64a8a430f"
-	owner := M1Account(t).Address()
+	owner := "0x1f06dd5f2d30819b790017497adf11d56f2db187"
+	// owner := M1Account(t).Address()
 	chain := TestnetChain()
 
 	nfts, err := chain.FetchNFTs(owner)
