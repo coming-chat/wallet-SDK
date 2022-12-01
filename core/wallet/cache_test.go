@@ -3,42 +3,42 @@ package wallet
 import (
 	"testing"
 
-	"github.com/coming-chat/wallet-SDK/core/eth"
 	"github.com/coming-chat/wallet-SDK/core/testcase"
 	"github.com/stretchr/testify/require"
 )
 
-func TestCache(t *testing.T) {
-	cache := NewAccountCache()
+func TestSSSss(t *testing.T) {
+	InfoProvider = &FakeWalletInfoProvider{}
 
-	address := "1234567890zxcvbnm"
-	cache.SaveAccountInfo("main", "bitcoin", &AccountInfo{Address: address})
+	wallet := Wallet{
+		WalletId: "",
+	}
 
-	info := cache.GetAccountInfo("main", "bitcoin")
-	require.Equal(t, address, info.Address)
+	info := wallet.PolkaAccountInfo(44)
 
-	cache.Clean()
-
-	info2 := cache.GetAccountInfo("main", "bitcoin")
-	require.Nil(t, info2)
-
-	ethAccount, err := eth.NewAccountWithMnemonic(testcase.M1)
+	account, err := info.Account()
 	require.Nil(t, err)
-	cache.SaveAccount("wallet2", "ethereum", ethAccount)
 
-	info3 := cache.GetAccountInfo("main", "ethereum")
-	require.Nil(t, info3)
-	info3 = cache.GetAccountInfo("wallet2", "ethereum")
-	require.Equal(t, info3.Address, ethAccount.Address())
-	require.Equal(t, info3.PublicKey, ethAccount.PublicKey())
+	t.Log(account.Address())
+	t.Log(info.Address())
 
-	cache.SaveAccount("wallet2", "ethereum", nil)
-	info4 := cache.GetAccountInfo("wallet2", "ethereum")
-	require.Nil(t, info4)
+	info = wallet.EthereumAccountInfo()
+	t.Log(info.Address())
+	t.Log(info.PublicKeyHex())
+}
 
-	// remove not exists key
-	cache.SaveAccount("wallet2", "ethereum", nil)
-	cache.Delete("xxxxxxx")
-	t.Log("delete success")
+type FakeWalletInfoProvider struct {
+}
 
+func (f *FakeWalletInfoProvider) Mnemonic(walletId string) string {
+	return testcase.M1
+}
+func (f *FakeWalletInfoProvider) Keystore(walletId string) string {
+	return ""
+}
+func (f *FakeWalletInfoProvider) Password(walletId string) string {
+	return ""
+}
+func (f *FakeWalletInfoProvider) PrivateKey(walletId string) string {
+	return ""
 }

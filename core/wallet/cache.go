@@ -1,91 +1,133 @@
 package wallet
 
 import (
+	"errors"
+	"fmt"
 	"sync"
 
 	"github.com/coming-chat/wallet-SDK/core/base"
 )
 
-// 旧的钱包对象在内存里面会缓存 **助记词**，还有很多链的账号 **私钥**，这是比较危险的，可能会有用户钱包被盗的风险
-// 因此 SDK 里面不能缓存 **助记词** 、**私钥** 、还有 **keystore 密码**
-// 也建议客户端每次使用完带有私钥的账号后，不要缓存这些账号，而是销毁它们
-//
-// 考虑到每次都导入助记词生成账号，而仅仅是为了获取账号地址或者公钥，可能会影响钱包的性能和体验
-// 因此这里会提供一个可以缓存 *账号地址* 和 *公钥* 这种不敏感信息的工具
-type AccountCache struct {
-	Store sync.Map
+var walletCache = sync.Map{}
+
+func SaveWallet(wallet *Wallet) {
+	key := "wallet-" + wallet.WalletId
+	walletCache.Store(key, wallet)
 }
 
-func NewAccountCache() *AccountCache {
-	return &AccountCache{}
-}
-
-func (c *AccountCache) GetAccountInfo(walletName, chainName string) *AccountInfo {
-	key := walletName + "###" + chainName
-	if val, ok := c.Store.Load(key); ok {
-		if info, ok := val.(*AccountInfo); ok && info.Chain == chainName {
-			return info
-		}
+func GetWallet(walletId string) *Wallet {
+	key := "wallet-" + walletId
+	if c, ok := walletCache.Load(key); ok {
+		return c.(*Wallet)
 	}
 	return nil
 }
 
-func (c *AccountCache) SaveAccountInfo(walletName, chainName string, info *AccountInfo) {
-	key := walletName + "###" + chainName
-	if info == nil {
-		c.Store.Delete(key)
-	} else {
-		info.Chain = chainName
-		c.Store.Store(key, info)
-	}
+func SaveAccountInfo(walletId string, info *AccountInfo) {
+	key := fmt.Sprintf("account-%v-%v", walletId, info.cacheKey)
+	walletCache.Store(key, info)
 }
 
-// 缓存账号信息，该账号的私钥不会被缓存
-func (c *AccountCache) SaveAccount(walletName, chainName string, account base.Account) {
-	key := walletName + "###" + chainName
-	if account == nil {
-		c.Store.Delete(key)
-		return
-	}
-	info := &AccountInfo{
-		PublicKey: account.PublicKey(),
-		Address:   account.Address(),
-		Chain:     chainName,
-	}
-	c.Store.Store(key, info)
-}
-
-func (c *AccountCache) Get(key string) *AccountInfo {
-	if val, ok := c.Store.Load(key); ok {
-		if info, ok := val.(*AccountInfo); ok {
-			return info
-		}
+func GetAccountInfo(walletId, cacheKey string) *AccountInfo {
+	key := fmt.Sprintf("account-%v-%v", walletId, cacheKey)
+	if c, ok := walletCache.Load(key); ok {
+		return c.(*AccountInfo)
 	}
 	return nil
 }
 
-func (c *AccountCache) Save(key string, info *AccountInfo) {
-	if info == nil {
-		c.Store.Delete(key)
-	} else {
-		c.Store.Store(key, info)
-	}
-}
-
-func (c *AccountCache) Delete(key string) {
-	c.Store.Delete(key)
-}
-
-func (c *AccountCache) Clean() {
-	c.Store = sync.Map{}
-}
-
+type accountCreator = func(val string) (base.Account, error)
 type AccountInfo struct {
-	PublicKey []byte
-	Address   string
-	Chain     string
+	wallet          *Wallet
+	cacheKey        string
+	mnemonicCreator accountCreator
+	keystoreCreator accountCreator
+	privkeyCreator  accountCreator
+
+	// Chain string
+	publicKey []byte
+	address   string
+}
+
+func (i *AccountInfo) Account() (base.Account, error) {
+	typ, ok := i.wallet.checkWalletType()
+	var val = ""
+	if ok {
+		typ, val = readValue(i.wallet.WalletId, typ)
+	} else {
+		typ, val = readTypeAndValue(i.wallet.WalletId)
+	}
+	var account base.Account
+	var err error
+	switch typ {
+	case WalletTypeMnemonic:
+		if i.mnemonicCreator == nil {
+			return nil, errors.New("Lose function of mnemonic account creator")
+		}
+		account, err = i.mnemonicCreator(val)
+	case WalletTypeKeystore:
+		if i.keystoreCreator == nil {
+			return nil, ErrUnsupportKeystore
+		}
+		account, err = i.keystoreCreator(val)
+	case WalletTypePrivateKey:
+		if i.privkeyCreator == nil {
+			return nil, errors.New("Lose function of private key account creator")
+		}
+		account, err = i.privkeyCreator(val)
+	default:
+		return nil, ErrWalletInfoNotExist
+	}
+	if err != nil {
+		return nil, err
+	}
+	i.loadAndSaveCacheIfNotFound(account)
+	return account, nil
+}
+
+func (i *AccountInfo) PrivateKeyHex() (string, error) {
+	account, err := i.Account()
+	if err != nil {
+		return "", err
+	}
+	return account.PrivateKeyHex()
 }
 
 func (i *AccountInfo) PublicKeyHex() string {
-	return ByteToHex(i.PublicKey)
+	if i.publicKey == nil {
+		new, err := i.loadAndSaveCacheIfNotFound(nil)
+		if err != nil {
+			return ""
+		}
+		i.publicKey = new.publicKey
+	}
+	return ByteToHex(i.publicKey)
+}
+
+func (i *AccountInfo) Address() string {
+	if i.address == "" {
+		new, err := i.loadAndSaveCacheIfNotFound(nil)
+		if err != nil {
+			return ""
+		}
+		i.address = new.address
+	}
+	return i.address
+}
+
+func (i *AccountInfo) loadAndSaveCacheIfNotFound(account base.Account) (*AccountInfo, error) {
+	if cache := GetAccountInfo(i.wallet.WalletId, i.cacheKey); cache != nil {
+		return cache, nil
+	}
+	if account == nil {
+		var err error
+		account, err = i.Account()
+		if err != nil {
+			return nil, err
+		}
+	}
+	i.publicKey = account.PublicKey()
+	i.address = account.Address()
+	SaveAccountInfo(i.wallet.WalletId, i)
+	return i, nil
 }

@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/coming-chat/wallet-SDK/core/aptos"
+	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/coming-chat/wallet-SDK/core/btc"
 	"github.com/coming-chat/wallet-SDK/core/cosmos"
 	"github.com/coming-chat/wallet-SDK/core/doge"
@@ -17,7 +18,15 @@ import (
 	"github.com/coming-chat/wallet-SDK/core/sui"
 )
 
-// Deprecated: 这个钱包对象缓存了助记词、密码、私钥等信息，继续使用有泄露资产的风险 ⚠️
+type WalletType = base.SDKEnumInt
+
+const (
+	WalletTypeMnemonic   WalletType = 1
+	WalletTypeKeystore   WalletType = 2
+	WalletTypePrivateKey WalletType = 3
+	WalletTypeError      WalletType = 4
+)
+
 type Wallet struct {
 	Mnemonic string
 
@@ -33,26 +42,9 @@ type Wallet struct {
 	starcoinAccount *starcoin.Account
 
 	WatchAddress string
-}
 
-func NewWalletWithMnemonic(mnemonic string) (*Wallet, error) {
-	if !IsValidMnemonic(mnemonic) {
-		return nil, ErrInvalidMnemonic
-	}
-	return &Wallet{Mnemonic: mnemonic}, nil
-}
-
-// Only support Polka keystore.
-func NewWalletWithKeyStore(keyStoreJson string, password string) (*Wallet, error) {
-	// check keystore's password
-	err := polka.CheckKeystorePassword(keyStoreJson, password)
-	if err != nil {
-		return nil, err
-	}
-	return &Wallet{
-		Keystore: keyStoreJson,
-		password: password,
-	}, nil
+	WalletId   string
+	walletType WalletType
 }
 
 func WatchWallet(address string) (*Wallet, error) {
@@ -79,193 +71,6 @@ func (w *Wallet) GetWatchWallet() *WatchAccount {
 	return &WatchAccount{address: w.WatchAddress}
 }
 
-// Get or create the polka account with specified network.
-func (w *Wallet) GetOrCreatePolkaAccount(network int) (*polka.Account, error) {
-	key := fmt.Sprintf("polka-%v", network)
-	if cache, ok := w.multiAccounts.Load(key); ok {
-		if acc, ok := cache.(*polka.Account); ok {
-			return acc, nil
-		}
-	}
-
-	var account *polka.Account
-	var err error
-	if len(w.Mnemonic) > 0 {
-		account, err = polka.NewAccountWithMnemonic(w.Mnemonic, network)
-	} else if len(w.Keystore) > 0 {
-		account, err = polka.NewAccountWithKeystore(w.Keystore, w.password, network)
-	}
-	if err != nil {
-		return nil, err
-	}
-	// save to cache
-	w.multiAccounts.Store(key, account)
-	return account, nil
-}
-
-// Get or create the bitcoin account with specified chainnet.
-func (w *Wallet) GetOrCreateBitcoinAccount(chainnet string) (*btc.Account, error) {
-	key := "bitcoin-" + chainnet
-	if cache, ok := w.multiAccounts.Load(key); ok {
-		if acc, ok := cache.(*btc.Account); ok {
-			return acc, nil
-		}
-	}
-
-	if len(w.Mnemonic) <= 0 {
-		return nil, ErrInvalidMnemonic
-	}
-	account, err := btc.NewAccountWithMnemonic(w.Mnemonic, chainnet)
-	if err != nil {
-		return nil, err
-	}
-
-	// save to cache
-	w.multiAccounts.Store(key, account)
-	return account, nil
-}
-
-// Get or create the ethereum account.
-func (w *Wallet) GetOrCreateEthereumAccount() (*eth.Account, error) {
-	cache := w.ethereumAccount
-	if cache != nil {
-		return cache, nil
-	}
-	if len(w.Mnemonic) <= 0 {
-		return nil, ErrInvalidMnemonic
-	}
-
-	account, err := eth.NewAccountWithMnemonic(w.Mnemonic)
-	if err != nil {
-		return nil, err
-	}
-	// save to cache
-	w.ethereumAccount = account
-	return account, nil
-}
-
-// Get or create a wallet account based on cosmos architecture.
-func (w *Wallet) GetOrCreateCosmosTypeAccount(cointype int64, addressPrefix string) (*cosmos.Account, error) {
-	key := fmt.Sprintf("cosmos-%d-%s", cointype, addressPrefix)
-	if cache, ok := w.multiAccounts.Load(key); ok {
-		if acc, ok := cache.(*cosmos.Account); ok {
-			return acc, nil
-		}
-	}
-
-	if len(w.Mnemonic) <= 0 {
-		return nil, ErrInvalidMnemonic
-	}
-	account, err := cosmos.NewAccountWithMnemonic(w.Mnemonic, cointype, addressPrefix)
-	if err != nil {
-		return nil, err
-	}
-
-	// save to cache
-	w.multiAccounts.Store(key, account)
-	return account, nil
-}
-
-func (w *Wallet) GetOrCreateDogeAccount(chainnet string) (*doge.Account, error) {
-	key := "Dogecoin" + chainnet
-	if cache, ok := w.multiAccounts.Load(key); ok {
-		if acc, ok := cache.(*doge.Account); ok {
-			return acc, nil
-		}
-	}
-	if len(w.Mnemonic) <= 0 {
-		return nil, ErrInvalidMnemonic
-	}
-	account, err := doge.NewAccountWithMnemonic(w.Mnemonic, chainnet)
-	if err != nil {
-		return nil, err
-	}
-	// save to cache
-	w.multiAccounts.Store(key, account)
-	return account, nil
-}
-
-// Get or create cosmos chain account
-func (w *Wallet) GetOrCreateCosmosAccount() (*cosmos.Account, error) {
-	return w.GetOrCreateCosmosTypeAccount(cosmos.CosmosCointype, cosmos.CosmosPrefix)
-}
-
-// Get or create the solana account.
-func (w *Wallet) GetOrCreateSolanaAccount() (*solana.Account, error) {
-	cache := w.solanaAccount
-	if cache != nil {
-		return cache, nil
-	}
-	if len(w.Mnemonic) <= 0 {
-		return nil, ErrInvalidMnemonic
-	}
-
-	account, err := solana.NewAccountWithMnemonic(w.Mnemonic)
-	if err != nil {
-		return nil, err
-	}
-	// save to cache
-	w.solanaAccount = account
-	return account, nil
-}
-
-// Get or create the aptos account.
-func (w *Wallet) GetOrCreateAptosAccount() (*aptos.Account, error) {
-	cache := w.aptosAccount
-	if cache != nil {
-		return cache, nil
-	}
-	if len(w.Mnemonic) <= 0 {
-		return nil, ErrInvalidMnemonic
-	}
-
-	account, err := aptos.NewAccountWithMnemonic(w.Mnemonic)
-	if err != nil {
-		return nil, err
-	}
-	// save to cache
-	w.aptosAccount = account
-	return account, nil
-}
-
-// Get or create the sui account.
-func (w *Wallet) GetOrCreateSuiAccount() (*sui.Account, error) {
-	cache := w.suiAccount
-	if cache != nil {
-		return cache, nil
-	}
-	if len(w.Mnemonic) <= 0 {
-		return nil, ErrInvalidMnemonic
-	}
-
-	account, err := sui.NewAccountWithMnemonic(w.Mnemonic)
-	if err != nil {
-		return nil, err
-	}
-	// save to cache
-	w.suiAccount = account
-	return account, nil
-}
-
-// Get or create the starcoin account.
-func (w *Wallet) GetOrCreateStarcoinAccount() (*starcoin.Account, error) {
-	cache := w.starcoinAccount
-	if cache != nil {
-		return cache, nil
-	}
-	if len(w.Mnemonic) <= 0 {
-		return nil, ErrInvalidMnemonic
-	}
-
-	account, err := starcoin.NewAccountWithMnemonic(w.Mnemonic)
-	if err != nil {
-		return nil, err
-	}
-	// save to cache
-	w.starcoinAccount = account
-	return account, nil
-}
-
 // check keystore password
 func (w *Wallet) CheckPassword(password string) (bool, error) {
 	err := polka.CheckKeystorePassword(w.Keystore, w.password)
@@ -274,7 +79,7 @@ func (w *Wallet) CheckPassword(password string) (bool, error) {
 
 // Deprecated: Sign is deprecated. Please use wallet.PolkaAccount(network).Sign() instead
 func (w *Wallet) Sign(message []byte, password string) (b []byte, err error) {
-	account, err := w.GetOrCreatePolkaAccount(44)
+	account, err := w.PolkaAccountInfo(44).Account()
 	if err != nil {
 		return nil, err
 	}
@@ -283,7 +88,7 @@ func (w *Wallet) Sign(message []byte, password string) (b []byte, err error) {
 
 // Deprecated: SignFromHex is deprecated. Please use wallet.PolkaAccount(network).SignHex() instead
 func (w *Wallet) SignFromHex(messageHex string, password string) ([]byte, error) {
-	account, err := w.GetOrCreatePolkaAccount(44)
+	account, err := w.PolkaAccountInfo(44).Account()
 	if err != nil {
 		return nil, err
 	}
@@ -296,7 +101,7 @@ func (w *Wallet) SignFromHex(messageHex string, password string) ([]byte, error)
 
 // Deprecated: GetPublicKey is deprecated. Please use wallet.PolkaAccount(network).PublicKey() instead
 func (w *Wallet) GetPublicKey() ([]byte, error) {
-	account, err := w.GetOrCreatePolkaAccount(44)
+	account, err := w.PolkaAccountInfo(44).Account()
 	if err != nil {
 		return nil, err
 	}
@@ -305,7 +110,7 @@ func (w *Wallet) GetPublicKey() ([]byte, error) {
 
 // Deprecated: GetPublicKeyHex is deprecated. Please use wallet.PolkaAccount(network).PublicKey() instead
 func (w *Wallet) GetPublicKeyHex() (string, error) {
-	account, err := w.GetOrCreatePolkaAccount(44)
+	account, err := w.PolkaAccountInfo(44).Account()
 	if err != nil {
 		return "", err
 	}
@@ -314,7 +119,7 @@ func (w *Wallet) GetPublicKeyHex() (string, error) {
 
 // Deprecated: GetAddress is deprecated. Please use wallet.PolkaAccount(network).Address() instead
 func (w *Wallet) GetAddress(network int) (string, error) {
-	account, err := w.GetOrCreatePolkaAccount(44)
+	account, err := w.PolkaAccountInfo(44).Account()
 	if err != nil {
 		return "", err
 	}
@@ -323,9 +128,152 @@ func (w *Wallet) GetAddress(network int) (string, error) {
 
 // Deprecated: GetPrivateKeyHex is deprecated. Please use wallet.PolkaAccount(network).PrivateKey() instead
 func (w *Wallet) GetPrivateKeyHex() (string, error) {
-	account, err := w.GetOrCreatePolkaAccount(44)
+	account, err := w.PolkaAccountInfo(44).Account()
 	if err != nil {
 		return "", err
 	}
 	return account.PrivateKeyHex()
+}
+
+func (w *Wallet) WalletType() WalletType {
+	if typ, ok := w.checkWalletType(); ok {
+		return typ
+	}
+	w.walletType, _ = readTypeAndValue(w.WalletId)
+	SaveWallet(w)
+	return w.walletType
+}
+
+func (w *Wallet) checkWalletType() (typ WalletType, ok bool) {
+	if w.walletType >= WalletTypeMnemonic && w.walletType <= WalletTypePrivateKey {
+		return w.walletType, true
+	}
+	if cache := GetWallet(w.WalletId); cache != nil &&
+		cache.walletType >= WalletTypeMnemonic && cache.walletType <= WalletTypePrivateKey {
+		w.walletType = cache.walletType
+		return cache.walletType, true
+	}
+	return WalletTypeError, false
+}
+
+func (w *Wallet) PolkaAccountInfo(network int) *AccountInfo {
+	walletId := w.WalletId
+	return &AccountInfo{
+		wallet:   w,
+		cacheKey: fmt.Sprintf("polka-%v", network),
+		mnemonicCreator: func(val string) (base.Account, error) {
+			return polka.NewAccountWithMnemonic(val, network)
+		},
+		keystoreCreator: func(val string) (base.Account, error) {
+			pwd := InfoProvider.Password(walletId)
+			return polka.NewAccountWithKeystore(val, pwd, network)
+		},
+		privkeyCreator: func(val string) (base.Account, error) {
+			return polka.AccountWithPrivateKey(val, network)
+		},
+	}
+}
+
+func (w *Wallet) BitcoinAccountInfo(chainnet string) *AccountInfo {
+	return &AccountInfo{
+		wallet:   w,
+		cacheKey: fmt.Sprintf("bitcoin-%v", chainnet),
+		mnemonicCreator: func(val string) (base.Account, error) {
+			return btc.NewAccountWithMnemonic(val, chainnet)
+		},
+		privkeyCreator: func(val string) (base.Account, error) {
+			return btc.AccountWithPrivateKey(val, chainnet)
+		},
+	}
+}
+
+func (w *Wallet) EthereumAccountInfo() *AccountInfo {
+	return &AccountInfo{
+		wallet:   w,
+		cacheKey: "ethereum",
+		mnemonicCreator: func(val string) (base.Account, error) {
+			return eth.NewAccountWithMnemonic(val)
+		},
+		privkeyCreator: func(val string) (base.Account, error) {
+			return eth.AccountWithPrivateKey(val)
+		},
+	}
+}
+
+func (w *Wallet) CosmosAccountInfo(cointype int64, prefix string) *AccountInfo {
+	return &AccountInfo{
+		wallet:   w,
+		cacheKey: fmt.Sprintf("cosmos-%v-%v", cointype, prefix),
+		mnemonicCreator: func(val string) (base.Account, error) {
+			return cosmos.NewAccountWithMnemonic(val, cointype, prefix)
+		},
+		privkeyCreator: func(val string) (base.Account, error) {
+			return cosmos.AccountWithPrivateKey(val, cointype, prefix)
+		},
+	}
+}
+
+func (w *Wallet) DogecoinAccountInfo(chainnet string) *AccountInfo {
+	return &AccountInfo{
+		wallet:   w,
+		cacheKey: fmt.Sprintf("bitcoin-%v", chainnet),
+		mnemonicCreator: func(val string) (base.Account, error) {
+			return doge.NewAccountWithMnemonic(val, chainnet)
+		},
+		privkeyCreator: func(val string) (base.Account, error) {
+			return doge.AccountWithPrivateKey(val, chainnet)
+		},
+	}
+}
+
+func (w *Wallet) SolanaAccountInfo() *AccountInfo {
+	return &AccountInfo{
+		wallet:   w,
+		cacheKey: "solana",
+		mnemonicCreator: func(val string) (base.Account, error) {
+			return solana.NewAccountWithMnemonic(val)
+		},
+		privkeyCreator: func(val string) (base.Account, error) {
+			return solana.AccountWithPrivateKey(val)
+		},
+	}
+}
+
+func (w *Wallet) AptosAccountInfo() *AccountInfo {
+	return &AccountInfo{
+		wallet:   w,
+		cacheKey: "aptos",
+		mnemonicCreator: func(val string) (base.Account, error) {
+			return aptos.NewAccountWithMnemonic(val)
+		},
+		privkeyCreator: func(val string) (base.Account, error) {
+			return aptos.AccountWithPrivateKey(val)
+		},
+	}
+}
+
+func (w *Wallet) SuiAccountInfo() *AccountInfo {
+	return &AccountInfo{
+		wallet:   w,
+		cacheKey: "sui",
+		mnemonicCreator: func(val string) (base.Account, error) {
+			return sui.NewAccountWithMnemonic(val)
+		},
+		privkeyCreator: func(val string) (base.Account, error) {
+			return sui.AccountWithPrivateKey(val)
+		},
+	}
+}
+
+func (w *Wallet) StarcoinAccountInfo() *AccountInfo {
+	return &AccountInfo{
+		wallet:   w,
+		cacheKey: "starcoin",
+		mnemonicCreator: func(val string) (base.Account, error) {
+			return starcoin.NewAccountWithMnemonic(val)
+		},
+		privkeyCreator: func(val string) (base.Account, error) {
+			return starcoin.AccountWithPrivateKey(val)
+		},
+	}
 }
