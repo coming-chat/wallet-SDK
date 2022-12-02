@@ -14,13 +14,7 @@ var (
 	// ErrPublicKey    = errors.New("err publicKey")
 	// ErrSeedOrPhrase = errors.New("invalid seed length")
 
-	ErrWalletInfoUnspecified = errors.New("Wallet info provider unspecified")
-
-	ErrWalletInfoNotExist = errors.New("The specified wallet info does not exist")
-
-	ErrUnsupportKeystore = errors.New("The chain type does not support keystore")
-
-	ErrInvalidMnemonic = errors.New("Invalid mnemonic")
+	ErrInvalidMnemonic = errors.New("invalid mnemonic")
 
 // ErrWrongMetadata   = errors.New("wrong metadata")
 // ErrNoEncrypted     = errors.New("no encrypted data to decode")
