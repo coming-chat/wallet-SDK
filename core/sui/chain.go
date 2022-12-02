@@ -206,10 +206,18 @@ func FaucetFundAccount(address string, faucetUrl string) (h *base.OptionalString
 		faucetUrl = FaucetUrlTestnet
 	}
 
+	var authority = ""
+	if strings.Contains(faucetUrl, "devnet") {
+		authority = "faucet.devnet.sui.io"
+	} else {
+		authority = "faucet.testnet.sui.io"
+	}
 	paramJson := fmt.Sprintf(`{"FixedAmountRequest":{"recipient":"%v"}}`, address)
 	params := httpUtil.RequestParams{
 		Header: map[string]string{
 			"Content-Type": "application/json",
+			"Authority":    authority,
+			"authority":    authority,
 		},
 		Body: []byte(paramJson),
 	}
