@@ -41,7 +41,7 @@ var Accounts = AccountGroup{
 	Polka2:      AccountCase{M1, "EDodEyCN6w8XNuhL8kz9NqUhHyJns9pvgmi3oRNbwba5hxN"},
 	Polka44:     AccountCase{M1, "5RHWUui8WKff5quBNVhz1E1Kqfyf6ZbgrC3DtWS23ra3u4vV"},
 	Solana:      AccountCase{M1, "AfBfH4ehvcXx66Y5YZozgTYPC1nieL9A3r2yT3vCXqPY"},
-	Aptos:       AccountCase{M1, "0xcf4ddd208bbbbefb3227cafa5c917fc6541d26b1869276ea80d99ee0505fc6f8"},
+	Aptos:       AccountCase{M1, "0x6ed6f83f1891e02c00c58bf8172e3311c982b1c4fbb1be2d85a55562d4085fb1"},
 	Starcoin:    AccountCase{M1, "0x1412Ea33f5ed7a27851801eDB2fE1d3F"},
 }
 
