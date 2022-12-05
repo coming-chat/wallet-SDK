@@ -27,6 +27,14 @@ func TestCache(t *testing.T) {
 		require.Nil(t, err)
 		require.Equal(t, ethereumAddress.Value, testcase.Accounts.Ethereum.Address)
 
+		bitcoinAddress, err := wallet.BitcoinAccountInfo("mainnet").Address()
+		require.Nil(t, err)
+		require.Equal(t, bitcoinAddress.Value, testcase.Accounts.BtcMainnet.Address)
+
+		dogecoinAddress, err := wallet.DogecoinAccountInfo("mainnet").Address()
+		require.Nil(t, err)
+		require.Equal(t, dogecoinAddress.Value, testcase.Accounts.DogeMainnet.Address)
+
 		timeStart := time.Now()
 		times := 10000
 		for i := 0; i < times; i++ {
@@ -77,6 +85,16 @@ func TestCache(t *testing.T) {
 
 		_, err = wallet.SuiAccountInfo().Address()
 		require.Equal(t, err, ErrWalletInfoNotExist)
+	}
+
+	{
+		// test m1 again.
+		wallet := NewCacheWallet("m1")
+		t.Logf("wallet %v's type = %v", wallet.WalletId, wallet.WalletType())
+
+		polkaAddress, err := wallet.PolkaAccountInfo(44).Address()
+		require.Nil(t, err)
+		require.Equal(t, polkaAddress.Value, testcase.Accounts.Polka44.Address)
 	}
 
 }

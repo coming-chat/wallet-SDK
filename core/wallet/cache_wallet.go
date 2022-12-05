@@ -153,7 +153,7 @@ func (w *CacheWallet) CosmosAccountInfo(cointype int64, prefix string) *AccountI
 func (w *CacheWallet) DogecoinAccountInfo(chainnet string) *AccountInfo {
 	return &AccountInfo{
 		wallet:   w,
-		cacheKey: fmt.Sprintf("bitcoin-%v", chainnet),
+		cacheKey: fmt.Sprintf("dogecoin-%v", chainnet),
 		mnemonicCreator: func(val string) (base.Account, error) {
 			return doge.NewAccountWithMnemonic(val, chainnet)
 		},
