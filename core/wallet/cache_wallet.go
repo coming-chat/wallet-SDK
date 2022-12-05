@@ -47,12 +47,6 @@ const (
 //     var privateKey = accountInfo.PrivateKeyHex()
 //     var publicKey = accountInfo.PublickKeyHex()
 //     var address = accountInfo.Address()
-//
-// 其他：
-//
-//	获取钱包类型
-//	var walletType = wallet.WalletType()
-//	枚举值见 `WalletType` (Mnemonic / Keystore / PrivateKey / Watch / Error)
 type CacheWallet struct {
 	WalletId   string
 	walletType WalletType
@@ -64,6 +58,7 @@ func NewCacheWallet(walletId string) *CacheWallet {
 	return &CacheWallet{WalletId: walletId}
 }
 
+// Create a watch wallet
 func NewWatchWallet(address string) (*CacheWallet, error) {
 	chainType := ChainTypeFrom(address)
 	if chainType.Count() == 0 {
@@ -75,6 +70,8 @@ func NewWatchWallet(address string) (*CacheWallet, error) {
 	}, nil
 }
 
+// 获取钱包类型
+// 枚举值见 `WalletType` (Mnemonic / Keystore / PrivateKey / Watch / Error)
 func (w *CacheWallet) WalletType() WalletType {
 	if typ, ok := w.checkWalletType(); ok {
 		return typ

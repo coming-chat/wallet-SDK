@@ -128,3 +128,7 @@ func (a *Account) StarcoinPrivateKey() starTypes.Ed25519PrivateKey {
 func (a *Account) StarcoinPublicKey() starTypes.Ed25519PublicKey {
 	return starTypes.Ed25519PublicKey(a.PublicKey())
 }
+
+func AsStarcoinAccount(account base.Account) *Account {
+	return account.(*Account)
+}

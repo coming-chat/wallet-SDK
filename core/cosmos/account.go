@@ -103,3 +103,7 @@ func (a *Account) SignHex(messageHex string, password string) (*base.OptionalStr
 	signedString := hexTypes.HexEncodeToString(signed)
 	return &base.OptionalString{Value: signedString}, nil
 }
+
+func AsCosmosAccount(account base.Account) *Account {
+	return account.(*Account)
+}

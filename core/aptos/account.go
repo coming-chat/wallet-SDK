@@ -87,3 +87,7 @@ func (a *Account) DecodeAddressToPublicKey(address string) (string, error) {
 func (a *Account) IsValidAddress(address string) bool {
 	return IsValidAddress(address)
 }
+
+func AsAptosAccount(account base.Account) *Account {
+	return account.(*Account)
+}

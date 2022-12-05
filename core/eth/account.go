@@ -181,3 +181,7 @@ func IsValidSignature(publicKey, msg, signature []byte) bool {
 	signature = signature[:len(signature)-1]
 	return crypto.VerifySignature(publicKey, originMsgHash, signature)
 }
+
+func AsEthereumAccount(account base.Account) *Account {
+	return account.(*Account)
+}
