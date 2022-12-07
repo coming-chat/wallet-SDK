@@ -10,26 +10,26 @@ import (
 
 var walletCache = sync.Map{}
 
-func SaveWallet(wallet *CacheWallet) {
-	key := "wallet-" + wallet.WalletId
+func saveWallet(wallet *CacheWallet) {
+	key := "wallet-" + wallet.key()
 	walletCache.Store(key, wallet)
 }
 
-func GetWallet(walletId string) *CacheWallet {
-	key := "wallet-" + walletId
+func getWallet(walletKey string) *CacheWallet {
+	key := "wallet-" + walletKey
 	if c, ok := walletCache.Load(key); ok {
 		return c.(*CacheWallet)
 	}
 	return nil
 }
 
-func SaveAccountInfo(walletId string, info *AccountInfo) {
-	key := fmt.Sprintf("account-%v-%v", walletId, info.cacheKey)
+func saveAccountInfo(walletKey string, info *AccountInfo) {
+	key := fmt.Sprintf("account-%v-%v", walletKey, info.cacheKey)
 	walletCache.Store(key, info)
 }
 
-func GetAccountInfo(walletId, cacheKey string) *AccountInfo {
-	key := fmt.Sprintf("account-%v-%v", walletId, cacheKey)
+func getAccountInfo(walletKey, cacheKey string) *AccountInfo {
+	key := fmt.Sprintf("account-%v-%v", walletKey, cacheKey)
 	if c, ok := walletCache.Load(key); ok {
 		return c.(*AccountInfo)
 	}
@@ -38,7 +38,7 @@ func GetAccountInfo(walletId, cacheKey string) *AccountInfo {
 
 type accountCreator = func(val string) (base.Account, error)
 type AccountInfo struct {
-	wallet          *CacheWallet
+	Wallet          *CacheWallet
 	cacheKey        string
 	mnemonicCreator accountCreator
 	keystoreCreator accountCreator
@@ -49,13 +49,14 @@ type AccountInfo struct {
 	address   string
 }
 
+// 获取账号对象，该对象可以用来签名. 账号不会缓存，每次都会重新生成
 func (i *AccountInfo) Account() (base.Account, error) {
-	typ, ok := i.wallet.checkWalletType()
+	typ, ok := i.Wallet.checkWalletType()
 	var val = ""
 	if ok {
-		typ, val = readValue(i.wallet.WalletId, typ)
+		typ, val = i.Wallet.readValue(typ)
 	} else {
-		typ, val = readTypeAndValue(i.wallet.WalletId)
+		typ, val = i.Wallet.readTypeAndValue()
 	}
 	var account base.Account
 	var err error
@@ -83,10 +84,11 @@ func (i *AccountInfo) Account() (base.Account, error) {
 	if err != nil {
 		return nil, err
 	}
-	i.loadAndSaveCacheIfNotFound(account)
+	i.saveCache(account)
 	return account, nil
 }
 
+// 获取账号私钥，私钥不会缓存，每次都会重新生成
 func (i *AccountInfo) PrivateKeyHex() (*base.OptionalString, error) {
 	account, err := i.Account()
 	if err != nil {
@@ -99,9 +101,10 @@ func (i *AccountInfo) PrivateKeyHex() (*base.OptionalString, error) {
 	return &base.OptionalString{Value: h}, nil
 }
 
+// 获取公钥，该方法会优先读取缓存
 func (i *AccountInfo) PublicKeyHex() (*base.OptionalString, error) {
 	if i.publicKey == nil {
-		new, err := i.loadAndSaveCacheIfNotFound(nil)
+		new, err := i.loadCache()
 		if err != nil {
 			return nil, err
 		}
@@ -110,9 +113,10 @@ func (i *AccountInfo) PublicKeyHex() (*base.OptionalString, error) {
 	return &base.OptionalString{Value: ByteToHex(i.publicKey)}, nil
 }
 
+// 获取地址，该方法会优先读取缓存
 func (i *AccountInfo) Address() (*base.OptionalString, error) {
 	if i.address == "" {
-		new, err := i.loadAndSaveCacheIfNotFound(nil)
+		new, err := i.loadCache()
 		if err != nil {
 			return nil, err
 		}
@@ -121,19 +125,20 @@ func (i *AccountInfo) Address() (*base.OptionalString, error) {
 	return &base.OptionalString{Value: i.address}, nil
 }
 
-func (i *AccountInfo) loadAndSaveCacheIfNotFound(account base.Account) (*AccountInfo, error) {
-	if cache := GetAccountInfo(i.wallet.WalletId, i.cacheKey); cache != nil {
+func (i *AccountInfo) loadCache() (*AccountInfo, error) {
+	if cache := getAccountInfo(i.Wallet.key(), i.cacheKey); cache != nil {
 		return cache, nil
 	}
-	if account == nil {
-		var err error
-		account, err = i.Account()
-		if err != nil {
-			return nil, err
-		}
+	account, err := i.Account()
+	if err != nil {
+		return nil, err
 	}
+	i.saveCache(account)
+	return i, nil
+}
+
+func (i *AccountInfo) saveCache(account base.Account) {
 	i.publicKey = account.PublicKey()
 	i.address = account.Address()
-	SaveAccountInfo(i.wallet.WalletId, i)
-	return i, nil
+	saveAccountInfo(i.Wallet.key(), i)
 }

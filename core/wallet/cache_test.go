@@ -9,11 +9,9 @@ import (
 )
 
 func TestCache(t *testing.T) {
-	InfoProvider = &FakeWalletInfoProvider{}
-
 	{
-		wallet := NewCacheWallet("m1")
-		t.Logf("wallet %v's type = %v", wallet.WalletId, wallet.WalletType())
+		wallet := NewCacheWallet(&m1Wallet)
+		t.Logf("wallet %v's type = %v", wallet.key(), wallet.WalletType())
 
 		polkaAddress, err := wallet.PolkaAccountInfo(44).Address()
 		require.Nil(t, err)
@@ -47,8 +45,8 @@ func TestCache(t *testing.T) {
 	}
 
 	{
-		wallet := NewCacheWallet("private_l64")
-		t.Logf("wallet %v's type = %v", wallet.WalletId, wallet.WalletType())
+		wallet := NewCacheWallet(&private_l64Wallet)
+		t.Logf("wallet %v's type = %v", wallet.key(), wallet.WalletType())
 
 		polkaAccount, err := wallet.PolkaAccountInfo(44).Account()
 		require.Nil(t, err)
@@ -64,21 +62,21 @@ func TestCache(t *testing.T) {
 	}
 
 	{
-		wallet := NewCacheWallet("watch")
-		t.Logf("wallet %v's type = %v", wallet.WalletId, wallet.WalletType())
+		wallet := NewCacheWallet(&watchWallet)
+		t.Logf("wallet %v's type = %v", wallet.key(), wallet.WalletType())
 
 		polkaAddress, err := wallet.PolkaAccountInfo(0).Address()
 		require.Nil(t, err)
-		require.Equal(t, polkaAddress.Value, "0x33214838821")
+		require.Equal(t, polkaAddress.Value, watchWallet.watchAddress)
 
 		bitcoinAddress, err := wallet.BitcoinAccountInfo("mainnet").Address()
 		require.Nil(t, err)
-		require.Equal(t, bitcoinAddress.Value, "0x33214838821")
+		require.Equal(t, bitcoinAddress.Value, watchWallet.watchAddress)
 	}
 
 	{
-		wallet := NewCacheWallet("invalid wallet id")
-		t.Logf("wallet %v's type = %v", wallet.WalletId, wallet.WalletType())
+		wallet := NewCacheWallet(&emptyWallet)
+		t.Logf("wallet %v's type = %v", wallet.key(), wallet.WalletType())
 
 		_, err := wallet.PolkaAccountInfo(2).Account()
 		require.Equal(t, err, ErrWalletInfoNotExist)
@@ -89,8 +87,8 @@ func TestCache(t *testing.T) {
 
 	{
 		// test m1 again.
-		wallet := NewCacheWallet("m1")
-		t.Logf("wallet %v's type = %v", wallet.WalletId, wallet.WalletType())
+		wallet := NewCacheWallet(&m1Wallet)
+		t.Logf("wallet %v's type = %v", wallet.key(), wallet.WalletType())
 
 		polkaAddress, err := wallet.PolkaAccountInfo(44).Address()
 		require.Nil(t, err)
@@ -100,6 +98,7 @@ func TestCache(t *testing.T) {
 }
 
 type WalletStore struct {
+	cacheKey     string
 	mnemonic     string
 	keystore     string
 	password     string
@@ -107,28 +106,44 @@ type WalletStore struct {
 	watchAddress string
 }
 
-var wallets = map[string]WalletStore{
-	"m1":          {mnemonic: testcase.M1},
-	"keystore":    {keystore: "TODO", password: "TODO"},
-	"watch":       {watchAddress: "0x33214838821"},
-	"private_l64": {privateKey: "0x0000000000000000000000000000000000000000000000000000000000000001"},
+func (s *WalletStore) SDKCacheKey() string {
+	return s.cacheKey
+}
+func (s *WalletStore) SDKMnemonic() string {
+	return s.mnemonic
+}
+func (s *WalletStore) SDKKeystore() string {
+	return s.keystore
+}
+func (s *WalletStore) SDKPassword() string {
+	return s.password
+}
+func (s *WalletStore) SDKPrivateKey() string {
+	return s.privateKey
+}
+func (s *WalletStore) SDKWatchAddress() string {
+	return s.watchAddress
 }
 
-type FakeWalletInfoProvider struct {
-}
-
-func (f *FakeWalletInfoProvider) Mnemonic(walletId string) string {
-	return wallets[walletId].mnemonic
-}
-func (f *FakeWalletInfoProvider) Keystore(walletId string) string {
-	return wallets[walletId].keystore
-}
-func (f *FakeWalletInfoProvider) Password(walletId string) string {
-	return wallets[walletId].password
-}
-func (f *FakeWalletInfoProvider) PrivateKey(walletId string) string {
-	return wallets[walletId].privateKey
-}
-func (f *FakeWalletInfoProvider) WatchAddress(walletId string) string {
-	return wallets[walletId].watchAddress
-}
+var (
+	m1Wallet = WalletStore{
+		cacheKey: "m1",
+		mnemonic: testcase.M1,
+	}
+	keystoreWallet = WalletStore{
+		cacheKey: "keystore",
+		keystore: "TODO",
+		password: "TODO",
+	}
+	watchWallet = WalletStore{
+		cacheKey:     "watch",
+		watchAddress: "0x33214838821",
+	}
+	private_l64Wallet = WalletStore{
+		cacheKey:   "private_l64",
+		privateKey: "0x0000000000000000000000000000000000000000000000000000000000000001",
+	}
+	emptyWallet = WalletStore{
+		cacheKey: "empty",
+	}
+)
