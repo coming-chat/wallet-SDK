@@ -22,7 +22,15 @@ func (c *Chain) FetchNFTs(owner string) (res map[string][]*base.NFT, err error) 
 	if err != nil {
 		return
 	}
-	nftObjects, err := client.GetNFTsOwnedByAddress(context.Background(), *address)
+	nftObjects, err := client.BatchGetFilteredObjectsOwnedByAddress(context.Background(), *address, func(oi types.ObjectInfo) bool {
+		if oi.Type == "0x2::devnet_nft::DevNetNFT" {
+			return true
+		}
+		if strings.HasSuffix(oi.Type, "::capy::Capy") {
+			return true
+		}
+		return false
+	})
 	if err != nil {
 		return
 	}
@@ -79,7 +87,7 @@ func transformNFT(nft *types.ObjectRead) *base.NFT {
 	}
 
 	return &base.NFT{
-		HashString: nft.Details.PreviousTransaction.String(),
+		HashString: nft.Details.PreviousTransaction,
 
 		Id:          meta.Fields.Id.Id,
 		Name:        meta.Fields.Name,

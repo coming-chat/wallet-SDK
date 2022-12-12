@@ -82,7 +82,7 @@ func (c *Chain) SendRawTransaction(signedTx string) (hash string, err error) {
 		return
 	}
 
-	hash = response.TransactionDigest().String()
+	hash = response.TransactionDigest()
 	return
 }
 
@@ -90,15 +90,11 @@ func (c *Chain) SendRawTransaction(signedTx string) (hash string, err error) {
 func (c *Chain) FetchTransactionDetail(hash string) (detail *base.TransactionDetail, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
 
-	digest, err := types.NewBase64Data(hash)
-	if err != nil {
-		return
-	}
 	cli, err := c.client()
 	if err != nil {
 		return
 	}
-	resp, err := cli.GetTransaction(context.Background(), *digest)
+	resp, err := cli.GetTransaction(context.Background(), hash)
 	if err != nil {
 		return nil, err
 	}

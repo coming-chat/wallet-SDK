@@ -36,6 +36,10 @@ func getAccountInfo(walletKey, cacheKey string) *AccountInfo {
 	return nil
 }
 
+func CleanCachedAccountInfo() {
+	walletCache = sync.Map{}
+}
+
 type accountCreator = func(val string) (base.Account, error)
 type AccountInfo struct {
 	Wallet          *CacheWallet

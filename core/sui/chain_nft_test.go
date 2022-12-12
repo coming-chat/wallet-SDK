@@ -9,9 +9,9 @@ import (
 )
 
 func TestFetchNfts(t *testing.T) {
-	owner := "0x1f06dd5f2d30819b790017497adf11d56f2db187"
-	// owner := M1Account(t).Address()
-	chain := TestnetChain()
+	// owner := "0x1f06dd5f2d30819b790017497adf11d56f2db187"
+	owner := M1Account(t).Address()
+	chain := DevnetChain()
 
 	nfts, err := chain.FetchNFTs(owner)
 	require.Nil(t, err)
@@ -26,7 +26,7 @@ func TestFetchNfts(t *testing.T) {
 
 func TestMintNFT(t *testing.T) {
 	account := M1Account(t)
-	chain := TestnetChain()
+	chain := DevnetChain()
 
 	var (
 		timeNow = time.Now().Format("06-01-02 15:04")
