@@ -18,16 +18,22 @@ const (
 	ChainTypeSolana   = "solana"
 
 	// contains chainx, minix, sherpax, polkadot...
-	// ChainTypePolka    = "polka"
-	// ChainTypeSignet   = "signet"
-	// ChainTypeDoge     = "dogecoin"
-	// ChainTypeTerra    = "terra"
-	// ChainTypeAptos    = "aptos"
-	// ChainTypeSui      = "sui"
-	// ChainTypeStarcoin = "starcoin"
+	ChainTypePolka    = "polka"
+	ChainTypeSignet   = "signet"
+	ChainTypeDoge     = "dogecoin"
+	ChainTypeTerra    = "terra"
+	ChainTypeAptos    = "aptos"
+	ChainTypeSui      = "sui"
+	ChainTypeStarcoin = "starcoin"
 )
 
+// Deprecated: renamed to `ChainTypeOfWatchAddress()`.
 func ChainTypeFrom(address string) *base.StringArray {
+	return ChainTypeOfWatchAddress(address)
+}
+
+// Only support evm, btc, cosmos, solana now.
+func ChainTypeOfWatchAddress(address string) *base.StringArray {
 	res := &base.StringArray{}
 	for _, ch := range []byte(address) {
 		valid := (ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')
@@ -70,6 +76,40 @@ func ChainTypeFrom(address string) *base.StringArray {
 		if solana.IsValidAddress(address) {
 			res.Append(ChainTypeSolana)
 		}
+	}
+	return res
+}
+
+func ChainTypeOfPrivateKey(prikey string) *base.StringArray {
+	res := &base.StringArray{}
+	if !strings.HasPrefix(prikey, "0x") && !strings.HasPrefix(prikey, "0X") {
+		return res
+	}
+	for idx, ch := range []byte(prikey) {
+		if idx < 2 {
+			continue // 0x
+		}
+		valid := (ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'f') || (ch >= 'A' && ch <= 'F')
+		if !valid {
+			return res
+		}
+	}
+	switch len(prikey) {
+	case 66:
+		res.Append(ChainTypeBitcoin)
+		res.Append(ChainTypeEthereum)
+		res.Append(ChainTypePolka)
+		res.Append(ChainTypeSignet)
+		res.Append(ChainTypeDoge)
+		res.Append(ChainTypeCosmos)
+		res.Append(ChainTypeTerra)
+		res.Append(ChainTypeAptos)
+		res.Append(ChainTypeSui)
+		res.Append(ChainTypeStarcoin)
+	case 130:
+		res.Append(ChainTypeSolana)
+	default:
+		break
 	}
 	return res
 }

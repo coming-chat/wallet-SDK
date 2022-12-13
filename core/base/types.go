@@ -60,6 +60,20 @@ func (a *StringArray) SetValue(value string, index int) {
 	a.Values[index] = value
 }
 
+func (a *StringArray) Contains(value string) bool {
+	return a.IndexOf(value) != -1
+}
+
+// return -1 if not found
+func (a *StringArray) IndexOf(value string) int {
+	for idx, item := range a.Values {
+		if item == value {
+			return idx
+		}
+	}
+	return -1
+}
+
 func (a *StringArray) ValueOf(index int) string {
 	return a.Values[index]
 }
