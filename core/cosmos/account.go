@@ -105,5 +105,9 @@ func (a *Account) SignHex(messageHex string, password string) (*base.OptionalStr
 }
 
 func AsCosmosAccount(account base.Account) *Account {
-	return account.(*Account)
+	if r, ok := account.(*Account); ok {
+		return r
+	} else {
+		return nil
+	}
 }

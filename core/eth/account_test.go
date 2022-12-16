@@ -7,6 +7,8 @@ import (
 	"github.com/btcsuite/btcd/btcutil/hdkeychain"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
+	"github.com/coming-chat/wallet-SDK/core/aptos"
+	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/coming-chat/wallet-SDK/core/testcase"
 	"github.com/cosmos/go-bip39"
 	"github.com/ethereum/go-ethereum/accounts"
@@ -187,4 +189,38 @@ func TestAccountWithPrivatekey(t *testing.T) {
 	require.Nil(t, err)
 
 	require.Equal(t, accountFromMnemonic.Address(), accountFromPrikey.Address())
+}
+
+func TestAsEthereumAccount(t *testing.T) {
+	aptAccount, err := aptos.NewAccountWithMnemonic(testcase.M1)
+	require.Nil(t, err)
+	ethAccount, err := NewAccountWithMnemonic(testcase.M1)
+	require.Nil(t, err)
+	tests := []struct {
+		name      string
+		account   base.Account
+		shouldNil bool
+	}{
+		{
+			name:      "nil account",
+			account:   nil,
+			shouldNil: true,
+		},
+		{
+			name:      "aptos account",
+			account:   aptAccount,
+			shouldNil: true,
+		},
+		{
+			name:      "eth account",
+			account:   ethAccount,
+			shouldNil: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := AsEthereumAccount(tt.account)
+			require.Equal(t, tt.shouldNil, got == nil)
+		})
+	}
 }

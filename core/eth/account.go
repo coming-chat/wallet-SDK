@@ -183,5 +183,9 @@ func IsValidSignature(publicKey, msg, signature []byte) bool {
 }
 
 func AsEthereumAccount(account base.Account) *Account {
-	return account.(*Account)
+	if r, ok := account.(*Account); ok {
+		return r
+	} else {
+		return nil
+	}
 }

@@ -130,5 +130,9 @@ func (a *Account) StarcoinPublicKey() starTypes.Ed25519PublicKey {
 }
 
 func AsStarcoinAccount(account base.Account) *Account {
-	return account.(*Account)
+	if r, ok := account.(*Account); ok {
+		return r
+	} else {
+		return nil
+	}
 }

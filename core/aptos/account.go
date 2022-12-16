@@ -89,5 +89,9 @@ func (a *Account) IsValidAddress(address string) bool {
 }
 
 func AsAptosAccount(account base.Account) *Account {
-	return account.(*Account)
+	if r, ok := account.(*Account); ok {
+		return r
+	} else {
+		return nil
+	}
 }
