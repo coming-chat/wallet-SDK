@@ -24,7 +24,7 @@ type Token struct {
 }
 
 func NewTokenMain(chain *Chain) *Token {
-	token, _ := newToken(chain, "0x2::sui::SUI")
+	token, _ := NewToken(chain, "0x2::sui::SUI")
 	return token
 }
 
