@@ -29,7 +29,7 @@ func NewTokenMain(chain *Chain) *Token {
 }
 
 // @param tag format `address::module_name::name`, e.g. "0x2::sui::SUI"
-func newToken(chain *Chain, tag string) (*Token, error) {
+func NewToken(chain *Chain, tag string) (*Token, error) {
 	token, err := types.NewResourceType(tag)
 	if err != nil {
 		return nil, err
