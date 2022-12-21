@@ -21,7 +21,7 @@ func (t *Token) getCoins(address string) (coins types.Coins, err error) {
 	if err != nil {
 		return
 	}
-	coins, err = cli.GetSuiCoinsOwnedByAddress(context.Background(), *addr)
+	coins, err = cli.GetCoinsOwnedByAddress(context.Background(), *addr, t.rType.ShortString())
 	if err != nil {
 		return
 	}
