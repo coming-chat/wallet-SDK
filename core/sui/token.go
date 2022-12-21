@@ -48,10 +48,14 @@ func (t *Token) Chain() base.Chain {
 }
 
 func (t *Token) TokenInfo() (*base.TokenInfo, error) {
+	metadata, err := t.getTokenMetadata(t.rType.ShortString())
+	if err != nil {
+		return nil, err
+	}
 	return &base.TokenInfo{
-		Name:    SuiName,
-		Symbol:  SuiSymbol,
-		Decimal: SuiDecimal,
+		Name:    metadata.Name,
+		Symbol:  metadata.Symbol,
+		Decimal: int16(metadata.Decimals),
 	}, nil
 }
 

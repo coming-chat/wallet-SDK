@@ -33,6 +33,17 @@ func (t *Token) getCoins(address string) (coins types.Coins, err error) {
 	return coins, nil
 }
 
+func (t *Token) getTokenMetadata(coinType string) (metadata *types.SuiCoinMetadata, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
+
+	cli, err := t.chain.client()
+	if err != nil {
+		return
+	}
+	metadata, err = cli.GetCoinMetadata(context.Background(), coinType)
+	return
+}
+
 func pickupTransferCoin(coins types.Coins, amount string) (*PickedCoins, error) {
 	amountInt, ok := big.NewInt(0).SetString(amount, 10)
 	if !ok {
