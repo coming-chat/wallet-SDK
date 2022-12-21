@@ -28,3 +28,23 @@ func TestTokenBalance(t *testing.T) {
 	}
 	t.Log(balance)
 }
+
+func TestTokenInfo(t *testing.T) {
+	chain := DevnetChain()
+	token, err := NewToken(chain, "0x2d79a3c70aa3f3a3feabbf54b7b520f956c4ef8d::AAA::AAA")
+	if err != nil {
+		t.Fatal(err)
+	}
+	info, err := token.TokenInfo()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(info)
+
+	mainToken := NewTokenMain(chain)
+	tokenInfo, err := mainToken.TokenInfo()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(tokenInfo)
+}
