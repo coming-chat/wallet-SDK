@@ -82,20 +82,17 @@ func ChainTypeOfWatchAddress(address string) *base.StringArray {
 
 func ChainTypeOfPrivateKey(prikey string) *base.StringArray {
 	res := &base.StringArray{}
-	if !strings.HasPrefix(prikey, "0x") && !strings.HasPrefix(prikey, "0X") {
-		return res
+	if strings.HasPrefix(prikey, "0x") || strings.HasPrefix(prikey, "0X") {
+		prikey = prikey[2:] // remote 0x prefix
 	}
-	for idx, ch := range []byte(prikey) {
-		if idx < 2 {
-			continue // 0x
-		}
+	for _, ch := range []byte(prikey) {
 		valid := (ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'f') || (ch >= 'A' && ch <= 'F')
 		if !valid {
 			return res
 		}
 	}
 	switch len(prikey) {
-	case 66:
+	case 64:
 		res.Append(ChainTypeBitcoin)
 		res.Append(ChainTypeEthereum)
 		res.Append(ChainTypePolka)
@@ -106,7 +103,7 @@ func ChainTypeOfPrivateKey(prikey string) *base.StringArray {
 		res.Append(ChainTypeAptos)
 		res.Append(ChainTypeSui)
 		res.Append(ChainTypeStarcoin)
-	case 130:
+	case 128:
 		res.Append(ChainTypeSolana)
 	default:
 		break
