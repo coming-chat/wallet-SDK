@@ -12,9 +12,10 @@ import (
 )
 
 const (
-	SuiName    = "Sui"
-	SuiSymbol  = "Sui"
-	SuiDecimal = 0
+	SuiName     = "Sui"
+	SuiSymbol   = "Sui"
+	SuiDecimal  = 0
+	SuiCoinType = "0x2::coin::Coin<0x2::sui::SUI>"
 )
 
 type Token struct {
@@ -109,7 +110,23 @@ func (t *Token) BuildTransferTxWithAccount(account *Account, receiverAddress, am
 	if err != nil {
 		return nil, errors.New("Failed to get coins information.")
 	}
-	pickedCoin, err := pickupTransferCoin(coins, amount)
+	var pickedCoin *PickedCoins
+	if t.coinType() != SuiCoinType {
+		pickedCoin, err = pickupTransferCoin(coins, amount, 0)
+		suiToken := NewTokenMain(t.chain)
+		suiCoins, err := suiToken.getCoins(account.Address())
+		if err != nil {
+			return nil, err
+		}
+		pickedGasCoin, err := pickupTransferCoin(suiCoins, "0", MaxGasForTransfer)
+		if err != nil {
+			return nil, err
+		}
+		pickedCoin.Coins = append(pickedCoin.Coins, pickedGasCoin.Coins...)
+	} else {
+		pickedCoin, err = pickupTransferCoin(coins, amount, MaxGasForPay)
+	}
+
 	if err != nil {
 		return
 	}

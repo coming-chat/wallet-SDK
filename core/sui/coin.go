@@ -44,14 +44,14 @@ func (t *Token) getTokenMetadata(coinType string) (metadata *types.SuiCoinMetada
 	return
 }
 
-func pickupTransferCoin(coins types.Coins, amount string) (*PickedCoins, error) {
+func pickupTransferCoin(coins types.Coins, amount string, gas int64) (*PickedCoins, error) {
 	amountInt, ok := big.NewInt(0).SetString(amount, 10)
 	if !ok {
 		return nil, fmt.Errorf(`Invalid transfer amount "%v".`, amount)
 	}
 	need := big.NewInt(0).Set(amountInt)
 
-	estimateGasPerCoin := big.NewInt(MaxGasForPay)
+	estimateGasPerCoin := big.NewInt(gas)
 	total := big.NewInt(0)
 	pickedCoins := types.Coins{}
 	for _, coin := range coins {
