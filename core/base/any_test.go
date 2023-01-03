@@ -31,8 +31,8 @@ func TestAny(t *testing.T) {
 	a.SetInt(1234)
 	require.Equal(t, a.GetInt(), 1234)
 
-	a.SetUInt64(5678)
-	require.Equal(t, a.GetUInt64(), uint64(5678))
+	a.SetString("qwer")
+	require.Equal(t, a.GetString(), "qwer")
 }
 
 func TestAnyArray(t *testing.T) {

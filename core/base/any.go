@@ -26,12 +26,13 @@ func (a *Any) SetInt32(v int32)     { a.Value = v }
 func (a *Any) SetInt64(v int64)     { a.Value = v }
 func (a *Any) SetInt128(v *BigInt)  { a.Value = v }
 func (a *Any) SetInt256(v *BigInt)  { a.Value = v }
-func (a *Any) SetUInt8(v uint8)     { a.Value = v }
-func (a *Any) SetUInt16(v uint16)   { a.Value = v }
-func (a *Any) SetUInt32(v uint32)   { a.Value = v }
-func (a *Any) SetUInt64(v uint64)   { a.Value = v }
 func (a *Any) SetUint128(v *BigInt) { a.Value = v }
 func (a *Any) SetUint256(v *BigInt) { a.Value = v }
+
+// func (a *Any) SetUInt8(v uint8)     { a.Value = v }
+// func (a *Any) SetUInt16(v uint16)   { a.Value = v }
+// func (a *Any) SetUInt32(v uint32)   { a.Value = v }
+// func (a *Any) SetUInt64(v uint64)   { a.Value = v }
 
 func (a *Any) GetString() string  { return a.Value.(string) }
 func (a *Any) GetBool() bool      { return a.Value.(bool) }
@@ -42,12 +43,13 @@ func (a *Any) GetInt32() int32    { return a.Value.(int32) }
 func (a *Any) GetInt64() int64    { return a.Value.(int64) }
 func (a *Any) GetInt128() string  { return a.Value.(*BigInt).GetString(128) }
 func (a *Any) GetInt256() string  { return a.Value.(*BigInt).GetString(256) }
-func (a *Any) GetUInt8() uint8    { return a.Value.(uint8) }
-func (a *Any) GetUInt16() uint16  { return a.Value.(uint16) }
-func (a *Any) GetUInt32() uint32  { return a.Value.(uint32) }
-func (a *Any) GetUInt64() uint64  { return a.Value.(uint64) }
 func (a *Any) GetUint128() string { return a.Value.(*BigInt).GetString(128) }
 func (a *Any) GetUint256() string { return a.Value.(*BigInt).GetString(256) }
+
+// func (a *Any) GetUInt8() uint8    { return a.Value.(uint8) }
+// func (a *Any) GetUInt16() uint16  { return a.Value.(uint16) }
+// func (a *Any) GetUInt32() uint32  { return a.Value.(uint32) }
+// func (a *Any) GetUInt64() uint64  { return a.Value.(uint64) }
 
 type AnyArray struct {
 	Values []any
