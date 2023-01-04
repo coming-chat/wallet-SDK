@@ -93,3 +93,10 @@ func TestAnyMap(t *testing.T) {
 	p := AsAnyPerson(mp.ValueOf("person"))
 	require.Equal(t, p.Name, "GGG")
 }
+
+func TestBigInt(t *testing.T) {
+	number := "99999999999999999999999999999999999999999999999999999999999999999999999999999"
+	a := NewAny()
+	a.SetBigInt(NewBigIntFromString(number, 10))
+	require.Equal(t, number, a.GetBigInt().String())
+}
