@@ -77,7 +77,7 @@ func (c *Chain) SendRawTransaction(signedTx string) (hash string, err error) {
 	if err != nil {
 		return
 	}
-	response, err := cli.ExecuteTransaction(context.Background(), signedTxn, types.TxnRequestTypeWaitForTxCert)
+	response, err := cli.ExecuteTransaction(context.Background(), signedTxn, types.TxnRequestTypeWaitForEffectsCert)
 	if err != nil {
 		return
 	}

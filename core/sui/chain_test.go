@@ -27,7 +27,7 @@ func TestTransfer(t *testing.T) {
 	// toAddress := "0x0c61c2622b77e2a9a3c953690e915ab82d6370d9"
 	// amount := "8000000"
 	toAddress := M2Account(t).Address()
-	amount := "100"
+	amount := "1000"
 
 	signedTxn, err := token.BuildTransferTxWithAccount(account, toAddress, amount)
 	require.Nil(t, err)
