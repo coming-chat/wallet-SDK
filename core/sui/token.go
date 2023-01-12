@@ -2,7 +2,6 @@ package sui
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
@@ -94,6 +93,14 @@ func (t *Token) BuildTransferTx(privateKey, receiverAddress, amount string) (*ba
 }
 
 func (t *Token) BuildTransferTxWithAccount(account *Account, receiverAddress, amount string) (s *base.OptionalString, err error) {
+	txn, err := t.BuildTransferTransaction(account, receiverAddress, amount)
+	if err != nil {
+		return
+	}
+	return txn.SignWithAccount(account)
+}
+
+func (t *Token) BuildTransferTransaction(account *Account, receiverAddress, amount string) (s *Transaction, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
 
 	recipient, err := types.NewAddressFromHex(receiverAddress)
@@ -143,21 +150,19 @@ func (t *Token) BuildTransferTxWithAccount(account *Account, receiverAddress, am
 
 	// send sui coin
 	firstCoin := pickedCoin.Coins[0]
-	txn, err := cli.TransferSui(context.Background(), *signer, *recipient, firstCoin.Reference.ObjectId, amountInt, MaxGasForTransfer)
+	txnBytes, err := cli.TransferSui(context.Background(), *signer, *recipient, firstCoin.Reference.ObjectId, amountInt, MaxGasForTransfer)
 	if err != nil {
 		return
 	}
-	signedTxn := txn.SignWith(account.account.PrivateKey)
-	bytes, err := json.Marshal(signedTxn)
-	if err != nil {
-		return
-	}
-	txnString := types.Bytes(bytes).GetBase64Data().String()
-
-	return &base.OptionalString{Value: txnString}, nil
+	return &Transaction{
+		Txn: *txnBytes,
+	}, nil
 }
 
 func (t *Token) EstimateFees(account *Account, receiverAddress, amount string) (f *base.OptionalString, err error) {
-	f = &base.OptionalString{Value: strconv.FormatInt(MaxGasBudget, 10)}
-	return f, nil
+	txn, err := t.BuildTransferTransaction(account, receiverAddress, amount)
+	if err != nil {
+		return
+	}
+	return t.chain.EstimateGasFee(txn)
 }

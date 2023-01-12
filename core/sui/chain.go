@@ -187,6 +187,28 @@ func (c *Chain) TransferObject(sender, receiver, objectId, gasId string, gasBudg
 	return &Transaction{Txn: *tx}, nil
 }
 
+func (c *Chain) EstimateGasFee(transaction *Transaction) (fee *base.OptionalString, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
+
+	cli, err := c.client()
+	if err != nil {
+		return
+	}
+	effects, err := cli.DryRunTransaction(context.Background(), &transaction.Txn)
+	if err != nil {
+		return
+	}
+
+	gasFee := effects.GasFee()
+	if gasFee == 0 {
+		gasFee = MaxGasBudget
+	} else {
+		gasFee = gasFee/10*15 + 14 // >= ceil(fee * 1.5)
+	}
+	gasString := strconv.FormatUint(gasFee, 10)
+	return &base.OptionalString{Value: gasString}, nil
+}
+
 /**
  * @param address Hex-encoded 16 bytes Sui account address wich mints tokens
  * @param faucetUrl default https://faucet.testnet.sui.io/gas

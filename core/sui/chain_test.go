@@ -38,6 +38,23 @@ func TestTransfer(t *testing.T) {
 	t.Log(hash)
 }
 
+func TestEstimateGas(t *testing.T) {
+	account := M1Account(t)
+	chain := DevnetChain()
+	token := NewTokenMain(chain)
+
+	toAddress := M2Account(t).Address()
+	amount := "1000"
+
+	txn, err := token.BuildTransferTransaction(account, toAddress, amount)
+	require.Nil(t, err)
+
+	fee, err := chain.EstimateGasFee(txn)
+	require.Nil(t, err)
+
+	t.Log("gas fee = ", fee.Value)
+}
+
 func TestFetchTransactionDetail(t *testing.T) {
 	// digest := "4nMHqXi60PLxj/DxLCWwkiO3L41kIz89qMDEpStRdP8="
 	// digest := "hPOfmwiRRsxleD0JGA67bWFBur+z1BdbLo6vYxzB+9w=" // normal coin transfer
