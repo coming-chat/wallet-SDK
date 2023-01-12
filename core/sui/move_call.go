@@ -5,7 +5,7 @@ import (
 	"github.com/coming-chat/go-sui/types"
 )
 
-const gasBudget = 1000
+const gasBudget = 3000
 
 func (c *Chain) BaseMoveCall(address, packageId, module, funcName string, arg []any) (*Transaction, error) {
 	client, err := c.client()
