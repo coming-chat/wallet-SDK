@@ -189,6 +189,7 @@ func (c *Chain) TransferObject(sender, receiver, objectId, gasId string, gasBudg
 
 func (c *Chain) EstimateGasFee(transaction *Transaction) (fee *base.OptionalString, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
+	fee = &base.OptionalString{Value: strconv.FormatInt(MaxGasBudget, 10)}
 
 	cli, err := c.client()
 	if err != nil {
