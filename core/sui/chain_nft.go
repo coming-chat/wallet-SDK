@@ -119,7 +119,10 @@ func (c *Chain) MintNFT(creator, name, description, uri, gasId string, gasBudget
 	if err != nil {
 		return
 	}
-	return &Transaction{Txn: *tx}, nil
+	return &Transaction{
+		Txn:          *tx,
+		MaxGasBudget: gasBudget,
+	}, nil
 }
 
 // Just encapsulation and callbacks to method `TransferObject`.

@@ -44,6 +44,7 @@ func (c *Chain) BaseMoveCall(address, packageId, module, funcName string, arg []
 		return nil, err
 	}
 	return &Transaction{
-		Txn: *tx,
+		Txn:          *tx,
+		MaxGasBudget: gasBudget,
 	}, nil
 }

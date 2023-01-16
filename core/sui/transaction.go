@@ -10,6 +10,9 @@ import (
 
 type Transaction struct {
 	Txn types.TransactionBytes
+
+	MaxGasBudget   int64
+	EstimateGasFee int64
 }
 
 func (txn *Transaction) SignWithAccount(account *Account) (signedTx *base.OptionalString, err error) {

@@ -155,7 +155,8 @@ func (t *Token) BuildTransferTransaction(account *Account, receiverAddress, amou
 		return
 	}
 	return &Transaction{
-		Txn: *txnBytes,
+		Txn:          *txnBytes,
+		MaxGasBudget: MaxGasForTransfer,
 	}, nil
 }
 

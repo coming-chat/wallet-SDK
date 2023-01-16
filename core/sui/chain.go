@@ -184,7 +184,10 @@ func (c *Chain) TransferObject(sender, receiver, objectId, gasId string, gasBudg
 	if err != nil {
 		return
 	}
-	return &Transaction{Txn: *tx}, nil
+	return &Transaction{
+		Txn:          *tx,
+		MaxGasBudget: gasBudget,
+	}, nil
 }
 
 func (c *Chain) EstimateGasFee(transaction *Transaction) (fee *base.OptionalString, err error) {
@@ -206,6 +209,7 @@ func (c *Chain) EstimateGasFee(transaction *Transaction) (fee *base.OptionalStri
 	} else {
 		gasFee = gasFee/10*15 + 14 // >= ceil(fee * 1.5)
 	}
+	transaction.EstimateGasFee = int64(gasFee)
 	gasString := strconv.FormatUint(gasFee, 10)
 	return &base.OptionalString{Value: gasString}, nil
 }
