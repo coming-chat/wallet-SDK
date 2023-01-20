@@ -133,8 +133,8 @@ func (t *Token) BuildTransferTransaction(account *Account, receiverAddress, amou
 		if err != nil {
 			return nil, err2
 		}
-		signedTxn := txn.SignWith(account.account.PrivateKey)
-		response, err2 := cli.ExecuteTransaction(context.Background(), *signedTxn, types.TxnRequestTypeWaitForLocalExecution)
+		signedTxn := txn.SignSerializedSigWith(account.account.PrivateKey)
+		response, err2 := cli.ExecuteTransactionSerializedSig(context.Background(), *signedTxn, types.TxnRequestTypeWaitForLocalExecution)
 		if err2 != nil {
 			return nil, err2
 		}

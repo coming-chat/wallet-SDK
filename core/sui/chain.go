@@ -68,7 +68,7 @@ func (c *Chain) SendRawTransaction(signedTx string) (hash string, err error) {
 	if err != nil {
 		return
 	}
-	signedTxn := types.SignedTransaction{}
+	signedTxn := types.SignedTransactionSerializedSig{}
 	err = json.Unmarshal(bytes.Data(), &signedTxn)
 	if err != nil {
 		return
@@ -77,7 +77,7 @@ func (c *Chain) SendRawTransaction(signedTx string) (hash string, err error) {
 	if err != nil {
 		return
 	}
-	response, err := cli.ExecuteTransaction(context.Background(), signedTxn, types.TxnRequestTypeWaitForEffectsCert)
+	response, err := cli.ExecuteTransactionSerializedSig(context.Background(), signedTxn, types.TxnRequestTypeWaitForEffectsCert)
 	if err != nil {
 		return
 	}

@@ -58,8 +58,9 @@ func TestEstimateGas(t *testing.T) {
 func TestFetchTransactionDetail(t *testing.T) {
 	// digest := "4nMHqXi60PLxj/DxLCWwkiO3L41kIz89qMDEpStRdP8="
 	// digest := "hPOfmwiRRsxleD0JGA67bWFBur+z1BdbLo6vYxzB+9w=" // normal coin transfer
-	digest := "uJYpq7vh/3dI4tzmc5wsecUGTMzYiae4829C1VBuQHM=" // testnet nft transfer
-	chain := TestnetChain()
+	// digest := "uJYpq7vh/3dI4tzmc5wsecUGTMzYiae4829C1VBuQHM=" // testnet nft transfer
+	digest := "4SjJh84sJ2KC56ULKv42Ftq6r9RHSuBqq64vraGvosmJ" // devnet sui transfer
+	chain := DevnetChain()
 
 	detail, err := chain.FetchTransactionDetail(digest)
 	require.Nil(t, err)
@@ -75,14 +76,14 @@ func TestSplit(t *testing.T) {
 	require.Nil(t, err)
 
 	signer, _ := types.NewAddressFromHex(account.Address())
-	coin := "0x03149662d06e9427a67777092e03701b91af24a7"
+	coin := "0x1f3bd44bf1b4a53eda1b649c459ca3593d38054b"
 	coinID, err := types.NewHexData(coin)
 	require.Nil(t, err)
 
 	txn, err := client.SplitCoinEqual(context.Background(), *signer, *coinID, 5, nil, 2000)
-	signedTxn := txn.SignWith(account.account.PrivateKey)
+	signedTxn := txn.SignSerializedSigWith(account.account.PrivateKey)
 
-	detail, err := client.ExecuteTransaction(context.Background(), *signedTxn, types.TxnRequestTypeWaitForLocalExecution)
+	detail, err := client.ExecuteTransactionSerializedSig(context.Background(), *signedTxn, types.TxnRequestTypeWaitForLocalExecution)
 	require.Nil(t, err)
 	t.Log(detail)
 }

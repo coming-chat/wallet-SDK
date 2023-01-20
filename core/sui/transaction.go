@@ -19,7 +19,7 @@ func (txn *Transaction) SignWithAccount(account *Account) (signedTx *base.Option
 	if account == nil {
 		return nil, errors.New("Invalid account.")
 	}
-	signedTxn := txn.Txn.SignWith(account.account.PrivateKey)
+	signedTxn := txn.Txn.SignSerializedSigWith(account.account.PrivateKey)
 	bytes, err := json.Marshal(signedTxn)
 	if err != nil {
 		return
