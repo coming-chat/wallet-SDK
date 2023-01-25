@@ -13,7 +13,7 @@
 | query balance | ✅ | ✅ | ✅ |✅   |✅   |✅   |✅   |✅   | ✅ |
 | fetch transaction detail | ✅ | ✅ | ✅ |✅   |✅   |✅   |✅   |✅   | ✅ |
 | gas fee | ❌ | ✅ | ✅ |☑️   |✅   |✅   |✅   |❌   | ✅ |
-| send taw transaction | ✅ | ✅ | ✅ ☑️ |✅   |✅   |✅   |✅   |✅   | ✅ |
+| send raw transaction | ✅ | ✅ | ✅ ☑️ |✅   |✅   |✅   |✅   |✅   | ✅ |
 | multi token | ❌ | ✅ erc20 | ✅ XBTC |✅   |❌   |❌   |✅   |❌   | ❌ |
 
 *If there are two icons, the first icon indicates development status, and the second icon indicates test status.*
