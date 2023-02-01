@@ -110,6 +110,7 @@ func (c *Chain) GenerateTransaction(senderPublicKey string, payload aptostypes.P
 	if err != nil {
 		return nil, err
 	}
+	txn = txns[0]
 	txn.MaxGasAmount = gasAmount
 
 	txn.Hash = ""

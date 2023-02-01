@@ -87,7 +87,14 @@ func payloadDemo() aptostypes.Payload {
 }
 
 func TestDapp_GenerateTransactionJson(t *testing.T) {
-	payloadJson := `{"function":"0x89576037b3cc0b89645ea393a47787bb348272c76d6941c574b053672b848039::aggregator::three_step_route","type_arguments":["0x1::aptos_coin::AptosCoin","0x1000000fa32d122c18a6a31c009ce5e71674f22d06a581bb0a15575e6addadcc::usda::USDA","0x84d7aeef42d38a5ffc3ccef853e1b82e4958659d16a7de736a29c55fbbeb0114::staked_aptos_coin::StakedAptosCoin","0x5e156f1207d0ebfa19a9eeff00d62a282278fb8719f4fab3a586a0a2c0fffbea::coin::T","u8","0x190d44266241744264b964a37b8f09863167a12d3e70cda39376cfb4e3561e12::curves::Uncorrelated","u8"],"arguments":[9,"0",true,3,"1",true,8,"4",false,"10000000","694840"]}`
+	payloadJson := `
+	{
+		"function": "0x1::managed_coin::register",
+		"type_arguments": [
+			"0xccc9620d38c4f3991fa68a03ad98ef3735f18d04717cb75d7a1300dd8a7eed75::coin::T"
+		]
+	}
+	`
 
 	chain := NewChainWithRestUrl(mainnetRestUrl)
 	account, err := NewAccountWithMnemonic(testcase.M1)
