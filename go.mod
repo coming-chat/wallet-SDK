@@ -10,7 +10,7 @@ require (
 	github.com/btcsuite/btcd/chaincfg/chainhash v1.0.1
 	github.com/centrifuge/go-substrate-rpc-client/v4 v4.0.0
 	github.com/coming-chat/go-aptos v0.0.0-20221109075633-2804a4483f45
-	github.com/coming-chat/go-sui v0.0.0-20230114101317-aa45ff3e8e17
+	github.com/coming-chat/go-sui v0.0.0-20230210080543-2895454c0bbc
 	github.com/coming-chat/lcs v0.0.0-20220829063658-0fa8432d2bdf
 	github.com/coming-chat/merlin v0.1.2-0.20211216101619-d46ce5719651
 	github.com/cosmos/cosmos-sdk v0.45.4
@@ -63,6 +63,7 @@ require (
 	github.com/drand/kyber v1.1.4 // indirect
 	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/dvsekhvalnov/jose2go v1.5.0 // indirect
+	github.com/fardream/go-bcs v0.2.1 // indirect
 	github.com/felixge/httpsnoop v1.0.1 // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/go-kit/kit v0.12.0 // indirect

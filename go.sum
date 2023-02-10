@@ -253,8 +253,8 @@ github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd/go.mod h1:sE
 github.com/coinbase/rosetta-sdk-go v0.7.0 h1:lmTO/JEpCvZgpbkOITL95rA80CPKb5CtMzLaqF2mCNg=
 github.com/coming-chat/go-aptos v0.0.0-20221109075633-2804a4483f45 h1:BqPY3c9NNuJ8OGdyVQdWueQcFwmOyywpPY+nDwf82e0=
 github.com/coming-chat/go-aptos v0.0.0-20221109075633-2804a4483f45/go.mod h1:HaGBPmQOlKzxkbGancRSX8wcwDxvj9Zs173CSla43vE=
-github.com/coming-chat/go-sui v0.0.0-20230114101317-aa45ff3e8e17 h1:eC1l+g69Brx9n51heHijJKyNKl8X9UYLpQC/BbVoCeI=
-github.com/coming-chat/go-sui v0.0.0-20230114101317-aa45ff3e8e17/go.mod h1:IT0m3ZSiKSXgitJT6rMuMAlfNal4ounjryXWqoNgrd8=
+github.com/coming-chat/go-sui v0.0.0-20230210080543-2895454c0bbc h1:dqrO/atiKEtUwCWqN2nIISsy6Q/3ExdWyggf7wXykE0=
+github.com/coming-chat/go-sui v0.0.0-20230210080543-2895454c0bbc/go.mod h1:D3s+A1WjI5fg/htr/F1OR72+MGEFFtMoheufXfMDDPA=
 github.com/coming-chat/keyring v1.3.0 h1:dMVtKkbVIzPMpMOrCQydAD5YeDCbvYBc7XLMEJqY9g0=
 github.com/coming-chat/keyring v1.3.0/go.mod h1:fc+wB5KTk9wQ9sDx0kFXB3A0MaeGHM9AwRStKOQ5vOA=
 github.com/coming-chat/lcs v0.0.0-20220829063658-0fa8432d2bdf h1:HrK16SFZnoxATieE+UHFSHZ6D2+XApv9g752MgvW7es=
@@ -391,6 +391,8 @@ github.com/facebookgo/stack v0.0.0-20160209184415-751773369052 h1:JWuenKqqX8nojt
 github.com/facebookgo/stack v0.0.0-20160209184415-751773369052/go.mod h1:UbMTZqLaRiH3MsBH8va0n7s1pQYcu3uTb8G4tygF4Zg=
 github.com/facebookgo/subset v0.0.0-20150612182917-8dac2c3c4870 h1:E2s37DuLxFhQDg5gKsWoLBOB0n+ZW8s599zru8FJ2/Y=
 github.com/facebookgo/subset v0.0.0-20150612182917-8dac2c3c4870/go.mod h1:5tD+neXqOorC30/tWg0LCSkrqj/AR6gu8yY8/fpw1q0=
+github.com/fardream/go-bcs v0.2.1 h1:ffW/0Jr0b2WXLNPF8AX6wWI9ETVE4+aXkv2aIXVViwE=
+github.com/fardream/go-bcs v0.2.1/go.mod h1:UsoxhIoe2GsVexX0s5NDLIChxeb/JUbjw7IWzzgF3Xk=
 github.com/fatih/color v1.3.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5KwzbycvMj4=
 github.com/fatih/color v1.7.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5KwzbycvMj4=
 github.com/fatih/color v1.9.0/go.mod h1:eQcE1qtQxscV5RaZvpXrrb8Drkc3/DdQ+uUYCNjL+zU=
