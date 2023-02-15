@@ -3,6 +3,7 @@ package sui
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"math/big"
 	"strconv"
 
@@ -11,6 +12,8 @@ import (
 )
 
 var cachedSuiSystemState *types.SuiSystemState
+
+const maxGasBudgetForStake = 20000
 
 type ValidatorState struct {
 	// The current epoch in Sui. An epoch takes approximately 24 hours and runs in checkpoints.
@@ -38,7 +41,7 @@ type Validator struct {
 	DelegatedStaked string `json:"delegatedStaked"`
 	SelfStaked      string `json:"selfStaked"`
 	TotalRewards    string `json:"totalRewards"`
-	GasPrice        string `json:"gasPrice"`
+	GasPrice        int64  `json:"gasPrice"`
 }
 
 type DelegationStatus = base.SDKEnumInt
@@ -136,24 +139,39 @@ func (c *Chain) AddDelegation(owner, amount string, validatorAddress string) (tx
 	if err != nil {
 		return
 	}
-	amountInt, err := strconv.ParseUint(amount, 10, 64)
-	if err != nil {
-		return
+	amountInt, ok := big.NewInt(0).SetString(amount, 10)
+	if !ok {
+		return nil, errors.New("invalid stake amount")
 	}
 	cli, err := c.client()
 	if err != nil {
 		return
 	}
-	coins := []types.ObjectId{} // TODO:
-	gasCoin := types.ObjectId{} // TODO:
-	gasBudget := uint64(3000)   // TODO:
-	txBytes, err := cli.RequestAddDelegation(context.Background(), *signer, coins, amountInt, *validator, gasCoin, gasBudget)
+	gasPrice, err := cli.GetReferenceGasPrice(context.Background())
+	if err != nil {
+		return
+	}
+	maxGasFee := gasPrice * maxGasBudgetForStake
+	allCoins, err := cli.GetSuiCoinsOwnedByAddress(context.Background(), *signer)
+	if err != nil {
+		return
+	}
+	needCoins, gasCoin, err := allCoins.PickSUICoinsWithGas(amountInt, maxGasFee, types.PickBigger)
+	if err != nil {
+		return
+	}
+	coinIds := []types.ObjectId{}
+	for _, coin := range needCoins {
+		coinIds = append(coinIds, coin.Reference.ObjectId)
+	}
+	gasId := gasCoin.Reference.ObjectId
+	txBytes, err := cli.RequestAddDelegation(context.Background(), *signer, coinIds, amountInt.Uint64(), *validator, gasId, maxGasBudgetForStake)
 	if err != nil {
 		return
 	}
 	return &Transaction{
 		Txn:          *txBytes,
-		MaxGasBudget: int64(gasBudget),
+		MaxGasBudget: int64(maxGasFee),
 	}, nil
 }
 
@@ -176,16 +194,28 @@ func (c *Chain) WithdrawDelegation(owner, delegationId, stakeId string) (txn *Tr
 	if err != nil {
 		return
 	}
-	gasCoin := types.ObjectId{} // TODO:
-	gasBudget := uint64(3000)   // TODO:
-	txnBytes, err := cli.RequestWithdrawDelegation(context.Background(), *signer, *delegation, *stakeSui, gasCoin, gasBudget)
+	gasPrice, err := cli.GetReferenceGasPrice(context.Background())
+	if err != nil {
+		return
+	}
+	maxGasFee := gasPrice * maxGasBudgetForStake
+	allCoins, err := cli.GetSuiCoinsOwnedByAddress(context.Background(), *signer)
+	if err != nil {
+		return
+	}
+	gasCoin, err := allCoins.PickCoinNoLess(maxGasFee)
+	if err != nil {
+		return
+	}
+	gasId := gasCoin.Reference.ObjectId
+	txnBytes, err := cli.RequestWithdrawDelegation(context.Background(), *signer, *delegation, *stakeSui, gasId, maxGasBudgetForStake)
 	if err != nil {
 		return
 	}
 
 	return &Transaction{
 		Txn:          *txnBytes,
-		MaxGasBudget: int64(gasBudget),
+		MaxGasBudget: int64(maxGasFee),
 	}, nil
 }
 
@@ -212,6 +242,7 @@ func mapRawValidator(v *types.Validator, epoch uint64) *Validator {
 		DelegatedStaked: strconv.FormatUint(delegatedStaked, 10),
 		TotalStaked:     strconv.FormatUint(totalStaked, 10),
 		TotalRewards:    strconv.FormatUint(rewardsPoolBalance, 10),
+		GasPrice:        int64(v.GasPrice),
 	}
 	return &validator
 }
