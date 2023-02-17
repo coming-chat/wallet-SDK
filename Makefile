@@ -20,6 +20,7 @@ pkgStarcoin =  $(pkgCore)/starcoin
 pkgMSCheck = ${pkgCore}/multi-signature-check
 
 pkgAll = ${pkgBase} ${pkgWallet} ${pkgPolka} ${pkgBtc} ${pkgEth} ${pkgCosmos} ${pkgMSCheck} ${pkgDoge} ${pkgSolana} ${pkgAptos} ${pkgSui} ${pkgStarcoin}
+# pkgAll = ${module}/ggtest
 
 iosPackageName=Wallet.xcframework
 
