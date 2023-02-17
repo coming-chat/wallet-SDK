@@ -8,7 +8,23 @@ import (
 // exchange `Aniable Object` & `Any`
 type Aniable interface {
 	AsAny() *Any
-	// func AsAniable(a *Any) *Aniable
+
+	// You need to implement the following methods if your class name is Xxx
+	// func AsXxx(a *Any) *Xxx
+
+	// ======= template
+	// func (o *Xxx) AsAny() *base.Any {
+	// 	return &base.Any{Value: o}
+	// }
+	//	func AsXxx(a *base.Any) *Xxx {
+	//		if r, ok := a.Value.(*Xxx); ok {
+	//			return r
+	//		}
+	//		if r, ok := a.Value.(Xxx); ok {
+	//			return &r
+	//		}
+	//		return nil
+	//	}
 }
 
 // 如果需要自定义类型支持 Any, 需要遵循协议 Aniable
@@ -18,6 +34,15 @@ type Any struct {
 
 func NewAny() *Any {
 	return &Any{}
+}
+
+// `Any` only support Marshal
+func (a Any) MarshalJSON() ([]byte, error) {
+	return json.Marshal(a.Value)
+}
+
+func (a *Any) JsonString() (*OptionalString, error) {
+	return JsonString(a)
 }
 
 func (a *Any) SetString(v string)  { a.Value = v }
@@ -52,6 +77,15 @@ type AnyArray struct {
 
 func NewAnyArray() *AnyArray {
 	return &AnyArray{Values: make([]any, 0)}
+}
+
+// `AnyArray` only support Marshal
+func (a AnyArray) MarshalJSON() ([]byte, error) {
+	return json.Marshal(a.Values)
+}
+
+func (a *AnyArray) JsonString() (*OptionalString, error) {
+	return JsonString(a)
 }
 
 func (a *AnyArray) Count() int {
@@ -113,6 +147,15 @@ type AnyMap struct {
 
 func NewAnyMap() *AnyMap {
 	return &AnyMap{Values: make(map[string]any)}
+}
+
+// `AnyMap` only support Marshal
+func (a AnyMap) MarshalJSON() ([]byte, error) {
+	return json.Marshal(a.Values)
+}
+
+func (a *AnyMap) JsonString() (*OptionalString, error) {
+	return JsonString(a)
 }
 
 func (a *AnyMap) ValueOf(key string) *Any {
