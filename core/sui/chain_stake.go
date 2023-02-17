@@ -17,8 +17,9 @@ const maxGasBudgetForStake = 20000
 
 type ValidatorState struct {
 	// The current epoch in Sui. An epoch takes approximately 24 hours and runs in checkpoints.
-	Epoch      int64        `json:"epoch"`
-	Validators []*Validator `json:"validators"`
+	Epoch int64 `json:"epoch"`
+	// Array of `Validator` elements
+	Validators *base.AnyArray `json:"validators"`
 
 	// The amount of all tokens staked in the Sui Network.
 	TotalStaked string `json:"totalStaked"`
@@ -26,6 +27,16 @@ type ValidatorState struct {
 	TotalRewards string `json:"lastEpochReward"`
 
 	Time int64 `json:"time"`
+}
+
+func (s *ValidatorState) JsonString() (*base.OptionalString, error) {
+	return base.JsonString(s)
+}
+
+func NewValidatorStateWithJsonString(str string) (*ValidatorState, error) {
+	var o ValidatorState
+	err := base.FromJsonString(str, &o)
+	return &o, err
 }
 
 type Validator struct {
@@ -42,6 +53,29 @@ type Validator struct {
 	SelfStaked      string `json:"selfStaked"`
 	TotalRewards    string `json:"totalRewards"`
 	GasPrice        int64  `json:"gasPrice"`
+}
+
+func (s *Validator) JsonString() (*base.OptionalString, error) {
+	return base.JsonString(s)
+}
+
+func NewValidatorWithJsonString(str string) (*Validator, error) {
+	var o Validator
+	err := base.FromJsonString(str, &o)
+	return &o, err
+}
+
+func (o *Validator) AsAny() *base.Any {
+	return &base.Any{Value: o}
+}
+func AsValidator(a *base.Any) *Validator {
+	if r, ok := a.Value.(*Validator); ok {
+		return r
+	}
+	if r, ok := a.Value.(Validator); ok {
+		return &r
+	}
+	return nil
 }
 
 type DelegationStatus = base.SDKEnumInt
@@ -63,6 +97,39 @@ type DelegatedStake struct {
 	Validator    *Validator       `json:"validator"`
 }
 
+func (s *DelegatedStake) JsonString() (*base.OptionalString, error) {
+	return base.JsonString(s)
+}
+
+func NewDelegatedStakeWithJsonString(str string) (*DelegatedStake, error) {
+	var o DelegatedStake
+	err := base.FromJsonString(str, &o)
+	return &o, err
+}
+
+func NewDelegatedStakeArrayWithJsonString(str string) (*base.AnyArray, error) {
+	var o []*DelegatedStake
+	err := base.FromJsonString(str, &o)
+	arr := make([]any, len(o))
+	for i, v := range o {
+		arr[i] = v
+	}
+	return &base.AnyArray{Values: arr}, err
+}
+
+func (o *DelegatedStake) AsAny() *base.Any {
+	return &base.Any{Value: o}
+}
+func AsDelegatedStake(a *base.Any) *DelegatedStake {
+	if r, ok := a.Value.(*DelegatedStake); ok {
+		return r
+	}
+	if r, ok := a.Value.(DelegatedStake); ok {
+		return &r
+	}
+	return nil
+}
+
 func (c *Chain) GetValidatorState() (s *ValidatorState, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
 
@@ -77,10 +144,10 @@ func (c *Chain) GetValidatorState() (s *ValidatorState, err error) {
 	cachedSuiSystemState = state // cache
 
 	totalRewards := big.NewInt(0)
-	var validators = []*Validator{}
+	var validators = &base.AnyArray{}
 	for _, v := range state.Validators.ActiveValidators {
 		validator := mapRawValidator(&v, state.Epoch)
-		validators = append(validators, validator)
+		validators.Values = append(validators.Values, validator)
 		reward := big.NewInt(int64(v.DelegationStakingPool.RewardsPool.Value))
 		totalRewards.Add(totalRewards, reward)
 	}
@@ -100,7 +167,8 @@ func (c *Chain) GetValidatorState() (s *ValidatorState, err error) {
 	return res, nil
 }
 
-func (c *Chain) GetDelegatedStakes(owner string) (arr []*DelegatedStake, err error) {
+// @return Array of `DelegatedStake` elements
+func (c *Chain) GetDelegatedStakes(owner string) (arr *base.AnyArray, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
 
 	addr, err := types.NewAddressFromHex(owner)
@@ -119,10 +187,10 @@ func (c *Chain) GetDelegatedStakes(owner string) (arr []*DelegatedStake, err err
 		cachedSuiSystemState, _ = cli.GetSuiSystemState(context.Background())
 	}
 
-	var stakes = []*DelegatedStake{}
+	var stakes = &base.AnyArray{}
 	for _, s := range list {
 		stake := mapRawStake(&s)
-		stakes = append(stakes, stake)
+		stakes.Values = append(stakes.Values, stake)
 	}
 
 	return stakes, nil

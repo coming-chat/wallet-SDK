@@ -11,8 +11,9 @@ func TestGetValidatorState(t *testing.T) {
 
 	state, err := chain.GetValidatorState()
 	require.Nil(t, err)
-	for _, v := range state.Validators {
-		t.Logf("%-10v, APY = %v", v.Name, v.APY)
+	for _, v := range state.Validators.Values {
+		vv := v.(*Validator)
+		t.Logf("%-10v, APY = %v", vv.Name, vv.APY)
 	}
 }
 
@@ -22,8 +23,9 @@ func TestGetDelegatedStakes(t *testing.T) {
 
 	list, err := chain.GetDelegatedStakes(acc.Address())
 	require.Nil(t, err)
-	for _, v := range list {
-		t.Log(v)
+	for _, v := range list.Values {
+		vv := v.(*DelegatedStake)
+		t.Log(vv)
 	}
 }
 
