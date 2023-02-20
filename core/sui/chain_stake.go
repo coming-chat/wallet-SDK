@@ -227,6 +227,26 @@ func (c *Chain) TotalStakedSuiAtValidator(validator, owner string, useCache bool
 	return &base.OptionalString{Value: total.String()}, nil
 }
 
+func AverageApyOfDelegatedStakes(stakes *base.AnyArray) float64 {
+	totalApy := float64(0)
+	added := map[string]bool{}
+	for _, val := range stakes.Values {
+		if stake, ok := val.(*DelegatedStake); ok {
+			if added[stake.ValidatorAddress] != true {
+				totalApy = totalApy + stake.Validator.APY
+				added[stake.ValidatorAddress] = true
+				continue
+			}
+		}
+	}
+
+	if count := len(added); count > 0 {
+		return totalApy / float64(count)
+	} else {
+		return 0
+	}
+}
+
 func (c *Chain) AddDelegation(owner, amount string, validatorAddress string) (txn *Transaction, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
 
