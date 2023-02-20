@@ -6,12 +6,14 @@ import (
 	"errors"
 	"math/big"
 	"strconv"
+	"sync"
 
 	"github.com/coming-chat/go-sui/types"
 	"github.com/coming-chat/wallet-SDK/core/base"
 )
 
 var cachedSuiSystemState *types.SuiSystemState
+var cachedDelegatedStakesMap sync.Map
 
 const maxGasBudgetForStake = 20000
 
@@ -193,7 +195,36 @@ func (c *Chain) GetDelegatedStakes(owner string) (arr *base.AnyArray, err error)
 		stakes.Values = append(stakes.Values, stake)
 	}
 
+	cachedDelegatedStakesMap.Store(owner, stakes)
 	return stakes, nil
+}
+
+// @useCache If true, when there is cached data, the result will be returned directly without requesting data on the chain.
+func (c *Chain) TotalStakedSuiAtValidator(validator, owner string, useCache bool) (sui *base.OptionalString, err error) {
+	var stakes *base.AnyArray
+	if useCache {
+		if cachedStakes, ok := cachedDelegatedStakesMap.Load(owner); ok {
+			if v, ok := cachedStakes.(*base.AnyArray); ok {
+				stakes = v
+			}
+		}
+	}
+	if stakes == nil {
+		stakes, err = c.GetDelegatedStakes(owner)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	total := big.NewInt(0)
+	for _, val := range stakes.Values {
+		if stake, ok := val.(*DelegatedStake); ok {
+			if principalInt, ok := big.NewInt(0).SetString(stake.Principal, 10); ok {
+				total = total.Add(total, principalInt)
+			}
+		}
+	}
+	return &base.OptionalString{Value: total.String()}, nil
 }
 
 func (c *Chain) AddDelegation(owner, amount string, validatorAddress string) (txn *Transaction, err error) {
