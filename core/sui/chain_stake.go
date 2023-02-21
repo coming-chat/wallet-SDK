@@ -35,6 +35,10 @@ func (s *ValidatorState) JsonString() (*base.OptionalString, error) {
 	return base.JsonString(s)
 }
 
+func NewValidatorState() *ValidatorState {
+	return &ValidatorState{}
+}
+
 func NewValidatorStateWithJsonString(str string) (*ValidatorState, error) {
 	var o ValidatorState
 	err := base.FromJsonString(str, &o)
@@ -59,6 +63,10 @@ type Validator struct {
 
 func (s *Validator) JsonString() (*base.OptionalString, error) {
 	return base.JsonString(s)
+}
+
+func NewValidator() *Validator {
+	return &Validator{}
 }
 
 func NewValidatorWithJsonString(str string) (*Validator, error) {
@@ -101,6 +109,10 @@ type DelegatedStake struct {
 
 func (s *DelegatedStake) JsonString() (*base.OptionalString, error) {
 	return base.JsonString(s)
+}
+
+func NewDelegatedStake() *DelegatedStake {
+	return &DelegatedStake{}
 }
 
 func NewDelegatedStakeWithJsonString(str string) (*DelegatedStake, error) {
@@ -167,6 +179,33 @@ func (c *Chain) GetValidatorState() (s *ValidatorState, err error) {
 	}
 
 	return res, nil
+}
+
+func (c *Chain) GetValidator(address string, useCache bool) (v *Validator, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
+
+	var state *types.SuiSystemState = nil
+	if useCache && cachedSuiSystemState != nil {
+		state = cachedSuiSystemState
+	}
+	if cachedSuiSystemState == nil {
+		cli, err := c.client()
+		if err != nil {
+			return nil, err
+		}
+		state, err = cli.GetSuiSystemState(context.Background())
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	for _, val := range state.Validators.ActiveValidators {
+		if address == val.Metadata.SuiAddress.ShortString() || address == val.Metadata.SuiAddress.String() {
+			validator := mapRawValidator(&val, state.Epoch)
+			return validator, nil
+		}
+	}
+	return nil, errors.New("not found")
 }
 
 // @return Array of `DelegatedStake` elements
