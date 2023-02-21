@@ -82,7 +82,7 @@ func (c *Chain) SendRawTransaction(signedTx string) (hash string, err error) {
 		return
 	}
 	hash = response.TransactionDigest()
-	effects := response.EffectsCert.Effects.Effects.Status
+	effects := response.Effects.Effects.Status
 	if effects.Status != types.TransactionStatusSuccess {
 		return hash, errors.New(effects.Error)
 	}

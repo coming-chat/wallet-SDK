@@ -138,11 +138,11 @@ func (t *Token) BuildTransferTransaction(account *Account, receiverAddress, amou
 		if err2 != nil {
 			return nil, err2
 		}
-		cert := response.EffectsCert
-		if cert == nil || cert.ConfirmedLocalExecution == false {
+		effects := response.Effects
+		if response.ConfirmedLocalExecution == false {
 			return nil, fmt.Errorf("Merge coins failed.")
 		}
-		status := cert.Effects.Effects.Status
+		status := effects.Effects.Status
 		if status.Status != types.TransactionStatusSuccess {
 			return nil, fmt.Errorf(`Merge coins failed: %v`, status.Error)
 		}
