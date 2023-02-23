@@ -200,7 +200,7 @@ func (c *Chain) GetValidator(address string, useCache bool) (v *Validator, err e
 	}
 
 	for _, val := range state.Validators.ActiveValidators {
-		if address == val.Metadata.SuiAddress.ShortString() || address == val.Metadata.SuiAddress.String() {
+		if types.IsSameStringAddress(address, val.Metadata.SuiAddress) {
 			validator := mapRawValidator(&val, state.Epoch)
 			return validator, nil
 		}
@@ -388,11 +388,11 @@ func mapRawValidator(v *types.Validator, epoch uint64) *Validator {
 	rewardsPoolBalance := v.DelegationStakingPool.RewardsPool.Value
 
 	validator := Validator{
-		Address:    meta.SuiAddress.String(),
-		Name:       string(meta.Name),
-		Desc:       string(meta.Description),
-		ImageUrl:   string(meta.ImageUrl),
-		ProjectUrl: string(meta.ProjectUrl),
+		Address:    meta.SuiAddress,
+		Name:       meta.Name,
+		Desc:       meta.Description,
+		ImageUrl:   meta.ImageUrl,
+		ProjectUrl: meta.ProjectUrl,
 		APY:        v.CalculateAPY(epoch),
 
 		Commission:      int64(v.CommissionRate),

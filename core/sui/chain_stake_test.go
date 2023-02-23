@@ -7,7 +7,7 @@ import (
 )
 
 func TestGetValidatorState(t *testing.T) {
-	chain := TestnetChain()
+	chain := DevnetChain()
 
 	state, err := chain.GetValidatorState()
 	require.Nil(t, err)
@@ -18,7 +18,7 @@ func TestGetValidatorState(t *testing.T) {
 }
 
 func TestGetDelegatedStakes(t *testing.T) {
-	chain := TestnetChain()
+	chain := DevnetChain()
 	acc := M1Account(t)
 
 	list, err := chain.GetDelegatedStakes(acc.Address())
@@ -30,11 +30,11 @@ func TestGetDelegatedStakes(t *testing.T) {
 }
 
 func TestAddDelegation(t *testing.T) {
-	chain := TestnetChain()
+	chain := DevnetChain()
 	acc := M1Account(t)
 
-	amount := "500000000" // 0.5
-	validator := "0x0018bb48352b63c246bdb154b15a3b0d17dff193"
+	amount := "10000000" // 0.01
+	validator := "0x0399e8864553720dac9258c7708ca821221bb246"
 	txn, err := chain.AddDelegation(acc.Address(), amount, validator)
 	require.Nil(t, err)
 
