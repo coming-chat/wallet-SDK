@@ -25,6 +25,15 @@ const (
 	FaucetUrlTestnet = "https://faucet.testnet.sui.io/gas"
 )
 
+var (
+	_ IChain = &Chain{} // check implement
+)
+
+type IChain interface {
+	base.Chain
+	GetClient() (*client.Client, error)
+}
+
 type Chain struct {
 	rpcClient *client.Client
 	RpcUrl    string
@@ -215,6 +224,11 @@ func (c *Chain) EstimateGasFee(transaction *Transaction) (fee *base.OptionalStri
 	transaction.EstimateGasFee = int64(gasFee)
 	gasString := strconv.FormatUint(gasFee, 10)
 	return &base.OptionalString{Value: gasString}, nil
+}
+
+// MARK - Implement the protocol IChain
+func (c *Chain) GetClient() (*client.Client, error) {
+	return c.client()
 }
 
 /**
