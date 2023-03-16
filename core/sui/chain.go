@@ -32,6 +32,7 @@ var (
 type IChain interface {
 	base.Chain
 	GetClient() (*client.Client, error)
+	EstimateGasFee(transaction *Transaction) (fee *base.OptionalString, err error)
 }
 
 type Chain struct {
