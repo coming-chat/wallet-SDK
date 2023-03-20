@@ -10,7 +10,7 @@ require (
 	github.com/btcsuite/btcd/chaincfg/chainhash v1.0.1
 	github.com/centrifuge/go-substrate-rpc-client/v4 v4.0.0
 	github.com/coming-chat/go-aptos v0.0.0-20221109075633-2804a4483f45
-	github.com/coming-chat/go-sui v0.0.0-20230223034339-8c7b35690e6d
+	github.com/coming-chat/go-sui v0.0.0-20230302033519-1628554cea3a
 	github.com/coming-chat/lcs v0.0.0-20220829063658-0fa8432d2bdf
 	github.com/coming-chat/merlin v0.1.2-0.20211216101619-d46ce5719651
 	github.com/cosmos/cosmos-sdk v0.45.4

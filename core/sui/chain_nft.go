@@ -29,6 +29,9 @@ func (c *Chain) FetchNFTs(owner string) (res map[string][]*base.NFT, err error) 
 		if strings.HasSuffix(oi.Type, "::capy::Capy") {
 			return true
 		}
+		if strings.HasSuffix(oi.Type, "::dmens::DmensMeta") {
+			return true
+		}
 		return false
 	})
 	if err != nil {
