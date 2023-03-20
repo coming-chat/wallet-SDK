@@ -23,16 +23,10 @@ func (c *Chain) FetchNFTs(owner string) (res map[string][]*base.NFT, err error) 
 		return
 	}
 	nftObjects, err := client.BatchGetFilteredObjectsOwnedByAddress(context.Background(), *address, func(oi types.ObjectInfo) bool {
-		if oi.Type == "0x2::devnet_nft::DevNetNFT" {
-			return true
+		if strings.HasPrefix(oi.Type, "0x2::coin::Coin<") {
+			return false
 		}
-		if strings.HasSuffix(oi.Type, "::capy::Capy") {
-			return true
-		}
-		if strings.HasSuffix(oi.Type, "::dmens::DmensMeta") {
-			return true
-		}
-		return false
+		return true
 	})
 	if err != nil {
 		return

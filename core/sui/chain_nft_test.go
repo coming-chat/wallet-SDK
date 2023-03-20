@@ -9,7 +9,7 @@ import (
 )
 
 func TestFetchNfts(t *testing.T) {
-	// owner := "0x1f06dd5f2d30819b790017497adf11d56f2db187"
+	// owner := "0xd059ab4c5c7d2be6537101f76c41f25cdf5cc26e"
 	owner := M1Account(t).Address()
 	chain := DevnetChain()
 
