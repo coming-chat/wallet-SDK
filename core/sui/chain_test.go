@@ -72,7 +72,7 @@ func TestSplit(t *testing.T) {
 	account := M1Account(t)
 	chain := DevnetChain()
 
-	client, err := chain.client()
+	client, err := chain.Client()
 	require.Nil(t, err)
 
 	signer, _ := types.NewAddressFromHex(account.Address())

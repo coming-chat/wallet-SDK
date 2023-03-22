@@ -34,7 +34,7 @@ func NewChainWithRpcUrl(rpcUrl string) *Chain {
 	return &Chain{RpcUrl: rpcUrl}
 }
 
-func (c *Chain) client() (*client.Client, error) {
+func (c *Chain) Client() (*client.Client, error) {
 	if c.rpcClient != nil {
 		return c.rpcClient, nil
 	}
@@ -73,7 +73,7 @@ func (c *Chain) SendRawTransaction(signedTx string) (hash string, err error) {
 	if err != nil {
 		return
 	}
-	cli, err := c.client()
+	cli, err := c.Client()
 	if err != nil {
 		return
 	}
@@ -93,7 +93,7 @@ func (c *Chain) SendRawTransaction(signedTx string) (hash string, err error) {
 func (c *Chain) FetchTransactionDetail(hash string) (detail *base.TransactionDetail, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
 
-	cli, err := c.client()
+	cli, err := c.Client()
 	if err != nil {
 		return
 	}
@@ -179,7 +179,7 @@ func (c *Chain) TransferObject(sender, receiver, objectId, gasId string, gasBudg
 			return nil, errors.New("Invalid gas object id")
 		}
 	}
-	client, err := c.client()
+	client, err := c.Client()
 	if err != nil {
 		return
 	}
@@ -197,7 +197,7 @@ func (c *Chain) EstimateGasFee(transaction *Transaction) (fee *base.OptionalStri
 	defer base.CatchPanicAndMapToBasicError(&err)
 	fee = &base.OptionalString{Value: strconv.FormatInt(MaxGasBudget, 10)}
 
-	cli, err := c.client()
+	cli, err := c.Client()
 	if err != nil {
 		return
 	}

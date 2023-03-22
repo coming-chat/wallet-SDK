@@ -147,7 +147,7 @@ func AsDelegatedStake(a *base.Any) *DelegatedStake {
 func (c *Chain) GetValidatorState() (s *ValidatorState, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
 
-	cli, err := c.client()
+	cli, err := c.Client()
 	if err != nil {
 		return nil, err
 	}
@@ -189,7 +189,7 @@ func (c *Chain) GetValidator(address string, useCache bool) (v *Validator, err e
 		state = cachedSuiSystemState
 	}
 	if cachedSuiSystemState == nil {
-		cli, err := c.client()
+		cli, err := c.Client()
 		if err != nil {
 			return nil, err
 		}
@@ -216,7 +216,7 @@ func (c *Chain) GetDelegatedStakes(owner string) (arr *base.AnyArray, err error)
 	if err != nil {
 		return nil, err
 	}
-	cli, err := c.client()
+	cli, err := c.Client()
 	if err != nil {
 		return nil, err
 	}
@@ -304,7 +304,7 @@ func (c *Chain) AddDelegation(owner, amount string, validatorAddress string) (tx
 	if !ok {
 		return nil, errors.New("invalid stake amount")
 	}
-	cli, err := c.client()
+	cli, err := c.Client()
 	if err != nil {
 		return
 	}
@@ -351,7 +351,7 @@ func (c *Chain) WithdrawDelegation(owner, delegationId, stakeId string) (txn *Tr
 	if err != nil {
 		return
 	}
-	cli, err := c.client()
+	cli, err := c.Client()
 	if err != nil {
 		return
 	}

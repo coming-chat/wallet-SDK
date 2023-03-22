@@ -18,7 +18,7 @@ func (c *Chain) FetchNFTs(owner string) (res map[string][]*base.NFT, err error) 
 	if err != nil {
 		return
 	}
-	client, err := c.client()
+	client, err := c.Client()
 	if err != nil {
 		return
 	}
@@ -108,7 +108,7 @@ func (c *Chain) MintNFT(creator, name, description, uri, gasId string, gasBudget
 			return nil, errors.New("Invalid gas object id")
 		}
 	}
-	client, err := c.client()
+	client, err := c.Client()
 	if err != nil {
 		return
 	}

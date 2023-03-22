@@ -8,7 +8,7 @@ import (
 const gasBudget = 3000
 
 func (c *Chain) BaseMoveCall(address, packageId, module, funcName string, arg []any) (*Transaction, error) {
-	client, err := c.client()
+	client, err := c.Client()
 	if err != nil {
 		return nil, err
 	}

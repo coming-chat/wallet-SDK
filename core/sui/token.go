@@ -121,7 +121,7 @@ func (t *Token) BuildTransferTransaction(account *Account, receiverAddress, amou
 		return
 	}
 
-	cli, err := t.chain.client()
+	cli, err := t.chain.Client()
 	if err != nil {
 		return
 	}

@@ -13,7 +13,7 @@ import (
 func (t *Token) getCoins(address string) (coins types.Coins, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
 
-	cli, err := t.chain.client()
+	cli, err := t.chain.Client()
 	if err != nil {
 		return
 	}
@@ -36,7 +36,7 @@ func (t *Token) getCoins(address string) (coins types.Coins, err error) {
 func (t *Token) getTokenMetadata(coinType string) (metadata *types.SuiCoinMetadata, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
 
-	cli, err := t.chain.client()
+	cli, err := t.chain.Client()
 	if err != nil {
 		return
 	}
