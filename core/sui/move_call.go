@@ -2,12 +2,13 @@ package sui
 
 import (
 	"context"
+
 	"github.com/coming-chat/go-sui/types"
 )
 
 const gasBudget = 3000
 
-func (c *Chain) BaseMoveCall(address, packageId, module, funcName string, arg []any) (*Transaction, error) {
+func (c *Chain) BaseMoveCall(address, packageId, module, funcName string, typArgs []string, arg []any) (*Transaction, error) {
 	client, err := c.Client()
 	if err != nil {
 		return nil, err
@@ -35,7 +36,7 @@ func (c *Chain) BaseMoveCall(address, packageId, module, funcName string, arg []
 		*packageIdHex,
 		module,
 		funcName,
-		[]string{},
+		typArgs,
 		arg,
 		&coin.Reference.ObjectId,
 		gasBudget,
