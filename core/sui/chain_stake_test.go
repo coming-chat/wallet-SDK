@@ -1,6 +1,7 @@
 package sui
 
 import (
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -19,9 +20,10 @@ func TestGetValidatorState(t *testing.T) {
 
 func TestGetDelegatedStakes(t *testing.T) {
 	chain := DevnetChain()
-	acc := M1Account(t)
+	address := M1Account(t).Address()
+	// address := "0xd77955e670f42c1bc5e94b9e68e5fe9bdbed9134d784f2a14dfe5fc1b24b5d9f"
 
-	list, err := chain.GetDelegatedStakes(acc.Address())
+	list, err := chain.GetDelegatedStakes(address)
 	require.Nil(t, err)
 	for _, v := range list.Values {
 		vv := v.(*DelegatedStake)
@@ -33,15 +35,15 @@ func TestAddDelegation(t *testing.T) {
 	chain := DevnetChain()
 	acc := M1Account(t)
 
-	amount := "10000000" // 0.01
-	validator := "0x0399e8864553720dac9258c7708ca821221bb246"
+	amount := strconv.FormatInt(1e9, 10) // 1 SUI
+	validator := "0x8ce890590fed55c37d44a043e781ad94254b413ee079a53fb5c037f7a6311304"
 	txn, err := chain.AddDelegation(acc.Address(), amount, validator)
 	require.Nil(t, err)
 
 	signedTxn, err := txn.SignWithAccount(acc)
 	require.Nil(t, err)
 
-	if false {
+	if true {
 		hash, err := chain.SendRawTransaction(signedTxn.Value)
 		require.Nil(t, err)
 

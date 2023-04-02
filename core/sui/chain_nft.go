@@ -23,8 +23,9 @@ func (c *Chain) FetchNFTs(owner string) (res map[string][]*base.NFT, err error) 
 		return
 	}
 	nftObjects, err := client.BatchGetFilteredObjectsOwnedByAddress(context.Background(), *address, types.SuiObjectDataOptions{
-		ShowType:    true,
-		ShowContent: true,
+		ShowType:                true,
+		ShowContent:             true,
+		ShowPreviousTransaction: true,
 	}, func(sod *types.SuiObjectData) bool {
 		if strings.HasPrefix(*sod.Type, "0x2::coin::Coin<") {
 			return false
@@ -76,7 +77,7 @@ func transformNFT(nft *types.SuiObjectResponse) *base.NFT {
 			Url         string `json:"url"`
 		} `json:"fields"`
 	}{}
-	metaBytes, err := json.Marshal(nft.Data)
+	metaBytes, err := json.Marshal(nft.Data.Content)
 	if err != nil {
 		return nil
 	}

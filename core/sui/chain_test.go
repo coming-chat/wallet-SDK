@@ -58,10 +58,9 @@ func TestEstimateGas(t *testing.T) {
 }
 
 func TestFetchTransactionDetail(t *testing.T) {
-	// digest := "4nMHqXi60PLxj/DxLCWwkiO3L41kIz89qMDEpStRdP8="
-	// digest := "hPOfmwiRRsxleD0JGA67bWFBur+z1BdbLo6vYxzB+9w=" // normal coin transfer
-	// digest := "uJYpq7vh/3dI4tzmc5wsecUGTMzYiae4829C1VBuQHM=" // testnet nft transfer
-	digest := "4SjJh84sJ2KC56ULKv42Ftq6r9RHSuBqq64vraGvosmJ" // devnet sui transfer
+	// digest := "3aFbrGBfi9A5ZSjv9jcEwx8TQjm1XC8NqWvSkzKJEbVE" // normal transfer
+	// digest := "C9grwYWbJyBypSbgXEMaQ47LJ2uy3bToQLtqA9cVee2z" // not coin transfer
+	digest := "29MYmpk3kzcmB6e7FMwe6mD7x5pqDCeRoRvhJDFnXvAX"
 	chain := DevnetChain()
 
 	detail, err := chain.FetchTransactionDetail(digest)
@@ -93,8 +92,7 @@ func TestSplit(t *testing.T) {
 }
 
 func TestFaucet(t *testing.T) {
-	address := "0x6c5d2cd6e62734f61b4e318e58cbfd1c4b99dfaf"
-	// address = "0x30d903963ceb4a5c74de9f87498fb467cae72008"
+	address := "0x7e875ea78ee09f08d72e2676cf84e0f1c8ac61d94fa339cc8e37cace85bebc6e"
 	digest, err := FaucetFundAccount(address, "")
 	if err != nil {
 		t.Logf("error = %v", err)
