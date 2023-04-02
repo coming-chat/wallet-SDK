@@ -2,7 +2,6 @@ package sui
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"math/big"
 	"strconv"
@@ -10,9 +9,10 @@ import (
 
 	"github.com/coming-chat/go-sui/types"
 	"github.com/coming-chat/wallet-SDK/core/base"
+	"github.com/shopspring/decimal"
 )
 
-var cachedSuiSystemState *types.SuiSystemState
+var cachedSuiSystemState *types.SuiSystemStateSummary
 var cachedDelegatedStakesMap sync.Map
 
 const maxGasBudgetForStake = 20000
@@ -151,25 +151,20 @@ func (c *Chain) GetValidatorState() (s *ValidatorState, err error) {
 	if err != nil {
 		return nil, err
 	}
-	state, err := cli.GetSuiSystemState(context.Background())
+	state, err := cli.GetLatestSuiSystemState(context.Background())
 	if err != nil {
 		return nil, err
 	}
 	cachedSuiSystemState = state // cache
 
-	totalRewards := big.NewInt(0)
+	totalRewards := decimal.Zero
 	var validators = &base.AnyArray{}
-	for _, v := range state.Validators.ActiveValidators {
+	for _, v := range state.ActiveValidators {
 		validator := mapRawValidator(&v, state.Epoch)
 		validators.Values = append(validators.Values, validator)
-		reward := big.NewInt(int64(v.DelegationStakingPool.RewardsPool.Value))
-		totalRewards.Add(totalRewards, reward)
+		totalRewards.Add(v.RewardsPool)
 	}
-
-	delegationStake := big.NewInt(int64(state.Validators.DelegationStake))
-	validatorStake := big.NewInt(int64(state.Validators.ValidatorStake))
-	totalStake := big.NewInt(0).Add(delegationStake, validatorStake)
-
+	totalStake := state.TotalStake
 	res := &ValidatorState{
 		Epoch:      int64(state.Epoch),
 		Validators: validators,
@@ -184,7 +179,7 @@ func (c *Chain) GetValidatorState() (s *ValidatorState, err error) {
 func (c *Chain) GetValidator(address string, useCache bool) (v *Validator, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
 
-	var state *types.SuiSystemState = nil
+	var state *types.SuiSystemStateSummary = nil
 	if useCache && cachedSuiSystemState != nil {
 		state = cachedSuiSystemState
 	}
@@ -193,14 +188,14 @@ func (c *Chain) GetValidator(address string, useCache bool) (v *Validator, err e
 		if err != nil {
 			return nil, err
 		}
-		state, err = cli.GetSuiSystemState(context.Background())
+		state, err = cli.GetLatestSuiSystemState(context.Background())
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	for _, val := range state.Validators.ActiveValidators {
-		if types.IsSameStringAddress(address, val.Metadata.SuiAddress) {
+	for _, val := range state.ActiveValidators {
+		if types.IsSameStringAddress(address, val.SuiAddress.String()) {
 			validator := mapRawValidator(&val, state.Epoch)
 			return validator, nil
 		}
@@ -220,18 +215,20 @@ func (c *Chain) GetDelegatedStakes(owner string) (arr *base.AnyArray, err error)
 	if err != nil {
 		return nil, err
 	}
-	list, err := cli.GetDelegatedStakes(context.Background(), *addr)
+	list, err := cli.GetStakes(context.Background(), *addr)
 	if err != nil {
 		return nil, err
 	}
 	if cachedSuiSystemState == nil {
-		cachedSuiSystemState, _ = cli.GetSuiSystemState(context.Background())
+		cachedSuiSystemState, _ = cli.GetLatestSuiSystemState(context.Background())
 	}
 
 	var stakes = &base.AnyArray{}
 	for _, s := range list {
-		stake := mapRawStake(&s)
-		stakes.Values = append(stakes.Values, stake)
+		stakeArray := mapRawStake(&s)
+		for _, stake := range stakeArray {
+			stakes.Values = append(stakes.Values, stake)
+		}
 	}
 
 	cachedDelegatedStakesMap.Store(owner, stakes)
@@ -312,38 +309,34 @@ func (c *Chain) AddDelegation(owner, amount string, validatorAddress string) (tx
 	if err != nil {
 		return
 	}
-	maxGasFee := gasPrice * maxGasBudgetForStake
+	maxGasFee := gasPrice.Mul(decimal.NewFromInt32(maxGasBudgetForStake))
 	allCoins, err := cli.GetSuiCoinsOwnedByAddress(context.Background(), *signer)
 	if err != nil {
 		return
 	}
-	needCoins, gasCoin, err := allCoins.PickSUICoinsWithGas(amountInt, maxGasFee, types.PickBigger)
+	needCoins, gasCoin, err := allCoins.PickSUICoinsWithGas(amountInt, maxGasFee.BigInt().Uint64(), types.PickBigger)
 	if err != nil {
 		return
 	}
 	coinIds := []types.ObjectId{}
 	for _, coin := range needCoins {
-		coinIds = append(coinIds, coin.Reference.ObjectId)
+		coinIds = append(coinIds, coin.CoinObjectId)
 	}
-	gasId := gasCoin.Reference.ObjectId
-	txBytes, err := cli.RequestAddDelegation(context.Background(), *signer, coinIds, amountInt.Uint64(), *validator, gasId, maxGasBudgetForStake)
+	gasId := gasCoin.CoinObjectId
+	txBytes, err := cli.RequestAddStake(context.Background(), *signer, coinIds, amountInt.Uint64(), *validator, &gasId, maxGasBudgetForStake)
 	if err != nil {
 		return
 	}
 	return &Transaction{
 		Txn:          *txBytes,
-		MaxGasBudget: int64(maxGasFee),
+		MaxGasBudget: maxGasFee.BigInt().Int64(),
 	}, nil
 }
 
-func (c *Chain) WithdrawDelegation(owner, delegationId, stakeId string) (txn *Transaction, err error) {
+func (c *Chain) WithdrawDelegation(owner, stakeId string) (txn *Transaction, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
 
 	signer, err := types.NewAddressFromHex(owner)
-	if err != nil {
-		return
-	}
-	delegation, err := types.NewHexData(delegationId)
 	if err != nil {
 		return
 	}
@@ -359,85 +352,90 @@ func (c *Chain) WithdrawDelegation(owner, delegationId, stakeId string) (txn *Tr
 	if err != nil {
 		return
 	}
-	maxGasFee := gasPrice * maxGasBudgetForStake
+	maxGasFee := gasPrice.Mul(decimal.NewFromInt32(maxGasBudgetForStake))
 	allCoins, err := cli.GetSuiCoinsOwnedByAddress(context.Background(), *signer)
 	if err != nil {
 		return
 	}
-	gasCoin, err := allCoins.PickCoinNoLess(maxGasFee)
+	gasCoin, err := allCoins.PickCoinNoLess(maxGasFee.BigInt().Uint64())
 	if err != nil {
 		return
 	}
-	gasId := gasCoin.Reference.ObjectId
-	txnBytes, err := cli.RequestWithdrawDelegation(context.Background(), *signer, *delegation, *stakeSui, gasId, maxGasBudgetForStake)
+	gasId := gasCoin.CoinObjectId
+	txnBytes, err := cli.RequestWithdrawStake(context.Background(), *signer, *stakeSui, &gasId, maxGasBudgetForStake)
 	if err != nil {
 		return
 	}
 
 	return &Transaction{
 		Txn:          *txnBytes,
-		MaxGasBudget: int64(maxGasFee),
+		MaxGasBudget: maxGasFee.BigInt().Int64(),
 	}, nil
 }
 
-func mapRawValidator(v *types.Validator, epoch uint64) *Validator {
+func mapRawValidator(v *types.SuiValidatorSummary, epoch int64) *Validator {
 	if v == nil {
 		return nil
 	}
-	meta := v.Metadata
-	selfStaked := v.StakeAmount
-	delegatedStaked := v.DelegationStakingPool.SuiBalance
-	totalStaked := selfStaked + delegatedStaked
-	rewardsPoolBalance := v.DelegationStakingPool.RewardsPool.Value
+	// selfStaked := v.StakeAmount
+	// delegatedStaked := v.DelegationStakingPool.SuiBalance
+	// totalStaked := selfStaked + delegatedStaked
+	rewardsPoolBalance := v.RewardsPool
 
 	validator := Validator{
-		Address:    meta.SuiAddress,
-		Name:       meta.Name,
-		Desc:       meta.Description,
-		ImageUrl:   meta.ImageUrl,
-		ProjectUrl: meta.ProjectUrl,
+		Address:    v.SuiAddress.String(),
+		Name:       v.Name,
+		Desc:       v.Description,
+		ImageUrl:   v.ImageUrl,
+		ProjectUrl: v.ProjectUrl,
 		APY:        v.CalculateAPY(epoch),
 
 		Commission:      int64(v.CommissionRate),
-		SelfStaked:      strconv.FormatUint(selfStaked, 10),
-		DelegatedStaked: strconv.FormatUint(delegatedStaked, 10),
-		TotalStaked:     strconv.FormatUint(totalStaked, 10),
-		TotalRewards:    strconv.FormatUint(rewardsPoolBalance, 10),
+		SelfStaked:      "--",
+		DelegatedStaked: "--",
+		TotalStaked:     "--",
+		TotalRewards:    rewardsPoolBalance.String(),
 		GasPrice:        int64(v.GasPrice),
 	}
 	return &validator
 }
 
-func mapRawStake(s *types.DelegatedStake) *DelegatedStake {
+func mapRawStake(s *types.DelegatedStake) []*DelegatedStake {
 	if s == nil {
 		return nil
 	}
-	stake := &DelegatedStake{
-		StakeId:          s.StakedSui.Id.Id.String(),
-		ValidatorAddress: s.StakedSui.ValidatorAddress.String(),
-		Principal:        strconv.FormatUint(s.StakedSui.Principal.Value, 10),
-		RequestEpoch:     int64(s.StakedSui.DelegationRequestEpoch),
-	}
 
+	var sameValidator *Validator = nil
 	if cachedSuiSystemState != nil {
-		earned, validator := s.CalculateEarnAmount(cachedSuiSystemState.Validators.ActiveValidators)
-		stake.EarnedAmount = strconv.FormatUint(earned, 10)
-		stake.Validator = mapRawValidator(validator, cachedSuiSystemState.Epoch)
+		for _, v := range cachedSuiSystemState.ActiveValidators {
+			if v.SuiAddress.ShortString() == s.ValidatorAddress.ShortString() {
+				sameValidator = mapRawValidator(&v, cachedSuiSystemState.Epoch)
+			}
+		}
 	}
 
-	statusData, err := json.Marshal(s.DelegationStatus)
-	if err != nil {
-		stake.Status = DelegationStatusPending
-		return stake
-	}
-	var activeStatus types.ActiveDelegationStatus
-	err = json.Unmarshal(statusData, &activeStatus)
-	if err != nil {
-		stake.Status = DelegationStatusPending
-		return stake
+	stakeArray := []*DelegatedStake{}
+	for _, stake := range s.Stakes {
+		requestEpoch, _ := strconv.ParseInt(stake.StakeRequestEpoch, 10, 64)
+		stakeRes := &DelegatedStake{
+			StakeId:          stake.StakedSuiId.String(),
+			ValidatorAddress: s.ValidatorAddress.String(),
+			Principal:        strconv.FormatUint(stake.Principal, 10),
+			RequestEpoch:     requestEpoch,
+			Validator:        sameValidator,
+		}
+		if stake.EstimatedReward != nil {
+			stakeRes.EarnedAmount = strconv.FormatUint(*stake.EstimatedReward, 10)
+		} else {
+			stakeRes.EarnedAmount = "0"
+		}
+		if stake.Status == types.StakeStatusActive {
+			stakeRes.Status = DelegationStatusActived
+		} else {
+			stakeRes.Status = DelegationStatusPending
+		}
+		stakeArray = append(stakeArray, stakeRes)
 	}
 
-	stake.Status = DelegationStatusActived
-	stake.DelegationId = activeStatus.Active.Id.Id.String()
-	return stake
+	return stakeArray
 }

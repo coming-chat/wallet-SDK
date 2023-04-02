@@ -6,6 +6,7 @@ import (
 
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/coming-chat/go-sui/account"
+	"github.com/coming-chat/go-sui/sui_types"
 	"github.com/coming-chat/wallet-SDK/core/base"
 )
 
@@ -28,7 +29,11 @@ func AccountWithPrivateKey(prikey string) (*Account, error) {
 	if err != nil {
 		return nil, err
 	}
-	account := account.NewAccount(seed)
+	scheme, err := sui_types.NewSignatureScheme(0)
+	if err != nil {
+		return nil, err
+	}
+	account := account.NewAccount(scheme, seed)
 	return &Account{account: account}, nil
 }
 
@@ -36,22 +41,22 @@ func AccountWithPrivateKey(prikey string) (*Account, error) {
 
 // @return privateKey data
 func (a *Account) PrivateKey() ([]byte, error) {
-	return a.account.PrivateKey[:32], nil
+	return a.account.KeyPair.PrivateKey()[:32], nil
 }
 
 // @return privateKey string that will start with 0x.
 func (a *Account) PrivateKeyHex() (string, error) {
-	return types.HexEncodeToString(a.account.PrivateKey[:32]), nil
+	return types.HexEncodeToString(a.account.KeyPair.PrivateKey()[:32]), nil
 }
 
 // @return publicKey data
 func (a *Account) PublicKey() []byte {
-	return a.account.PublicKey
+	return a.account.KeyPair.PublicKey()
 }
 
 // @return publicKey string that will start with 0x.
 func (a *Account) PublicKeyHex() string {
-	return types.HexEncodeToString(a.account.PublicKey)
+	return types.HexEncodeToString(a.account.KeyPair.PublicKey())
 }
 
 func (a *Account) Address() string {

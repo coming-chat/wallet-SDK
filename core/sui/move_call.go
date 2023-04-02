@@ -38,7 +38,7 @@ func (c *Chain) BaseMoveCall(address, packageId, module, funcName string, typArg
 		funcName,
 		typArgs,
 		arg,
-		&coin.Reference.ObjectId,
+		&coin.CoinObjectId,
 		gasBudget,
 	)
 	if err != nil {

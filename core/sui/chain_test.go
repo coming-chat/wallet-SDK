@@ -2,8 +2,10 @@ package sui
 
 import (
 	"context"
+	"strconv"
 	"testing"
 
+	"github.com/coming-chat/go-sui/sui_types"
 	"github.com/coming-chat/go-sui/types"
 	"github.com/stretchr/testify/require"
 )
@@ -27,7 +29,7 @@ func TestTransfer(t *testing.T) {
 	// toAddress := "0x0c61c2622b77e2a9a3c953690e915ab82d6370d9"
 	// amount := "8000000"
 	toAddress := M2Account(t).Address()
-	amount := "1000"
+	amount := strconv.FormatUint(uint64(0.01e9), 10)
 
 	signedTxn, err := token.BuildTransferTxWithAccount(account, toAddress, amount)
 	require.Nil(t, err)
@@ -44,7 +46,7 @@ func TestEstimateGas(t *testing.T) {
 	token := NewTokenMain(chain)
 
 	toAddress := M2Account(t).Address()
-	amount := "1000"
+	amount := strconv.FormatUint(uint64(0.01e9), 10)
 
 	txn, err := token.BuildTransferTransaction(account, toAddress, amount)
 	require.Nil(t, err)
@@ -76,14 +78,15 @@ func TestSplit(t *testing.T) {
 	require.Nil(t, err)
 
 	signer, _ := types.NewAddressFromHex(account.Address())
-	coin := "0x1f3bd44bf1b4a53eda1b649c459ca3593d38054b"
+	coin := "0x0a1248b37b452627eaa588166464cb84718e9c032da3d986c8a9f7f99c1eb6d8"
 	coinID, err := types.NewHexData(coin)
 	require.Nil(t, err)
 
-	txn, err := client.SplitCoinEqual(context.Background(), *signer, *coinID, 5, nil, 2000)
-	signedTxn := txn.SignSerializedSigWith(account.account.PrivateKey)
+	txn, err := client.SplitCoinEqual(context.Background(), *signer, *coinID, 2, nil, 2000)
+	signature, err := account.account.SignSecure(txn.TxBytes.Data(), sui_types.DefaultIntent())
+	require.Nil(t, err)
 
-	detail, err := client.ExecuteTransactionSerializedSig(context.Background(), *signedTxn, types.TxnRequestTypeWaitForLocalExecution)
+	detail, err := client.ExecuteTransactionBlock(context.Background(), txn.TxBytes, []any{signature}, &types.SuiTransactionBlockResponseOptions{ShowEffects: true}, types.TxnRequestTypeWaitForEffectsCert)
 	require.Nil(t, err)
 	t.Log(detail)
 }

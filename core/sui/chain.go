@@ -1,7 +1,6 @@
 package sui
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -19,8 +18,8 @@ const (
 	MaxGasBudget   = 10000
 	MaxGasForMerge = 10000
 
-	MaxGasForPay      = 150
-	MaxGasForTransfer = 200
+	MaxGasForPay      = 10000
+	MaxGasForTransfer = 10000
 
 	FaucetUrlTestnet = "https://faucet.testnet.sui.io/gas"
 )
@@ -68,7 +67,7 @@ func (c *Chain) SendRawTransaction(signedTx string) (hash string, err error) {
 	if err != nil {
 		return
 	}
-	signedTxn := types.SignedTransactionSerializedSig{}
+	signedTxn := SignedTransaction{}
 	err = json.Unmarshal(bytes.Data(), &signedTxn)
 	if err != nil {
 		return
@@ -77,14 +76,16 @@ func (c *Chain) SendRawTransaction(signedTx string) (hash string, err error) {
 	if err != nil {
 		return
 	}
-	response, err := cli.ExecuteTransactionSerializedSig(context.Background(), signedTxn, types.TxnRequestTypeWaitForEffectsCert)
+	options := types.SuiTransactionBlockResponseOptions{
+		ShowEffects: true,
+	}
+	response, err := cli.ExecuteTransactionBlock(context.Background(), *signedTxn.TxBytes, []any{signedTxn.Signature}, &options, types.TxnRequestTypeWaitForEffectsCert)
 	if err != nil {
 		return
 	}
-	hash = response.TransactionDigest()
-	effects := response.Effects.Effects.Status
-	if effects.Status != types.TransactionStatusSuccess {
-		return hash, errors.New(effects.Error)
+	hash = response.Digest
+	if !response.Effects.IsSuccess() {
+		return hash, errors.New(response.Effects.Status.Error)
 	}
 	return hash, nil
 }
@@ -97,41 +98,64 @@ func (c *Chain) FetchTransactionDetail(hash string) (detail *base.TransactionDet
 	if err != nil {
 		return
 	}
-	resp, err := cli.GetTransaction(context.Background(), hash)
+	resp, err := cli.GetTransactionBlock(context.Background(), hash, types.SuiTransactionBlockResponseOptions{
+		ShowInput:   true,
+		ShowEffects: true,
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	var firstRecipient *types.HexData
-	var total uint64
-	for _, txn := range resp.Certificate.Data.Transactions {
-		if tsui := txn.TransferSui; tsui != nil {
-			if firstRecipient == nil {
-				firstRecipient = &tsui.Recipient
-				total = tsui.Amount
-			} else if bytes.Compare(firstRecipient.Data(), tsui.Recipient.Data()) == 0 {
-				total = total + tsui.Amount
-			}
-		} else if tobject := txn.TransferObject; tobject != nil {
-			if firstRecipient == nil {
-				firstRecipient = &tobject.Recipient
-			}
-		}
+	var notCoinTransferErr = errors.New("Invalid coin transfer transaction.")
+	var firstRecipient string
+	var total string
+	var data = resp.Transaction.Data
+	var txn = data.Transaction.(map[string]interface{})
+	if txn == nil || txn["kind"] != "ProgrammableTransaction" {
+		return nil, notCoinTransferErr
 	}
-	if firstRecipient == nil {
-		return nil, errors.New("Invalid coin transfer transaction.")
+	dataBytes, err := json.Marshal(txn)
+	if err != nil {
+		return nil, err
+	}
+	var transaction struct {
+		Inputs []struct {
+			Type      string `json:"type"`
+			ValueType string `json:"valueType"`
+			Value     string `json:"value"`
+		} `json:"inputs"`
+	}
+	err = json.Unmarshal(dataBytes, &transaction)
+	if err != nil {
+		return nil, err
+	}
+	if len(transaction.Inputs) != 2 {
+		return nil, notCoinTransferErr
+	}
+	for _, input := range transaction.Inputs {
+		if input.Type != "pure" {
+			return nil, notCoinTransferErr
+		}
+		switch input.ValueType {
+		case "address":
+			firstRecipient = input.Value
+		case "u64":
+			total = input.Value
+		default:
+			return nil, notCoinTransferErr
+		}
 	}
 
 	detail = &base.TransactionDetail{
 		HashString:      hash,
-		FromAddress:     resp.Certificate.Data.Sender.String(),
-		ToAddress:       firstRecipient.String(),
-		Amount:          strconv.FormatUint(total, 10),
+		FromAddress:     data.Sender.ShortString(),
+		ToAddress:       firstRecipient,
+		Amount:          total,
 		EstimateFees:    strconv.FormatUint(resp.Effects.GasFee(), 10),
-		FinishTimestamp: int64(resp.TimestampMs / 1000),
+		FinishTimestamp: int64(*resp.TimestampMs / 1000),
 	}
 	status := resp.Effects.Status
-	if status.Status == types.TransactionStatusSuccess {
+	if status.Status == types.ExecutionStatusSuccess {
 		detail.Status = base.TransactionStatusSuccess
 	} else {
 		detail.Status = base.TransactionStatusFailure
@@ -206,7 +230,7 @@ func (c *Chain) EstimateGasFee(transaction *Transaction) (fee *base.OptionalStri
 		return
 	}
 
-	gasFee := effects.GasFee()
+	gasFee := effects.Effects.GasFee()
 	if gasFee == 0 {
 		gasFee = MaxGasBudget
 	} else {

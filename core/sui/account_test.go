@@ -9,7 +9,7 @@ import (
 
 func TestAccount(t *testing.T) {
 	account := M1Account(t)
-	require.Equal(t, account.Address(), "0x6c5d2cd6e62734f61b4e318e58cbfd1c4b99dfaf")
+	require.Equal(t, account.Address(), "0x7e875ea78ee09f08d72e2676cf84e0f1c8ac61d94fa339cc8e37cace85bebc6e")
 
 	t.Log(account.PrivateKeyHex())
 	t.Log(account.PublicKeyHex())

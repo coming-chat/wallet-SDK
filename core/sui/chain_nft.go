@@ -22,8 +22,11 @@ func (c *Chain) FetchNFTs(owner string) (res map[string][]*base.NFT, err error) 
 	if err != nil {
 		return
 	}
-	nftObjects, err := client.BatchGetFilteredObjectsOwnedByAddress(context.Background(), *address, func(oi types.ObjectInfo) bool {
-		if strings.HasPrefix(oi.Type, "0x2::coin::Coin<") {
+	nftObjects, err := client.BatchGetFilteredObjectsOwnedByAddress(context.Background(), *address, types.SuiObjectDataOptions{
+		ShowType:    true,
+		ShowContent: true,
+	}, func(sod *types.SuiObjectData) bool {
+		if strings.HasPrefix(*sod.Type, "0x2::coin::Coin<") {
 			return false
 		}
 		return true
@@ -59,11 +62,10 @@ func (c *Chain) FetchNFTsJsonString(owner string) (*base.OptionalString, error) 
 	return &base.OptionalString{Value: string(bytes)}, nil
 }
 
-func transformNFT(nft *types.ObjectRead) *base.NFT {
-	if nft.Status != types.ObjectStatusExists {
-		return nil
-	}
-
+func transformNFT(nft *types.SuiObjectResponse) *base.NFT {
+	// if nft.Status != types.ObjectStatusExists {
+	// 	return nil
+	// }
 	meta := struct {
 		Fields struct {
 			Id struct {
@@ -74,7 +76,7 @@ func transformNFT(nft *types.ObjectRead) *base.NFT {
 			Url         string `json:"url"`
 		} `json:"fields"`
 	}{}
-	metaBytes, err := json.Marshal(nft.Details.Data)
+	metaBytes, err := json.Marshal(nft.Data)
 	if err != nil {
 		return nil
 	}
@@ -84,7 +86,7 @@ func transformNFT(nft *types.ObjectRead) *base.NFT {
 	}
 
 	return &base.NFT{
-		HashString: nft.Details.PreviousTransaction,
+		HashString: *nft.Data.PreviousTransaction,
 
 		Id:          meta.Fields.Id.Id,
 		Name:        meta.Fields.Name,

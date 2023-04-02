@@ -21,10 +21,12 @@ func (t *Token) getCoins(address string) (coins types.Coins, err error) {
 	if err != nil {
 		return
 	}
-	coins, err = cli.GetCoinsOwnedByAddress(context.Background(), *addr, t.rType.ShortString())
+	coinType := t.rType.ShortString()
+	pageCoins, err := cli.GetCoins(context.Background(), *addr, &coinType, nil, 0)
 	if err != nil {
 		return
 	}
+	coins = pageCoins.Data
 
 	// sort by balance descend
 	sort.Slice(coins, func(i, j int) bool {
@@ -78,7 +80,7 @@ type PickedCoins struct {
 func (cs *PickedCoins) CoinIds() []types.ObjectId {
 	coinIds := []types.ObjectId{}
 	for _, coin := range cs.Coins {
-		coinIds = append(coinIds, coin.Reference.ObjectId)
+		coinIds = append(coinIds, coin.CoinObjectId)
 	}
 	return coinIds
 }

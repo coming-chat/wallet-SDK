@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/coming-chat/go-sui/sui_types"
 	"github.com/coming-chat/go-sui/types"
 	"github.com/coming-chat/wallet-SDK/core/base"
 )
@@ -133,24 +134,26 @@ func (t *Token) BuildTransferTransaction(account *Account, receiverAddress, amou
 		if err != nil {
 			return nil, err2
 		}
-		signedTxn := txn.SignSerializedSigWith(account.account.PrivateKey)
-		response, err2 := cli.ExecuteTransactionSerializedSig(context.Background(), *signedTxn, types.TxnRequestTypeWaitForLocalExecution)
+		signature, err2 := account.account.SignSecure(txn.TxBytes.Data(), sui_types.DefaultIntent())
+		if err != nil {
+			return nil, err
+		}
+		response, err2 := cli.ExecuteTransactionBlock(context.Background(), txn.TxBytes, []any{signature}, &types.SuiTransactionBlockResponseOptions{ShowEffects: true}, types.TxnRequestTypeWaitForLocalExecution)
 		if err2 != nil {
 			return nil, err2
 		}
 		effects := response.Effects
-		if response.ConfirmedLocalExecution == false {
+		if *response.ConfirmedLocalExecution == false {
 			return nil, fmt.Errorf("Merge coins failed.")
 		}
-		status := effects.Effects.Status
-		if status.Status != types.TransactionStatusSuccess {
-			return nil, fmt.Errorf(`Merge coins failed: %v`, status.Error)
+		if !effects.IsSuccess() {
+			return nil, fmt.Errorf(`Merge coins failed: %v`, effects.Status.Error)
 		}
 	}
 
 	// send sui coin
 	firstCoin := pickedCoin.Coins[0]
-	txnBytes, err := cli.TransferSui(context.Background(), *signer, *recipient, firstCoin.Reference.ObjectId, amountInt, MaxGasForTransfer)
+	txnBytes, err := cli.TransferSui(context.Background(), *signer, *recipient, firstCoin.CoinObjectId, amountInt, MaxGasForTransfer)
 	if err != nil {
 		return
 	}

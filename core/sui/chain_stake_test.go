@@ -54,9 +54,8 @@ func TestWithdrawDelegation(t *testing.T) {
 	acc := M1Account(t)
 
 	if false {
-		delegationId := "0xd1e5f57aa2eb1ef7481e715c46c72fdfb46ec048"
 		stakeId := "0x5cdb23dacf54329660467b900a2598bb796353fa"
-		txn, err := chain.WithdrawDelegation(acc.Address(), delegationId, stakeId)
+		txn, err := chain.WithdrawDelegation(acc.Address(), stakeId)
 		require.Nil(t, err)
 
 		signedTxn, err := txn.SignWithAccount(acc)
