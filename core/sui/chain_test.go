@@ -26,10 +26,10 @@ func TestTransfer(t *testing.T) {
 	chain := DevnetChain()
 	token := NewTokenMain(chain)
 
-	// toAddress := "0x0c61c2622b77e2a9a3c953690e915ab82d6370d9"
-	// amount := "8000000"
 	toAddress := M2Account(t).Address()
 	amount := strconv.FormatUint(uint64(0.01e9), 10)
+	// toAddress := account.Address()
+	// amount := strconv.FormatUint(4e9, 10) // test big amount transfer
 
 	signedTxn, err := token.BuildTransferTxWithAccount(account, toAddress, amount)
 	require.Nil(t, err)
@@ -83,7 +83,8 @@ func TestSplit(t *testing.T) {
 	require.Nil(t, err)
 
 	txn, err := client.SplitCoinEqual(context.Background(), *signer, *coinID, 2, nil, 2000)
-	signature, err := account.account.SignSecure(txn.TxBytes.Data(), sui_types.DefaultIntent())
+	require.Nil(t, err)
+	signature, err := account.account.SignSecureWithoutEncode(txn.TxBytes, sui_types.DefaultIntent())
 	require.Nil(t, err)
 
 	detail, err := client.ExecuteTransactionBlock(context.Background(), txn.TxBytes, []any{signature}, &types.SuiTransactionBlockResponseOptions{ShowEffects: true}, types.TxnRequestTypeWaitForEffectsCert)

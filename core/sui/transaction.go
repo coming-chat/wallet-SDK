@@ -28,7 +28,7 @@ func (txn *Transaction) SignWithAccount(account *Account) (signedTx *base.Option
 	if account == nil {
 		return nil, errors.New("Invalid account.")
 	}
-	signature, err := account.account.SignSecure(txn.Txn.TxBytes.Data(), sui_types.DefaultIntent())
+	signature, err := account.account.SignSecureWithoutEncode(txn.Txn.TxBytes, sui_types.DefaultIntent())
 	if err != nil {
 		return nil, err
 	}

@@ -134,7 +134,7 @@ func (t *Token) BuildTransferTransaction(account *Account, receiverAddress, amou
 		if err != nil {
 			return nil, err2
 		}
-		signature, err2 := account.account.SignSecure(txn.TxBytes.Data(), sui_types.DefaultIntent())
+		signature, err2 := account.account.SignSecureWithoutEncode(txn.TxBytes, sui_types.DefaultIntent())
 		if err != nil {
 			return nil, err
 		}
