@@ -48,3 +48,9 @@ func TestAccountWithPrivatekey(t *testing.T) {
 
 	require.Equal(t, accountFromMnemonic.Address(), accountFromPrikey.Address())
 }
+
+func Test_IsValidAddress(t *testing.T) {
+	addr := "0xd77955e670f42c1bc5e94b9e68e5fe9bdbed9134d784f2a14dfe5fc1b24b5d9f"
+	valid := IsValidAddress(addr)
+	require.True(t, valid)
+}

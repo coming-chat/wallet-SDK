@@ -53,6 +53,6 @@ func DecodeAddressToPublicKey(address string) (string, error) {
 
 // @param chainnet chain name
 func IsValidAddress(address string) bool {
-	reg := regexp.MustCompile(`^(0x|0X)?[0-9a-fA-F]{1,40}$`)
+	reg := regexp.MustCompile(`^(0x|0X)?[0-9a-fA-F]{1,64}$`)
 	return reg.MatchString(address)
 }
