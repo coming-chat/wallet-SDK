@@ -15,7 +15,7 @@ import (
 var cachedSuiSystemState *types.SuiSystemStateSummary
 var cachedDelegatedStakesMap sync.Map
 
-const maxGasBudgetForStake = MaxGasBudget
+const maxGasBudgetForStake = 12000000
 
 type ValidatorState struct {
 	// The current epoch in Sui. An epoch takes approximately 24 hours and runs in checkpoints.
@@ -305,16 +305,11 @@ func (c *Chain) AddDelegation(owner, amount string, validatorAddress string) (tx
 	if err != nil {
 		return
 	}
-	gasPrice, err := cli.GetReferenceGasPrice(context.Background())
-	if err != nil {
-		return
-	}
-	maxGasFee := gasPrice.Mul(decimal.NewFromInt32(maxGasBudgetForStake))
 	allCoins, err := cli.GetSuiCoinsOwnedByAddress(context.Background(), *signer)
 	if err != nil {
 		return
 	}
-	needCoins, gasCoin, err := allCoins.PickSUICoinsWithGas(amountInt, maxGasFee.BigInt().Uint64(), types.PickBigger)
+	needCoins, gasCoin, err := allCoins.PickSUICoinsWithGas(amountInt, maxGasBudgetForStake, types.PickBigger)
 	if err != nil {
 		return
 	}
@@ -329,7 +324,7 @@ func (c *Chain) AddDelegation(owner, amount string, validatorAddress string) (tx
 	}
 	return &Transaction{
 		Txn:          *txBytes,
-		MaxGasBudget: maxGasFee.BigInt().Int64(),
+		MaxGasBudget: maxGasBudgetForStake,
 	}, nil
 }
 
@@ -348,16 +343,11 @@ func (c *Chain) WithdrawDelegation(owner, stakeId string) (txn *Transaction, err
 	if err != nil {
 		return
 	}
-	gasPrice, err := cli.GetReferenceGasPrice(context.Background())
-	if err != nil {
-		return
-	}
-	maxGasFee := gasPrice.Mul(decimal.NewFromInt32(maxGasBudgetForStake))
 	allCoins, err := cli.GetSuiCoinsOwnedByAddress(context.Background(), *signer)
 	if err != nil {
 		return
 	}
-	gasCoin, err := allCoins.PickCoinNoLess(maxGasFee.BigInt().Uint64())
+	gasCoin, err := allCoins.PickCoinNoLess(maxGasBudgetForStake)
 	if err != nil {
 		return
 	}
@@ -369,7 +359,7 @@ func (c *Chain) WithdrawDelegation(owner, stakeId string) (txn *Transaction, err
 
 	return &Transaction{
 		Txn:          *txnBytes,
-		MaxGasBudget: maxGasFee.BigInt().Int64(),
+		MaxGasBudget: maxGasBudgetForStake,
 	}, nil
 }
 

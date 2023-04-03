@@ -32,13 +32,17 @@ func TestGetDelegatedStakes(t *testing.T) {
 }
 
 func TestAddDelegation(t *testing.T) {
-	chain := DevnetChain()
-	acc := M1Account(t)
+	chain := TestnetChain()
+	acc := M3Account(t)
 
-	amount := strconv.FormatInt(1e9, 10) // 1 SUI
-	validator := "0x8ce890590fed55c37d44a043e781ad94254b413ee079a53fb5c037f7a6311304"
+	amount := strconv.FormatInt(1e9, 10)                                              // 1 SUI
+	validator := "0x520289e77c838bae8501ae92b151b99a54407288fdd20dee6e5416bfe943eb7a" // coming chat
 	txn, err := chain.AddDelegation(acc.Address(), amount, validator)
 	require.Nil(t, err)
+
+	gas, err := chain.EstimateGasFee(txn)
+	require.Nil(t, err)
+	t.Log(gas.Value)
 
 	signedTxn, err := txn.SignWithAccount(acc)
 	require.Nil(t, err)
