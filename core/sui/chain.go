@@ -15,11 +15,11 @@ import (
 )
 
 const (
-	MaxGasBudget   = 10000
-	MaxGasForMerge = 10000
+	MaxGasBudget   = 300000
+	MaxGasForMerge = 300000
 
-	MaxGasForPay      = 10000
-	MaxGasForTransfer = 10000
+	MaxGasForPay      = 300000
+	MaxGasForTransfer = 300000
 
 	FaucetUrlTestnet = "https://faucet.testnet.sui.io/gas"
 )
@@ -215,6 +215,18 @@ func (c *Chain) TransferObject(sender, receiver, objectId, gasId string, gasBudg
 		Txn:          *tx,
 		MaxGasBudget: gasBudget,
 	}, nil
+}
+
+func (c *Chain) GasPrice() (*base.OptionalString, error) {
+	cli, err := c.Client()
+	if err != nil {
+		return nil, err
+	}
+	price, err := cli.GetReferenceGasPrice(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	return &base.OptionalString{Value: price.String()}, nil
 }
 
 func (c *Chain) EstimateGasFee(transaction *Transaction) (fee *base.OptionalString, err error) {

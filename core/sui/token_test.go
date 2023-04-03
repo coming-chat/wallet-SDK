@@ -42,3 +42,18 @@ func TestTokenInfo(t *testing.T) {
 
 	t.Log(tokenInfo)
 }
+
+func TestToken_EstimateGas(t *testing.T) {
+	chain := TestnetChain()
+	token := NewTokenMain(chain)
+
+	account := M1Account(t)
+
+	gasPrice, err := chain.GasPrice()
+	require.Nil(t, err)
+	t.Log(gasPrice)
+
+	gas, err := token.EstimateFees(account, account.Address(), "1000000")
+	require.Nil(t, err)
+	t.Log(gas.Value)
+}
