@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"math/big"
+	"regexp"
 	"strconv"
 	"sync"
 
@@ -59,6 +60,15 @@ type Validator struct {
 	SelfStaked      string `json:"selfStaked"`
 	TotalRewards    string `json:"totalRewards"`
 	GasPrice        int64  `json:"gasPrice"`
+}
+
+func (v *Validator) isSpecified() bool {
+	if v == nil {
+		return false
+	}
+	reg := regexp.MustCompile(`(?i)^Coming[ ._-]*Chat$`)
+	nameMatched := reg.MatchString(v.Name)
+	return nameMatched || v.Address == "0x520289e77c838bae8501ae92b151b99a54407288fdd20dee6e5416bfe943eb7a"
 }
 
 func (s *Validator) JsonString() (*base.OptionalString, error) {
@@ -161,7 +171,11 @@ func (c *Chain) GetValidatorState() (s *ValidatorState, err error) {
 	var validators = &base.AnyArray{}
 	for _, v := range state.ActiveValidators {
 		validator := mapRawValidator(&v, state.Epoch)
-		validators.Values = append(validators.Values, validator)
+		if validator.isSpecified() {
+			validators.Values = append([]any{validator}, validators.Values...)
+		} else {
+			validators.Values = append(validators.Values, validator)
+		}
 		totalRewards.Add(v.RewardsPool)
 	}
 	totalStake := state.TotalStake
