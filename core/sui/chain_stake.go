@@ -410,7 +410,7 @@ func mapRawValidator(v *types.SuiValidatorSummary, epoch uint64) *Validator {
 		ProjectUrl: v.ProjectUrl,
 		APY:        v.CalculateAPY(epoch),
 
-		Commission:      v.CommissionRate / 100,
+		Commission:      v.CommissionRate,
 		SelfStaked:      "--",
 		DelegatedStaked: "--",
 		TotalStaked:     "--",
