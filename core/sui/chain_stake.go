@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/coming-chat/go-sui/types"
 	"github.com/coming-chat/wallet-SDK/core/base"
@@ -29,11 +30,24 @@ type ValidatorState struct {
 	// The amount of rewards won by all Sui validators in the last epoch.
 	TotalRewards string `json:"lastEpochReward"`
 
-	Time int64 `json:"time"`
+	EpochStartTimestampMs int64 `json:"epochStartTimestampMs"`
+	EpochDurationMs       int64 `json:"epochDurationMs"`
 }
 
 func (s *ValidatorState) JsonString() (*base.OptionalString, error) {
 	return base.JsonString(s)
+}
+
+// @return if time > 0 indicates how long it will take to get the reward;
+// if time < 0 indicates how much time has passed since the reward was earned;
+func (s *ValidatorState) EarningAmountTimeAfterNowMs() int64 {
+	return s.EarningAmountTimeAfterTimestampMs(time.Now().UnixMilli())
+}
+
+func (s *ValidatorState) EarningAmountTimeAfterTimestampMs(timestamp int64) int64 {
+	ranTime := timestamp - s.EpochStartTimestampMs
+	leftTime := s.EpochDurationMs*2 - ranTime
+	return leftTime
 }
 
 func NewValidatorState() *ValidatorState {
@@ -183,8 +197,10 @@ func (c *Chain) GetValidatorState() (s *ValidatorState, err error) {
 		Epoch:      int64(state.Epoch),
 		Validators: validators,
 
-		TotalStaked:  strconv.FormatUint(totalStake, 10),
-		TotalRewards: totalRewards.String(),
+		TotalStaked:           strconv.FormatUint(totalStake, 10),
+		TotalRewards:          totalRewards.String(),
+		EpochDurationMs:       int64(state.EpochDurationMs),
+		EpochStartTimestampMs: int64(state.EpochStartTimestampMs),
 	}
 
 	return res, nil

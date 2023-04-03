@@ -15,11 +15,11 @@ import (
 )
 
 const (
-	MaxGasBudget   = 1500000
-	MaxGasForMerge = 1500000
+	MaxGasBudget   = 10000000
+	MaxGasForMerge = 10000000
 
-	MaxGasForPay      = 1500000
-	MaxGasForTransfer = 1500000
+	MaxGasForPay      = 10000000
+	MaxGasForTransfer = 10000000
 
 	FaucetUrlTestnet = "https://faucet.testnet.sui.io/gas"
 )

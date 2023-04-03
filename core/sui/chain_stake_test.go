@@ -18,6 +18,16 @@ func TestGetValidatorState(t *testing.T) {
 	}
 }
 
+func TestStakeEarningTimems(t *testing.T) {
+	state := ValidatorState{
+		EpochDurationMs:       86400000,
+		EpochStartTimestampMs: 1280501695772,
+	}
+
+	ti := state.EarningAmountTimeAfterNowMs()
+	t.Log(ti)
+}
+
 func TestGetDelegatedStakes(t *testing.T) {
 	chain := DevnetChain()
 	address := M1Account(t).Address()
