@@ -15,7 +15,7 @@ import (
 var cachedSuiSystemState *types.SuiSystemStateSummary
 var cachedDelegatedStakesMap sync.Map
 
-const maxGasBudgetForStake = 20000
+const maxGasBudgetForStake = MaxGasBudget
 
 type ValidatorState struct {
 	// The current epoch in Sui. An epoch takes approximately 24 hours and runs in checkpoints.
@@ -169,7 +169,7 @@ func (c *Chain) GetValidatorState() (s *ValidatorState, err error) {
 		Epoch:      int64(state.Epoch),
 		Validators: validators,
 
-		TotalStaked:  totalStake.String(),
+		TotalStaked:  strconv.FormatUint(totalStake, 10),
 		TotalRewards: totalRewards.String(),
 	}
 
@@ -373,7 +373,7 @@ func (c *Chain) WithdrawDelegation(owner, stakeId string) (txn *Transaction, err
 	}, nil
 }
 
-func mapRawValidator(v *types.SuiValidatorSummary, epoch int64) *Validator {
+func mapRawValidator(v *types.SuiValidatorSummary, epoch uint64) *Validator {
 	if v == nil {
 		return nil
 	}

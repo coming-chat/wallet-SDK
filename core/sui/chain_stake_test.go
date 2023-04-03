@@ -8,7 +8,7 @@ import (
 )
 
 func TestGetValidatorState(t *testing.T) {
-	chain := DevnetChain()
+	chain := TestnetChain()
 
 	state, err := chain.GetValidatorState()
 	require.Nil(t, err)

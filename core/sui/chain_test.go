@@ -22,12 +22,14 @@ func TestnetChain() *Chain {
 }
 
 func TestTransfer(t *testing.T) {
-	account := M1Account(t)
-	chain := DevnetChain()
+	// account := M1Account(t)
+	account := M3Account(t)
+	t.Log("m3 address ", account.Address())
+	chain := TestnetChain()
 	token := NewTokenMain(chain)
 
-	toAddress := M2Account(t).Address()
-	amount := strconv.FormatUint(uint64(0.01e9), 10)
+	toAddress := M1Account(t).Address()
+	amount := strconv.FormatUint(uint64(0.1e9), 10)
 	// toAddress := account.Address()
 	// amount := strconv.FormatUint(4e9, 10) // test big amount transfer
 

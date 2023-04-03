@@ -36,6 +36,12 @@ func M2Account(t *testing.T) *Account {
 	return account
 }
 
+func M3Account(t *testing.T) *Account {
+	account, err := NewAccountWithMnemonic(testcase.M3)
+	require.Nil(t, err)
+	return account
+}
+
 func TestAccountWithPrivatekey(t *testing.T) {
 	mnemonic := testcase.M1
 	accountFromMnemonic, err := NewAccountWithMnemonic(mnemonic)
