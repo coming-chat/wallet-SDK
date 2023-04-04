@@ -17,10 +17,14 @@ func TestAccount(t *testing.T) {
 }
 
 func TestPublicKeyToAddress(t *testing.T) {
-	pub := "0x1cec19ef9a036d27a055e8ad49e8c37cdc16ab2fb3270b73424a971af9039604"
-	addr, err := EncodePublicKeyToAddress(pub)
+	account := M1Account(t)
+
+	pub := account.PublicKeyHex()
+	addr := account.Address()
+
+	encodedAddr, err := EncodePublicKeyToAddress(pub)
 	require.Nil(t, err)
-	require.Equal(t, addr, "0x0bd43fc3aa4f62e8943d16f66beb7546fafb2bac")
+	require.Equal(t, addr, encodedAddr)
 }
 
 // Account of os environment M1
