@@ -4,14 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"strconv"
 	"strings"
 
 	"github.com/coming-chat/go-sui/client"
 	"github.com/coming-chat/go-sui/types"
 	"github.com/coming-chat/wallet-SDK/core/base"
-	"github.com/coming-chat/wallet-SDK/pkg/httpUtil"
 )
 
 const (
@@ -21,7 +19,8 @@ const (
 	MaxGasForPay      = 10000000
 	MaxGasForTransfer = 10000000
 
-	FaucetUrlTestnet = "https://faucet.testnet.sui.io/gas"
+	TestNetFaucetUrl = client.TestNetFaucetUrl
+	DevNetFaucetUrl  = client.DevNetFaucetUrl
 )
 
 type Chain struct {
@@ -256,56 +255,17 @@ func (c *Chain) EstimateGasFee(transaction *Transaction) (fee *base.OptionalStri
 /**
  * @param address Hex-encoded 16 bytes Sui account address wich mints tokens
  * @param faucetUrl default https://faucet.testnet.sui.io/gas
- * @return digest of transfer transaction.
+ * @return digest of the faucet transfer transaction.
  */
 func FaucetFundAccount(address string, faucetUrl string) (h *base.OptionalString, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
-	_, err = types.NewAddressFromHex(address)
-	if err != nil {
-		return
-	}
+
 	if faucetUrl == "" {
-		faucetUrl = FaucetUrlTestnet
+		faucetUrl = TestNetFaucetUrl
 	}
-
-	var authority = ""
-	if strings.Contains(faucetUrl, "devnet") {
-		authority = "faucet.devnet.sui.io"
-	} else {
-		authority = "faucet.testnet.sui.io"
-	}
-	paramJson := fmt.Sprintf(`{"FixedAmountRequest":{"recipient":"%v"}}`, address)
-	params := httpUtil.RequestParams{
-		Header: map[string]string{
-			"Content-Type": "application/json",
-			"Authority":    authority,
-			"authority":    authority,
-		},
-		Body: []byte(paramJson),
-	}
-	res, err := httpUtil.Post(faucetUrl, params)
+	hash, err := client.FaucetFundAccount(address, faucetUrl)
 	if err != nil {
-		return
+		return nil, err
 	}
-	response := struct {
-		TransferredObjects []struct {
-			Amount uint64         `json:"amount"`
-			Id     types.ObjectId `json:"id"`
-			Digest types.Digest   `json:"transfer_tx_digest"`
-		} `json:"transferred_gas_objects,omitempty"`
-		Error string `json:"error,omitempty"`
-	}{}
-	err = json.Unmarshal(res, &response)
-	if err != nil {
-		return
-	}
-	if strings.TrimSpace(response.Error) != "" {
-		return nil, errors.New(response.Error)
-	}
-	if len(response.TransferredObjects) <= 0 {
-		return nil, errors.New("Transaction not found.")
-	}
-
-	digest := response.TransferredObjects[0].Digest.String()
-	return &base.OptionalString{Value: digest}, nil
+	return &base.OptionalString{Value: hash}, nil
 }
