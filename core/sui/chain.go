@@ -264,7 +264,7 @@ func (c *Chain) EstimateGasFee(transaction *Transaction) (fee *base.OptionalStri
 
 // MARK - Implement the protocol IChain
 func (c *Chain) GetClient() (*client.Client, error) {
-	return c.client()
+	return c.rpcClient, nil
 }
 
 /**
