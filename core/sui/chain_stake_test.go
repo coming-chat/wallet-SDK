@@ -1,13 +1,14 @@
 package sui
 
 import (
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 )
 
 func TestGetValidatorState(t *testing.T) {
-	chain := DevnetChain()
+	chain := TestnetChain()
 
 	state, err := chain.GetValidatorState()
 	require.Nil(t, err)
@@ -17,11 +18,22 @@ func TestGetValidatorState(t *testing.T) {
 	}
 }
 
+func TestStakeEarningTimems(t *testing.T) {
+	state := ValidatorState{
+		EpochDurationMs:       86400000,
+		EpochStartTimestampMs: 1280501695772,
+	}
+
+	ti := state.EarningAmountTimeAfterNowMs()
+	t.Log(ti)
+}
+
 func TestGetDelegatedStakes(t *testing.T) {
 	chain := DevnetChain()
-	acc := M1Account(t)
+	address := M1Account(t).Address()
+	// address := "0xd77955e670f42c1bc5e94b9e68e5fe9bdbed9134d784f2a14dfe5fc1b24b5d9f"
 
-	list, err := chain.GetDelegatedStakes(acc.Address())
+	list, err := chain.GetDelegatedStakes(address)
 	require.Nil(t, err)
 	for _, v := range list.Values {
 		vv := v.(*DelegatedStake)
@@ -30,18 +42,22 @@ func TestGetDelegatedStakes(t *testing.T) {
 }
 
 func TestAddDelegation(t *testing.T) {
-	chain := DevnetChain()
-	acc := M1Account(t)
+	chain := TestnetChain()
+	acc := M3Account(t)
 
-	amount := "10000000" // 0.01
-	validator := "0x0399e8864553720dac9258c7708ca821221bb246"
+	amount := strconv.FormatInt(1e9, 10)                                              // 1 SUI
+	validator := "0x520289e77c838bae8501ae92b151b99a54407288fdd20dee6e5416bfe943eb7a" // coming chat
 	txn, err := chain.AddDelegation(acc.Address(), amount, validator)
 	require.Nil(t, err)
+
+	gas, err := chain.EstimateGasFee(txn)
+	require.Nil(t, err)
+	t.Log(gas.Value)
 
 	signedTxn, err := txn.SignWithAccount(acc)
 	require.Nil(t, err)
 
-	if false {
+	if true {
 		hash, err := chain.SendRawTransaction(signedTxn.Value)
 		require.Nil(t, err)
 
@@ -54,9 +70,8 @@ func TestWithdrawDelegation(t *testing.T) {
 	acc := M1Account(t)
 
 	if false {
-		delegationId := "0xd1e5f57aa2eb1ef7481e715c46c72fdfb46ec048"
 		stakeId := "0x5cdb23dacf54329660467b900a2598bb796353fa"
-		txn, err := chain.WithdrawDelegation(acc.Address(), delegationId, stakeId)
+		txn, err := chain.WithdrawDelegation(acc.Address(), stakeId)
 		require.Nil(t, err)
 
 		signedTxn, err := txn.SignWithAccount(acc)

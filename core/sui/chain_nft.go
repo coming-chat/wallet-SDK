@@ -18,18 +18,19 @@ func (c *Chain) FetchNFTs(owner string) (res map[string][]*base.NFT, err error) 
 	if err != nil {
 		return
 	}
-	client, err := c.client()
+	client, err := c.Client()
 	if err != nil {
 		return
 	}
-	nftObjects, err := client.BatchGetFilteredObjectsOwnedByAddress(context.Background(), *address, func(oi types.ObjectInfo) bool {
-		if oi.Type == "0x2::devnet_nft::DevNetNFT" {
-			return true
+	nftObjects, err := client.BatchGetFilteredObjectsOwnedByAddress(context.Background(), *address, types.SuiObjectDataOptions{
+		ShowType:                true,
+		ShowContent:             true,
+		ShowPreviousTransaction: true,
+	}, func(sod *types.SuiObjectData) bool {
+		if strings.HasPrefix(*sod.Type, "0x2::coin::Coin<") {
+			return false
 		}
-		if strings.HasSuffix(oi.Type, "::capy::Capy") {
-			return true
-		}
-		return false
+		return true
 	})
 	if err != nil {
 		return
@@ -62,11 +63,10 @@ func (c *Chain) FetchNFTsJsonString(owner string) (*base.OptionalString, error) 
 	return &base.OptionalString{Value: string(bytes)}, nil
 }
 
-func transformNFT(nft *types.ObjectRead) *base.NFT {
-	if nft.Status != types.ObjectStatusExists {
-		return nil
-	}
-
+func transformNFT(nft *types.SuiObjectResponse) *base.NFT {
+	// if nft.Status != types.ObjectStatusExists {
+	// 	return nil
+	// }
 	meta := struct {
 		Fields struct {
 			Id struct {
@@ -77,7 +77,7 @@ func transformNFT(nft *types.ObjectRead) *base.NFT {
 			Url         string `json:"url"`
 		} `json:"fields"`
 	}{}
-	metaBytes, err := json.Marshal(nft.Details.Data)
+	metaBytes, err := json.Marshal(nft.Data.Content)
 	if err != nil {
 		return nil
 	}
@@ -87,7 +87,7 @@ func transformNFT(nft *types.ObjectRead) *base.NFT {
 	}
 
 	return &base.NFT{
-		HashString: nft.Details.PreviousTransaction,
+		HashString: *nft.Data.PreviousTransaction,
 
 		Id:          meta.Fields.Id.Id,
 		Name:        meta.Fields.Name,
@@ -111,7 +111,7 @@ func (c *Chain) MintNFT(creator, name, description, uri, gasId string, gasBudget
 			return nil, errors.New("Invalid gas object id")
 		}
 	}
-	client, err := c.client()
+	client, err := c.Client()
 	if err != nil {
 		return
 	}

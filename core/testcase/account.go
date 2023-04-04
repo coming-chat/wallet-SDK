@@ -27,6 +27,7 @@ type AccountGroup struct {
 // You need to configure the environment variable of the mnemonic phrase in your computer environment and update the corresponding currency address
 var M1 = os.Getenv("WalletSdkTestM1")
 var M2 = os.Getenv("WalletSdkTestM2")
+var M3 = os.Getenv("WalletSdkTestM3")
 var Mterra = os.Getenv("WalletSdkTestMterra")
 
 var Accounts = AccountGroup{
