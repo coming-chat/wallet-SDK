@@ -414,7 +414,7 @@ func mapRawValidator(v *types.SuiValidatorSummary, epoch uint64) *Validator {
 	}
 	// selfStaked := v.StakeAmount
 	// delegatedStaked := v.DelegationStakingPool.SuiBalance
-	// totalStaked := selfStaked + delegatedStaked
+	totalStaked := v.StakingPoolSuiBalance
 	rewardsPoolBalance := v.RewardsPool
 
 	validator := Validator{
@@ -428,7 +428,7 @@ func mapRawValidator(v *types.SuiValidatorSummary, epoch uint64) *Validator {
 		Commission:      v.CommissionRate,
 		SelfStaked:      "--",
 		DelegatedStaked: "--",
-		TotalStaked:     "--",
+		TotalStaked:     totalStaked.String(),
 		TotalRewards:    rewardsPoolBalance.String(),
 		GasPrice:        int64(v.GasPrice),
 	}

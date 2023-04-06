@@ -14,7 +14,7 @@ func TestGetValidatorState(t *testing.T) {
 	require.Nil(t, err)
 	for _, v := range state.Validators.Values {
 		vv := v.(*Validator)
-		t.Logf("%-10v, APY = %v", vv.Name, vv.APY)
+		t.Logf("%-10v, APY = %v, totalStaked=%v", vv.Name, vv.APY, vv.TotalStaked)
 	}
 }
 
