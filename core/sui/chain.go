@@ -29,7 +29,6 @@ var (
 
 type IChain interface {
 	base.Chain
-	GetClient() (*client.Client, error)
 	EstimateGasFee(transaction *Transaction) (fee *base.OptionalString, err error)
 }
 
@@ -259,11 +258,6 @@ func (c *Chain) EstimateGasFee(transaction *Transaction) (fee *base.OptionalStri
 	transaction.EstimateGasFee = int64(gasFee)
 	gasString := strconv.FormatUint(gasFee, 10)
 	return &base.OptionalString{Value: gasString}, nil
-}
-
-// MARK - Implement the protocol IChain
-func (c *Chain) GetClient() (*client.Client, error) {
-	return c.rpcClient, nil
 }
 
 /**
