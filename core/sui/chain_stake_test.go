@@ -20,12 +20,19 @@ func TestGetValidatorState(t *testing.T) {
 
 func TestStakeEarningTimems(t *testing.T) {
 	state := ValidatorState{
+		Epoch:                 9,
 		EpochDurationMs:       86400000,
-		EpochStartTimestampMs: 1280501695772,
+		EpochStartTimestampMs: 1680760906723,
 	}
 
 	ti := state.EarningAmountTimeAfterNowMs()
 	t.Log(ti)
+
+	delegated := DelegatedStake{
+		RequestEpoch: 8,
+	}
+	ti2 := delegated.EarningAmountTimeAfterNowMs(&state)
+	t.Log(ti2)
 }
 
 func TestGetDelegatedStakes(t *testing.T) {
