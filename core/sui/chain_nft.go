@@ -64,35 +64,36 @@ func (c *Chain) FetchNFTsJsonString(owner string) (*base.OptionalString, error) 
 }
 
 func transformNFT(nft *types.SuiObjectResponse) *base.NFT {
-	// if nft.Status != types.ObjectStatusExists {
-	// 	return nil
-	// }
-	meta := struct {
-		Fields struct {
-			Id struct {
-				Id string `json:"id"`
-			} `json:"id"`
-			Name        string `json:"name"`
-			Description string `json:"description"`
-			Url         string `json:"url"`
-		} `json:"fields"`
+	if nft == nil || nft.Data == nil || nft.Data.Content == nil || nft.Data.Content.Data.MoveObject == nil {
+		return nil
+	}
+	fields := struct {
+		Id struct {
+			Id string `json:"id"`
+		} `json:"id"`
+		Name        string `json:"name"`
+		Description string `json:"description"`
+		Url         string `json:"url"`
 	}{}
-	metaBytes, err := json.Marshal(nft.Data.Content)
+	metaBytes, err := json.Marshal(nft.Data.Content.Data.MoveObject.Fields)
 	if err != nil {
 		return nil
 	}
-	err = json.Unmarshal(metaBytes, &meta)
+	err = json.Unmarshal(metaBytes, &fields)
 	if err != nil {
+		return nil
+	}
+	if fields.Name == "" && fields.Url == "" {
 		return nil
 	}
 
 	return &base.NFT{
 		HashString: *nft.Data.PreviousTransaction,
 
-		Id:          meta.Fields.Id.Id,
-		Name:        meta.Fields.Name,
-		Description: meta.Fields.Description,
-		Image:       strings.Replace(meta.Fields.Url, "ipfs://", "https://ipfs.io/ipfs/", 1),
+		Id:          fields.Id.Id,
+		Name:        fields.Name,
+		Description: fields.Description,
+		Image:       strings.Replace(fields.Url, "ipfs://", "https://ipfs.io/ipfs/", 1),
 	}
 }
 
