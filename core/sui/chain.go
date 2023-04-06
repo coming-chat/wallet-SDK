@@ -29,6 +29,7 @@ var (
 
 type IChain interface {
 	base.Chain
+	Client() (*client.Client, error)
 	EstimateGasFee(transaction *Transaction) (fee *base.OptionalString, err error)
 }
 
