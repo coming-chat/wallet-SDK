@@ -6,7 +6,7 @@ import (
 	"regexp"
 
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
-	"golang.org/x/crypto/sha3"
+	"golang.org/x/crypto/blake2b"
 )
 
 type Util struct {
@@ -43,8 +43,8 @@ func EncodePublicKeyToAddress(publicKey string) (string, error) {
 
 	tmp := []byte{0x00}
 	tmp = append(tmp, publicBytes...)
-	addrBytes := sha3.Sum256(tmp)
-	return "0x" + hex.EncodeToString(addrBytes[:])[:40], nil
+	addrBytes := blake2b.Sum256(tmp)
+	return "0x" + hex.EncodeToString(addrBytes[:])[:64], nil
 }
 
 func DecodeAddressToPublicKey(address string) (string, error) {
