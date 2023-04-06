@@ -109,11 +109,10 @@ func (c *Chain) FetchTransactionDetail(hash string) (detail *base.TransactionDet
 	var firstRecipient string
 	var total string
 	var data = resp.Transaction.Data
-	var txn = data.Transaction.(map[string]interface{})
-	if txn == nil || txn["kind"] != "ProgrammableTransaction" {
+	if data.Transaction.Data.ProgrammableTransaction == nil {
 		return nil, notCoinTransferErr
 	}
-	dataBytes, err := json.Marshal(txn)
+	dataBytes, err := json.Marshal(data.Transaction.Data.ProgrammableTransaction)
 	if err != nil {
 		return nil, err
 	}
