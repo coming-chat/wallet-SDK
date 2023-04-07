@@ -196,10 +196,12 @@ func (c *Chain) GetValidatorState() (s *ValidatorState, err error) {
 	}
 	cachedSuiSystemState = state // cache
 
+	apys := c.getRollingApys(len(state.ActiveValidators), true)
+
 	totalRewards := decimal.Zero
 	var validators = &base.AnyArray{}
 	for _, v := range state.ActiveValidators {
-		validator := mapRawValidator(&v, state.Epoch)
+		validator := mapRawValidator(&v, apys)
 		if validator.isSpecified() {
 			validators.Values = append([]any{validator}, validators.Values...)
 		} else {
@@ -228,7 +230,7 @@ func (c *Chain) GetValidator(address string, useCache bool) (v *Validator, err e
 	if useCache && cachedSuiSystemState != nil {
 		state = cachedSuiSystemState
 	}
-	if cachedSuiSystemState == nil {
+	if state == nil {
 		cli, err := c.Client()
 		if err != nil {
 			return nil, err
@@ -238,14 +240,33 @@ func (c *Chain) GetValidator(address string, useCache bool) (v *Validator, err e
 			return nil, err
 		}
 	}
+	apys := c.getRollingApys(len(state.ActiveValidators), true)
 
 	for _, val := range state.ActiveValidators {
 		if types.IsSameStringAddress(address, val.SuiAddress.String()) {
-			validator := mapRawValidator(&val, state.Epoch)
+			validator := mapRawValidator(&val, apys)
 			return validator, nil
 		}
 	}
 	return nil, errors.New("not found")
+}
+
+var apysCache map[string]float64
+
+// @return not null
+func (c *Chain) getRollingApys(validatorCount int, useCache bool) map[string]float64 {
+	if useCache && apysCache != nil {
+		return apysCache
+	}
+	cli, err := c.Client()
+	if err != nil {
+		return map[string]float64{}
+	}
+	apys, err := cli.GetAndCalculateRollingAverageApys(context.Background(), validatorCount)
+	if err != nil {
+		apys = map[string]float64{} // empty apy data
+	}
+	return apys
 }
 
 // @return Array of `DelegatedStake` elements
@@ -267,10 +288,11 @@ func (c *Chain) GetDelegatedStakes(owner string) (arr *base.AnyArray, err error)
 	if cachedSuiSystemState == nil {
 		cachedSuiSystemState, _ = cli.GetLatestSuiSystemState(context.Background())
 	}
+	apys := c.getRollingApys(50, true)
 
 	var stakes = &base.AnyArray{}
 	for _, s := range list {
-		stakeArray := mapRawStake(&s)
+		stakeArray := mapRawStake(&s, apys)
 		for _, stake := range stakeArray {
 			stakes.Values = append(stakes.Values, stake)
 		}
@@ -408,7 +430,7 @@ func (c *Chain) WithdrawDelegation(owner, stakeId string) (txn *Transaction, err
 	}, nil
 }
 
-func mapRawValidator(v *types.SuiValidatorSummary, epoch uint64) *Validator {
+func mapRawValidator(v *types.SuiValidatorSummary, apys map[string]float64) *Validator {
 	if v == nil {
 		return nil
 	}
@@ -423,7 +445,7 @@ func mapRawValidator(v *types.SuiValidatorSummary, epoch uint64) *Validator {
 		Desc:       v.Description,
 		ImageUrl:   v.ImageUrl,
 		ProjectUrl: v.ProjectUrl,
-		APY:        v.CalculateAPY(epoch),
+		APY:        apys[v.SuiAddress.String()] * 100,
 
 		Commission:      v.CommissionRate,
 		SelfStaked:      "--",
@@ -435,7 +457,7 @@ func mapRawValidator(v *types.SuiValidatorSummary, epoch uint64) *Validator {
 	return &validator
 }
 
-func mapRawStake(s *types.DelegatedStake) []*DelegatedStake {
+func mapRawStake(s *types.DelegatedStake, apys map[string]float64) []*DelegatedStake {
 	if s == nil {
 		return nil
 	}
@@ -444,7 +466,7 @@ func mapRawStake(s *types.DelegatedStake) []*DelegatedStake {
 	if cachedSuiSystemState != nil {
 		for _, v := range cachedSuiSystemState.ActiveValidators {
 			if v.SuiAddress.ShortString() == s.ValidatorAddress.ShortString() {
-				sameValidator = mapRawValidator(&v, cachedSuiSystemState.Epoch)
+				sameValidator = mapRawValidator(&v, apys)
 			}
 		}
 	}
