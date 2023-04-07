@@ -10,7 +10,7 @@ import (
 func TestBalance(t *testing.T) {
 	address := "0x7e875ea78ee09f08d72e2676cf84e0f1c8ac61d94fa339cc8e37cace85bebc6e"
 
-	chain := DevnetChain()
+	chain := TestnetChain()
 	b, err := chain.BalanceOfAddress(address)
 	assert.Nil(t, err)
 

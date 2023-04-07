@@ -60,14 +60,22 @@ func (t *Token) TokenInfo() (*base.TokenInfo, error) {
 }
 
 func (t *Token) BalanceOfAddress(address string) (b *base.Balance, err error) {
-	coins, err := t.getCoins(address)
+	owner, err := types.NewAddressFromHex(address)
 	if err != nil {
 		return nil, err
 	}
-	total := coins.TotalBalance().String()
+	cli, err := t.chain.Client()
+	if err != nil {
+		return nil, err
+	}
+	balance, err := cli.GetBalance(context.Background(), *owner, t.rType.ShortString())
+	if err != nil {
+		return nil, err
+	}
+	balanceStr := strconv.FormatUint(balance.TotalBalance, 10)
 	return &base.Balance{
-		Total:  total,
-		Usable: total,
+		Total:  balanceStr,
+		Usable: balanceStr,
 	}, nil
 }
 
