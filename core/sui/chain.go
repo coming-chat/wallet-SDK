@@ -13,11 +13,11 @@ import (
 )
 
 const (
-	MaxGasBudget   = 10000000
-	MaxGasForMerge = 10000000
+	MaxGasBudget = 90000000
+	// MaxGasForMerge = 10000000
 
 	MaxGasForPay      = 10000000
-	MaxGasForTransfer = 10000000
+	MaxGasForTransfer = 20000000
 
 	TestNetFaucetUrl = client.TestNetFaucetUrl
 	DevNetFaucetUrl  = client.DevNetFaucetUrl

@@ -86,9 +86,9 @@ func (cs *PickedCoins) CoinIds() []types.ObjectId {
 }
 
 func (cs *PickedCoins) EstimateTotalGas() uint64 {
-	return uint64(len(cs.Coins)) * MaxGasForPay
+	return MaxGasForTransfer
 }
 
 func (cs *PickedCoins) EstimateMergeGas() uint64 {
-	return uint64(len(cs.Coins)-1) * MaxGasForPay
+	return MaxGasForTransfer
 }
