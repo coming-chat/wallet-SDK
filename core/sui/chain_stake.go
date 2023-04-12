@@ -207,17 +207,17 @@ func (c *Chain) GetValidatorState() (s *ValidatorState, err error) {
 		} else {
 			validators.Values = append(validators.Values, validator)
 		}
-		totalRewards.Add(v.RewardsPool)
+		totalRewards.Add(v.RewardsPool.Decimal())
 	}
 	totalStake := state.TotalStake
 	res := &ValidatorState{
-		Epoch:      int64(state.Epoch),
+		Epoch:      state.Epoch.Int64(),
 		Validators: validators,
 
-		TotalStaked:           strconv.FormatUint(totalStake, 10),
+		TotalStaked:           strconv.FormatUint(totalStake.Uint64(), 10),
 		TotalRewards:          totalRewards.String(),
-		EpochDurationMs:       int64(state.EpochDurationMs),
-		EpochStartTimestampMs: int64(state.EpochStartTimestampMs),
+		EpochDurationMs:       state.EpochDurationMs.Int64(),
+		EpochStartTimestampMs: state.EpochStartTimestampMs.Int64(),
 	}
 
 	return res, nil
@@ -385,7 +385,7 @@ func (c *Chain) AddDelegation(owner, amount string, validatorAddress string) (tx
 		coinIds = append(coinIds, coin.CoinObjectId)
 	}
 	gasId := gasCoin.CoinObjectId
-	txBytes, err := cli.RequestAddStake(context.Background(), *signer, coinIds, amountInt.Uint64(), *validator, &gasId, maxGasBudgetForStake)
+	txBytes, err := cli.RequestAddStake(context.Background(), *signer, coinIds, decimal.NewFromBigInt(amountInt, 0), *validator, &gasId, decimal.NewFromInt(maxGasBudgetForStake))
 	if err != nil {
 		return
 	}
@@ -419,7 +419,7 @@ func (c *Chain) WithdrawDelegation(owner, stakeId string) (txn *Transaction, err
 		return
 	}
 	gasId := gasCoin.CoinObjectId
-	txnBytes, err := cli.RequestWithdrawStake(context.Background(), *signer, *stakeSui, &gasId, maxGasBudgetForStake)
+	txnBytes, err := cli.RequestWithdrawStake(context.Background(), *signer, *stakeSui, &gasId, decimal.NewFromInt(maxGasBudgetForStake))
 	if err != nil {
 		return
 	}
@@ -447,12 +447,12 @@ func mapRawValidator(v *types.SuiValidatorSummary, apys map[string]float64) *Val
 		ProjectUrl: v.ProjectUrl,
 		APY:        apys[v.SuiAddress.String()] * 100,
 
-		Commission:      v.CommissionRate,
+		Commission:      v.CommissionRate.Int64(),
 		SelfStaked:      "--",
 		DelegatedStaked: "--",
-		TotalStaked:     totalStaked.String(),
-		TotalRewards:    rewardsPoolBalance.String(),
-		GasPrice:        int64(v.GasPrice),
+		TotalStaked:     strconv.FormatInt(totalStaked.Int64(), 10),
+		TotalRewards:    strconv.FormatInt(rewardsPoolBalance.Int64(), 10),
+		GasPrice:        v.GasPrice.Int64(),
 	}
 	return &validator
 }
@@ -472,23 +472,22 @@ func mapRawStake(s *types.DelegatedStake, apys map[string]float64) []*DelegatedS
 	}
 
 	stakeArray := []*DelegatedStake{}
-	for _, stake := range s.Stakes {
-		requestEpoch, _ := strconv.ParseInt(stake.StakeRequestEpoch, 10, 64)
+	for _, json := range s.Stakes {
+		stake := json.Data
+		requestEpoch := stake.StakeRequestEpoch.Int64()
 		stakeRes := &DelegatedStake{
 			StakeId:          stake.StakedSuiId.String(),
 			ValidatorAddress: s.ValidatorAddress.String(),
-			Principal:        strconv.FormatUint(stake.Principal, 10),
+			Principal:        strconv.FormatUint(stake.Principal.Uint64(), 10),
 			RequestEpoch:     requestEpoch,
 			Validator:        sameValidator,
 		}
-		if stake.EstimatedReward != nil {
-			stakeRes.EarnedAmount = strconv.FormatUint(*stake.EstimatedReward, 10)
-		} else {
-			stakeRes.EarnedAmount = "0"
-		}
-		if stake.Status == types.StakeStatusActive {
+		status := stake.StakeStatus.Data
+		if status.Active != nil {
+			stakeRes.EarnedAmount = strconv.FormatUint(status.Active.EstimatedReward.Uint64(), 10)
 			stakeRes.Status = DelegationStatusActived
 		} else {
+			stakeRes.EarnedAmount = "0"
 			stakeRes.Status = DelegationStatusPending
 		}
 		stakeArray = append(stakeArray, stakeRes)

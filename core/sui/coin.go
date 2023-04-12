@@ -30,7 +30,7 @@ func (t *Token) getCoins(address string) (coins types.Coins, err error) {
 
 	// sort by balance descend
 	sort.Slice(coins, func(i, j int) bool {
-		return coins[i].Balance > coins[j].Balance
+		return coins[i].Balance.Uint64() > coins[j].Balance.Uint64()
 	})
 	return coins, nil
 }
@@ -58,7 +58,7 @@ func pickupTransferCoin(coins types.Coins, amount string) (*PickedCoins, error) 
 	pickedCoins := types.Coins{}
 	for _, coin := range coins {
 		need = need.Add(need, estimateGasPerCoin)
-		total = total.Add(total, big.NewInt(int64(coin.Balance)))
+		total = total.Add(total, big.NewInt(coin.Balance.Int64()))
 		pickedCoins = append(pickedCoins, coin)
 		if total.Cmp(need) >= 0 {
 			return &PickedCoins{

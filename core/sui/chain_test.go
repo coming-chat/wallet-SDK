@@ -62,8 +62,9 @@ func TestEstimateGas(t *testing.T) {
 func TestFetchTransactionDetail(t *testing.T) {
 	// digest := "3aFbrGBfi9A5ZSjv9jcEwx8TQjm1XC8NqWvSkzKJEbVE" // normal transfer
 	// digest := "C9grwYWbJyBypSbgXEMaQ47LJ2uy3bToQLtqA9cVee2z" // not coin transfer
-	digest := "29MYmpk3kzcmB6e7FMwe6mD7x5pqDCeRoRvhJDFnXvAX"
-	chain := DevnetChain()
+	// digest := "29MYmpk3kzcmB6e7FMwe6mD7x5pqDCeRoRvhJDFnXvAX"
+	digest := "FD4onoYMKTNC4f7UFS4UmeaeDKsqt73eaRciDm7UcEdZ"
+	chain := TestnetChain()
 
 	detail, err := chain.FetchTransactionDetail(digest)
 	require.Nil(t, err)
@@ -83,7 +84,7 @@ func TestSplit(t *testing.T) {
 	coinID, err := types.NewHexData(coin)
 	require.Nil(t, err)
 
-	txn, err := client.SplitCoinEqual(context.Background(), *signer, *coinID, 2, nil, 2000)
+	txn, err := client.SplitCoinEqual(context.Background(), *signer, *coinID, types.NewSafeSuiBigInt[uint64](2), nil, types.NewSafeSuiBigInt[uint64](20000))
 	require.Nil(t, err)
 	signature, err := account.account.SignSecureWithoutEncode(txn.TxBytes, sui_types.DefaultIntent())
 	require.Nil(t, err)

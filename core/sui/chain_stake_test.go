@@ -12,9 +12,9 @@ func TestGetValidatorState(t *testing.T) {
 
 	state, err := chain.GetValidatorState()
 	require.Nil(t, err)
-	for _, v := range state.Validators.Values {
+	for idx, v := range state.Validators.Values {
 		vv := v.(*Validator)
-		t.Logf("%-10v, APY = %v, totalStaked=%v", vv.Name, vv.APY, vv.TotalStaked)
+		t.Logf("%v, %-10v, APY = %v, totalStaked=%v", idx+1, vv.Name, vv.APY, vv.TotalStaked)
 	}
 }
 
@@ -22,7 +22,7 @@ func TestStakeEarningTimems(t *testing.T) {
 	state := ValidatorState{
 		Epoch:                 9,
 		EpochDurationMs:       86400000,
-		EpochStartTimestampMs: 1680760906723,
+		EpochStartTimestampMs: 1681266455000,
 	}
 
 	ti := state.EarningAmountTimeAfterNowMs()
@@ -36,7 +36,7 @@ func TestStakeEarningTimems(t *testing.T) {
 }
 
 func TestGetDelegatedStakes(t *testing.T) {
-	chain := DevnetChain()
+	chain := TestnetChain()
 	address := M1Account(t).Address()
 	// address := "0xd77955e670f42c1bc5e94b9e68e5fe9bdbed9134d784f2a14dfe5fc1b24b5d9f"
 
@@ -64,7 +64,7 @@ func TestAddDelegation(t *testing.T) {
 	signedTxn, err := txn.SignWithAccount(acc)
 	require.Nil(t, err)
 
-	if true {
+	if false {
 		hash, err := chain.SendRawTransaction(signedTxn.Value)
 		require.Nil(t, err)
 

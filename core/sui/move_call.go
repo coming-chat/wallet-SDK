@@ -30,6 +30,7 @@ func (c *Chain) BaseMoveCall(address, packageId, module, funcName string, typArg
 	if err != nil {
 		return nil, err
 	}
+	gasInt := types.NewSafeSuiBigInt[uint64](gasBudget)
 	tx, err := client.MoveCall(
 		context.Background(),
 		*addr,
@@ -39,7 +40,7 @@ func (c *Chain) BaseMoveCall(address, packageId, module, funcName string, typArg
 		typArgs,
 		arg,
 		&coin.CoinObjectId,
-		gasBudget,
+		gasInt,
 	)
 	if err != nil {
 		return nil, err

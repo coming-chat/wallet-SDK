@@ -72,7 +72,7 @@ func (t *Token) BalanceOfAddress(address string) (b *base.Balance, err error) {
 	if err != nil {
 		return nil, err
 	}
-	balanceStr := strconv.FormatUint(balance.TotalBalance, 10)
+	balanceStr := balance.TotalBalance.String()
 	return &base.Balance{
 		Total:  balanceStr,
 		Usable: balanceStr,
@@ -138,7 +138,8 @@ func (t *Token) BuildTransferTransaction(account *Account, receiverAddress, amou
 	signer, _ := types.NewAddressFromHex(account.Address())
 	if len(pickedCoin.Coins) >= 2 {
 		// firstly, we should merge all coin's balance to firstCoin
-		txn, err2 := cli.PayAllSui(context.Background(), *signer, *signer, pickedCoin.CoinIds(), pickedCoin.EstimateMergeGas())
+		gasInt := types.NewSafeSuiBigInt(pickedCoin.EstimateMergeGas())
+		txn, err2 := cli.PayAllSui(context.Background(), *signer, *signer, pickedCoin.CoinIds(), gasInt)
 		if err != nil {
 			return nil, err2
 		}
@@ -154,14 +155,16 @@ func (t *Token) BuildTransferTransaction(account *Account, receiverAddress, amou
 		if *response.ConfirmedLocalExecution == false {
 			return nil, fmt.Errorf("Merge coins failed.")
 		}
-		if !effects.IsSuccess() {
-			return nil, fmt.Errorf(`Merge coins failed: %v`, effects.Status.Error)
+		if !effects.Data.IsSuccess() {
+			return nil, fmt.Errorf(`Merge coins failed: %v`, effects.Data.V1.Status.Error)
 		}
 	}
 
 	// send sui coin
 	firstCoin := pickedCoin.Coins[0]
-	txnBytes, err := cli.TransferSui(context.Background(), *signer, *recipient, firstCoin.CoinObjectId, amountInt, MaxGasForTransfer)
+	amountBigInt := types.NewSafeSuiBigInt(amountInt)
+	gasInt := types.NewSafeSuiBigInt[uint64](MaxGasForTransfer)
+	txnBytes, err := cli.TransferSui(context.Background(), *signer, *recipient, firstCoin.CoinObjectId, amountBigInt, gasInt)
 	if err != nil {
 		return
 	}

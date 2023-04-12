@@ -83,8 +83,8 @@ func (c *Chain) SendRawTransaction(signedTx string) (hash string, err error) {
 		return
 	}
 	hash = response.Digest
-	if !response.Effects.IsSuccess() {
-		return hash, errors.New(response.Effects.Status.Error)
+	if !response.Effects.Data.IsSuccess() {
+		return hash, errors.New(response.Effects.Data.V1.Status.Error)
 	}
 	return hash, nil
 }
@@ -100,6 +100,7 @@ func (c *Chain) FetchTransactionDetail(hash string) (detail *base.TransactionDet
 	resp, err := cli.GetTransactionBlock(context.Background(), hash, types.SuiTransactionBlockResponseOptions{
 		ShowInput:   true,
 		ShowEffects: true,
+		ShowEvents:  true,
 	})
 	if err != nil {
 		return nil, err
@@ -108,7 +109,10 @@ func (c *Chain) FetchTransactionDetail(hash string) (detail *base.TransactionDet
 	var notCoinTransferErr = errors.New("Invalid coin transfer transaction.")
 	var firstRecipient string
 	var total string
-	var data = resp.Transaction.Data
+	if resp.Transaction == nil || resp.Transaction.Data.Data.V1 == nil {
+		return nil, errors.New("failed to retrieve data")
+	}
+	var data = resp.Transaction.Data.Data.V1
 	if data.Transaction.Data.ProgrammableTransaction == nil {
 		return nil, notCoinTransferErr
 	}
@@ -144,15 +148,19 @@ func (c *Chain) FetchTransactionDetail(hash string) (detail *base.TransactionDet
 		}
 	}
 
+	var effects types.SuiTransactionBlockEffects
+	if resp.Effects != nil {
+		effects = resp.Effects.Data
+	}
 	detail = &base.TransactionDetail{
 		HashString:      hash,
 		FromAddress:     data.Sender.ShortString(),
 		ToAddress:       firstRecipient,
 		Amount:          total,
-		EstimateFees:    strconv.FormatUint(resp.Effects.GasFee(), 10),
-		FinishTimestamp: int64(*resp.TimestampMs / 1000),
+		EstimateFees:    strconv.FormatInt(effects.GasFee(), 10),
+		FinishTimestamp: resp.TimestampMs.Int64() / 1000,
 	}
-	status := resp.Effects.Status
+	status := effects.V1.Status
 	if status.Status == types.ExecutionStatusSuccess {
 		detail.Status = base.TransactionStatusSuccess
 	} else {
@@ -205,7 +213,8 @@ func (c *Chain) TransferObject(sender, receiver, objectId, gasId string, gasBudg
 	if err != nil {
 		return
 	}
-	tx, err := client.TransferObject(context.Background(), *senderAddress, *receiverAddress, *nftObject, gas, uint64(gasBudget))
+	gasInt := types.NewSafeSuiBigInt(uint64(gasBudget))
+	tx, err := client.TransferObject(context.Background(), *senderAddress, *receiverAddress, *nftObject, gas, gasInt)
 	if err != nil {
 		return
 	}
@@ -224,7 +233,8 @@ func (c *Chain) GasPrice() (*base.OptionalString, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &base.OptionalString{Value: price.String()}, nil
+	str := strconv.FormatUint(price.Uint64(), 10)
+	return &base.OptionalString{Value: str}, nil
 }
 
 func (c *Chain) EstimateGasFee(transaction *Transaction) (fee *base.OptionalString, err error) {
@@ -240,14 +250,14 @@ func (c *Chain) EstimateGasFee(transaction *Transaction) (fee *base.OptionalStri
 		return
 	}
 
-	gasFee := effects.Effects.GasFee()
+	gasFee := effects.Effects.Data.GasFee()
 	if gasFee == 0 {
 		gasFee = MaxGasBudget
 	} else {
 		gasFee = gasFee/10*15 + 14 // >= ceil(fee * 1.5)
 	}
-	transaction.EstimateGasFee = int64(gasFee)
-	gasString := strconv.FormatUint(gasFee, 10)
+	transaction.EstimateGasFee = gasFee
+	gasString := strconv.FormatInt(gasFee, 10)
 	return &base.OptionalString{Value: gasString}, nil
 }
 
