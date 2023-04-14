@@ -3,7 +3,6 @@ package sui
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -12,9 +11,9 @@ func TestBalance(t *testing.T) {
 
 	chain := TestnetChain()
 	b, err := chain.BalanceOfAddress(address)
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
-	t.Log(b)
+	t.Log(b, "")
 }
 
 func TestTokenBalance(t *testing.T) {

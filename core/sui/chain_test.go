@@ -13,6 +13,8 @@ import (
 const DevnetRpcUrl = "https://fullnode.devnet.sui.io"
 const TestnetRpcUrl = "https://fullnode.testnet.sui.io"
 
+// const TestnetRpcUrl = "https://sui-testnet-wave3.coming.chat"
+
 func DevnetChain() *Chain {
 	return NewChainWithRpcUrl(DevnetRpcUrl)
 }

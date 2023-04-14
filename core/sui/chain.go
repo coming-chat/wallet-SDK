@@ -224,14 +224,16 @@ func (c *Chain) TransferObject(sender, receiver, objectId, gasId string, gasBudg
 	}, nil
 }
 
-func (c *Chain) GasPrice() (*base.OptionalString, error) {
+func (c *Chain) GasPrice() (gasprice *base.OptionalString, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
+
 	cli, err := c.Client()
 	if err != nil {
-		return nil, err
+		return
 	}
 	price, err := cli.GetReferenceGasPrice(context.Background())
 	if err != nil {
-		return nil, err
+		return
 	}
 	str := strconv.FormatUint(price.Uint64(), 10)
 	return &base.OptionalString{Value: str}, nil

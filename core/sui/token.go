@@ -60,6 +60,8 @@ func (t *Token) TokenInfo() (*base.TokenInfo, error) {
 }
 
 func (t *Token) BalanceOfAddress(address string) (b *base.Balance, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
+
 	owner, err := types.NewAddressFromHex(address)
 	if err != nil {
 		return nil, err
