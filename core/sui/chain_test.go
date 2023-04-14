@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/coming-chat/go-sui/account"
 	"github.com/coming-chat/go-sui/sui_types"
 	"github.com/coming-chat/go-sui/types"
 	"github.com/stretchr/testify/require"
@@ -35,13 +36,10 @@ func TestTransfer(t *testing.T) {
 	// toAddress := account.Address()
 	// amount := strconv.FormatUint(4e9, 10) // test big amount transfer
 
-	signedTxn, err := token.BuildTransferTxWithAccount(account, toAddress, amount)
+	txn, err := token.BuildTransferTransaction(account, toAddress, amount)
 	require.Nil(t, err)
 
-	hash, err := chain.SendRawTransaction(signedTxn.Value)
-	require.Nil(t, err)
-
-	t.Log(hash)
+	simulateCheck(t, chain, &txn.Txn)
 }
 
 func TestEstimateGas(t *testing.T) {
@@ -88,12 +86,8 @@ func TestSplit(t *testing.T) {
 
 	txn, err := client.SplitCoinEqual(context.Background(), *signer, *coinID, types.NewSafeSuiBigInt[uint64](2), nil, types.NewSafeSuiBigInt[uint64](20000))
 	require.Nil(t, err)
-	signature, err := account.account.SignSecureWithoutEncode(txn.TxBytes, sui_types.DefaultIntent())
-	require.Nil(t, err)
 
-	detail, err := client.ExecuteTransactionBlock(context.Background(), txn.TxBytes, []any{signature}, &types.SuiTransactionBlockResponseOptions{ShowEffects: true}, types.TxnRequestTypeWaitForEffectsCert)
-	require.Nil(t, err)
-	t.Log(detail)
+	simulateCheck(t, chain, txn)
 }
 
 func TestFaucet(t *testing.T) {
@@ -104,4 +98,38 @@ func TestFaucet(t *testing.T) {
 	} else {
 		t.Logf("digest = %v", digest)
 	}
+}
+
+func simulateCheck(t *testing.T, chain *Chain, txn *types.TransactionBytes) *types.DryRunTransactionBlockResponse {
+	cli, err := chain.Client()
+	require.Nil(t, err)
+	simulate, err := cli.DryRunTransaction(context.Background(), txn)
+	require.Nil(t, err)
+	require.Equal(t, simulate.Effects.Data.V1.Status.Error, "")
+	require.True(t, simulate.Effects.Data.IsSuccess())
+	return simulate
+}
+
+func executeTransaction(t *testing.T, chain *Chain, txn *types.TransactionBytes, acc *account.Account) *types.SuiTransactionBlockResponse {
+	// firstly we best ensure the transaction simulate call can be success.
+	simulateCheck(t, chain, txn)
+
+	// execute
+	cli, err := chain.Client()
+	require.NoError(t, err)
+	signature, err := acc.SignSecureWithoutEncode(txn.TxBytes, sui_types.DefaultIntent())
+	require.NoError(t, err)
+	options := types.SuiTransactionBlockResponseOptions{
+		ShowEffects:        true,
+		ShowBalanceChanges: true,
+		ShowObjectChanges:  true,
+		ShowInput:          true,
+		ShowEvents:         true,
+	}
+	resp, err := cli.ExecuteTransactionBlock(
+		context.TODO(), txn.TxBytes, []any{signature}, &options,
+		types.TxnRequestTypeWaitForLocalExecution,
+	)
+	require.NoError(t, err)
+	return resp
 }

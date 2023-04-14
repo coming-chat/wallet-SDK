@@ -61,15 +61,7 @@ func TestAddDelegation(t *testing.T) {
 	require.Nil(t, err)
 	t.Log(gas.Value)
 
-	signedTxn, err := txn.SignWithAccount(acc)
-	require.Nil(t, err)
-
-	if false {
-		hash, err := chain.SendRawTransaction(signedTxn.Value)
-		require.Nil(t, err)
-
-		t.Log("add stake delegation succeed:", hash)
-	}
+	simulateCheck(t, chain, &txn.Txn)
 }
 
 func TestWithdrawDelegation(t *testing.T) {
@@ -81,12 +73,6 @@ func TestWithdrawDelegation(t *testing.T) {
 		txn, err := chain.WithdrawDelegation(acc.Address(), stakeId)
 		require.Nil(t, err)
 
-		signedTxn, err := txn.SignWithAccount(acc)
-		require.Nil(t, err)
-
-		hash, err := chain.SendRawTransaction(signedTxn.Value)
-		require.Nil(t, err)
-
-		t.Log("withdraw stake delegation succeed:", hash)
+		simulateCheck(t, chain, &txn.Txn)
 	}
 }
