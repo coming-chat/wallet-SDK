@@ -2,6 +2,7 @@ package sui
 
 import (
 	"context"
+	"encoding/json"
 	"strconv"
 	"testing"
 
@@ -12,9 +13,10 @@ import (
 )
 
 const DevnetRpcUrl = "https://fullnode.devnet.sui.io"
-const TestnetRpcUrl = "https://fullnode.testnet.sui.io"
 
-// const TestnetRpcUrl = "https://sui-testnet-wave3.coming.chat"
+// const TestnetRpcUrl = "https://fullnode.testnet.sui.io"
+
+const TestnetRpcUrl = "https://sui-testnet-wave3.coming.chat"
 
 func DevnetChain() *Chain {
 	return NewChainWithRpcUrl(DevnetRpcUrl)
@@ -22,24 +24,6 @@ func DevnetChain() *Chain {
 
 func TestnetChain() *Chain {
 	return NewChainWithRpcUrl(TestnetRpcUrl)
-}
-
-func TestTransfer(t *testing.T) {
-	// account := M1Account(t)
-	account := M3Account(t)
-	t.Log("m3 address ", account.Address())
-	chain := TestnetChain()
-	token := NewTokenMain(chain)
-
-	toAddress := M1Account(t).Address()
-	amount := strconv.FormatUint(uint64(0.1e9), 10)
-	// toAddress := account.Address()
-	// amount := strconv.FormatUint(4e9, 10) // test big amount transfer
-
-	txn, err := token.BuildTransferTransaction(account, toAddress, amount)
-	require.Nil(t, err)
-
-	simulateCheck(t, chain, &txn.Txn)
 }
 
 func TestEstimateGas(t *testing.T) {
@@ -63,7 +47,9 @@ func TestFetchTransactionDetail(t *testing.T) {
 	// digest := "3aFbrGBfi9A5ZSjv9jcEwx8TQjm1XC8NqWvSkzKJEbVE" // normal transfer
 	// digest := "C9grwYWbJyBypSbgXEMaQ47LJ2uy3bToQLtqA9cVee2z" // not coin transfer
 	// digest := "29MYmpk3kzcmB6e7FMwe6mD7x5pqDCeRoRvhJDFnXvAX"
-	digest := "FD4onoYMKTNC4f7UFS4UmeaeDKsqt73eaRciDm7UcEdZ"
+	// digest := "FD4onoYMKTNC4f7UFS4UmeaeDKsqt73eaRciDm7UcEdZ"
+	digest := "GH87s7pc8EWhnuq96tGe34he12hox6TuK5JPzqGJvm8S" // transfer object
+	// digest := "5PLq48GYcKwsA3P1rDpUbWrNLX63tp2iamYJDhTHhskC" // pay sui
 	chain := TestnetChain()
 
 	detail, err := chain.FetchTransactionDetail(digest)
@@ -87,7 +73,7 @@ func TestSplit(t *testing.T) {
 	txn, err := client.SplitCoinEqual(context.Background(), *signer, *coinID, types.NewSafeSuiBigInt[uint64](2), nil, types.NewSafeSuiBigInt[uint64](20000))
 	require.Nil(t, err)
 
-	simulateCheck(t, chain, txn)
+	simulateCheck(t, chain, txn, false)
 }
 
 func TestFaucet(t *testing.T) {
@@ -100,19 +86,25 @@ func TestFaucet(t *testing.T) {
 	}
 }
 
-func simulateCheck(t *testing.T, chain *Chain, txn *types.TransactionBytes) *types.DryRunTransactionBlockResponse {
+func simulateCheck(t *testing.T, chain *Chain, txn *types.TransactionBytes, showJson bool) *types.DryRunTransactionBlockResponse {
 	cli, err := chain.Client()
 	require.Nil(t, err)
-	simulate, err := cli.DryRunTransaction(context.Background(), txn)
+	resp, err := cli.DryRunTransaction(context.Background(), txn)
 	require.Nil(t, err)
-	require.Equal(t, simulate.Effects.Data.V1.Status.Error, "")
-	require.True(t, simulate.Effects.Data.IsSuccess())
-	return simulate
+	require.Equal(t, resp.Effects.Data.V1.Status.Error, "")
+	require.True(t, resp.Effects.Data.IsSuccess())
+	if showJson {
+		data, err := json.Marshal(resp)
+		require.Nil(t, err)
+		respStr := string(data)
+		t.Log(respStr)
+	}
+	return resp
 }
 
 func executeTransaction(t *testing.T, chain *Chain, txn *types.TransactionBytes, acc *account.Account) *types.SuiTransactionBlockResponse {
 	// firstly we best ensure the transaction simulate call can be success.
-	simulateCheck(t, chain, txn)
+	simulateCheck(t, chain, txn, false)
 
 	// execute
 	cli, err := chain.Client()

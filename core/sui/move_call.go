@@ -25,7 +25,7 @@ func (c *Chain) BaseMoveCall(address, packageId, module, funcName string, typArg
 		return
 	}
 	suiToken := NewTokenMain(c)
-	coins, err := suiToken.getCoins(address)
+	coins, err := suiToken.getCoins(address, 0)
 	if err != nil {
 		return
 	}

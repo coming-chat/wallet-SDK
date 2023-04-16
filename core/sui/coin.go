@@ -10,7 +10,7 @@ import (
 	"github.com/coming-chat/wallet-SDK/core/base"
 )
 
-func (t *Token) getCoins(address string) (coins types.Coins, err error) {
+func (t *Token) getCoins(address string, limit uint) (coins types.Coins, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
 
 	cli, err := t.chain.Client()
@@ -22,7 +22,7 @@ func (t *Token) getCoins(address string) (coins types.Coins, err error) {
 		return
 	}
 	coinType := t.rType.ShortString()
-	pageCoins, err := cli.GetCoins(context.Background(), *addr, &coinType, nil, 0)
+	pageCoins, err := cli.GetCoins(context.Background(), *addr, &coinType, nil, limit)
 	if err != nil {
 		return
 	}
@@ -35,35 +35,61 @@ func (t *Token) getCoins(address string) (coins types.Coins, err error) {
 	return coins, nil
 }
 
-func pickupTransferCoin(coins types.Coins, amount string) (*PickedCoins, error) {
-	amountInt, ok := big.NewInt(0).SetString(amount, 10)
-	if !ok {
-		return nil, fmt.Errorf(`Invalid transfer amount "%v".`, amount)
-	}
-	need := big.NewInt(0).Set(amountInt)
+// @params coins we assume that it is sorted by balance descending.
+func pickupTransferCoin(coins types.Coins, amount uint64, isSUI bool) (*PickedCoins, error) {
+	amountInt := big.NewInt(0).SetUint64(amount)
+	amountAddGas := big.NewInt(0).Add(amountInt, big.NewInt(MaxGasForPay))
 
-	estimateGasPerCoin := big.NewInt(MaxGasForPay)
 	total := big.NewInt(0)
 	pickedCoins := types.Coins{}
+	enough := false
+	meetSmaller := false
 	for _, coin := range coins {
-		need = need.Add(need, estimateGasPerCoin)
-		total = total.Add(total, big.NewInt(coin.Balance.Int64()))
-		pickedCoins = append(pickedCoins, coin)
-		if total.Cmp(need) >= 0 {
+		balance := coin.Balance.Uint64()
+
+		if balance < amount {
+			meetSmaller = true
+		} else if balance == amount {
 			return &PickedCoins{
-				Coins:  pickedCoins,
-				Total:  total,
-				Amount: amountInt,
+				Coins:  []types.Coin{coin},
+				Total:  *amountInt,
+				Amount: *amountInt,
+
+				CanUseTransferObject: true,
 			}, nil
 		}
+
+		if !enough {
+			total = total.Add(total, big.NewInt(0).SetUint64(balance))
+			pickedCoins = append(pickedCoins, coin)
+			if isSUI {
+				enough = total.Cmp(amountAddGas) >= 0
+			} else {
+				enough = total.Cmp(amountInt) >= 0
+			}
+		}
+		if enough && meetSmaller {
+			break
+		}
 	}
-	return nil, fmt.Errorf(`Insufficient account balance "%v"`, total.String())
+	if enough {
+		return &PickedCoins{
+			Coins:  pickedCoins,
+			Total:  *total,
+			Amount: *amountInt,
+
+			CanUseTransferObject: false,
+		}, nil
+	}
+	return nil, fmt.Errorf(`insufficient account balance`)
 }
 
 type PickedCoins struct {
 	Coins  types.Coins
-	Total  *big.Int
-	Amount *big.Int
+	Total  big.Int
+	Amount big.Int
+
+	CanUseTransferObject bool
 }
 
 func (cs *PickedCoins) CoinIds() []types.ObjectId {

@@ -6,10 +6,11 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/coming-chat/go-sui/sui_types"
 	"github.com/coming-chat/go-sui/types"
 	"github.com/coming-chat/wallet-SDK/core/base"
 )
+
+const SUI_COIN_TYPE = "0x2::sui::SUI"
 
 const (
 	SuiName    = "Sui"
@@ -24,7 +25,7 @@ type Token struct {
 }
 
 func NewTokenMain(chain *Chain) *Token {
-	token, _ := NewToken(chain, "0x2::sui::SUI")
+	token, _ := NewToken(chain, SUI_COIN_TYPE)
 	return token
 }
 
@@ -39,6 +40,10 @@ func NewToken(chain *Chain, tag string) (*Token, error) {
 
 func (t *Token) coinType() string {
 	return fmt.Sprintf("0x2::coin::Coin<%v>", t.rType.ShortString())
+}
+
+func (t *Token) IsSUI() bool {
+	return t.rType.ShortString() == SUI_COIN_TYPE
 }
 
 // MARK - Implement the protocol Token
@@ -129,11 +134,11 @@ func (t *Token) BuildTransferTransaction(account *Account, receiverAddress, amou
 		return
 	}
 
-	coins, err := t.getCoins(account.Address())
+	coins, err := t.getCoins(account.Address(), 0)
 	if err != nil {
 		return nil, errors.New("Failed to get coins information.")
 	}
-	pickedCoin, err := pickupTransferCoin(coins, amount)
+	pickedCoin, err := pickupTransferCoin(coins, amountInt, t.IsSUI())
 	if err != nil {
 		return
 	}
@@ -144,38 +149,32 @@ func (t *Token) BuildTransferTransaction(account *Account, receiverAddress, amou
 	}
 
 	signer, _ := types.NewAddressFromHex(account.Address())
-	if len(pickedCoin.Coins) >= 2 {
-		// firstly, we should merge all coin's balance to firstCoin
-		gasInt := types.NewSafeSuiBigInt(pickedCoin.EstimateMergeGas())
-		txn, err2 := cli.PayAllSui(context.Background(), *signer, *signer, pickedCoin.CoinIds(), gasInt)
-		if err != nil {
-			return nil, err2
-		}
-		signature, err2 := account.account.SignSecureWithoutEncode(txn.TxBytes, sui_types.DefaultIntent())
-		if err != nil {
-			return nil, err
-		}
-		response, err2 := cli.ExecuteTransactionBlock(context.Background(), txn.TxBytes, []any{signature}, &types.SuiTransactionBlockResponseOptions{ShowEffects: true}, types.TxnRequestTypeWaitForLocalExecution)
-		if err2 != nil {
-			return nil, err2
-		}
-		effects := response.Effects
-		if *response.ConfirmedLocalExecution == false {
-			return nil, fmt.Errorf("Merge coins failed.")
-		}
-		if !effects.Data.IsSuccess() {
-			return nil, fmt.Errorf(`Merge coins failed: %v`, effects.Data.V1.Status.Error)
-		}
+	gasBudget := types.NewSafeSuiBigInt[uint64](MaxGasForTransfer)
+	var txnBytes *types.TransactionBytes
+	// TODO: we can transfer object now, but we cannot parse it's to a coin transfer event.
+	// if pickedCoin.CanUseTransferObject {
+	// 	txnBytes, err = cli.TransferObject(context.Background(), *signer, *recipient,
+	// 		pickedCoin.Coins[0].CoinObjectId,
+	// 		nil, gasBudget)
+	// } else {
+	// }
+	if t.IsSUI() {
+		txnBytes, err = cli.PaySui(context.Background(), *signer,
+			pickedCoin.CoinIds(),
+			[]types.Address{*recipient},
+			[]types.SafeSuiBigInt[uint64]{types.NewSafeSuiBigInt(amountInt)},
+			gasBudget)
+	} else {
+		txnBytes, err = cli.Pay(context.Background(), *signer,
+			pickedCoin.CoinIds(),
+			[]types.Address{*recipient},
+			[]types.SafeSuiBigInt[uint64]{types.NewSafeSuiBigInt(amountInt)},
+			nil, gasBudget)
 	}
-
-	// send sui coin
-	firstCoin := pickedCoin.Coins[0]
-	amountBigInt := types.NewSafeSuiBigInt(amountInt)
-	gasInt := types.NewSafeSuiBigInt[uint64](MaxGasForTransfer)
-	txnBytes, err := cli.TransferSui(context.Background(), *signer, *recipient, firstCoin.CoinObjectId, amountBigInt, gasInt)
 	if err != nil {
 		return
 	}
+
 	return &Transaction{
 		Txn:          *txnBytes,
 		MaxGasBudget: MaxGasForTransfer,
