@@ -47,8 +47,14 @@ func (t *Token) Chain() base.Chain {
 	return t.chain
 }
 
-func (t *Token) TokenInfo() (*base.TokenInfo, error) {
-	metadata, err := t.getTokenMetadata(t.rType.ShortString())
+func (t *Token) TokenInfo() (info *base.TokenInfo, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
+
+	cli, err := t.chain.Client()
+	if err != nil {
+		return
+	}
+	metadata, err := cli.GetCoinMetadata(context.Background(), t.rType.ShortString())
 	if err != nil {
 		return nil, err
 	}
