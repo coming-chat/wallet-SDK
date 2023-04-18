@@ -9,6 +9,15 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+type SUI float32
+
+func (s SUI) Value() uint64 {
+	return uint64(s * 1e9)
+}
+func (s SUI) String() string {
+	return strconv.FormatUint(s.Value(), 10)
+}
+
 func TestBalance(t *testing.T) {
 	address := "0x7e875ea78ee09f08d72e2676cf84e0f1c8ac61d94fa339cc8e37cace85bebc6e"
 

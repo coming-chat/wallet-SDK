@@ -244,6 +244,51 @@ signedHashString = signedTxObj.Value // signed transaction hash string
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
+### Sui Merge Coin
+
+```golang
+var owner = "0x123abc"
+var coinType = "0x2::sui::SUI" // Default
+var targetAmount = (10,000,000,000).toString() // 10 SUI
+
+// make request
+var mergeRequest = chain.BuildMergeCoinRequest(owner, coinType, targetAmount)
+println(mergeRequest.WillBeAchieved)
+println(mergeRequest.EstimateAmount)
+println("merging coin count = ", mergeRequest.CoinsCount)
+
+// preview merge result
+var mergePreview = chain.BuildMergeCoinPreview(mergeRequest)
+println(mergePreview.SimulateSuccess)
+println(mergePreview.EstimateGasFee)
+println(mergePreview.WillBeAchieved)
+println(mergePreview.EstimateAmount)
+
+// sign & send
+var txn = mergePreview.Transaction
+var account = ...
+var signedTxn = txn.SignWithAccount(account)
+var hash = chain.SendRawTransaction(signedTxn)
+```
+
+### Sui Split Coin
+
+```golang
+// build transaction
+var transaction = chain.BuildSplitCoinTransaction(owner, coinType, targetAmount)
+
+// estimate gas fee
+var estimateFee = chain.EstimateGasFee(transaction)
+
+// sign & send
+......
+```
+
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+
 
 ComingChat substrate wallet SDK
 

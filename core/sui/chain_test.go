@@ -97,7 +97,7 @@ func simulateCheck(t *testing.T, chain *Chain, txn *types.TransactionBytes, show
 		data, err := json.Marshal(resp)
 		require.Nil(t, err)
 		respStr := string(data)
-		t.Log(respStr)
+		t.Log("simulate run resp: ", respStr)
 	}
 	return resp
 }
