@@ -372,20 +372,20 @@ func (c *Chain) AddDelegation(owner, amount string, validatorAddress string) (tx
 	if err != nil {
 		return
 	}
-	allCoins, err := cli.GetSuiCoinsOwnedByAddress(context.Background(), *signer)
+	coinType := SUI_COIN_TYPE
+	coins, err := cli.GetCoins(context.Background(), *signer, &coinType, nil, MAX_INPUT_COUNT_STAKE)
 	if err != nil {
 		return
 	}
-	needCoins, gasCoin, err := allCoins.PickSUICoinsWithGas(amountInt, maxGasBudgetForStake, types.PickBigger)
+	pickedCoins, err := types.PickupCoins(coins, *amountInt, MAX_INPUT_COUNT_STAKE, true)
 	if err != nil {
 		return
 	}
-	coinIds := []types.ObjectId{}
-	for _, coin := range needCoins {
-		coinIds = append(coinIds, coin.CoinObjectId)
-	}
-	gasId := gasCoin.CoinObjectId
-	txBytes, err := cli.RequestAddStake(context.Background(), *signer, coinIds, decimal.NewFromBigInt(amountInt, 0), *validator, &gasId, decimal.NewFromInt(maxGasBudgetForStake))
+	txBytes, err := cli.RequestAddStake(context.Background(), *signer,
+		pickedCoins.CoinIds(),
+		decimal.NewFromBigInt(amountInt, 0),
+		*validator,
+		nil, decimal.NewFromInt(maxGasBudgetForStake))
 	if err != nil {
 		return
 	}

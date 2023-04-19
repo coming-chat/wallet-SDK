@@ -24,15 +24,6 @@ func (c *Chain) BaseMoveCall(address, packageId, module, funcName string, typArg
 	if err != nil {
 		return
 	}
-	suiToken := NewTokenMain(c)
-	coins, err := suiToken.getCoins(address, 0)
-	if err != nil {
-		return
-	}
-	coin, err := coins.PickCoinNoLess(gasBudget)
-	if err != nil {
-		return
-	}
 	gasInt := types.NewSafeSuiBigInt[uint64](gasBudget)
 	tx, err := client.MoveCall(
 		context.Background(),
@@ -42,7 +33,7 @@ func (c *Chain) BaseMoveCall(address, packageId, module, funcName string, typArg
 		funcName,
 		typArgs,
 		arg,
-		&coin.CoinObjectId,
+		nil,
 		gasInt,
 	)
 	if err != nil {

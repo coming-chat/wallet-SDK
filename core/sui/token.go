@@ -2,15 +2,21 @@ package sui
 
 import (
 	"context"
-	"errors"
-	"fmt"
+	"math/big"
 	"strconv"
 
 	"github.com/coming-chat/go-sui/types"
 	"github.com/coming-chat/wallet-SDK/core/base"
 )
 
-const SUI_COIN_TYPE = "0x2::sui::SUI"
+// "0x2::sui::SUI"
+const SUI_COIN_TYPE = types.SUI_COIN_TYPE
+
+// = 256-1
+const MAX_INPUT_COUNT_MERGE = types.MAX_INPUT_COUNT_MERGE
+
+// = 512-1
+const MAX_INPUT_COUNT_STAKE = types.MAX_INPUT_COUNT_STAKE
 
 const (
 	SuiName    = "Sui"
@@ -38,8 +44,8 @@ func NewToken(chain *Chain, tag string) (*Token, error) {
 	return &Token{chain, *token}, nil
 }
 
-func (t *Token) coinType() string {
-	return fmt.Sprintf("0x2::coin::Coin<%v>", t.rType.ShortString())
+func (t *Token) CoinType() string {
+	return t.rType.ShortString()
 }
 
 func (t *Token) IsSUI() bool {
@@ -134,21 +140,26 @@ func (t *Token) BuildTransferTransaction(account *Account, receiverAddress, amou
 		return
 	}
 
-	coins, err := t.getCoins(account.Address(), 0)
-	if err != nil {
-		return nil, errors.New("Failed to get coins information.")
-	}
-	pickedCoin, err := pickupTransferCoin(coins, amountInt, t.IsSUI())
-	if err != nil {
-		return
-	}
-
 	cli, err := t.chain.Client()
 	if err != nil {
 		return
 	}
 
+	coinType := t.CoinType()
 	signer, _ := types.NewAddressFromHex(account.Address())
+	coins, err := cli.GetCoins(context.Background(), *signer, &coinType, nil, MAX_INPUT_COUNT_MERGE)
+	if err != nil {
+		return
+	}
+	targetAmount := amountInt
+	if t.IsSUI() {
+		targetAmount = amountInt + MaxGasForTransfer // We will use PaySui if coin is SUI, the amount need plus gas
+	}
+	pickedCoin, err := types.PickupCoins(coins, *big.NewInt(0).SetUint64(targetAmount), MAX_INPUT_COUNT_MERGE, false)
+	if err != nil {
+		return
+	}
+
 	gasBudget := types.NewSafeSuiBigInt[uint64](MaxGasForTransfer)
 	var txnBytes *types.TransactionBytes
 	// TODO: we can transfer object now, but we cannot parse it's to a coin transfer event.

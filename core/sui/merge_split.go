@@ -2,15 +2,12 @@ package sui
 
 import (
 	"context"
-	"errors"
 	"math/big"
 	"strconv"
 
 	"github.com/coming-chat/go-sui/types"
 	"github.com/coming-chat/wallet-SDK/core/base"
 )
-
-const MAX_INPUT_COUNT = 256
 
 type MergeCoinRequest struct {
 	Owner        string
@@ -118,9 +115,6 @@ func (c *Chain) BuildMergeCoinPreview(request *MergeCoinRequest) (preview *Merge
 func (c *Chain) BuildMergeCoinRequest(owner, coinType, targetAmount string) (req *MergeCoinRequest, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
 
-	// Actually, the maximum count of input coins is `MAX_INPUT_COUNT-1`
-	maxInput := MAX_INPUT_COUNT - 1
-
 	if coinType == "" {
 		coinType = SUI_COIN_TYPE
 	}
@@ -137,16 +131,16 @@ func (c *Chain) BuildMergeCoinRequest(owner, coinType, targetAmount string) (req
 		return
 	}
 
-	pageCoins, err := cli.GetCoins(context.Background(), *ownerAddr, &coinType, nil, uint(maxInput))
+	pageCoins, err := cli.GetCoins(context.Background(), *ownerAddr, &coinType, nil, MAX_INPUT_COUNT_MERGE)
 	if err != nil {
 		return
 	}
 	if len(pageCoins.Data) <= 0 {
-		return nil, errors.New("You do not have this coin yet")
+		return nil, ErrNoCoinsFound
 	}
-	count := base.Min(len(pageCoins.Data), maxInput)
 
 	// We will try to merge all the coins as much as possible.
+	count := base.Min(len(pageCoins.Data), MAX_INPUT_COUNT_MERGE)
 	coins := types.Coins(pageCoins.Data[0:count])
 	totalAmount := coins.TotalBalance()
 
@@ -182,37 +176,34 @@ func (c *Chain) BuildSplitCoinTransaction(owner, coinType, targetAmount string) 
 		return
 	}
 
-	pageCoins, err := cli.GetCoins(context.Background(), *ownerAddr, &coinType, nil, MAX_INPUT_COUNT)
+	pageCoins, err := cli.GetCoins(context.Background(), *ownerAddr, &coinType, nil, MAX_INPUT_COUNT_MERGE)
 	if err != nil {
 		return
 	}
-	if len(pageCoins.Data) <= 0 {
-		return nil, errors.New("You do not have this coin yet")
+	pickedCoins, err := types.PickupCoins(pageCoins, *big.NewInt(0).SetUint64(amountInt), MAX_INPUT_COUNT_MERGE, false)
+	if err != nil {
+		return
 	}
-
-	biggestCoin := pageCoins.Data[0]
-	for _, coin := range pageCoins.Data {
-		if biggestCoin.Balance.Uint64() < coin.Balance.Uint64() {
-			biggestCoin = coin
-		}
-	}
-	if biggestCoin.Balance.Uint64() <= amountInt {
-		return nil, errors.New("no coin found that can split to the target amount.")
-	}
-
-	anotherAmount := biggestCoin.Balance.Uint64() - amountInt
 
 	var txnBytes *types.TransactionBytes
 	gasBudget := types.NewSafeSuiBigInt[uint64](MaxGasForPay)
-	if coinType == SUI_COIN_TYPE && len(pageCoins.Data) == 1 {
-		// only have one sui coin, it cannot be both split and used as a gas fee at the same time.
+	if coinType == SUI_COIN_TYPE && (pickedCoins.Count() > 1 || len(pageCoins.Data) == 1) {
 		txnBytes, err = cli.PaySui(context.Background(), *ownerAddr,
-			[]types.ObjectId{biggestCoin.CoinObjectId},
+			pickedCoins.CoinIds(),
 			[]types.Address{*ownerAddr},
 			[]types.SafeSuiBigInt[uint64]{types.NewSafeSuiBigInt(amountInt)},
 			gasBudget)
+	} else if pickedCoins.Count() > 1 {
+		txnBytes, err = cli.Pay(context.Background(), *ownerAddr,
+			pickedCoins.CoinIds(),
+			[]types.Address{*ownerAddr},
+			[]types.SafeSuiBigInt[uint64]{types.NewSafeSuiBigInt(amountInt)},
+			nil, gasBudget)
 	} else {
-		txnBytes, err = cli.SplitCoin(context.Background(), *ownerAddr, biggestCoin.CoinObjectId,
+		theCoin := pickedCoins.Coins[0]
+		anotherAmount := theCoin.Balance.Uint64() - amountInt
+		txnBytes, err = cli.SplitCoin(context.Background(), *ownerAddr,
+			theCoin.CoinObjectId,
 			[]types.SafeSuiBigInt[uint64]{
 				types.NewSafeSuiBigInt(amountInt),
 				types.NewSafeSuiBigInt(anotherAmount),

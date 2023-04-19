@@ -244,6 +244,21 @@ signedHashString = signedTxObj.Value // signed transaction hash string
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
+### Decide Merge & Split Coin
+
+```golang
+// If you get any error, example
+var transaction, err = chain.AddDelegation(owner, amount, validator)
+if err != nil {
+  if IsMergeError(err) {
+    // You need merge coins
+  }
+  if IsSplitError(err) {
+    // You need split coin
+  }
+}
+```
+
 ### Sui Merge Coin
 
 ```golang
