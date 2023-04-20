@@ -1,6 +1,8 @@
 package sui
 
 import (
+	"errors"
+
 	"github.com/coming-chat/go-sui/types"
 )
 
@@ -9,6 +11,9 @@ var (
 	ErrInsufficientBalance = types.ErrInsufficientBalance
 	ErrNeedMergeCoin       = types.ErrNeedMergeCoin
 	ErrNeedSplitGasCoin    = types.ErrNeedSplitGasCoin
+
+	ErrNoNeedMergeCoin = errors.New("existing coins exceed the target amount, no need to merge coins")
+	ErrMergeOneCoin    = errors.New("only one coin does not need to merge coins")
 )
 
 func IsMergeError(err error) bool {

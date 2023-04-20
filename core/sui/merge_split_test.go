@@ -10,7 +10,7 @@ func TestBuildMergeCoinRequest(t *testing.T) {
 	chain := TestnetChain()
 
 	owner := "0x9bab5b2fa325fe2b103fd6a56a93bf91925b269a2dd31ee146b693e5cb9d2901"
-	amountStr := SUI(1000).String()
+	amountStr := SUI(400).String()
 
 	req, err := chain.BuildMergeCoinRequest(owner, "", amountStr)
 	require.Nil(t, err)

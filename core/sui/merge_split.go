@@ -3,6 +3,7 @@ package sui
 import (
 	"context"
 	"math/big"
+	"sort"
 	"strconv"
 
 	"github.com/coming-chat/go-sui/types"
@@ -138,21 +139,37 @@ func (c *Chain) BuildMergeCoinRequest(owner, coinType, targetAmount string) (req
 	if len(pageCoins.Data) <= 0 {
 		return nil, ErrNoCoinsFound
 	}
+	coins := pageCoins.Data
+	sort.Slice(coins, func(i, j int) bool {
+		return coins[i].Balance.Uint64() > coins[j].Balance.Uint64()
+	})
 
-	// We will try to merge all the coins as much as possible.
-	count := base.Min(len(pageCoins.Data), MAX_INPUT_COUNT_MERGE)
-	coins := types.Coins(pageCoins.Data[0:count])
-	totalAmount := coins.TotalBalance()
+	amountBigInt := big.NewInt(0).SetUint64(amountInt)
+	totalAmount := big.NewInt(0)
+	mergingCoins := []types.Coin{}
+	for _, coin := range coins {
+		if coin.Balance.Uint64() >= amountBigInt.Uint64() {
+			return nil, ErrNoNeedMergeCoin
+		}
+		totalAmount.Add(totalAmount, big.NewInt(0).SetUint64(coin.Balance.Uint64()))
+		mergingCoins = append(mergingCoins, coin)
+		if totalAmount.Cmp(amountBigInt) >= 0 {
+			break
+		}
+	}
+	if len(mergingCoins) == 1 {
+		return nil, ErrMergeOneCoin
+	}
 
 	return &MergeCoinRequest{
 		Owner:        owner,
 		CoinType:     coinType,
 		TargetAmount: targetAmount,
 
-		Coins:          coins,
-		CoinsCount:     len(coins),
+		Coins:          mergingCoins,
+		CoinsCount:     len(mergingCoins),
 		EstimateAmount: totalAmount.String(),
-		WillBeAchieved: totalAmount.Uint64() > amountInt,
+		WillBeAchieved: totalAmount.Cmp(amountBigInt) >= 0,
 	}, nil
 }
 
