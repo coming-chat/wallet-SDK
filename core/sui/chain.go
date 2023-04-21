@@ -78,7 +78,7 @@ func (c *Chain) SendRawTransaction(signedTx string) (hash string, err error) {
 	options := types.SuiTransactionBlockResponseOptions{
 		ShowEffects: true,
 	}
-	response, err := cli.ExecuteTransactionBlock(context.Background(), *signedTxn.TxBytes, []any{signedTxn.Signature}, &options, types.TxnRequestTypeWaitForEffectsCert)
+	response, err := cli.ExecuteTransactionBlock(context.Background(), *signedTxn.TxBytes, []any{signedTxn.Signature}, &options, types.TxnRequestTypeWaitForLocalExecution)
 	if err != nil {
 		return
 	}
