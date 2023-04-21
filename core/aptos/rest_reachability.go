@@ -40,6 +40,7 @@ func (r *RestReachability) LatencyOf(rpc string, timeout int64) (l *base.RpcLate
 	heightInt, err := strconv.ParseInt(model.BlockHeight, 10, 64)
 	if err != nil {
 		heightInt = 0
+		err = nil
 	}
 	timeCost := time.Since(timeStart) // Time End
 
