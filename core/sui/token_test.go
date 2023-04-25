@@ -84,8 +84,8 @@ func TestTransfer(t *testing.T) {
 	txn, err := token.BuildTransferTransaction(account, toAddress, amount)
 	require.Nil(t, err)
 
-	// simulateCheck(t, chain, &txn.Txn, false)
-	executeTransaction(t, chain, &txn.Txn, account.account)
+	simulateCheck(t, chain, &txn.Txn, false)
+	// executeTransaction(t, chain, &txn.Txn, account.account)
 }
 
 func TestToken_Transfer_Use_Pay(t *testing.T) {
@@ -137,7 +137,7 @@ func Test_TokenTransfer_Gas_Compare(t *testing.T) {
 
 	sendCoin := coins.Data[0]
 	sendAmount := types.NewSafeSuiBigInt(sendCoin.Balance.Uint64())
-	gasBudget := types.NewSafeSuiBigInt[uint64](30000000)
+	gasBudget := types.NewSafeSuiBigInt[uint64](10000000)
 
 	{
 		txn, err := cli.Pay(context.Background(), *owner,

@@ -12,7 +12,6 @@ import (
 type Transaction struct {
 	Txn types.TransactionBytes
 
-	MaxGasBudget   int64
 	EstimateGasFee int64
 }
 

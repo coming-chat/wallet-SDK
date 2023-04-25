@@ -68,11 +68,14 @@ func TestWithdrawDelegation(t *testing.T) {
 	chain := TestnetChain()
 	acc := M1Account(t)
 
-	if false {
-		stakeId := "0x5cdb23dacf54329660467b900a2598bb796353fa"
-		txn, err := chain.WithdrawDelegation(acc.Address(), stakeId)
-		require.Nil(t, err)
+	stakedArray, err := chain.GetDelegatedStakes(acc.Address())
+	require.Nil(t, err)
+	require.Greater(t, stakedArray.Count(), 0)
 
-		simulateCheck(t, chain, &txn.Txn, false)
-	}
+	stake := stakedArray.Values[0].(*DelegatedStake)
+	stakeId := stake.StakeId
+	txn, err := chain.WithdrawDelegation(acc.Address(), stakeId)
+	require.Nil(t, err)
+
+	simulateCheck(t, chain, &txn.Txn, false)
 }

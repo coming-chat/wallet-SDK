@@ -7,8 +7,6 @@ import (
 	"github.com/coming-chat/wallet-SDK/core/base"
 )
 
-const gasBudget = MaxGasBudget
-
 func (c *Chain) BaseMoveCall(address, packageId, module, funcName string, typArgs []string, arg []any) (txn *Transaction, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
 
@@ -24,23 +22,25 @@ func (c *Chain) BaseMoveCall(address, packageId, module, funcName string, typArg
 	if err != nil {
 		return
 	}
-	gasInt := types.NewSafeSuiBigInt[uint64](gasBudget)
-	tx, err := client.MoveCall(
-		context.Background(),
-		*addr,
-		*packageIdHex,
-		module,
-		funcName,
-		typArgs,
-		arg,
-		nil,
-		gasInt,
-	)
-	if err != nil {
-		return
-	}
-	return &Transaction{
-		Txn:          *tx,
-		MaxGasBudget: gasBudget,
-	}, nil
+	return c.EstimateTransactionFeeAndRebuildTransaction(MaxGasBudget, func(gasBudget uint64) (*Transaction, error) {
+		gasInt := types.NewSafeSuiBigInt(gasBudget)
+		tx, err := client.MoveCall(
+			context.Background(),
+			*addr,
+			*packageIdHex,
+			module,
+			funcName,
+			typArgs,
+			arg,
+			nil,
+			gasInt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		return &Transaction{
+			Txn: *tx,
+		}, nil
+	})
+
 }

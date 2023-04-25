@@ -381,18 +381,18 @@ func (c *Chain) AddDelegation(owner, amount string, validatorAddress string) (tx
 	if err != nil {
 		return
 	}
-	txBytes, err := cli.RequestAddStake(context.Background(), *signer,
-		pickedCoins.CoinIds(),
-		decimal.NewFromBigInt(amountInt, 0),
-		*validator,
-		nil, decimal.NewFromInt(maxGasBudgetForStake))
-	if err != nil {
-		return
-	}
-	return &Transaction{
-		Txn:          *txBytes,
-		MaxGasBudget: maxGasBudgetForStake,
-	}, nil
+	return c.EstimateTransactionFeeAndRebuildTransaction(maxGasBudgetForStake, func(gasBudget uint64) (*Transaction, error) {
+		gasInt := big.NewInt(0).SetUint64(gasBudget)
+		txBytes, err := cli.RequestAddStake(context.Background(), *signer,
+			pickedCoins.CoinIds(),
+			decimal.NewFromBigInt(amountInt, 0),
+			*validator,
+			nil, decimal.NewFromBigInt(gasInt, 0))
+		if err != nil {
+			return nil, err
+		}
+		return &Transaction{Txn: *txBytes}, nil
+	})
 }
 
 func (c *Chain) WithdrawDelegation(owner, stakeId string) (txn *Transaction, err error) {
@@ -410,24 +410,14 @@ func (c *Chain) WithdrawDelegation(owner, stakeId string) (txn *Transaction, err
 	if err != nil {
 		return
 	}
-	allCoins, err := cli.GetSuiCoinsOwnedByAddress(context.Background(), *signer)
-	if err != nil {
-		return
-	}
-	gasCoin, err := allCoins.PickCoinNoLess(maxGasBudgetForStake)
-	if err != nil {
-		return
-	}
-	gasId := gasCoin.CoinObjectId
-	txnBytes, err := cli.RequestWithdrawStake(context.Background(), *signer, *stakeSui, &gasId, decimal.NewFromInt(maxGasBudgetForStake))
-	if err != nil {
-		return
-	}
-
-	return &Transaction{
-		Txn:          *txnBytes,
-		MaxGasBudget: maxGasBudgetForStake,
-	}, nil
+	return c.EstimateTransactionFeeAndRebuildTransaction(maxGasBudgetForStake, func(gasBudget uint64) (*Transaction, error) {
+		gasInt := big.NewInt(0).SetUint64(gasBudget)
+		txnBytes, err := cli.RequestWithdrawStake(context.Background(), *signer, *stakeSui, nil, decimal.NewFromBigInt(gasInt, 0))
+		if err != nil {
+			return nil, err
+		}
+		return &Transaction{Txn: *txnBytes}, nil
+	})
 }
 
 func mapRawValidator(v *types.SuiValidatorSummary, apys map[string]float64) *Validator {

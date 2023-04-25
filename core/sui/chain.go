@@ -14,6 +14,7 @@ import (
 
 const (
 	MaxGasBudget = 90000000
+	MinGasBudget = 1100000
 	// MaxGasForMerge = 10000000
 
 	MaxGasForPay      = 10000000
@@ -186,8 +187,7 @@ func (c *Chain) BatchFetchTransactionStatus(hashListString string) string {
 	return strings.Join(statuses, ",")
 }
 
-// @param gasId gas object to be used in this transaction, the gateway will pick one from the signer's possession if not provided
-func (c *Chain) TransferObject(sender, receiver, objectId, gasId string, gasBudget int64) (txn *Transaction, err error) {
+func (c *Chain) TransferObject(sender, receiver, objectId string, gasBudget int64) (txn *Transaction, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
 
 	senderAddress, err := types.NewAddressFromHex(sender)
@@ -202,26 +202,18 @@ func (c *Chain) TransferObject(sender, receiver, objectId, gasId string, gasBudg
 	if err != nil {
 		return nil, err
 	}
-	var gas *types.ObjectId = nil
-	if gasId != "" {
-		gas, err = types.NewHexData(gasId)
-		if err != nil {
-			return nil, errors.New("Invalid gas object id")
-		}
-	}
 	client, err := c.Client()
 	if err != nil {
 		return
 	}
-	gasInt := types.NewSafeSuiBigInt(uint64(gasBudget))
-	tx, err := client.TransferObject(context.Background(), *senderAddress, *receiverAddress, *nftObject, gas, gasInt)
-	if err != nil {
-		return
-	}
-	return &Transaction{
-		Txn:          *tx,
-		MaxGasBudget: gasBudget,
-	}, nil
+	return c.EstimateTransactionFeeAndRebuildTransaction(uint64(gasBudget), func(maxGas uint64) (*Transaction, error) {
+		gasInt := types.NewSafeSuiBigInt(maxGas)
+		txBytes, err := client.TransferObject(context.Background(), *senderAddress, *receiverAddress, *nftObject, nil, gasInt)
+		if err != nil {
+			return nil, err
+		}
+		return &Transaction{Txn: *txBytes}, nil
+	})
 }
 
 func (c *Chain) GasPrice() (gasprice *base.OptionalString, err error) {
@@ -251,12 +243,15 @@ func (c *Chain) EstimateGasFee(transaction *Transaction) (fee *base.OptionalStri
 	if err != nil {
 		return
 	}
+	if !effects.Effects.Data.IsSuccess() {
+		return nil, errors.New(effects.Effects.Data.V1.Status.Error)
+	}
 
 	gasFee := effects.Effects.Data.GasFee()
 	if gasFee == 0 {
 		gasFee = MaxGasBudget
 	} else {
-		gasFee = gasFee/10*15 + 14 // >= ceil(fee * 1.5)
+		gasFee = gasFee/10*11 + 10 // >= ceil(fee * 1.1)
 	}
 	transaction.EstimateGasFee = gasFee
 	gasString := strconv.FormatInt(gasFee, 10)
@@ -279,4 +274,34 @@ func FaucetFundAccount(address string, faucetUrl string) (h *base.OptionalString
 		return nil, err
 	}
 	return &base.OptionalString{Value: hash}, nil
+}
+
+// @param maxGasBudget: the firstly build required gas
+// @param builer: the builder should build a transaction, it maybe will invoking twice, the firstly build gas pass the maxGasBudget, the second build will pass the estimate gas.
+func (c *Chain) EstimateTransactionFeeAndRebuildTransaction(maxGasBudget uint64, buildTransaction func(gasBudget uint64) (*Transaction, error)) (*Transaction, error) {
+	txn, err := buildTransaction(maxGasBudget)
+	if err != nil {
+		return nil, err
+	}
+	_, err = c.EstimateGasFee(txn)
+	if err != nil {
+		return nil, err
+	}
+	estimateFeeUint := uint64(txn.EstimateGasFee)
+	if txn.EstimateGasFee < MinGasBudget {
+		estimateFeeUint = MinGasBudget
+	}
+	if estimateFeeUint/5*6 > maxGasBudget && maxGasBudget-estimateFeeUint < 1000000 {
+		// estimate*1.2 > max && max-estimate < 0.001SUI
+		// The estimated transaction fee is not much different from the build transaction.
+		return txn, nil
+	}
+
+	// second call the builder
+	newTxn, err := buildTransaction(estimateFeeUint)
+	if err != nil {
+		return nil, err
+	}
+	newTxn.EstimateGasFee = txn.EstimateGasFee
+	return newTxn, nil
 }

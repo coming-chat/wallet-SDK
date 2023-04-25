@@ -47,10 +47,6 @@ func (c *Chain) BuildMergeCoinPreview(request *MergeCoinRequest) (preview *Merge
 	if err != nil {
 		return
 	}
-	targetAmount, err := strconv.ParseUint(request.TargetAmount, 10, 64)
-	if err != nil {
-		return
-	}
 	cli, err := c.Client()
 	if err != nil {
 		return
@@ -63,52 +59,31 @@ func (c *Chain) BuildMergeCoinPreview(request *MergeCoinRequest) (preview *Merge
 		mergeIds = append(mergeIds, coin.CoinObjectId)
 	}
 
-	var txnBytes *types.TransactionBytes
-	gasBudget := types.NewSafeSuiBigInt[uint64](MaxGasForPay)
-	if request.CoinType == SUI_COIN_TYPE {
-		txnBytes, err = cli.PayAllSui(context.Background(), *ownerAddr, *ownerAddr, mergeIds, gasBudget)
-	} else {
-		txnBytes, err = cli.Pay(context.Background(), *ownerAddr, mergeIds,
-			[]types.Address{*ownerAddr},
-			[]types.SafeSuiBigInt[uint64]{types.NewSafeSuiBigInt(totalAmount.Uint64())},
-			nil, gasBudget)
-	}
-	if err != nil {
-		return
-	}
-
-	rawTxn := &Transaction{
-		Txn:          *txnBytes,
-		MaxGasBudget: gasBudget.Int64(),
-	}
-	simulate, err := cli.DryRunTransaction(context.Background(), txnBytes)
-	if err != nil || !simulate.Effects.Data.IsSuccess() {
-		return &MergeCoinPreview{
-			Request:        request,
-			Transaction:    rawTxn,
-			EstimateAmount: totalAmount.String(),
-			WillBeAchieved: totalAmount.Uint64() > targetAmount,
-		}, nil
-	}
-
-	balanceChange := int64(0)
-	rawTxn.EstimateGasFee = simulate.Effects.Data.GasFee()
-	for _, c := range simulate.BalanceChanges {
-		if c.CoinType == request.CoinType {
-			balanceChange, _ = strconv.ParseInt(c.Amount, 10, 64)
-			break
+	txn, err := c.EstimateTransactionFeeAndRebuildTransaction(MaxGasForPay, func(gasBudget uint64) (*Transaction, error) {
+		var txnBytes *types.TransactionBytes
+		gasInt := types.NewSafeSuiBigInt(gasBudget)
+		if request.CoinType == SUI_COIN_TYPE {
+			txnBytes, err = cli.PayAllSui(context.Background(), *ownerAddr, *ownerAddr, mergeIds, gasInt)
+		} else {
+			txnBytes, err = cli.Pay(context.Background(), *ownerAddr, mergeIds,
+				[]types.Address{*ownerAddr},
+				[]types.SafeSuiBigInt[uint64]{types.NewSafeSuiBigInt(totalAmount.Uint64())},
+				nil, gasInt)
 		}
-	}
-	estimateAmount := big.NewInt(0).Add(totalAmount, big.NewInt(balanceChange))
+		if err != nil {
+			return nil, err
+		}
+		return &Transaction{Txn: *txnBytes}, nil
+	})
 
 	return &MergeCoinPreview{
 		Request: request,
 
-		Transaction:     rawTxn,
+		Transaction:     txn,
 		SimulateSuccess: true,
-		EstimateGasFee:  simulate.Effects.Data.GasFee(),
-		EstimateAmount:  estimateAmount.String(),
-		WillBeAchieved:  estimateAmount.Uint64() > targetAmount,
+		EstimateGasFee:  txn.EstimateGasFee,
+		EstimateAmount:  request.EstimateAmount,
+		WillBeAchieved:  request.WillBeAchieved,
 	}, nil
 }
 
@@ -202,36 +177,37 @@ func (c *Chain) BuildSplitCoinTransaction(owner, coinType, targetAmount string) 
 		return
 	}
 
-	var txnBytes *types.TransactionBytes
-	gasBudget := types.NewSafeSuiBigInt[uint64](MaxGasForPay)
-	if coinType == SUI_COIN_TYPE && (pickedCoins.Count() > 1 || len(pageCoins.Data) == 1) {
-		txnBytes, err = cli.PaySui(context.Background(), *ownerAddr,
-			pickedCoins.CoinIds(),
-			[]types.Address{*ownerAddr},
-			[]types.SafeSuiBigInt[uint64]{types.NewSafeSuiBigInt(amountInt)},
-			gasBudget)
-	} else if pickedCoins.Count() > 1 {
-		txnBytes, err = cli.Pay(context.Background(), *ownerAddr,
-			pickedCoins.CoinIds(),
-			[]types.Address{*ownerAddr},
-			[]types.SafeSuiBigInt[uint64]{types.NewSafeSuiBigInt(amountInt)},
-			nil, gasBudget)
-	} else {
-		theCoin := pickedCoins.Coins[0]
-		anotherAmount := theCoin.Balance.Uint64() - amountInt
-		txnBytes, err = cli.SplitCoin(context.Background(), *ownerAddr,
-			theCoin.CoinObjectId,
-			[]types.SafeSuiBigInt[uint64]{
-				types.NewSafeSuiBigInt(amountInt),
-				types.NewSafeSuiBigInt(anotherAmount),
-			}, nil, gasBudget)
-	}
-	if err != nil {
-		return
-	}
+	return c.EstimateTransactionFeeAndRebuildTransaction(MaxGasForPay, func(gasBudget uint64) (*Transaction, error) {
+		var txnBytes *types.TransactionBytes
+		gasInt := types.NewSafeSuiBigInt(gasBudget)
+		if coinType == SUI_COIN_TYPE && (pickedCoins.Count() > 1 || len(pageCoins.Data) == 1) {
+			txnBytes, err = cli.PaySui(context.Background(), *ownerAddr,
+				pickedCoins.CoinIds(),
+				[]types.Address{*ownerAddr},
+				[]types.SafeSuiBigInt[uint64]{types.NewSafeSuiBigInt(amountInt)},
+				gasInt)
+		} else if pickedCoins.Count() > 1 {
+			txnBytes, err = cli.Pay(context.Background(), *ownerAddr,
+				pickedCoins.CoinIds(),
+				[]types.Address{*ownerAddr},
+				[]types.SafeSuiBigInt[uint64]{types.NewSafeSuiBigInt(amountInt)},
+				nil, gasInt)
+		} else {
+			theCoin := pickedCoins.Coins[0]
+			anotherAmount := theCoin.Balance.Uint64() - amountInt
+			txnBytes, err = cli.SplitCoin(context.Background(), *ownerAddr,
+				theCoin.CoinObjectId,
+				[]types.SafeSuiBigInt[uint64]{
+					types.NewSafeSuiBigInt(amountInt),
+					types.NewSafeSuiBigInt(anotherAmount),
+				}, nil, gasInt)
+		}
+		if err != nil {
+			return nil, err
+		}
 
-	return &Transaction{
-		Txn:          *txnBytes,
-		MaxGasBudget: MaxGasForPay,
-	}, nil
+		return &Transaction{
+			Txn: *txnBytes,
+		}, nil
+	})
 }

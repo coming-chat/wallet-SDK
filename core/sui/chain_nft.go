@@ -97,37 +97,30 @@ func transformNFT(nft *types.SuiObjectResponse) *base.NFT {
 	}
 }
 
-// @param gasId gas object to be used in this transaction, the gateway will pick one from the signer's possession if not provided
-func (c *Chain) MintNFT(creator, name, description, uri, gasId string, gasBudget int64) (txn *Transaction, err error) {
+func (c *Chain) MintNFT(creator, name, description, uri string) (txn *Transaction, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
 
 	signer, err := types.NewAddressFromHex(creator)
 	if err != nil {
 		return nil, errors.New("Invalid creator address")
 	}
-	var gas *types.ObjectId = nil
-	if gasId != "" {
-		gas, err = types.NewHexData(gasId)
-		if err != nil {
-			return nil, errors.New("Invalid gas object id")
-		}
-	}
 	client, err := c.Client()
 	if err != nil {
 		return
 	}
-	tx, err := client.MintNFT(context.Background(), *signer, name, description, uri, gas, uint64(gasBudget))
-	if err != nil {
-		return
-	}
-	return &Transaction{
-		Txn:          *tx,
-		MaxGasBudget: gasBudget,
-	}, nil
+	return c.EstimateTransactionFeeAndRebuildTransaction(MaxGasBudget, func(gasBudget uint64) (*Transaction, error) {
+		txBytes, err := client.MintNFT(context.Background(), *signer, name, description, uri, nil, gasBudget)
+		if err != nil {
+			return nil, err
+		}
+		return &Transaction{
+			Txn: *txBytes,
+		}, nil
+	})
 }
 
 // Just encapsulation and callbacks to method `TransferObject`.
 // @param gasId gas object to be used in this transaction, the gateway will pick one from the signer's possession if not provided
-func (c *Chain) TransferNFT(sender, receiver, nftId, gasId string, gasBudget int64) (txn *Transaction, err error) {
-	return c.TransferObject(sender, receiver, nftId, gasId, gasBudget)
+func (c *Chain) TransferNFT(sender, receiver, nftId string) (txn *Transaction, err error) {
+	return c.TransferObject(sender, receiver, nftId, MaxGasBudget)
 }

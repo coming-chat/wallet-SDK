@@ -86,6 +86,19 @@ func TestFaucet(t *testing.T) {
 	}
 }
 
+func Test_EstimateFee_And_RebuildTxn(t *testing.T) {
+	account := M1Account(t)
+	chain := TestnetChain()
+	token := NewTokenMain(chain)
+
+	txn, err := chain.EstimateTransactionFeeAndRebuildTransaction(MaxGasForTransfer, func(gasBudget uint64) (*Transaction, error) {
+		return token.BuildTransferTransaction(account, account.Address(), SUI(1).String())
+	})
+	require.Nil(t, err)
+
+	t.Log(txn)
+}
+
 func simulateCheck(t *testing.T, chain *Chain, txn *types.TransactionBytes, showJson bool) *types.DryRunTransactionBlockResponse {
 	cli, err := chain.Client()
 	require.Nil(t, err)

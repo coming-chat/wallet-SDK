@@ -160,36 +160,35 @@ func (t *Token) BuildTransferTransaction(account *Account, receiverAddress, amou
 		return
 	}
 
-	gasBudget := types.NewSafeSuiBigInt[uint64](MaxGasForTransfer)
-	var txnBytes *types.TransactionBytes
-	// TODO: we can transfer object now, but we cannot parse it's to a coin transfer event.
-	// if pickedCoin.CanUseTransferObject {
-	// 	txnBytes, err = cli.TransferObject(context.Background(), *signer, *recipient,
-	// 		pickedCoin.Coins[0].CoinObjectId,
-	// 		nil, gasBudget)
-	// } else {
-	// }
-	if t.IsSUI() {
-		txnBytes, err = cli.PaySui(context.Background(), *signer,
-			pickedCoin.CoinIds(),
-			[]types.Address{*recipient},
-			[]types.SafeSuiBigInt[uint64]{types.NewSafeSuiBigInt(amountInt)},
-			gasBudget)
-	} else {
-		txnBytes, err = cli.Pay(context.Background(), *signer,
-			pickedCoin.CoinIds(),
-			[]types.Address{*recipient},
-			[]types.SafeSuiBigInt[uint64]{types.NewSafeSuiBigInt(amountInt)},
-			nil, gasBudget)
-	}
-	if err != nil {
-		return
-	}
+	return t.chain.EstimateTransactionFeeAndRebuildTransaction(MaxGasForTransfer, func(gasBudget uint64) (*Transaction, error) {
+		gasInt := types.NewSafeSuiBigInt(gasBudget)
+		var txnBytes *types.TransactionBytes
+		// TODO: we can transfer object now, but we cannot parse it's to a coin transfer event.
+		// if pickedCoin.CanUseTransferObject {
+		// 	txnBytes, err = cli.TransferObject(context.Background(), *signer, *recipient,
+		// 		pickedCoin.Coins[0].CoinObjectId,
+		// 		nil, gasBudget)
+		// } else {
+		// }
+		if t.IsSUI() {
+			txnBytes, err = cli.PaySui(context.Background(), *signer,
+				pickedCoin.CoinIds(),
+				[]types.Address{*recipient},
+				[]types.SafeSuiBigInt[uint64]{types.NewSafeSuiBigInt(amountInt)},
+				gasInt)
+		} else {
+			txnBytes, err = cli.Pay(context.Background(), *signer,
+				pickedCoin.CoinIds(),
+				[]types.Address{*recipient},
+				[]types.SafeSuiBigInt[uint64]{types.NewSafeSuiBigInt(amountInt)},
+				nil, gasInt)
+		}
+		if err != nil {
+			return nil, err
+		}
 
-	return &Transaction{
-		Txn:          *txnBytes,
-		MaxGasBudget: MaxGasForTransfer,
-	}, nil
+		return &Transaction{Txn: *txnBytes}, nil
+	})
 }
 
 func (t *Token) EstimateFees(account *Account, receiverAddress, amount string) (f *base.OptionalString, err error) {
@@ -197,5 +196,6 @@ func (t *Token) EstimateFees(account *Account, receiverAddress, amount string) (
 	if err != nil {
 		return
 	}
-	return t.chain.EstimateGasFee(txn)
+	gasString := strconv.FormatInt(txn.EstimateGasFee, 10)
+	return &base.OptionalString{Value: gasString}, nil
 }

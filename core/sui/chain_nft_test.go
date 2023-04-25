@@ -34,7 +34,7 @@ func TestMintNFT(t *testing.T) {
 		nftDesc = "This is a NFT created by ComingChat"
 		nftUrl  = "https://coming.chat/favicon.ico"
 	)
-	txn, err := chain.MintNFT(account.Address(), nftName, nftDesc, nftUrl, "", MaxGasBudget)
+	txn, err := chain.MintNFT(account.Address(), nftName, nftDesc, nftUrl)
 	require.Nil(t, err)
 	signedTxn, err := txn.SignWithAccount(account)
 	require.Nil(t, err)
@@ -61,7 +61,7 @@ out:
 	}
 	require.NotNil(t, nft)
 
-	txn, err := chain.TransferNFT(account.Address(), receiver, nft.Id, "", MaxGasBudget)
+	txn, err := chain.TransferNFT(account.Address(), receiver, nft.Id)
 	require.Nil(t, err)
 	signedTxn, err := txn.SignWithAccount(account)
 	require.Nil(t, err)
