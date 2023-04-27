@@ -1,10 +1,13 @@
 package sui
 
 import (
-	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+)
+
+const (
+	ComingChatValidatorAddress = "0x520289e77c838bae8501ae92b151b99a54407288fdd20dee6e5416bfe943eb7a"
 )
 
 func TestGetValidatorState(t *testing.T) {
@@ -37,8 +40,8 @@ func TestStakeEarningTimems(t *testing.T) {
 
 func TestGetDelegatedStakes(t *testing.T) {
 	chain := TestnetChain()
-	address := M1Account(t).Address()
-	// address := "0xd77955e670f42c1bc5e94b9e68e5fe9bdbed9134d784f2a14dfe5fc1b24b5d9f"
+	// address := M1Account(t).Address()
+	address := "0xd77955e670f42c1bc5e94b9e68e5fe9bdbed9134d784f2a14dfe5fc1b24b5d9f"
 
 	list, err := chain.GetDelegatedStakes(address)
 	require.Nil(t, err)
@@ -50,10 +53,10 @@ func TestGetDelegatedStakes(t *testing.T) {
 
 func TestAddDelegation(t *testing.T) {
 	chain := TestnetChain()
-	acc := M3Account(t)
+	acc := M1Account(t)
 
-	amount := strconv.FormatInt(1e9, 10)                                              // 1 SUI
-	validator := "0x520289e77c838bae8501ae92b151b99a54407288fdd20dee6e5416bfe943eb7a" // coming chat
+	amount := SUI(1).String()
+	validator := ComingChatValidatorAddress
 	txn, err := chain.AddDelegation(acc.Address(), amount, validator)
 	require.Nil(t, err)
 
@@ -66,15 +69,15 @@ func TestAddDelegation(t *testing.T) {
 
 func TestWithdrawDelegation(t *testing.T) {
 	chain := TestnetChain()
-	acc := M1Account(t)
+	owner := "0xd77955e670f42c1bc5e94b9e68e5fe9bdbed9134d784f2a14dfe5fc1b24b5d9f"
 
-	stakedArray, err := chain.GetDelegatedStakes(acc.Address())
+	stakedArray, err := chain.GetDelegatedStakes(owner)
 	require.Nil(t, err)
 	require.Greater(t, stakedArray.Count(), 0)
 
 	stake := stakedArray.Values[0].(*DelegatedStake)
 	stakeId := stake.StakeId
-	txn, err := chain.WithdrawDelegation(acc.Address(), stakeId)
+	txn, err := chain.WithdrawDelegation(owner, stakeId)
 	require.Nil(t, err)
 
 	simulateCheck(t, chain, &txn.Txn, false)

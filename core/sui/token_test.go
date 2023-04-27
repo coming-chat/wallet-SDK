@@ -11,11 +11,14 @@ import (
 
 type SUI float32
 
-func (s SUI) Value() uint64 {
+func (s SUI) Int64() int64 {
+	return int64(s * 1e9)
+}
+func (s SUI) Uint64() uint64 {
 	return uint64(s * 1e9)
 }
 func (s SUI) String() string {
-	return strconv.FormatUint(s.Value(), 10)
+	return strconv.FormatUint(s.Uint64(), 10)
 }
 
 func TestBalance(t *testing.T) {
