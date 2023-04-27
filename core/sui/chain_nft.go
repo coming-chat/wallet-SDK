@@ -24,20 +24,18 @@ func (c *Chain) FetchNFTs(owner string) (res map[string][]*base.NFT, err error) 
 	}
 	nftObjects, err := client.BatchGetFilteredObjectsOwnedByAddress(context.Background(), *address, types.SuiObjectDataOptions{
 		ShowType:                true,
-		ShowContent:             true,
+		ShowDisplay:             true,
 		ShowPreviousTransaction: true,
 	}, func(sod *types.SuiObjectData) bool {
-		if strings.HasPrefix(*sod.Type, "0x2::coin::Coin<") {
-			return false
-		}
-		return true
+		isCoin := strings.HasPrefix(*sod.Type, "0x2::coin::Coin<")
+		return !isCoin
 	})
 	if err != nil {
 		return
 	}
 	nfts := []*base.NFT{}
 	for _, obj := range nftObjects {
-		nft := transformNFT(&obj)
+		nft := TransformNFT(&obj)
 		if nft != nil {
 			nfts = append(nfts, nft)
 		}
@@ -63,37 +61,57 @@ func (c *Chain) FetchNFTsJsonString(owner string) (*base.OptionalString, error) 
 	return &base.OptionalString{Value: string(bytes)}, nil
 }
 
-func transformNFT(nft *types.SuiObjectResponse) *base.NFT {
-	if nft == nil || nft.Data == nil || nft.Data.Content == nil || nft.Data.Content.Data.MoveObject == nil {
+func TransformNFT(nft *types.SuiObjectResponse) *base.NFT {
+	if nft == nil || nft.Data == nil || nft.Data.Display == nil {
 		return nil
 	}
-	fields := struct {
-		Id struct {
-			Id string `json:"id"`
-		} `json:"id"`
-		Name        string `json:"name"`
-		Description string `json:"description"`
-		Url         string `json:"url"`
-	}{}
-	metaBytes, err := json.Marshal(nft.Data.Content.Data.MoveObject.Fields)
+	var nftStruct struct {
+		Data struct {
+			ImageUrl    string `json:"image_url"`
+			Description string `json:"description"`
+			Name        string `json:"name"`
+			Creator     string `json:"creator"`
+			// ProjectUrl  string `json:"project_url"`
+			Link string `json:"link"`
+		} `json:"data"`
+	}
+	metaBytes, err := json.Marshal(nft.Data.Display)
 	if err != nil {
 		return nil
 	}
-	err = json.Unmarshal(metaBytes, &fields)
+	err = json.Unmarshal(metaBytes, &nftStruct)
 	if err != nil {
 		return nil
 	}
-	if fields.Name == "" && fields.Url == "" {
+	if nftStruct.Data.ImageUrl == "" {
 		return nil
 	}
 
+	contractAddress := ""
+	if nft.Data.Type != nil {
+		typ, err := types.NewResourceType(*nft.Data.Type)
+		if err == nil {
+			contractAddress = typ.Address.String()
+		}
+		err = nil
+	}
+	hash := ""
+	if nft.Data.PreviousTransaction != nil {
+		hash = *nft.Data.PreviousTransaction
+	}
+	name := nftStruct.Data.Name
+	if name == "" {
+		name = nft.Data.ObjectId.String()
+	}
 	return &base.NFT{
-		HashString: *nft.Data.PreviousTransaction,
+		HashString:      hash,
+		ContractAddress: contractAddress,
 
-		Id:          fields.Id.Id,
-		Name:        fields.Name,
-		Description: fields.Description,
-		Image:       strings.Replace(fields.Url, "ipfs://", "https://ipfs.io/ipfs/", 1),
+		Name:        name,
+		Id:          nft.Data.ObjectId.String(),
+		Description: nftStruct.Data.Description,
+		RelatedUrl:  nftStruct.Data.Link,
+		Image:       strings.Replace(nftStruct.Data.ImageUrl, "ipfs://", "https://ipfs.io/ipfs/", 1),
 	}
 }
 
