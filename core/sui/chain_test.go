@@ -60,17 +60,21 @@ func TestFetchTransactionDetail(t *testing.T) {
 
 func TestSplit(t *testing.T) {
 	account := M1Account(t)
-	chain := DevnetChain()
+	chain := TestnetChain()
 
 	client, err := chain.Client()
 	require.Nil(t, err)
 
-	signer, _ := types.NewAddressFromHex(account.Address())
-	coin := "0x0a1248b37b452627eaa588166464cb84718e9c032da3d986c8a9f7f99c1eb6d8"
-	coinID, err := types.NewHexData(coin)
+	signer, err := types.NewAddressFromHex(account.Address())
 	require.Nil(t, err)
+	coins, err := client.GetCoins(context.Background(), *signer, nil, nil, 10)
+	require.Nil(t, err)
+	require.GreaterOrEqual(t, len(coins.Data), 1)
 
-	txn, err := client.SplitCoinEqual(context.Background(), *signer, *coinID, types.NewSafeSuiBigInt[uint64](2), nil, types.NewSafeSuiBigInt[uint64](20000))
+	coin := coins.Data[0]
+
+	gasBudget := SUI(0.01).Uint64()
+	txn, err := client.SplitCoinEqual(context.Background(), *signer, coin.CoinObjectId, types.NewSafeSuiBigInt[uint64](2), nil, types.NewSafeSuiBigInt(gasBudget))
 	require.Nil(t, err)
 
 	simulateCheck(t, chain, txn, false)

@@ -13,7 +13,7 @@ type Jsonable interface {
 
 	// ====== template
 	// func (j *Xxx) JsonString() (*base.OptionalString, error) {
-	// 	return base.JsonString(s)
+	// 	return base.JsonString(j)
 	// }
 	// func NewXxxWithJsonString(str string) (*Xxx, error) {
 	// 	var o Xxx

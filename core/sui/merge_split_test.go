@@ -3,6 +3,7 @@ package sui
 import (
 	"testing"
 
+	"github.com/coming-chat/go-sui/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -33,4 +34,19 @@ func TestBuildSplitCoinTransaction(t *testing.T) {
 	require.Nil(t, err)
 
 	simulateCheck(t, chain, &txn.Txn, true)
+}
+
+func TestRunableSplitCoin(t *testing.T) {
+	chain := TestnetChain()
+	acc := M3Account(t)
+
+	owner, err := types.NewAddressFromHex(acc.Address())
+	require.Nil(t, err)
+	amount := SUI(1).String()
+
+	txn, err := chain.BuildSplitCoinTransaction(owner.String(), "", amount)
+	require.Nil(t, err)
+
+	simulateCheck(t, chain, &txn.Txn, true)
+	// executeTransaction(t, chain, &txn.Txn, acc.account)
 }

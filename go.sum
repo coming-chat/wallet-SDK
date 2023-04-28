@@ -253,8 +253,8 @@ github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd/go.mod h1:sE
 github.com/coinbase/rosetta-sdk-go v0.7.0 h1:lmTO/JEpCvZgpbkOITL95rA80CPKb5CtMzLaqF2mCNg=
 github.com/coming-chat/go-aptos v0.0.0-20221109075633-2804a4483f45 h1:BqPY3c9NNuJ8OGdyVQdWueQcFwmOyywpPY+nDwf82e0=
 github.com/coming-chat/go-aptos v0.0.0-20221109075633-2804a4483f45/go.mod h1:HaGBPmQOlKzxkbGancRSX8wcwDxvj9Zs173CSla43vE=
-github.com/coming-chat/go-sui v0.0.0-20230427064916-84fb7d12bd57 h1:Ys4O+xkWUyNECfD/PUR8knhBI0EoivyC7gfFq2m5/jg=
-github.com/coming-chat/go-sui v0.0.0-20230427064916-84fb7d12bd57/go.mod h1:s5DRgrUeaPfWULPP3+OcUaBdRIVkq7W1PrQKNr7D5ag=
+github.com/coming-chat/go-sui v0.0.0-20230428090637-5d4207a2fb8a h1:bWZQC9ZezFFN5Q+xFd+4b9nqE+Z5+ot4v3NZQjujNt8=
+github.com/coming-chat/go-sui v0.0.0-20230428090637-5d4207a2fb8a/go.mod h1:s5DRgrUeaPfWULPP3+OcUaBdRIVkq7W1PrQKNr7D5ag=
 github.com/coming-chat/keyring v1.3.0 h1:dMVtKkbVIzPMpMOrCQydAD5YeDCbvYBc7XLMEJqY9g0=
 github.com/coming-chat/keyring v1.3.0/go.mod h1:fc+wB5KTk9wQ9sDx0kFXB3A0MaeGHM9AwRStKOQ5vOA=
 github.com/coming-chat/lcs v0.0.0-20220829063658-0fa8432d2bdf h1:HrK16SFZnoxATieE+UHFSHZ6D2+XApv9g752MgvW7es=
