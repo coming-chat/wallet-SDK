@@ -172,11 +172,24 @@ func (c *Chain) FetchTransactionDetail(hash string) (detail *base.TransactionDet
 }
 
 func (c *Chain) FetchTransactionStatus(hash string) base.TransactionStatus {
-	detail, err := c.FetchTransactionDetail(hash)
+	cli, err := c.Client()
 	if err != nil {
 		return base.TransactionStatusNone
 	}
-	return detail.Status
+	resp, err := cli.GetTransactionBlock(context.Background(), hash, types.SuiTransactionBlockResponseOptions{
+		ShowEffects: true,
+	})
+	if err != nil {
+		return base.TransactionStatusNone
+	}
+	if resp.Effects == nil {
+		return base.TransactionStatusNone
+	}
+	if resp.Effects.Data.IsSuccess() {
+		return base.TransactionStatusSuccess
+	} else {
+		return base.TransactionStatusFailure
+	}
 }
 
 func (c *Chain) BatchFetchTransactionStatus(hashListString string) string {
