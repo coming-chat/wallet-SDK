@@ -30,7 +30,14 @@ func (c *Chain) FetchSuiCatGlobalData() (data *SuiCatGlobalData, err error) {
 	if err != nil {
 		return
 	}
-	if res.Data.Content == nil || res.Data.Content.Data.MoveObject == nil {
+	if res.Error != nil {
+		data, err := json.Marshal(res.Error)
+		if err != nil {
+			return nil, errors.New("sui cat data not found")
+		}
+		return nil, errors.New(string(data))
+	}
+	if res.Data == nil || res.Data.Content == nil || res.Data.Content.Data.MoveObject == nil {
 		return nil, errors.New("sui cat data not found")
 	}
 

@@ -11,7 +11,7 @@ const (
 )
 
 func TestGetValidatorState(t *testing.T) {
-	chain := TestnetChain()
+	chain := MainnetChain()
 
 	state, err := chain.GetValidatorState()
 	require.Nil(t, err)

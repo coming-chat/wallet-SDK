@@ -7,7 +7,7 @@ import (
 )
 
 func Test_FetchSuiCatGlobalData(t *testing.T) {
-	chain := TestnetChain()
+	chain := MainnetChain()
 	data, err := chain.FetchSuiCatGlobalData()
 	require.Nil(t, err)
 	t.Log(data.JsonString())

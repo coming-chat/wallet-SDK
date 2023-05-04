@@ -18,12 +18,18 @@ const TestnetRpcUrl = "https://fullnode.testnet.sui.io"
 
 // const TestnetRpcUrl = "https://sui-testnet-wave3.coming.chat"
 
+const MainnetRpcUrl = "https://sui-mainnet.coming.chat"
+
 func DevnetChain() *Chain {
 	return NewChainWithRpcUrl(DevnetRpcUrl)
 }
 
 func TestnetChain() *Chain {
 	return NewChainWithRpcUrl(TestnetRpcUrl)
+}
+
+func MainnetChain() *Chain {
+	return NewChainWithRpcUrl(MainnetRpcUrl)
 }
 
 func TestEstimateGas(t *testing.T) {
