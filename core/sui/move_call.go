@@ -22,7 +22,7 @@ func (c *Chain) BaseMoveCall(address, packageId, module, funcName string, typArg
 	if err != nil {
 		return
 	}
-	return c.EstimateTransactionFeeAndRebuildTransaction(MaxGasBudget, func(gasBudget uint64) (*Transaction, error) {
+	return c.EstimateTransactionFeeAndRebuildTransaction(MinGasBudget, func(gasBudget uint64) (*Transaction, error) {
 		gasInt := types.NewSafeSuiBigInt(gasBudget)
 		tx, err := client.MoveCall(
 			context.Background(),

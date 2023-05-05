@@ -126,7 +126,7 @@ func (c *Chain) MintNFT(creator, name, description, uri string) (txn *Transactio
 	if err != nil {
 		return
 	}
-	return c.EstimateTransactionFeeAndRebuildTransaction(MaxGasBudget, func(gasBudget uint64) (*Transaction, error) {
+	return c.EstimateTransactionFeeAndRebuildTransaction(MinGasBudget, func(gasBudget uint64) (*Transaction, error) {
 		txBytes, err := client.MintNFT(context.Background(), *signer, name, description, uri, nil, gasBudget)
 		if err != nil {
 			return nil, err

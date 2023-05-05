@@ -385,7 +385,11 @@ func (c *Chain) AddDelegation(owner, amount string, validatorAddress string) (tx
 	if err != nil {
 		return
 	}
-	return c.EstimateTransactionFeeAndRebuildTransaction(maxGasBudgetForStake, func(gasBudget uint64) (*Transaction, error) {
+	maxGasBudget := uint64(maxGasBudgetForStake)
+	if pickedCoins.RemainingMaxCoinValue > 0 {
+		maxGasBudget = base.Min(maxGasBudget, pickedCoins.RemainingMaxCoinValue)
+	}
+	return c.EstimateTransactionFeeAndRebuildTransaction(maxGasBudget, func(gasBudget uint64) (*Transaction, error) {
 		gasInt := big.NewInt(0).SetUint64(gasBudget)
 		txBytes, err := cli.RequestAddStake(context.Background(), *signer,
 			pickedCoins.CoinIds(),
@@ -414,7 +418,7 @@ func (c *Chain) WithdrawDelegation(owner, stakeId string) (txn *Transaction, err
 	if err != nil {
 		return
 	}
-	return c.EstimateTransactionFeeAndRebuildTransaction(maxGasBudgetForStake, func(gasBudget uint64) (*Transaction, error) {
+	return c.EstimateTransactionFeeAndRebuildTransaction(MinGasBudget, func(gasBudget uint64) (*Transaction, error) {
 		gasInt := big.NewInt(0).SetUint64(gasBudget)
 		txnBytes, err := cli.RequestWithdrawStake(context.Background(), *signer, *stakeSui, nil, decimal.NewFromBigInt(gasInt, 0))
 		if err != nil {

@@ -101,12 +101,35 @@ func Test_EstimateFee_And_RebuildTxn(t *testing.T) {
 	chain := TestnetChain()
 	token := NewTokenMain(chain)
 
-	txn, err := chain.EstimateTransactionFeeAndRebuildTransaction(MaxGasForTransfer, func(gasBudget uint64) (*Transaction, error) {
+	txn, err := chain.EstimateTransactionFeeAndRebuildTransaction(MinGasBudget, func(gasBudget uint64) (*Transaction, error) {
 		return token.BuildTransferTransaction(account, account.Address(), SUI(1).String())
 	})
 	require.Nil(t, err)
 
 	t.Log(txn)
+}
+
+func Test_TryToFindTheMiniumGasBudget(t *testing.T) {
+	chain := MainnetChain()
+
+	addressHasManySUIObject := "0xab73ad38c63f83eda02182422b545395be1d3caeb54b5869159a9f70b678cd56"
+	totalBigAmount := SUI(266000000).String()
+
+	req, err := chain.BuildMergeCoinRequest(addressHasManySUIObject, "", totalBigAmount)
+	require.Nil(t, err)
+	_, err = chain.BuildMergeCoinPreview(req)
+	require.Nil(t, err)
+	// 我们需要修改下面方法的第一次构建的 maxGasBudget 的值，保证它在第一次模拟交易能通过
+	// chain.EstimateTransactionFeeAndRebuildTransaction()
+}
+
+func Test_TryBuild(t *testing.T) {
+	chain := MainnetChain()
+
+	address := "0xab73ad38c63f83eda02182422b545395be1d3caeb54b5869159a9f70b678cd56"
+
+	_, err := chain.AddDelegation(address, SUI(2).String(), ComingChatValidatorMainnet)
+	require.Nil(t, err)
 }
 
 func simulateCheck(t *testing.T, chain *Chain, txn *types.TransactionBytes, showJson bool) *types.DryRunTransactionBlockResponse {

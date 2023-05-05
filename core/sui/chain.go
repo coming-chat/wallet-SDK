@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -292,21 +293,48 @@ func FaucetFundAccount(address string, faucetUrl string) (h *base.OptionalString
 // @param maxGasBudget: the firstly build required gas
 // @param builer: the builder should build a transaction, it maybe will invoking twice, the firstly build gas pass the maxGasBudget, the second build will pass the estimate gas.
 func (c *Chain) EstimateTransactionFeeAndRebuildTransaction(maxGasBudget uint64, buildTransaction func(gasBudget uint64) (*Transaction, error)) (*Transaction, error) {
-	txn, err := buildTransaction(maxGasBudget)
-	if err != nil {
-		return nil, err
+	if maxGasBudget < MinGasBudget {
+		maxGasBudget = MinGasBudget
 	}
-	_, err = c.EstimateGasFee(txn)
-	if err != nil {
-		return nil, err
+	var (
+		txn *Transaction = nil
+		err error        = nil
+
+		estimateFeeUint = uint64(0)
+	)
+	isLowGasError := func(err error) bool {
+		regInsufficientGas := regexp.MustCompile(`Insufficient.*Gas|GasBudgetTooLow|.*is less than the reference gas price.*`)
+		match := regInsufficientGas.FindAllStringSubmatch(err.Error(), -1)
+		return len(match) > 0
 	}
-	estimateFeeUint := uint64(txn.EstimateGasFee)
-	if txn.EstimateGasFee < MinGasBudget {
-		estimateFeeUint = MinGasBudget
+	for {
+		txn, err = buildTransaction(maxGasBudget)
+		if err != nil {
+			if isLowGasError(err) {
+				maxGasBudget = nextTryingGas(maxGasBudget)
+				continue
+			}
+			return nil, err
+		}
+		_, err = c.EstimateGasFee(txn)
+		if err != nil {
+			if isLowGasError(err) {
+				maxGasBudget = nextTryingGas(maxGasBudget)
+				continue
+			}
+			return nil, err
+		}
+		if txn.EstimateGasFee < MinGasBudget {
+			estimateFeeUint = MinGasBudget
+		} else {
+			estimateFeeUint = uint64(txn.EstimateGasFee)
+		}
+		break
 	}
-	if estimateFeeUint/5*6 > maxGasBudget && maxGasBudget-estimateFeeUint < 1000000 {
+	if estimateFeeUint/5*6 > maxGasBudget && (estimateFeeUint > maxGasBudget || maxGasBudget-estimateFeeUint < 1000000) {
 		// estimate*1.2 > max && max-estimate < 0.001SUI
 		// The estimated transaction fee is not much different from the build transaction.
+		txn.EstimateGasFee = int64(maxGasBudget)
 		return txn, nil
 	}
 
@@ -317,4 +345,20 @@ func (c *Chain) EstimateTransactionFeeAndRebuildTransaction(maxGasBudget uint64,
 	}
 	newTxn.EstimateGasFee = txn.EstimateGasFee
 	return newTxn, nil
+}
+
+func nextTryingGas(currentGas uint64) uint64 {
+	if currentGas < MinGasBudget {
+		return MinGasBudget
+	} else if currentGas < 10e6 {
+		return 10e6
+	} else if currentGas < 30e6 {
+		return 30e6
+	} else if currentGas < 60e6 {
+		return 60e6
+	} else if currentGas < MaxGasBudget { // 90e6
+		return MaxGasBudget
+	} else {
+		return currentGas / 2 * 3 // gas * 1.5
+	}
 }

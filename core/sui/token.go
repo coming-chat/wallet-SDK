@@ -160,7 +160,11 @@ func (t *Token) BuildTransferTransaction(account *Account, receiverAddress, amou
 		return
 	}
 
-	return t.chain.EstimateTransactionFeeAndRebuildTransaction(MaxGasForTransfer, func(gasBudget uint64) (*Transaction, error) {
+	maxGasBudget := uint64(MaxGasForTransfer)
+	if pickedCoin.RemainingMaxCoinValue > 0 {
+		maxGasBudget = base.Min(maxGasBudget, pickedCoin.RemainingMaxCoinValue)
+	}
+	return t.chain.EstimateTransactionFeeAndRebuildTransaction(maxGasBudget, func(gasBudget uint64) (*Transaction, error) {
 		gasInt := types.NewSafeSuiBigInt(gasBudget)
 		var txnBytes *types.TransactionBytes
 		// TODO: we can transfer object now, but we cannot parse it's to a coin transfer event.

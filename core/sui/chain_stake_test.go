@@ -8,6 +8,7 @@ import (
 
 const (
 	ComingChatValidatorAddress = "0x520289e77c838bae8501ae92b151b99a54407288fdd20dee6e5416bfe943eb7a"
+	ComingChatValidatorMainnet = "0x11ec7353e9e08ed4ca13b935ad930a2f937112736aec5eedd08c95cc5cd4c264"
 )
 
 func TestGetValidatorState(t *testing.T) {

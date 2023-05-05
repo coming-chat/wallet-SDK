@@ -59,7 +59,7 @@ func (c *Chain) BuildMergeCoinPreview(request *MergeCoinRequest) (preview *Merge
 		mergeIds = append(mergeIds, coin.CoinObjectId)
 	}
 
-	txn, err := c.EstimateTransactionFeeAndRebuildTransaction(MaxGasForPay, func(gasBudget uint64) (*Transaction, error) {
+	txn, err := c.EstimateTransactionFeeAndRebuildTransaction(MinGasBudget, func(gasBudget uint64) (*Transaction, error) {
 		var txnBytes *types.TransactionBytes
 		gasInt := types.NewSafeSuiBigInt(gasBudget)
 		if request.CoinType == SUI_COIN_TYPE {
@@ -177,7 +177,11 @@ func (c *Chain) BuildSplitCoinTransaction(owner, coinType, targetAmount string) 
 		return
 	}
 
-	return c.EstimateTransactionFeeAndRebuildTransaction(MaxGasForPay, func(gasBudget uint64) (*Transaction, error) {
+	maxGasBudget := uint64(MaxGasForPay)
+	if pickedCoins.RemainingMaxCoinValue > 0 {
+		maxGasBudget = base.Min(maxGasBudget, pickedCoins.RemainingMaxCoinValue)
+	}
+	return c.EstimateTransactionFeeAndRebuildTransaction(maxGasBudget, func(gasBudget uint64) (*Transaction, error) {
 		var txnBytes *types.TransactionBytes
 		gasInt := types.NewSafeSuiBigInt(gasBudget)
 		if coinType == SUI_COIN_TYPE && (pickedCoins.Count() > 1 || len(pageCoins.Data) == 1) {
