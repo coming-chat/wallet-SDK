@@ -307,7 +307,12 @@ func (c *Chain) EstimateTransactionFeeAndRebuildTransaction(maxGasBudget uint64,
 		match := regInsufficientGas.FindAllStringSubmatch(err.Error(), -1)
 		return len(match) > 0
 	}
+	count := 0
 	for {
+		if count >= 20 {
+			return nil, errors.New("build transaction failed")
+		}
+		count++
 		txn, err = buildTransaction(maxGasBudget)
 		if err != nil {
 			if isLowGasError(err) {
