@@ -204,11 +204,6 @@ func (c *Chain) GetValidatorState() (s *ValidatorState, err error) {
 	var validators = &base.AnyArray{}
 	for _, v := range state.ActiveValidators {
 		validator := mapRawValidator(&v, apys)
-		if state.TotalStake.Int64() != 0 {
-			validator.PoolShare, _ = v.StakingPoolSuiBalance.Decimal().
-				Div(state.TotalStake.Decimal()).
-				Mul(decimal.NewFromInt(100)).Float64()
-		}
 		if validator.isSpecified() {
 			validators.Values = append([]any{validator}, validators.Values...)
 		} else {
@@ -246,6 +241,7 @@ func (c *Chain) GetValidator(address string, useCache bool) (v *Validator, err e
 		if err != nil {
 			return nil, err
 		}
+		cachedSuiSystemState = state
 	}
 	apys := c.getValidatorsApy(true)
 
@@ -451,6 +447,11 @@ func mapRawValidator(v *types.SuiValidatorSummary, apys map[string]float64) *Val
 		TotalStaked:     strconv.FormatInt(totalStaked.Int64(), 10),
 		TotalRewards:    strconv.FormatInt(rewardsPoolBalance.Int64(), 10),
 		GasPrice:        v.GasPrice.Int64(),
+	}
+	if cachedSuiSystemState.TotalStake.Int64() != 0 {
+		validator.PoolShare, _ = v.StakingPoolSuiBalance.Decimal().
+			Div(cachedSuiSystemState.TotalStake.Decimal()).
+			Mul(decimal.NewFromInt(100)).Float64()
 	}
 	return &validator
 }

@@ -88,7 +88,7 @@ func (raw *rawSuiCatGlobalData) mapToPubData() *SuiCatGlobalData {
 		err = nil
 	}
 	return &SuiCatGlobalData{
-		TotalMinted:    int64(len(raw.MintVault.Fields.Indexes)),
+		TotalMinted:    int64(raw.Supply - uint64(len(raw.MintVault.Fields.Indexes))),
 		Supply:         int64(raw.Supply),
 		PricePublic:    raw.PricePublic,
 		PriceWhitelist: raw.PriceWhitelist,
