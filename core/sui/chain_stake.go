@@ -381,14 +381,11 @@ func (c *Chain) AddDelegation(owner, amount string, validatorAddress string) (tx
 	if err != nil {
 		return
 	}
-	pickedCoins, err := types.PickupCoins(coins, *amountInt, MAX_INPUT_COUNT_STAKE, true)
+	pickedCoins, err := types.PickupCoins(coins, *amountInt, MAX_INPUT_COUNT_STAKE, maxGasBudgetForStake)
 	if err != nil {
 		return
 	}
-	maxGasBudget := uint64(maxGasBudgetForStake)
-	if pickedCoins.RemainingMaxCoinValue > 0 {
-		maxGasBudget = base.Min(maxGasBudget, pickedCoins.RemainingMaxCoinValue)
-	}
+	maxGasBudget := maxGasBudget(pickedCoins, maxGasBudgetForStake)
 	return c.EstimateTransactionFeeAndRebuildTransaction(maxGasBudget, func(gasBudget uint64) (*Transaction, error) {
 		gasInt := big.NewInt(0).SetUint64(gasBudget)
 		txBytes, err := cli.RequestAddStake(context.Background(), *signer,

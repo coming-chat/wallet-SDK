@@ -122,10 +122,11 @@ func (c *Chain) MintSuiCatNFT(signer string, amount string) (txn *Transaction, e
 	if err != nil {
 		return
 	}
-	pickedCoins, err := types.PickupCoins(coins, *big.NewInt(0).SetUint64(amountInt), MAX_INPUT_COUNT_MERGE, true)
+	pickedCoins, err := types.PickupCoins(coins, *big.NewInt(0).SetUint64(amountInt), MAX_INPUT_COUNT_MERGE, MinGasBudget)
 	if err != nil {
 		return
 	}
+	gasBudget := maxGasBudget(pickedCoins, MinGasBudget)
 	return c.BaseMoveCall(signer,
 		SuiCatTestnetConfig.PackageId,
 		SuiCatTestnetConfig.ModuleName,
@@ -135,5 +136,5 @@ func (c *Chain) MintSuiCatNFT(signer string, amount string) (txn *Transaction, e
 			SuiCatTestnetConfig.GlobalId,
 			add2,
 			pickedCoins.CoinIds(),
-		})
+		}, gasBudget)
 }

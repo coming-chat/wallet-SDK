@@ -155,15 +155,12 @@ func (t *Token) BuildTransferTransaction(account *Account, receiverAddress, amou
 	if t.IsSUI() {
 		targetAmount = amountInt + MaxGasForTransfer // We will use PaySui if coin is SUI, the amount need plus gas
 	}
-	pickedCoin, err := types.PickupCoins(coins, *big.NewInt(0).SetUint64(targetAmount), MAX_INPUT_COUNT_MERGE, false)
+	pickedCoin, err := types.PickupCoins(coins, *big.NewInt(0).SetUint64(targetAmount), MAX_INPUT_COUNT_MERGE, 0)
 	if err != nil {
 		return
 	}
 
-	maxGasBudget := uint64(MaxGasForTransfer)
-	if pickedCoin.RemainingMaxCoinValue > 0 {
-		maxGasBudget = base.Min(maxGasBudget, pickedCoin.RemainingMaxCoinValue)
-	}
+	maxGasBudget := maxGasBudget(pickedCoin, MaxGasForTransfer)
 	return t.chain.EstimateTransactionFeeAndRebuildTransaction(maxGasBudget, func(gasBudget uint64) (*Transaction, error) {
 		gasInt := types.NewSafeSuiBigInt(gasBudget)
 		var txnBytes *types.TransactionBytes

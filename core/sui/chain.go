@@ -307,6 +307,11 @@ func (c *Chain) EstimateTransactionFeeAndRebuildTransaction(maxGasBudget uint64,
 		match := regInsufficientGas.FindAllStringSubmatch(err.Error(), -1)
 		return len(match) > 0
 	}
+	isCannotFindGasError := func(err error) bool {
+		reg := regexp.MustCompile(`Cannot find gas coin for signer.*[0-9a-f]+.*amount sufficient.*required gas amount.*\d+.*`)
+		match := reg.FindAllStringSubmatch(err.Error(), -1)
+		return len(match) > 0
+	}
 	count := 0
 	for {
 		if count >= 20 {
@@ -319,6 +324,9 @@ func (c *Chain) EstimateTransactionFeeAndRebuildTransaction(maxGasBudget uint64,
 				maxGasBudget = nextTryingGas(maxGasBudget)
 				continue
 			}
+			if isCannotFindGasError(err) {
+				return nil, ErrNeedSplitGasCoin
+			}
 			return nil, err
 		}
 		_, err = c.EstimateGasFee(txn)
@@ -326,6 +334,9 @@ func (c *Chain) EstimateTransactionFeeAndRebuildTransaction(maxGasBudget uint64,
 			if isLowGasError(err) {
 				maxGasBudget = nextTryingGas(maxGasBudget)
 				continue
+			}
+			if isCannotFindGasError(err) {
+				return nil, ErrNeedSplitGasCoin
 			}
 			return nil, err
 		}
@@ -366,4 +377,11 @@ func nextTryingGas(currentGas uint64) uint64 {
 	} else {
 		return currentGas / 2 * 3 // gas * 1.5
 	}
+}
+
+func maxGasBudget(pickedCoins *types.PickedCoins, maxGasBudget uint64) uint64 {
+	if coin := pickedCoins.MaxGasCoin(); coin != nil {
+		return base.Min(maxGasBudget, coin.Balance.Uint64())
+	}
+	return maxGasBudget
 }

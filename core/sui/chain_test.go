@@ -132,6 +132,24 @@ func Test_TryBuild(t *testing.T) {
 	require.Nil(t, err)
 }
 
+func Test_Err_CannotFindGasCoinForSigner(t *testing.T) {
+	// chain := MainnetChain()
+	chain := TestnetChain()
+	address := "0xd77955e670f42c1bc5e94b9e68e5fe9bdbed9134d784f2a14dfe5fc1b24b5d9f"
+
+	cli, err := chain.Client()
+	require.Nil(t, err)
+	signer, err := types.NewAddressFromHex(address)
+	require.Nil(t, err)
+	// coin1, err := types.NewHexData("0x6e8d27767c4fe4953f2c80d49c074e3b1534814017cb69759c9e195d05cd9053")
+	coin1, err := types.NewHexData("0x0153883d60e0df7052b12bc04454dd2eec1c3723ee12145ca73522c6a3917523")
+	require.Nil(t, err)
+	_, err = cli.Pay(context.Background(), *signer, []types.ObjectId{*coin1}, []types.Address{*signer}, []types.SafeSuiBigInt[uint64]{types.NewSafeSuiBigInt[uint64](100)},
+		nil, types.NewSafeSuiBigInt(SUI(10).Uint64()))
+	require.Error(t, err)
+	// "Cannot find gas coin for signer address [0xd77955e670f42c1bc5e94b9e68e5fe9bdbed9134d784f2a14dfe5fc1b24b5d9f] with amount sufficient for the required gas amount [10000000000]."
+}
+
 func simulateCheck(t *testing.T, chain *Chain, txn *types.TransactionBytes, showJson bool) *types.DryRunTransactionBlockResponse {
 	cli, err := chain.Client()
 	require.Nil(t, err)

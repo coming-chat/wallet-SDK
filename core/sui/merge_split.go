@@ -172,15 +172,24 @@ func (c *Chain) BuildSplitCoinTransaction(owner, coinType, targetAmount string) 
 	if err != nil {
 		return
 	}
-	pickedCoins, err := types.PickupCoins(pageCoins, *big.NewInt(0).SetUint64(amountInt), MAX_INPUT_COUNT_MERGE, false)
+	// We'd better split a coin that can meet the target amount and the remaining coin value can be greater than 1SUI
+	// so that the transaction can be executed smoothly.
+	needAmount := amountInt + 1e9
+	pickedCoins, err := types.PickupCoins(pageCoins, *big.NewInt(0).SetUint64(needAmount), MAX_INPUT_COUNT_MERGE, 0)
+	if err.Error() == ErrInsufficientBalance.Error() {
+		if types.Coins(pageCoins.Data).TotalBalance().Uint64() < (amountInt + MinGasBudget*2) {
+			return nil, ErrInsufficientBalance
+		}
+		pickedCoins = &types.PickedCoins{
+			Coins: pageCoins.Data, // all coins should be used to merge
+		}
+		err = nil
+	}
 	if err != nil {
 		return
 	}
 
-	maxGasBudget := uint64(MaxGasForPay)
-	if pickedCoins.RemainingMaxCoinValue > 0 {
-		maxGasBudget = base.Min(maxGasBudget, pickedCoins.RemainingMaxCoinValue)
-	}
+	maxGasBudget := maxGasBudget(pickedCoins, MaxGasForPay)
 	return c.EstimateTransactionFeeAndRebuildTransaction(maxGasBudget, func(gasBudget uint64) (*Transaction, error) {
 		var txnBytes *types.TransactionBytes
 		gasInt := types.NewSafeSuiBigInt(gasBudget)
