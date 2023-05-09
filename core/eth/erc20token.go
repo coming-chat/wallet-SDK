@@ -201,3 +201,13 @@ func (t *Erc20Token) Approve(account *Account, spender string, amount *big.Int) 
 
 	return t.chain.SendRawTransaction(rawTx.Value)
 }
+
+func (t *Erc20Token) BuildTransfer(sender, receiver, amount string) (txn base.Transaction, err error) {
+	return nil, base.ErrUnsupportedFunction
+}
+func (t *Erc20Token) CanTransferAll() bool {
+	return false
+}
+func (t *Erc20Token) BuildTransferAll(sender, receiver string) (txn base.Transaction, err error) {
+	return nil, base.ErrUnsupportedFunction
+}

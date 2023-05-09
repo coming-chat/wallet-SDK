@@ -7,13 +7,16 @@ import (
 	"github.com/coming-chat/wallet-SDK/core/base"
 )
 
-func (c *Chain) EstimateFeeForTransaction(transaction *Transaction) (s string, err error) {
+func (c *Chain) EstimateTransactionFee(transaction base.Transaction) (fee *base.OptionalString, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
-	s = "0"
+	txn, ok := transaction.(*Transaction)
+	if !ok {
+		return nil, base.ErrInvalidTransactionType
+	}
 
 	account := mockAccount()
 	fakeHash := "0x38c5a9f6fabb8d8583ed633c469cdeefb988b0d2384937b15e10e9c0a75aa744"
-	signData, err := transaction.GetSignData(fakeHash, 0, 0, 0)
+	signData, err := txn.GetSignData(fakeHash, 0, 0, 0)
 	if err != nil {
 		return
 	}
@@ -21,7 +24,7 @@ func (c *Chain) EstimateFeeForTransaction(transaction *Transaction) (s string, e
 	if err != nil {
 		return
 	}
-	sendTx, err := transaction.GetTx(account.PublicKey(), signature)
+	sendTx, err := txn.GetTx(account.PublicKey(), signature)
 	if err != nil {
 		return
 	}
@@ -35,8 +38,8 @@ func (c *Chain) EstimateFeeForTransaction(transaction *Transaction) (s string, e
 
 	estimateFee, ok := data["partialFee"].(string)
 	if !ok {
-		return s, errors.New("get estimated fee result nil")
+		return nil, errors.New("get estimated fee result nil")
 	}
 
-	return estimateFee, nil
+	return &base.OptionalString{Value: estimateFee}, nil
 }

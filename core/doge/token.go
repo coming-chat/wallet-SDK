@@ -19,3 +19,13 @@ func (c *Chain) TokenInfo() (*base.TokenInfo, error) {
 		Decimal: 8,
 	}, nil
 }
+
+func (t *Chain) BuildTransfer(sender, receiver, amount string) (txn base.Transaction, err error) {
+	return nil, base.ErrUnsupportedFunction
+}
+func (t *Chain) CanTransferAll() bool {
+	return false
+}
+func (t *Chain) BuildTransferAll(sender, receiver string) (txn base.Transaction, err error) {
+	return nil, base.ErrUnsupportedFunction
+}

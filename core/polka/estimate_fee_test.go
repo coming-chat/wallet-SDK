@@ -98,7 +98,7 @@ func TestChain_EstimateFeeForTransaction(t *testing.T) {
 				}
 				return
 			}
-			gotS, err := c.EstimateFeeForTransaction(transaction)
+			gotS, err := c.EstimateTransactionFee(transaction)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("EstimateFeeForTransaction() error = %v, wantErr %v", err, tt.wantErr)
 				return

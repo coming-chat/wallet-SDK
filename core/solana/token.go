@@ -130,3 +130,13 @@ func transactionMessage(client *client.Client, fromAddress, toAddress, amount st
 
 	return &message, nil
 }
+
+func (t *Token) BuildTransfer(sender, receiver, amount string) (txn base.Transaction, err error) {
+	return nil, base.ErrUnsupportedFunction
+}
+func (t *Token) CanTransferAll() bool {
+	return false
+}
+func (t *Token) BuildTransferAll(sender, receiver string) (txn base.Transaction, err error) {
+	return nil, base.ErrUnsupportedFunction
+}

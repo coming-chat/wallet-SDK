@@ -23,6 +23,8 @@ type Chain interface {
 	// @return Batch transaction status, its order is consistent with hashListString: "status1,status2,status3"
 	BatchFetchTransactionStatus(hashListString string) string
 
+	EstimateTransactionFee(transaction Transaction) (fee *OptionalString, err error)
+
 	// -----------------------------
 	// polka
 	// GetSignDataFromChain(t *Transaction, walletAddress string) ([]byte, error)

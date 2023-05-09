@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
+	"github.com/coming-chat/wallet-SDK/core/base"
 )
 
 type Tx struct {
@@ -36,6 +37,10 @@ func (c *Chain) GetTx() (*Tx, error) {
 
 type Transaction struct {
 	extrinsic *types.Extrinsic
+}
+
+func (t *Transaction) SignWithAccount(account base.Account) (signedTx *base.OptionalString, err error) {
+	return nil, base.ErrUnsupportedFunction
 }
 
 func (t *Transaction) GetSignData(genesisHashString string, nonce int64, specVersion, transVersion int32) ([]byte, error) {

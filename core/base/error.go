@@ -3,5 +3,9 @@ package base
 import "errors"
 
 var (
-	ErrUnsupportedFunction = errors.New("This chain does not support this feature.")
+	ErrUnsupportedFunction = errors.New("this method is not supported")
+
+	ErrInvalidChainType       = errors.New("invalid chain type")
+	ErrInvalidAccountType     = errors.New("invalid account type")
+	ErrInvalidTransactionType = errors.New("invalid transaction type")
 )

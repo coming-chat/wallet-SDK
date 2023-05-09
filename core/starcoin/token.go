@@ -141,3 +141,13 @@ func (t *Token) BuildTransferPayload(receiverAddress, amount string) (p types.Tr
 	p = client.Encode_peer_to_peer_v2_script_function(&types.TypeTag__Struct{Value: t.tokenTag}, *receiver, *amountInt)
 	return
 }
+
+func (t *Token) BuildTransfer(sender, receiver, amount string) (txn base.Transaction, err error) {
+	return nil, base.ErrUnsupportedFunction
+}
+func (t *Token) CanTransferAll() bool {
+	return false
+}
+func (t *Token) BuildTransferAll(sender, receiver string) (txn base.Transaction, err error) {
+	return nil, base.ErrUnsupportedFunction
+}

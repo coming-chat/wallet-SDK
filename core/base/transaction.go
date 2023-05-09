@@ -5,6 +5,14 @@ import (
 	"strings"
 )
 
+type Transaction interface {
+	SignWithAccount(account Account) (signedTxn *OptionalString, err error)
+}
+
+// type SignedTransaction interface {
+// 	String() string
+// }
+
 type TransactionStatus = SDKEnumInt
 
 const (
@@ -13,9 +21,6 @@ const (
 	TransactionStatusSuccess TransactionStatus = 2
 	TransactionStatusFailure TransactionStatus = 3
 )
-
-type Transaction struct {
-}
 
 // Transaction details that can be fetched from the chain
 type TransactionDetail struct {

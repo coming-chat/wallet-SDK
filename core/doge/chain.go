@@ -79,6 +79,10 @@ func (c *Chain) BatchFetchTransactionStatus(hashListString string) string {
 	return strings.Join(statuses, ",")
 }
 
+func (c *Chain) EstimateTransactionFee(transaction base.Transaction) (fee *base.OptionalString, err error) {
+	return nil, base.ErrUnsupportedFunction
+}
+
 // @param limit Specify how many the latest utxos to fetch, The minimum value of the limit is 100.
 func (c *Chain) FetchUtxos(address string, limit int) (*base.OptionalString, error) {
 	limit = base.Max(100, limit)

@@ -81,6 +81,16 @@ func (t *Token) BuildTransferTxWithAccount(account *Account, transaction *Transa
 	return t.chain.buildTransfer(account.privateKeyECDSA, transaction)
 }
 
+func (t *Token) BuildTransfer(sender, receiver, amount string) (txn base.Transaction, err error) {
+	return nil, base.ErrUnsupportedFunction
+}
+func (t *Token) CanTransferAll() bool {
+	return false
+}
+func (t *Token) BuildTransferAll(sender, receiver string) (txn base.Transaction, err error) {
+	return nil, base.ErrUnsupportedFunction
+}
+
 type OptimismLayer2Gas struct {
 	L1GasLimit string
 	L1GasPrice string

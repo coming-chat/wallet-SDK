@@ -34,3 +34,13 @@ func (t *Token) BalanceOfPublicKey(publicKey string) (*base.Balance, error) {
 func (t *Token) BalanceOfAccount(account base.Account) (*base.Balance, error) {
 	return t.chain.BalanceOfAccount(account)
 }
+
+func (t *Token) BuildTransfer(sender, receiver, amount string) (txn base.Transaction, err error) {
+	return nil, base.ErrUnsupportedFunction
+}
+func (t *Token) CanTransferAll() bool {
+	return false
+}
+func (t *Token) BuildTransferAll(sender, receiver string) (txn base.Transaction, err error) {
+	return nil, base.ErrUnsupportedFunction
+}

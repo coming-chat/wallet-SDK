@@ -161,6 +161,10 @@ func (c *Chain) BatchFetchTransactionStatus(hashListString string) string {
 	return strings.Join(statuses, ",")
 }
 
+func (c *Chain) EstimateTransactionFee(transaction base.Transaction) (fee *base.OptionalString, err error) {
+	return nil, base.ErrUnsupportedFunction
+}
+
 // MARK - Client
 
 func (c *Chain) GetClient() (*tendermintHttp.HTTP, error) {

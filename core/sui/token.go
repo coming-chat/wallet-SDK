@@ -200,3 +200,13 @@ func (t *Token) EstimateFees(account *Account, receiverAddress, amount string) (
 	gasString := strconv.FormatInt(txn.EstimateGasFee, 10)
 	return &base.OptionalString{Value: gasString}, nil
 }
+
+func (t *Token) BuildTransfer(sender, receiver, amount string) (txn base.Transaction, err error) {
+	return nil, base.ErrUnsupportedFunction
+}
+func (t *Token) CanTransferAll() bool {
+	return false
+}
+func (t *Token) BuildTransferAll(sender, receiver string) (txn base.Transaction, err error) {
+	return nil, base.ErrUnsupportedFunction
+}

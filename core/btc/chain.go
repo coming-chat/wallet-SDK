@@ -73,6 +73,10 @@ func (c *Chain) BatchFetchTransactionStatus(hashListString string) string {
 	return sdkBatchTransactionStatus(hashListString, c.Chainnet)
 }
 
+func (c *Chain) EstimateTransactionFee(transaction base.Transaction) (fee *base.OptionalString, err error) {
+	return nil, base.ErrUnsupportedFunction
+}
+
 type FeeRate struct {
 	Low     int64
 	Average int64

@@ -176,3 +176,13 @@ func (t *Token) buildTransferTx(privateKey types.PrivKey, receiverAddress, gasPr
 	signedTx := hexTypes.HexEncodeToString(txBytes)
 	return signedTx, nil
 }
+
+func (t *Token) BuildTransfer(sender, receiver, amount string) (txn base.Transaction, err error) {
+	return nil, base.ErrUnsupportedFunction
+}
+func (t *Token) CanTransferAll() bool {
+	return false
+}
+func (t *Token) BuildTransferAll(sender, receiver string) (txn base.Transaction, err error) {
+	return nil, base.ErrUnsupportedFunction
+}

@@ -121,6 +121,10 @@ func (c *Chain) BatchFetchTransactionStatus(hashListString string) string {
 	return strings.Join(statuses, ",")
 }
 
+func (c *Chain) EstimateTransactionFee(transaction base.Transaction) (fee *base.OptionalString, err error) {
+	return nil, base.ErrUnsupportedFunction
+}
+
 func decodeTransaction(tx *client.GetTransactionResponse, to *base.TransactionDetail) error {
 	base.CatchPanicAndMapToBasicError(nil)
 

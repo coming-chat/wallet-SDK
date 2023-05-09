@@ -245,7 +245,12 @@ func (c *Chain) GasPrice() (gasprice *base.OptionalString, err error) {
 	return &base.OptionalString{Value: str}, nil
 }
 
-func (c *Chain) EstimateGasFee(transaction *Transaction) (fee *base.OptionalString, err error) {
+func (c *Chain) EstimateTransactionFee(transaction base.Transaction) (fee *base.OptionalString, err error) {
+	txn, ok := transaction.(*Transaction)
+	if !ok {
+		return nil, base.ErrInvalidTransactionType
+	}
+
 	defer base.CatchPanicAndMapToBasicError(&err)
 	fee = &base.OptionalString{Value: strconv.FormatInt(MaxGasBudget, 10)}
 
@@ -253,7 +258,7 @@ func (c *Chain) EstimateGasFee(transaction *Transaction) (fee *base.OptionalStri
 	if err != nil {
 		return
 	}
-	effects, err := cli.DryRunTransaction(context.Background(), &transaction.Txn)
+	effects, err := cli.DryRunTransaction(context.Background(), &txn.Txn)
 	if err != nil {
 		return
 	}
@@ -267,7 +272,7 @@ func (c *Chain) EstimateGasFee(transaction *Transaction) (fee *base.OptionalStri
 	} else {
 		gasFee = gasFee/10*11 + 10 // >= ceil(fee * 1.1)
 	}
-	transaction.EstimateGasFee = gasFee
+	txn.EstimateGasFee = gasFee
 	gasString := strconv.FormatInt(gasFee, 10)
 	return &base.OptionalString{Value: gasString}, nil
 }
@@ -329,7 +334,7 @@ func (c *Chain) EstimateTransactionFeeAndRebuildTransaction(maxGasBudget uint64,
 			}
 			return nil, err
 		}
-		_, err = c.EstimateGasFee(txn)
+		_, err = c.EstimateTransactionFee(txn)
 		if err != nil {
 			if isLowGasError(err) {
 				maxGasBudget = nextTryingGas(maxGasBudget)

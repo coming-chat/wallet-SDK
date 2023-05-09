@@ -126,6 +126,10 @@ func (c *Chain) BatchFetchTransactionStatus(hashListString string) string {
 	return chain.SdkBatchTransactionStatus(hashListString)
 }
 
+func (c *Chain) EstimateTransactionFee(transaction base.Transaction) (fee *base.OptionalString, err error) {
+	return nil, base.ErrUnsupportedFunction
+}
+
 func (c *Chain) BuildTransferTx(privateKey string, transaction *Transaction) (*base.OptionalString, error) {
 	privateKey = strings.TrimPrefix(privateKey, "0x")
 	privateKeyECDSA, err := crypto.HexToECDSA(privateKey)

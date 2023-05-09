@@ -154,6 +154,10 @@ func (c *Chain) BatchFetchTransactionStatus(hashListString string) string {
 	return strings.Join(statuses, ",")
 }
 
+func (c *Chain) EstimateTransactionFee(transaction base.Transaction) (fee *base.OptionalString, err error) {
+	return nil, base.ErrUnsupportedFunction
+}
+
 // MARK - Implement the protocol IChain
 
 func (c *Chain) GetClient() (*aptosclient.RestClient, error) {

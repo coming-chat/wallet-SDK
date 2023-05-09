@@ -3,7 +3,6 @@ package sui
 import (
 	"context"
 	"encoding/json"
-	"strconv"
 	"testing"
 
 	"github.com/coming-chat/go-sui/account"
@@ -34,16 +33,16 @@ func MainnetChain() *Chain {
 
 func TestEstimateGas(t *testing.T) {
 	account := M1Account(t)
-	chain := DevnetChain()
+	chain := TestnetChain()
 	token := NewTokenMain(chain)
 
 	toAddress := M2Account(t).Address()
-	amount := strconv.FormatUint(uint64(0.01e9), 10)
+	amount := SUI(0.01).String()
 
 	txn, err := token.BuildTransferTransaction(account, toAddress, amount)
 	require.Nil(t, err)
 
-	fee, err := chain.EstimateGasFee(txn)
+	fee, err := chain.EstimateTransactionFee(txn)
 	require.Nil(t, err)
 
 	t.Log("gas fee = ", fee.Value)

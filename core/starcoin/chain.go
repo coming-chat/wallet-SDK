@@ -168,6 +168,10 @@ func (c *Chain) BatchFetchTransactionStatus(hashListString string) string {
 	return strings.Join(statuses, ",")
 }
 
+func (c *Chain) EstimateTransactionFee(transaction base.Transaction) (fee *base.OptionalString, err error) {
+	return nil, base.ErrUnsupportedFunction
+}
+
 func (c *Chain) GasPrice() (*base.OptionalString, error) {
 	price, err := c.client.GetGasUnitPrice(context.Background())
 	if err != nil {

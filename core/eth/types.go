@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	HexType "github.com/centrifuge/go-substrate-rpc-client/v4/types"
+	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -273,4 +274,8 @@ func (tx *Transaction) TotalAmount() string {
 		return "0"
 	}
 	return amount.Add(amount, priceInt.Mul(priceInt, limitInt)).String()
+}
+
+func (t *Transaction) SignWithAccount(account base.Account) (signedTx *base.OptionalString, err error) {
+	return nil, base.ErrUnsupportedFunction
 }

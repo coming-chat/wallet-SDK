@@ -61,7 +61,7 @@ func TestAddDelegation(t *testing.T) {
 	txn, err := chain.AddDelegation(acc.Address(), amount, validator)
 	require.Nil(t, err)
 
-	gas, err := chain.EstimateGasFee(txn)
+	gas, err := chain.EstimateTransactionFee(txn)
 	require.Nil(t, err)
 	t.Log(gas.Value)
 
