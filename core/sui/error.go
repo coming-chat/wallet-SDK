@@ -17,9 +17,9 @@ var (
 )
 
 func IsMergeError(err error) bool {
-	return err.Error() == ErrNeedMergeCoin.Error()
+	return err != nil && err.Error() == ErrNeedMergeCoin.Error()
 }
 
 func IsSplitError(err error) bool {
-	return err.Error() == ErrNeedSplitGasCoin.Error()
+	return err != nil && err.Error() == ErrNeedSplitGasCoin.Error()
 }

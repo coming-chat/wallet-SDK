@@ -176,17 +176,18 @@ func (c *Chain) BuildSplitCoinTransaction(owner, coinType, targetAmount string) 
 	// so that the transaction can be executed smoothly.
 	needAmount := amountInt + 1e9
 	pickedCoins, err := types.PickupCoins(pageCoins, *big.NewInt(0).SetUint64(needAmount), MAX_INPUT_COUNT_MERGE, 0)
-	if err.Error() == ErrInsufficientBalance.Error() {
-		if types.Coins(pageCoins.Data).TotalBalance().Uint64() < (amountInt + MinGasBudget*2) {
-			return nil, ErrInsufficientBalance
-		}
-		pickedCoins = &types.PickedCoins{
-			Coins: pageCoins.Data, // all coins should be used to merge
-		}
-		err = nil
-	}
 	if err != nil {
-		return
+		if err.Error() == ErrInsufficientBalance.Error() {
+			if types.Coins(pageCoins.Data).TotalBalance().Uint64() < (amountInt + MinGasBudget*2) {
+				return nil, ErrInsufficientBalance
+			}
+			pickedCoins = &types.PickedCoins{
+				Coins: pageCoins.Data, // all coins should be used to merge
+			}
+			err = nil
+		} else {
+			return nil, err
+		}
 	}
 
 	maxGasBudget := maxGasBudget(pickedCoins, MaxGasForPay)
