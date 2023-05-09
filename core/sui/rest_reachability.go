@@ -29,7 +29,7 @@ func (r *RestReachability) LatencyOf(rpc string, timeout int64) (l *base.RpcLate
 	timeStart := time.Now() // Time Start
 	params := httpUtil.RequestParams{
 		Header:  map[string]string{"Content-Type": "application/json"},
-		Body:    []byte(`{"jsonrpc":"2.0","method":"sui_getTotalTransactionBlocks","params":{},"id":33}`),
+		Body:    []byte(`{"jsonrpc":"2.0","method":"sui_getLatestCheckpointSequenceNumber","params":{},"id":33}`),
 		Timeout: time.Duration(timeout * int64(time.Millisecond)),
 	}
 	response, err := httpUtil.Post(rpc, params)
