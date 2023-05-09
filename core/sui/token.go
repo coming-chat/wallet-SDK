@@ -129,9 +129,27 @@ func (t *Token) BuildTransferTxWithAccount(account *Account, receiverAddress, am
 }
 
 func (t *Token) BuildTransferTransaction(account *Account, receiverAddress, amount string) (s *Transaction, err error) {
+	txn, err := t.BuildTransfer(account.Address(), receiverAddress, amount)
+	return txn.(*Transaction), err
+}
+
+func (t *Token) EstimateFees(account *Account, receiverAddress, amount string) (f *base.OptionalString, err error) {
+	txn, err := t.BuildTransferTransaction(account, receiverAddress, amount)
+	if err != nil {
+		return
+	}
+	gasString := strconv.FormatInt(txn.EstimateGasFee, 10)
+	return &base.OptionalString{Value: gasString}, nil
+}
+
+func (t *Token) BuildTransfer(sender, receiver, amount string) (txn base.Transaction, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
 
-	recipient, err := types.NewAddressFromHex(receiverAddress)
+	signer, err := types.NewAddressFromHex(sender)
+	if err != nil {
+		return
+	}
+	recipient, err := types.NewAddressFromHex(receiver)
 	if err != nil {
 		return
 	}
@@ -139,14 +157,12 @@ func (t *Token) BuildTransferTransaction(account *Account, receiverAddress, amou
 	if err != nil {
 		return
 	}
-
 	cli, err := t.chain.Client()
 	if err != nil {
 		return
 	}
 
 	coinType := t.CoinType()
-	signer, _ := types.NewAddressFromHex(account.Address())
 	coins, err := cli.GetCoins(context.Background(), *signer, &coinType, nil, MAX_INPUT_COUNT_MERGE)
 	if err != nil {
 		return
@@ -192,21 +208,64 @@ func (t *Token) BuildTransferTransaction(account *Account, receiverAddress, amou
 	})
 }
 
-func (t *Token) EstimateFees(account *Account, receiverAddress, amount string) (f *base.OptionalString, err error) {
-	txn, err := t.BuildTransferTransaction(account, receiverAddress, amount)
+func (t *Token) CanTransferAll() bool {
+	return true
+}
+
+// Before invoking this method, it is best to check `CanTransferAll()`
+func (t *Token) BuildTransferAll(sender, receiver string) (txn base.Transaction, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
+
+	signer, err := types.NewAddressFromHex(sender)
 	if err != nil {
 		return
 	}
-	gasString := strconv.FormatInt(txn.EstimateGasFee, 10)
-	return &base.OptionalString{Value: gasString}, nil
-}
+	recipient, err := types.NewAddressFromHex(receiver)
+	if err != nil {
+		return
+	}
+	cli, err := t.chain.Client()
+	if err != nil {
+		return
+	}
 
-func (t *Token) BuildTransfer(sender, receiver, amount string) (txn base.Transaction, err error) {
-	return nil, base.ErrUnsupportedFunction
-}
-func (t *Token) CanTransferAll() bool {
-	return false
-}
-func (t *Token) BuildTransferAll(sender, receiver string) (txn base.Transaction, err error) {
-	return nil, base.ErrUnsupportedFunction
+	coinType := t.CoinType()
+	coins, err := cli.GetCoins(context.Background(), *signer, &coinType, nil, MAX_INPUT_COUNT_MERGE)
+	if err != nil {
+		return
+	}
+	if len(coins.Data) <= 0 {
+		return nil, ErrNoCoinsFound
+	}
+	if coins.HasNextPage {
+		return nil, ErrNeedMergeCoin
+	}
+	totalAmount := big.NewInt(0)
+	coinIds := make([]types.ObjectId, len(coins.Data))
+	for idx, coin := range coins.Data {
+		coinIds[idx] = coin.CoinObjectId
+		totalAmount.Add(totalAmount, big.NewInt(0).SetUint64(coin.Balance.Uint64()))
+	}
+
+	return t.chain.EstimateTransactionFeeAndRebuildTransaction(MaxGasForTransfer, func(gasBudget uint64) (*Transaction, error) {
+		gasInt := types.NewSafeSuiBigInt(gasBudget)
+		var txnBytes *types.TransactionBytes
+		if t.IsSUI() {
+			txnBytes, err = cli.PayAllSui(context.Background(), *signer,
+				*recipient,
+				coinIds,
+				gasInt)
+		} else {
+			txnBytes, err = cli.Pay(context.Background(), *signer,
+				coinIds,
+				[]types.Address{*recipient},
+				[]types.SafeSuiBigInt[uint64]{types.NewSafeSuiBigInt(totalAmount.Uint64())},
+				nil, gasInt)
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		return &Transaction{Txn: *txnBytes}, nil
+	})
 }
