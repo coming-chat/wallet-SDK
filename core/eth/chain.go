@@ -129,6 +129,9 @@ func (c *Chain) BatchFetchTransactionStatus(hashListString string) string {
 func (c *Chain) EstimateTransactionFee(transaction base.Transaction) (fee *base.OptionalString, err error) {
 	return nil, base.ErrUnsupportedFunction
 }
+func (c *Chain) EstimateTransactionFeeUsePublicKey(transaction base.Transaction, pubkey string) (fee *base.OptionalString, err error) {
+	return c.EstimateTransactionFee(transaction)
+}
 
 func (c *Chain) BuildTransferTx(privateKey string, transaction *Transaction) (*base.OptionalString, error) {
 	privateKey = strings.TrimPrefix(privateKey, "0x")

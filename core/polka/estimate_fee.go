@@ -43,3 +43,7 @@ func (c *Chain) EstimateTransactionFee(transaction base.Transaction) (fee *base.
 
 	return &base.OptionalString{Value: estimateFee}, nil
 }
+
+func (c *Chain) EstimateTransactionFeeUsePublicKey(transaction base.Transaction, pubkey string) (fee *base.OptionalString, err error) {
+	return c.EstimateTransactionFee(transaction)
+}

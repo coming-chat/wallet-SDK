@@ -106,6 +106,7 @@ func (t *Token) BalanceOfAccount(account base.Account) (*base.Balance, error) {
 
 // MARK - token
 
+// Deprecated: use `BuildTransfer()`
 func (t *Token) BuildTransferTx(privateKey, receiverAddress, amount string) (*base.OptionalString, error) {
 	account, err := AccountWithPrivateKey(privateKey)
 	if err != nil {
@@ -114,36 +115,22 @@ func (t *Token) BuildTransferTx(privateKey, receiverAddress, amount string) (*ba
 	return t.BuildTransferTxWithAccount(account, receiverAddress, amount)
 }
 
+// Deprecated: use `BuildTransfer()`
 func (t *Token) BuildTransferTxWithAccount(account *Account, receiverAddress, amount string) (*base.OptionalString, error) {
-	payload, err := t.buildTransferPayload(receiverAddress, amount)
+	txn, err := t.BuildTransfer(account.Address(), receiverAddress, amount)
 	if err != nil {
 		return nil, err
 	}
-	transaction, err := t.chain.createTransactionFromPayloadBCS(account, payload)
-	if err != nil {
-		return nil, err
-	}
-	signedTx, err := txbuilder.GenerateBCSTransaction(account.account, transaction)
-	if err != nil {
-		return nil, err
-	}
-	return &base.OptionalString{Value: types.HexEncodeToString(signedTx)}, nil
+	return txn.SignWithAccount(account)
 }
 
+// Deprecated: use `BuildTransfer() & chain.EstimateTransactionFeeUsePublicKey()`
 func (t *Token) EstimateFees(account *Account, receiverAddress, amount string) (f *base.OptionalString, err error) {
-	f = &base.OptionalString{Value: "200000"}
-
-	payload, err := t.buildTransferPayload(receiverAddress, amount)
+	txn, err := t.BuildTransfer(account.Address(), receiverAddress, amount)
 	if err != nil {
-		return
+		return nil, err
 	}
-	transaction, err := t.chain.createTransactionFromPayloadBCS(account, payload)
-	if err != nil {
-		return
-	}
-	gasFee := transaction.MaxGasAmount * transaction.GasUnitPrice
-	gasString := strconv.FormatUint(gasFee, 10)
-	return &base.OptionalString{Value: gasString}, nil
+	return t.chain.EstimateTransactionFeeUsePublicKey(txn, account.PublicKeyHex())
 }
 
 func (t *Token) buildTransferPayload(receiverAddress, amount string) (p txbuilder.TransactionPayload, err error) {
@@ -242,7 +229,17 @@ func (t *Token) RegisterTokenForOwner(owner *Account) (s *base.OptionalString, e
 }
 
 func (t *Token) BuildTransfer(sender, receiver, amount string) (txn base.Transaction, err error) {
-	return nil, base.ErrUnsupportedFunction
+	payload, err := t.buildTransferPayload(receiver, amount)
+	if err != nil {
+		return nil, err
+	}
+	rawTxn, err := t.chain.buildTransactionFromPayloadBCS(sender, payload)
+	if err != nil {
+		return nil, err
+	}
+	return &Transaction{
+		RawTxn: *rawTxn,
+	}, nil
 }
 func (t *Token) CanTransferAll() bool {
 	return false

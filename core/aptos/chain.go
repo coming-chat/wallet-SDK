@@ -155,7 +155,26 @@ func (c *Chain) BatchFetchTransactionStatus(hashListString string) string {
 }
 
 func (c *Chain) EstimateTransactionFee(transaction base.Transaction) (fee *base.OptionalString, err error) {
-	return nil, base.ErrUnsupportedFunction
+	return nil, base.ErrEstimateGasNeedPublicKey
+}
+
+func (c *Chain) EstimateTransactionFeeUsePublicKey(transaction base.Transaction, pubkey string) (fee *base.OptionalString, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
+	txn, ok := transaction.(*Transaction)
+	if !ok {
+		return nil, base.ErrInvalidTransactionType
+	}
+	pubData, err := types.HexDecodeString(pubkey)
+	if err != nil {
+		return nil, base.ErrInvalidPublicKey
+	}
+	gas, err := c.EstimateMaxGasAmountBCS(pubData, &txn.RawTxn)
+	if err != nil {
+		return
+	}
+	txn.RawTxn.MaxGasAmount = gas // reset MaxGasAmount
+	gasFee := gas * txn.RawTxn.GasUnitPrice
+	return &base.OptionalString{Value: strconv.FormatUint(gasFee, 10)}, nil
 }
 
 // MARK - Implement the protocol IChain
@@ -177,20 +196,6 @@ func (c *Chain) EstimatePayloadGasFeeBCS(account base.Account, data []byte) (*ba
 		return nil, err
 	}
 	return &base.OptionalString{Value: strconv.FormatUint(txAbi.MaxGasAmount, 10)}, nil
-}
-
-func (c *Chain) EstimateMaxGasAmount(account base.Account, transaction *aptostypes.Transaction) (uint64, error) {
-	client, err := c.client()
-	if err != nil {
-		return 0, err
-	}
-	transaction.MaxGasAmount = base.Max(transaction.MaxGasAmount, 5000) // as big as possible
-
-	txns, err := client.SimulateTransaction(transaction, account.PublicKeyHex())
-	if err != nil {
-		return 0, err
-	}
-	return handleGasAmount(txns)
 }
 
 func (c *Chain) EstimateMaxGasAmountBCS(publicKey []byte, rawTxn *txbuilder.RawTransaction) (uint64, error) {
@@ -217,8 +222,8 @@ func handleGasAmount(txns []*aptostypes.Transaction) (uint64, error) {
 	if !txn.Success {
 		return 0, errors.New(txn.VmStatus)
 	}
-	maxGas := txn.GasUsed/10*15 + 14 // >= ceil(fee * 1.5)
-	return maxGas, nil
+	gasFloat := float64(txn.GasUsed)*1.2 + 1
+	return uint64(gasFloat), nil
 }
 
 func (c *Chain) SubmitTransactionPayloadBCS(account base.Account, data []byte) (string, error) {
@@ -287,28 +292,44 @@ func (c *Chain) SignAndSendTransaction(account base.Account, hexData string) (*b
 
 // @return The raw transaction that `MaxGasAmount` has obtained from the chain in real time.
 func (c *Chain) createTransactionFromPayloadBCS(account base.Account, payload txbuilder.TransactionPayload) (*txbuilder.RawTransaction, error) {
-	var (
-		err         error
-		client      *aptosclient.RestClient
-		accountData *aptostypes.AccountCoreData
-		ledgerInfo  *aptostypes.LedgerInfo
-		gasPrice    uint64
-	)
+	txn, err := c.buildTransactionFromPayloadBCS(account.Address(), payload)
+	if err != nil {
+		return nil, err
+	}
+	// estimate gas and resign
+	maxGas, err := c.EstimateMaxGasAmountBCS(account.PublicKey(), txn)
+	if err != nil {
+		return nil, err
+	}
+	txn.MaxGasAmount = maxGas
+	return txn, nil
+}
 
-	if client, err = c.client(); err != nil {
+func (c *Chain) buildTransactionFromPayloadBCS(sender string, payload txbuilder.TransactionPayload) (txn *txbuilder.RawTransaction, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
+
+	senderKey, err := txbuilder.NewAccountAddressFromHex(sender)
+	if err != nil {
 		return nil, err
 	}
-	if accountData, err = client.GetAccount(account.Address()); err != nil {
+	client, err := c.client()
+	if err != nil {
 		return nil, err
 	}
-	if ledgerInfo, err = client.LedgerInfo(); err != nil {
+	accountData, err := client.GetAccount(sender)
+	if err != nil {
 		return nil, err
 	}
-	if gasPrice, err = client.EstimateGasPrice(); err != nil {
+	ledgerInfo, err := client.LedgerInfo()
+	if err != nil {
+		return nil, err
+	}
+	gasPrice, err := client.EstimateGasPrice()
+	if err != nil {
 		return nil, err
 	}
 	txAbi := &txbuilder.RawTransaction{
-		Sender:                  getAuthKey(account),
+		Sender:                  *senderKey,
 		SequenceNumber:          accountData.SequenceNumber,
 		MaxGasAmount:            MaxGasAmount,
 		GasUnitPrice:            gasPrice,
@@ -316,12 +337,6 @@ func (c *Chain) createTransactionFromPayloadBCS(account base.Account, payload tx
 		ExpirationTimestampSecs: ledgerInfo.LedgerTimestamp + TxExpireSec,
 		ChainId:                 uint8(ledgerInfo.ChainId),
 	}
-	// estimate gas and resign
-	maxGas, err := c.EstimateMaxGasAmountBCS(account.PublicKey(), txAbi)
-	if err != nil {
-		return nil, err
-	}
-	txAbi.MaxGasAmount = maxGas
 	return txAbi, nil
 }
 

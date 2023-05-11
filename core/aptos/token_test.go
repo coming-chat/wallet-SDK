@@ -5,6 +5,7 @@ import (
 
 	"github.com/coming-chat/wallet-SDK/core/testcase"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -50,22 +51,49 @@ func TestTokenBalance(t *testing.T) {
 	t.Logf("USDT Balance = %v", usdtBalance.Total)
 }
 
-func TestTransafer(t *testing.T) {
+func TestBuildTransferTxWithAccount(t *testing.T) {
 	account, err := NewAccountWithMnemonic(testcase.M1)
 	assert.Nil(t, err)
 	toAddress := "0x559c26e61a74a1c40244212e768ab282a2cbe2ed679ad8421f7d5ebfb2b79fb5"
 	amount := "100"
 
-	chain := NewChainWithRestUrl(devnetRestUrl)
+	chain := NewChainWithRestUrl(testnetRestUrl)
 	token := NewMainToken(chain)
 
-	signedTx, err := token.BuildTransferTxWithAccount(account, toAddress, amount)
-	assert.Nil(t, err)
-	t.Log(signedTx.Value)
+	signedTxn, err := token.BuildTransferTxWithAccount(account, toAddress, amount)
+	require.Nil(t, err)
 
-	txHash, err := chain.SendRawTransaction(signedTx.Value)
+	if false {
+		txHash, err := chain.SendRawTransaction(signedTxn.Value)
+		require.Nil(t, err)
+		t.Log(txHash)
+	}
+}
+
+func TestBuildTransafer(t *testing.T) {
+	account, err := NewAccountWithMnemonic(testcase.M1)
 	assert.Nil(t, err)
-	t.Log(txHash)
+	toAddress := "0x559c26e61a74a1c40244212e768ab282a2cbe2ed679ad8421f7d5ebfb2b79fb5"
+	amount := "100"
+
+	chain := NewChainWithRestUrl(testnetRestUrl)
+	token := NewMainToken(chain)
+
+	txn, err := token.BuildTransfer(account.Address(), toAddress, amount)
+	require.Nil(t, err)
+
+	estimateFee, err := chain.EstimateTransactionFeeUsePublicKey(txn, account.PublicKeyHex())
+	require.Nil(t, err)
+	t.Log(estimateFee)
+
+	signedTxn, err := txn.SignWithAccount(account)
+	require.Nil(t, err)
+
+	if false {
+		txHash, err := chain.SendRawTransaction(signedTxn.Value)
+		require.Nil(t, err)
+		t.Log(txHash)
+	}
 }
 
 func TestEstimateFee(t *testing.T) {

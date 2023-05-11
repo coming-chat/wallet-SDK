@@ -276,6 +276,9 @@ func (c *Chain) EstimateTransactionFee(transaction base.Transaction) (fee *base.
 	gasString := strconv.FormatInt(gasFee, 10)
 	return &base.OptionalString{Value: gasString}, nil
 }
+func (c *Chain) EstimateTransactionFeeUsePublicKey(transaction base.Transaction, pubkey string) (fee *base.OptionalString, err error) {
+	return c.EstimateTransactionFee(transaction)
+}
 
 /**
  * @param address Hex-encoded 16 bytes Sui account address wich mints tokens

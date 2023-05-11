@@ -23,7 +23,13 @@ type Chain interface {
 	// @return Batch transaction status, its order is consistent with hashListString: "status1,status2,status3"
 	BatchFetchTransactionStatus(hashListString string) string
 
+	// Most chains can estimate the fee directly to the transaction object
+	// **But two chains don't work: `aptos`, `starcoin`**
 	EstimateTransactionFee(transaction Transaction) (fee *OptionalString, err error)
+
+	// All chains can call this method to estimate the gas fee.
+	// **Chain  `aptos`, `starcoin` must pass in publickey**
+	EstimateTransactionFeeUsePublicKey(transaction Transaction, pubkey string) (fee *OptionalString, err error)
 
 	// -----------------------------
 	// polka

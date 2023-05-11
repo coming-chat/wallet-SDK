@@ -15,6 +15,7 @@ type RpcLatency struct {
 	Height  int64  `json:"height"`
 }
 
+// You can customize the test latency method of rpc
 type RpcReachability interface {
 	LatencyOf(rpc string, timeout int64) (l *RpcLatency, err error)
 }
@@ -42,6 +43,12 @@ type ReachMonitor struct {
 	stoped bool
 }
 
+// You need to pass in different objects to get the latency and block height of different chains.
+// let reachability = eth.RpcReachability()
+// let reachability = polka.RpcReachability()
+// let reachability = sui.RestReachability()
+// ...
+// let monitor = NewReachMonitorWithReachability(reachability)
 func NewReachMonitorWithReachability(reachability RpcReachability) *ReachMonitor {
 	return &ReachMonitor{
 		reachability: reachability,
