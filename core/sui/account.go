@@ -5,8 +5,8 @@ import (
 	"errors"
 
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
-	"github.com/coming-chat/go-sui/account"
-	"github.com/coming-chat/go-sui/sui_types"
+	"github.com/coming-chat/go-sui/v2/account"
+	"github.com/coming-chat/go-sui/v2/sui_types"
 	"github.com/coming-chat/wallet-SDK/core/base"
 )
 

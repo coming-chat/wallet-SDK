@@ -3,7 +3,8 @@ package sui
 import (
 	"context"
 
-	"github.com/coming-chat/go-sui/types"
+	"github.com/coming-chat/go-sui/v2/sui_types"
+	"github.com/coming-chat/go-sui/v2/types"
 	"github.com/coming-chat/wallet-SDK/core/base"
 )
 
@@ -15,11 +16,11 @@ func (c *Chain) BaseMoveCall(address, packageId, module, funcName string, typArg
 	if err != nil {
 		return
 	}
-	addr, err := types.NewAddressFromHex(address)
+	addr, err := sui_types.NewAddressFromHex(address)
 	if err != nil {
 		return
 	}
-	packageIdHex, err := types.NewHexData(packageId)
+	packageIdHex, err := sui_types.NewObjectIdFromHex(packageId)
 	if err != nil {
 		return
 	}

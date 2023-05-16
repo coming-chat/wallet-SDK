@@ -3,8 +3,9 @@ package sui
 import (
 	"encoding/json"
 
-	"github.com/coming-chat/go-sui/sui_types"
-	"github.com/coming-chat/go-sui/types"
+	"github.com/coming-chat/go-sui/v2/lib"
+	"github.com/coming-chat/go-sui/v2/sui_types"
+	"github.com/coming-chat/go-sui/v2/types"
 	"github.com/coming-chat/wallet-SDK/core/base"
 )
 
@@ -16,7 +17,7 @@ type Transaction struct {
 
 type SignedTransaction struct {
 	// transaction data bytes
-	TxBytes *types.Base64Data `json:"tx_bytes"`
+	TxBytes *lib.Base64Data `json:"tx_bytes"`
 
 	// transaction signature
 	Signature *sui_types.Signature `json:"signature"`
@@ -39,7 +40,7 @@ func (t *Transaction) SignWithAccount(account base.Account) (signedTx *base.Opti
 	if err != nil {
 		return
 	}
-	txnString := types.Bytes(bytes).GetBase64Data().String()
+	txnString := lib.Base64Data(bytes).String()
 
 	return &base.OptionalString{Value: txnString}, nil
 }

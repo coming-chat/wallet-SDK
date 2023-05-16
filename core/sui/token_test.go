@@ -5,7 +5,8 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/coming-chat/go-sui/types"
+	"github.com/coming-chat/go-sui/v2/sui_types"
+	"github.com/coming-chat/go-sui/v2/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -92,15 +93,15 @@ func TestTransfer(t *testing.T) {
 }
 
 func TestToken_Transfer_Use_Pay(t *testing.T) {
-	ownerStr := "0x9bab5b2fa325fe2b103fd6a56a93bf91925b269a2dd31ee146b693e5cb9d2901"
+	ownerStr := "0x7d20dcdb2bca4f508ea9613994683eb4e76e9c4ed371169677c1be02aaf0b58e"
 	recipientStr := "0xd77955e670f42c1bc5e94b9e68e5fe9bdbed9134d784f2a14dfe5fc1b24b5d9f"
 	chain := TestnetChain()
 
 	coinCount := int(5)
 
-	owner, err := types.NewAddressFromHex(ownerStr)
+	owner, err := sui_types.NewAddressFromHex(ownerStr)
 	require.Nil(t, err)
-	recipient, err := types.NewAddressFromHex(recipientStr)
+	recipient, err := sui_types.NewAddressFromHex(recipientStr)
 	require.Nil(t, err)
 	cli, err := chain.Client()
 	require.Nil(t, err)
@@ -108,7 +109,7 @@ func TestToken_Transfer_Use_Pay(t *testing.T) {
 	require.Nil(t, err)
 	require.GreaterOrEqual(t, len(coins.Data), coinCount)
 
-	inputCoins := make([]types.ObjectId, 0)
+	inputCoins := make([]sui_types.ObjectID, 0)
 	totalAmount := uint64(0)
 	for _, coin := range coins.Data {
 		inputCoins = append(inputCoins, coin.CoinObjectId)
@@ -117,20 +118,20 @@ func TestToken_Transfer_Use_Pay(t *testing.T) {
 
 	sendAmount := types.NewSafeSuiBigInt(totalAmount / 2)
 	gasBudget := types.NewSafeSuiBigInt[uint64](30000000)
-	txn, err := cli.Pay(context.Background(), *owner, inputCoins, []types.Address{*recipient}, []types.SafeSuiBigInt[uint64]{sendAmount}, nil, gasBudget)
+	txn, err := cli.Pay(context.Background(), *owner, inputCoins, []sui_types.SuiAddress{*recipient}, []types.SafeSuiBigInt[uint64]{sendAmount}, nil, gasBudget)
 	require.Nil(t, err)
 
 	simulateCheck(t, chain, txn, true)
 }
 
 func Test_TokenTransfer_Gas_Compare(t *testing.T) {
-	ownerStr := "0x9bab5b2fa325fe2b103fd6a56a93bf91925b269a2dd31ee146b693e5cb9d2901"
+	ownerStr := "0x7d20dcdb2bca4f508ea9613994683eb4e76e9c4ed371169677c1be02aaf0b58e"
 	recipientStr := "0xd77955e670f42c1bc5e94b9e68e5fe9bdbed9134d784f2a14dfe5fc1b24b5d9f"
 	chain := TestnetChain()
 
-	owner, err := types.NewAddressFromHex(ownerStr)
+	owner, err := sui_types.NewAddressFromHex(ownerStr)
 	require.Nil(t, err)
-	recipient, err := types.NewAddressFromHex(recipientStr)
+	recipient, err := sui_types.NewAddressFromHex(recipientStr)
 	require.Nil(t, err)
 	cli, err := chain.Client()
 	require.Nil(t, err)
@@ -144,8 +145,8 @@ func Test_TokenTransfer_Gas_Compare(t *testing.T) {
 
 	{
 		txn, err := cli.Pay(context.Background(), *owner,
-			[]types.ObjectId{sendCoin.CoinObjectId},
-			[]types.Address{*recipient},
+			[]sui_types.ObjectID{sendCoin.CoinObjectId},
+			[]sui_types.SuiAddress{*recipient},
 			[]types.SafeSuiBigInt[uint64]{sendAmount},
 			nil, gasBudget)
 		require.Nil(t, err)
@@ -163,13 +164,13 @@ func Test_TokenTransfer_Gas_Compare(t *testing.T) {
 	}
 	{
 		txn, err := cli.PaySui(context.Background(), *owner,
-			[]types.ObjectId{sendCoin.CoinObjectId},
-			[]types.Address{*recipient},
+			[]sui_types.ObjectID{sendCoin.CoinObjectId},
+			[]sui_types.SuiAddress{*recipient},
 			[]types.SafeSuiBigInt[uint64]{sendAmount},
 			gasBudget)
 		require.Nil(t, err)
 
-		resp, err := cli.DryRunTransaction(context.Background(), txn)
+		resp, err := cli.DryRunTransaction(context.Background(), txn.TxBytes)
 		require.Nil(t, err)
 		require.False(t, resp.Effects.Data.IsSuccess())
 		// InsufficientCoinBalance, because the sendCoin need balance=amount+gasfee

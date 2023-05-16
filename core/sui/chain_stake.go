@@ -9,7 +9,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/coming-chat/go-sui/types"
+	"github.com/coming-chat/go-sui/v2/sui_types"
+	"github.com/coming-chat/go-sui/v2/types"
 	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/shopspring/decimal"
 )
@@ -277,7 +278,7 @@ func (c *Chain) getValidatorsApy(useCache bool) map[string]float64 {
 func (c *Chain) GetDelegatedStakes(owner string) (arr *base.AnyArray, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
 
-	addr, err := types.NewAddressFromHex(owner)
+	addr, err := sui_types.NewAddressFromHex(owner)
 	if err != nil {
 		return nil, err
 	}
@@ -360,11 +361,11 @@ func AverageApyOfDelegatedStakes(stakes *base.AnyArray) float64 {
 func (c *Chain) AddDelegation(owner, amount string, validatorAddress string) (txn *Transaction, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
 
-	signer, err := types.NewAddressFromHex(owner)
+	signer, err := sui_types.NewAddressFromHex(owner)
 	if err != nil {
 		return
 	}
-	validator, err := types.NewAddressFromHex(validatorAddress)
+	validator, err := sui_types.NewAddressFromHex(validatorAddress)
 	if err != nil {
 		return
 	}
@@ -377,11 +378,11 @@ func (c *Chain) AddDelegation(owner, amount string, validatorAddress string) (tx
 		return
 	}
 	coinType := SUI_COIN_TYPE
-	coins, err := cli.GetCoins(context.Background(), *signer, &coinType, nil, MAX_INPUT_COUNT_STAKE)
+	coins, err := cli.GetCoins(context.Background(), *signer, &coinType, nil, MAX_INPUT_COUNT_MERGE)
 	if err != nil {
 		return
 	}
-	pickedCoins, err := types.PickupCoins(coins, *amountInt, MAX_INPUT_COUNT_STAKE, maxGasBudgetForStake)
+	pickedCoins, err := types.PickupCoins(coins, *amountInt, maxGasBudgetForStake, MAX_INPUT_COUNT_MERGE, 0)
 	if err != nil {
 		return
 	}
@@ -403,11 +404,11 @@ func (c *Chain) AddDelegation(owner, amount string, validatorAddress string) (tx
 func (c *Chain) WithdrawDelegation(owner, stakeId string) (txn *Transaction, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
 
-	signer, err := types.NewAddressFromHex(owner)
+	signer, err := sui_types.NewAddressFromHex(owner)
 	if err != nil {
 		return
 	}
-	stakeSui, err := types.NewHexData(stakeId)
+	stakeSui, err := sui_types.NewObjectIdFromHex(stakeId)
 	if err != nil {
 		return
 	}

@@ -8,8 +8,8 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/coming-chat/go-sui/sui_types"
-	"github.com/coming-chat/go-sui/types"
+	"github.com/coming-chat/go-sui/v2/sui_types"
+	"github.com/coming-chat/go-sui/v2/types"
 	"github.com/coming-chat/wallet-SDK/core/base"
 )
 
@@ -20,7 +20,7 @@ func (c *Chain) FetchSuiCatGlobalData() (data *SuiCatGlobalData, err error) {
 	if err != nil {
 		return
 	}
-	globalId, err := types.NewAddressFromHex(SuiCatTestnetConfig.GlobalId)
+	globalId, err := sui_types.NewAddressFromHex(SuiCatTestnetConfig.GlobalId)
 	if err != nil {
 		return
 	}
@@ -75,7 +75,7 @@ func (c *Chain) QueryIsInSuiCatWhiteList(address string) (b *base.OptionalBool, 
 		}
 	}
 
-	parentId, err := types.NewAddressFromHex(SuiCatTestnetConfig.whitelistId)
+	parentId, err := sui_types.NewAddressFromHex(SuiCatTestnetConfig.whitelistId)
 	if err != nil {
 		return
 	}
@@ -91,7 +91,7 @@ func (c *Chain) QueryIsInSuiCatWhiteList(address string) (b *base.OptionalBool, 
 		return &base.OptionalBool{Value: false}, nil
 	}
 
-	if res.Error != nil || res.Data == nil || res.Data.Digest == "" {
+	if res.Error != nil || res.Data == nil || res.Data.Digest.String() == "" {
 		return &base.OptionalBool{Value: false}, nil
 	} else {
 		return &base.OptionalBool{Value: true}, nil
@@ -101,7 +101,7 @@ func (c *Chain) QueryIsInSuiCatWhiteList(address string) (b *base.OptionalBool, 
 func (c *Chain) MintSuiCatNFT(signer string, amount string) (txn *Transaction, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
 
-	signerAddr, err := types.NewAddressFromHex(signer)
+	signerAddr, err := sui_types.NewAddressFromHex(signer)
 	if err != nil {
 		return
 	}
@@ -109,7 +109,7 @@ func (c *Chain) MintSuiCatNFT(signer string, amount string) (txn *Transaction, e
 	if err != nil {
 		return
 	}
-	add2, err := types.NewAddressFromHex("0x6")
+	add2, err := sui_types.NewAddressFromHex("0x6")
 	if err != nil {
 		return
 	}
@@ -122,11 +122,11 @@ func (c *Chain) MintSuiCatNFT(signer string, amount string) (txn *Transaction, e
 	if err != nil {
 		return
 	}
-	pickedCoins, err := types.PickupCoins(coins, *big.NewInt(0).SetUint64(amountInt), MAX_INPUT_COUNT_MERGE, MinGasBudget)
+	pickedCoins, err := types.PickupCoins(coins, *big.NewInt(0).SetUint64(amountInt), MaxGasForTransfer, MAX_INPUT_COUNT_MERGE, 0)
 	if err != nil {
 		return
 	}
-	gasBudget := maxGasBudget(pickedCoins, MinGasBudget)
+	gasBudget := maxGasBudget(pickedCoins, MaxGasForTransfer)
 	return c.BaseMoveCall(signer,
 		SuiCatTestnetConfig.PackageId,
 		SuiCatTestnetConfig.ModuleName,

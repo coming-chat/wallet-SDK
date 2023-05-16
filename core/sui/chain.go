@@ -8,8 +8,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/coming-chat/go-sui/client"
-	"github.com/coming-chat/go-sui/types"
+	"github.com/coming-chat/go-sui/v2/client"
+	"github.com/coming-chat/go-sui/v2/lib"
+	"github.com/coming-chat/go-sui/v2/sui_types"
+	"github.com/coming-chat/go-sui/v2/types"
 	"github.com/coming-chat/wallet-SDK/core/base"
 )
 
@@ -64,7 +66,7 @@ func (c *Chain) BalanceOfAccount(account base.Account) (*base.Balance, error) {
 func (c *Chain) SendRawTransaction(signedTx string) (hash string, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
 
-	bytes, err := types.NewBase64Data(signedTx)
+	bytes, err := lib.NewBase64Data(signedTx)
 	if err != nil {
 		return
 	}
@@ -80,11 +82,11 @@ func (c *Chain) SendRawTransaction(signedTx string) (hash string, err error) {
 	options := types.SuiTransactionBlockResponseOptions{
 		ShowEffects: true,
 	}
-	response, err := cli.ExecuteTransactionBlock(context.Background(), *signedTxn.TxBytes, []any{signedTxn.Signature}, &options, types.TxnRequestTypeWaitForLocalExecution)
+	response, err := cli.ExecuteTransactionBlock(context.Background(), signedTxn.TxBytes.Data(), []any{signedTxn.Signature}, &options, types.TxnRequestTypeWaitForLocalExecution)
 	if err != nil {
 		return
 	}
-	hash = response.Digest
+	hash = response.Digest.String()
 	if !response.Effects.Data.IsSuccess() {
 		return hash, errors.New(response.Effects.Data.V1.Status.Error)
 	}
@@ -95,11 +97,15 @@ func (c *Chain) SendRawTransaction(signedTx string) (hash string, err error) {
 func (c *Chain) FetchTransactionDetail(hash string) (detail *base.TransactionDetail, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
 
+	digest, err := sui_types.NewDigest(hash)
+	if err != nil {
+		return
+	}
 	cli, err := c.Client()
 	if err != nil {
 		return
 	}
-	resp, err := cli.GetTransactionBlock(context.Background(), hash, types.SuiTransactionBlockResponseOptions{
+	resp, err := cli.GetTransactionBlock(context.Background(), *digest, types.SuiTransactionBlockResponseOptions{
 		ShowInput:   true,
 		ShowEffects: true,
 		ShowEvents:  true,
@@ -173,11 +179,15 @@ func (c *Chain) FetchTransactionDetail(hash string) (detail *base.TransactionDet
 }
 
 func (c *Chain) FetchTransactionStatus(hash string) base.TransactionStatus {
+	digest, err := sui_types.NewDigest(hash)
+	if err != nil {
+		return base.TransactionStatusNone
+	}
 	cli, err := c.Client()
 	if err != nil {
 		return base.TransactionStatusNone
 	}
-	resp, err := cli.GetTransactionBlock(context.Background(), hash, types.SuiTransactionBlockResponseOptions{
+	resp, err := cli.GetTransactionBlock(context.Background(), *digest, types.SuiTransactionBlockResponseOptions{
 		ShowEffects: true,
 	})
 	if err != nil {
@@ -204,15 +214,15 @@ func (c *Chain) BatchFetchTransactionStatus(hashListString string) string {
 func (c *Chain) TransferObject(sender, receiver, objectId string, gasBudget int64) (txn *Transaction, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
 
-	senderAddress, err := types.NewAddressFromHex(sender)
+	senderAddress, err := sui_types.NewAddressFromHex(sender)
 	if err != nil {
 		return
 	}
-	receiverAddress, err := types.NewAddressFromHex(receiver)
+	receiverAddress, err := sui_types.NewAddressFromHex(receiver)
 	if err != nil {
 		return
 	}
-	nftObject, err := types.NewHexData(objectId)
+	nftObject, err := sui_types.NewObjectIdFromHex(objectId)
 	if err != nil {
 		return nil, err
 	}
@@ -258,7 +268,7 @@ func (c *Chain) EstimateTransactionFee(transaction base.Transaction) (fee *base.
 	if err != nil {
 		return
 	}
-	effects, err := cli.DryRunTransaction(context.Background(), &txn.Txn)
+	effects, err := cli.DryRunTransaction(context.Background(), txn.Txn.TxBytes)
 	if err != nil {
 		return
 	}
@@ -388,8 +398,6 @@ func nextTryingGas(currentGas uint64) uint64 {
 }
 
 func maxGasBudget(pickedCoins *types.PickedCoins, maxGasBudget uint64) uint64 {
-	if coin := pickedCoins.MaxGasCoin(); coin != nil {
-		return base.Min(maxGasBudget, coin.Balance.Uint64())
-	}
-	return maxGasBudget
+	suggestGas := pickedCoins.SuggestMaxGasBudget()
+	return base.Min(suggestGas, maxGasBudget)
 }

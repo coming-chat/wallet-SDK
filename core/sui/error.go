@@ -3,7 +3,7 @@ package sui
 import (
 	"errors"
 
-	"github.com/coming-chat/go-sui/types"
+	"github.com/coming-chat/go-sui/v2/types"
 )
 
 var (

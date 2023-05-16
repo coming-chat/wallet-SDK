@@ -3,14 +3,14 @@ package sui
 import (
 	"testing"
 
-	"github.com/coming-chat/go-sui/types"
+	"github.com/coming-chat/go-sui/v2/sui_types"
 	"github.com/stretchr/testify/require"
 )
 
 func TestBuildMergeCoinRequest(t *testing.T) {
 	chain := TestnetChain()
 
-	owner := "0x9bab5b2fa325fe2b103fd6a56a93bf91925b269a2dd31ee146b693e5cb9d2901"
+	owner := M1Account(t).Address()
 	amountStr := SUI(1).String()
 
 	req, err := chain.BuildMergeCoinRequest(owner, "", amountStr)
@@ -27,7 +27,7 @@ func TestBuildMergeCoinRequest(t *testing.T) {
 func TestBuildSplitCoinTransaction(t *testing.T) {
 	chain := TestnetChain()
 
-	owner := "0x9bab5b2fa325fe2b103fd6a56a93bf91925b269a2dd31ee146b693e5cb9d2901"
+	owner := M1Account(t).Address()
 	amountStr := SUI(1).String()
 
 	txn, err := chain.BuildSplitCoinTransaction(owner, "", amountStr)
@@ -40,7 +40,7 @@ func TestRunableSplitCoin(t *testing.T) {
 	chain := TestnetChain()
 	acc := M3Account(t)
 
-	owner, err := types.NewAddressFromHex(acc.Address())
+	owner, err := sui_types.NewAddressFromHex(acc.Address())
 	require.Nil(t, err)
 	amount := SUI(1).String()
 

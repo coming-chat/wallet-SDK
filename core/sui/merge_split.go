@@ -6,7 +6,8 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/coming-chat/go-sui/types"
+	"github.com/coming-chat/go-sui/v2/sui_types"
+	"github.com/coming-chat/go-sui/v2/types"
 	"github.com/coming-chat/wallet-SDK/core/base"
 )
 
@@ -43,7 +44,7 @@ type MergeCoinPreview struct {
 func (c *Chain) BuildMergeCoinPreview(request *MergeCoinRequest) (preview *MergeCoinPreview, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
 
-	ownerAddr, err := types.NewAddressFromHex(request.Owner)
+	ownerAddr, err := sui_types.NewAddressFromHex(request.Owner)
 	if err != nil {
 		return
 	}
@@ -53,7 +54,7 @@ func (c *Chain) BuildMergeCoinPreview(request *MergeCoinRequest) (preview *Merge
 	}
 
 	totalAmount := big.NewInt(0)
-	mergeIds := make([]types.ObjectId, 0)
+	mergeIds := make([]sui_types.ObjectID, 0)
 	for _, coin := range request.Coins {
 		totalAmount.Add(totalAmount, big.NewInt(0).SetUint64(coin.Balance.Uint64()))
 		mergeIds = append(mergeIds, coin.CoinObjectId)
@@ -66,7 +67,7 @@ func (c *Chain) BuildMergeCoinPreview(request *MergeCoinRequest) (preview *Merge
 			txnBytes, err = cli.PayAllSui(context.Background(), *ownerAddr, *ownerAddr, mergeIds, gasInt)
 		} else {
 			txnBytes, err = cli.Pay(context.Background(), *ownerAddr, mergeIds,
-				[]types.Address{*ownerAddr},
+				[]sui_types.SuiAddress{*ownerAddr},
 				[]types.SafeSuiBigInt[uint64]{types.NewSafeSuiBigInt(totalAmount.Uint64())},
 				nil, gasInt)
 		}
@@ -94,7 +95,7 @@ func (c *Chain) BuildMergeCoinRequest(owner, coinType, targetAmount string) (req
 	if coinType == "" {
 		coinType = SUI_COIN_TYPE
 	}
-	ownerAddr, err := types.NewAddressFromHex(owner)
+	ownerAddr, err := sui_types.NewAddressFromHex(owner)
 	if err != nil {
 		return
 	}
@@ -155,7 +156,7 @@ func (c *Chain) BuildSplitCoinTransaction(owner, coinType, targetAmount string) 
 	if coinType == "" {
 		coinType = SUI_COIN_TYPE
 	}
-	ownerAddr, err := types.NewAddressFromHex(owner)
+	ownerAddr, err := sui_types.NewAddressFromHex(owner)
 	if err != nil {
 		return
 	}
@@ -175,7 +176,7 @@ func (c *Chain) BuildSplitCoinTransaction(owner, coinType, targetAmount string) 
 	// We'd better split a coin that can meet the target amount and the remaining coin value can be greater than 1SUI
 	// so that the transaction can be executed smoothly.
 	needAmount := amountInt + 1e9
-	pickedCoins, err := types.PickupCoins(pageCoins, *big.NewInt(0).SetUint64(needAmount), MAX_INPUT_COUNT_MERGE, 0)
+	pickedCoins, err := types.PickupCoins(pageCoins, *big.NewInt(0).SetUint64(needAmount), MaxGasForPay, MAX_INPUT_COUNT_MERGE, 0)
 	if err != nil {
 		if err.Error() == ErrInsufficientBalance.Error() {
 			if types.Coins(pageCoins.Data).TotalBalance().Uint64() < (amountInt + MinGasBudget*2) {
@@ -197,13 +198,13 @@ func (c *Chain) BuildSplitCoinTransaction(owner, coinType, targetAmount string) 
 		if coinType == SUI_COIN_TYPE && (pickedCoins.Count() > 1 || len(pageCoins.Data) == 1) {
 			txnBytes, err = cli.PaySui(context.Background(), *ownerAddr,
 				pickedCoins.CoinIds(),
-				[]types.Address{*ownerAddr},
+				[]sui_types.SuiAddress{*ownerAddr},
 				[]types.SafeSuiBigInt[uint64]{types.NewSafeSuiBigInt(amountInt)},
 				gasInt)
 		} else if pickedCoins.Count() > 1 {
 			txnBytes, err = cli.Pay(context.Background(), *ownerAddr,
 				pickedCoins.CoinIds(),
-				[]types.Address{*ownerAddr},
+				[]sui_types.SuiAddress{*ownerAddr},
 				[]types.SafeSuiBigInt[uint64]{types.NewSafeSuiBigInt(amountInt)},
 				nil, gasInt)
 		} else {

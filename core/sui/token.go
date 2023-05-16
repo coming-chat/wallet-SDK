@@ -5,7 +5,8 @@ import (
 	"math/big"
 	"strconv"
 
-	"github.com/coming-chat/go-sui/types"
+	"github.com/coming-chat/go-sui/v2/sui_types"
+	"github.com/coming-chat/go-sui/v2/types"
 	"github.com/coming-chat/wallet-SDK/core/base"
 )
 
@@ -79,7 +80,7 @@ func (t *Token) TokenInfo() (info *base.TokenInfo, err error) {
 func (t *Token) BalanceOfAddress(address string) (b *base.Balance, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
 
-	owner, err := types.NewAddressFromHex(address)
+	owner, err := sui_types.NewAddressFromHex(address)
 	if err != nil {
 		return nil, err
 	}
@@ -145,11 +146,11 @@ func (t *Token) EstimateFees(account *Account, receiverAddress, amount string) (
 func (t *Token) BuildTransfer(sender, receiver, amount string) (txn base.Transaction, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
 
-	signer, err := types.NewAddressFromHex(sender)
+	signer, err := sui_types.NewAddressFromHex(sender)
 	if err != nil {
 		return
 	}
-	recipient, err := types.NewAddressFromHex(receiver)
+	recipient, err := sui_types.NewAddressFromHex(receiver)
 	if err != nil {
 		return
 	}
@@ -171,7 +172,7 @@ func (t *Token) BuildTransfer(sender, receiver, amount string) (txn base.Transac
 	if t.IsSUI() {
 		targetAmount = amountInt + MaxGasForTransfer // We will use PaySui if coin is SUI, the amount need plus gas
 	}
-	pickedCoin, err := types.PickupCoins(coins, *big.NewInt(0).SetUint64(targetAmount), MAX_INPUT_COUNT_MERGE, 0)
+	pickedCoin, err := types.PickupCoins(coins, *big.NewInt(0).SetUint64(targetAmount), MaxGasForTransfer, MAX_INPUT_COUNT_MERGE, 0)
 	if err != nil {
 		return
 	}
@@ -190,13 +191,13 @@ func (t *Token) BuildTransfer(sender, receiver, amount string) (txn base.Transac
 		if t.IsSUI() {
 			txnBytes, err = cli.PaySui(context.Background(), *signer,
 				pickedCoin.CoinIds(),
-				[]types.Address{*recipient},
+				[]sui_types.SuiAddress{*recipient},
 				[]types.SafeSuiBigInt[uint64]{types.NewSafeSuiBigInt(amountInt)},
 				gasInt)
 		} else {
 			txnBytes, err = cli.Pay(context.Background(), *signer,
 				pickedCoin.CoinIds(),
-				[]types.Address{*recipient},
+				[]sui_types.SuiAddress{*recipient},
 				[]types.SafeSuiBigInt[uint64]{types.NewSafeSuiBigInt(amountInt)},
 				nil, gasInt)
 		}
@@ -216,11 +217,11 @@ func (t *Token) CanTransferAll() bool {
 func (t *Token) BuildTransferAll(sender, receiver string) (txn base.Transaction, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
 
-	signer, err := types.NewAddressFromHex(sender)
+	signer, err := sui_types.NewAddressFromHex(sender)
 	if err != nil {
 		return
 	}
-	recipient, err := types.NewAddressFromHex(receiver)
+	recipient, err := sui_types.NewAddressFromHex(receiver)
 	if err != nil {
 		return
 	}
@@ -241,7 +242,7 @@ func (t *Token) BuildTransferAll(sender, receiver string) (txn base.Transaction,
 		return nil, ErrNeedMergeCoin
 	}
 	totalAmount := big.NewInt(0)
-	coinIds := make([]types.ObjectId, len(coins.Data))
+	coinIds := make([]sui_types.ObjectID, len(coins.Data))
 	for idx, coin := range coins.Data {
 		coinIds[idx] = coin.CoinObjectId
 		totalAmount.Add(totalAmount, big.NewInt(0).SetUint64(coin.Balance.Uint64()))
@@ -258,7 +259,7 @@ func (t *Token) BuildTransferAll(sender, receiver string) (txn base.Transaction,
 		} else {
 			txnBytes, err = cli.Pay(context.Background(), *signer,
 				coinIds,
-				[]types.Address{*recipient},
+				[]sui_types.SuiAddress{*recipient},
 				[]types.SafeSuiBigInt[uint64]{types.NewSafeSuiBigInt(totalAmount.Uint64())},
 				nil, gasInt)
 		}

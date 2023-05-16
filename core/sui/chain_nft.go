@@ -7,14 +7,15 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/coming-chat/go-sui/types"
+	"github.com/coming-chat/go-sui/v2/sui_types"
+	"github.com/coming-chat/go-sui/v2/types"
 	"github.com/coming-chat/wallet-SDK/core/base"
 )
 
 func (c *Chain) FetchNFTs(owner string) (res map[string][]*base.NFT, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
 
-	address, err := types.NewAddressFromHex(owner)
+	address, err := sui_types.NewAddressFromHex(owner)
 	if err != nil {
 		return
 	}
@@ -97,7 +98,7 @@ func TransformNFT(nft *types.SuiObjectResponse) *base.NFT {
 	}
 	hash := ""
 	if nft.Data.PreviousTransaction != nil {
-		hash = *nft.Data.PreviousTransaction
+		hash = nft.Data.PreviousTransaction.String()
 	}
 	name := nftStruct.Data.Name
 	if name == "" {
@@ -118,7 +119,7 @@ func TransformNFT(nft *types.SuiObjectResponse) *base.NFT {
 func (c *Chain) MintNFT(creator, name, description, uri string) (txn *Transaction, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
 
-	signer, err := types.NewAddressFromHex(creator)
+	signer, err := sui_types.NewAddressFromHex(creator)
 	if err != nil {
 		return nil, errors.New("Invalid creator address")
 	}
