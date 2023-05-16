@@ -136,10 +136,10 @@ type DelegatedStake struct {
 // @return if time > 0 indicates how long it will take to get the reward;
 // if time < 0 indicates how much time has passed since the reward was earned;
 func (s *DelegatedStake) EarningAmountTimeAfterNowMs(stateInfo *ValidatorState) int64 {
-	return s.EarningAmountTimeAfterTimestampMs(time.Now().UnixMilli(), *stateInfo)
+	return s.EarningAmountTimeAfterTimestampMs(time.Now().UnixMilli(), stateInfo)
 }
 
-func (s *DelegatedStake) EarningAmountTimeAfterTimestampMs(timestamp int64, stateInfo ValidatorState) int64 {
+func (s *DelegatedStake) EarningAmountTimeAfterTimestampMs(timestamp int64, stateInfo *ValidatorState) int64 {
 	rewardEpoch := s.RequestEpoch + 2
 	leftEpoch := rewardEpoch - stateInfo.Epoch
 
