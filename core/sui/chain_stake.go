@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/coming-chat/go-sui/v2/client"
 	"github.com/coming-chat/go-sui/v2/sui_types"
 	"github.com/coming-chat/go-sui/v2/types"
 	"github.com/coming-chat/wallet-SDK/core/base"
@@ -386,18 +387,22 @@ func (c *Chain) AddDelegation(owner, amount string, validatorAddress string) (tx
 	if err != nil {
 		return
 	}
+	gasPrice, _ := c.CachedGasPrice()
 	maxGasBudget := maxGasBudget(pickedCoins, maxGasBudgetForStake)
-	return c.EstimateTransactionFeeAndRebuildTransaction(maxGasBudget, func(gasBudget uint64) (*Transaction, error) {
-		gasInt := big.NewInt(0).SetUint64(gasBudget)
-		txBytes, err := cli.RequestAddStake(context.Background(), *signer,
-			pickedCoins.CoinIds(),
-			decimal.NewFromBigInt(amountInt, 0),
+	return c.EstimateTransactionFeeAndRebuildTransactionBCS(maxGasBudget, func(gasBudget uint64) (*Transaction, error) {
+		txBytes, err := client.BCS_RequestAddStake(*signer,
+			pickedCoins.CoinRefs(),
+			types.NewSafeSuiBigInt(amountInt.Uint64()),
 			*validator,
-			nil, decimal.NewFromBigInt(gasInt, 0))
+			gasBudget,
+			gasPrice,
+		)
 		if err != nil {
 			return nil, err
 		}
-		return &Transaction{Txn: *txBytes}, nil
+		return &Transaction{
+			TxnBytes: txBytes,
+		}, nil
 	})
 }
 
@@ -416,13 +421,27 @@ func (c *Chain) WithdrawDelegation(owner, stakeId string) (txn *Transaction, err
 	if err != nil {
 		return
 	}
-	return c.EstimateTransactionFeeAndRebuildTransaction(MinGasBudget, func(gasBudget uint64) (*Transaction, error) {
-		gasInt := big.NewInt(0).SetUint64(gasBudget)
-		txnBytes, err := cli.RequestWithdrawStake(context.Background(), *signer, *stakeSui, nil, decimal.NewFromBigInt(gasInt, 0))
+	pickedGas, err := c.PickGasCoins(*signer, maxGasBudgetForStake)
+	if err != nil {
+		return
+	}
+	stakeSuiObject, err := cli.GetObject(context.Background(), *stakeSui, nil)
+	if err != nil {
+		return
+	}
+
+	maxGasBudget := pickedGas.SuggestMaxGasBudget()
+	gasPrice, _ := c.CachedGasPrice()
+	return c.EstimateTransactionFeeAndRebuildTransactionBCS(maxGasBudget, func(gasBudget uint64) (*Transaction, error) {
+		txnBytes, err := client.BCS_RequestWithdrawStake(*signer,
+			stakeSuiObject.Data.Reference(), pickedGas.CoinRefs(),
+			gasBudget, gasPrice)
 		if err != nil {
 			return nil, err
 		}
-		return &Transaction{Txn: *txnBytes}, nil
+		return &Transaction{
+			TxnBytes: txnBytes,
+		}, nil
 	})
 }
 

@@ -65,7 +65,7 @@ func TestAddDelegation(t *testing.T) {
 	require.Nil(t, err)
 	t.Log(gas.Value)
 
-	simulateCheck(t, chain, &txn.Txn, false)
+	simulateTxnCheck(t, chain, txn, false)
 }
 
 func TestWithdrawDelegation(t *testing.T) {
@@ -81,5 +81,5 @@ func TestWithdrawDelegation(t *testing.T) {
 	txn, err := chain.WithdrawDelegation(owner, stakeId)
 	require.Nil(t, err)
 
-	simulateCheck(t, chain, &txn.Txn, false)
+	simulateTxnCheck(t, chain, txn, false)
 }

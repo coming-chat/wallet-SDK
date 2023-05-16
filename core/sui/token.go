@@ -8,6 +8,7 @@ import (
 	"github.com/coming-chat/go-sui/v2/sui_types"
 	"github.com/coming-chat/go-sui/v2/types"
 	"github.com/coming-chat/wallet-SDK/core/base"
+	"github.com/fardream/go-bcs/bcs"
 )
 
 // "0x2::sui::SUI"
@@ -131,7 +132,10 @@ func (t *Token) BuildTransferTxWithAccount(account *Account, receiverAddress, am
 
 func (t *Token) BuildTransferTransaction(account *Account, receiverAddress, amount string) (s *Transaction, err error) {
 	txn, err := t.BuildTransfer(account.Address(), receiverAddress, amount)
-	return txn.(*Transaction), err
+	if err != nil {
+		return nil, err
+	}
+	return txn.(*Transaction), nil
 }
 
 func (t *Token) EstimateFees(account *Account, receiverAddress, amount string) (f *base.OptionalString, err error) {
@@ -168,44 +172,61 @@ func (t *Token) BuildTransfer(sender, receiver, amount string) (txn base.Transac
 	if err != nil {
 		return
 	}
-	targetAmount := amountInt
+	var pickedCoins *types.PickedCoins
+	var pickedGasCoins *types.PickedCoins
 	if t.IsSUI() {
-		targetAmount = amountInt + MaxGasForTransfer // We will use PaySui if coin is SUI, the amount need plus gas
-	}
-	pickedCoin, err := types.PickupCoins(coins, *big.NewInt(0).SetUint64(targetAmount), MaxGasForTransfer, MAX_INPUT_COUNT_MERGE, 0)
-	if err != nil {
-		return
+		pickedCoins = nil
+		pickedGasCoins, err = types.PickupCoins(coins, *big.NewInt(0).SetUint64(amountInt), MaxGasForTransfer, MAX_INPUT_COUNT_MERGE, 0)
+		if err != nil {
+			return
+		}
+	} else {
+		pickedCoins, err = types.PickupCoins(coins, *big.NewInt(0).SetUint64(amountInt), 0, MAX_INPUT_COUNT_MERGE, 0)
+		if err != nil {
+			return
+		}
+		pickedGasCoins, err = t.chain.PickGasCoins(*signer, MaxGasForTransfer)
+		if err != nil {
+			return
+		}
 	}
 
-	maxGasBudget := maxGasBudget(pickedCoin, MaxGasForTransfer)
-	return t.chain.EstimateTransactionFeeAndRebuildTransaction(maxGasBudget, func(gasBudget uint64) (*Transaction, error) {
-		gasInt := types.NewSafeSuiBigInt(gasBudget)
-		var txnBytes *types.TransactionBytes
-		// TODO: we can transfer object now, but we cannot parse it's to a coin transfer event.
-		// if pickedCoin.CanUseTransferObject {
-		// 	txnBytes, err = cli.TransferObject(context.Background(), *signer, *recipient,
-		// 		pickedCoin.Coins[0].CoinObjectId,
-		// 		nil, gasBudget)
-		// } else {
-		// }
+	maxGasBudget := maxGasBudget(pickedGasCoins, MaxGasForTransfer)
+	gasPrice, _ := t.chain.CachedGasPrice()
+	return t.chain.EstimateTransactionFeeAndRebuildTransactionBCS(maxGasBudget, func(gasBudget uint64) (*Transaction, error) {
+		ptb := sui_types.NewProgrammableTransactionBuilder()
+
 		if t.IsSUI() {
-			txnBytes, err = cli.PaySui(context.Background(), *signer,
-				pickedCoin.CoinIds(),
-				[]sui_types.SuiAddress{*recipient},
-				[]types.SafeSuiBigInt[uint64]{types.NewSafeSuiBigInt(amountInt)},
-				gasInt)
+			err = ptb.TransferSui(*recipient, &amountInt)
 		} else {
-			txnBytes, err = cli.Pay(context.Background(), *signer,
-				pickedCoin.CoinIds(),
-				[]sui_types.SuiAddress{*recipient},
-				[]types.SafeSuiBigInt[uint64]{types.NewSafeSuiBigInt(amountInt)},
-				nil, gasInt)
+			subAmount := big.NewInt(0).Sub(&pickedCoins.TotalAmount, &pickedCoins.TargetAmount).Int64()
+			if subAmount < 0 {
+				return nil, ErrInsufficientBalance
+			} else if subAmount == 0 {
+				err = ptb.Pay(
+					pickedCoins.CoinRefs(),
+					[]sui_types.SuiAddress{*recipient},
+					[]uint64{amountInt},
+				)
+			} else {
+				err = ptb.Pay(
+					pickedCoins.CoinRefs(),
+					[]sui_types.SuiAddress{*recipient, *signer},
+					[]uint64{amountInt, uint64(subAmount)},
+				)
+			}
 		}
 		if err != nil {
 			return nil, err
 		}
 
-		return &Transaction{Txn: *txnBytes}, nil
+		pt := ptb.Finish()
+		tx := sui_types.NewProgrammable(*signer, pickedGasCoins.CoinRefs(), pt, gasBudget, gasPrice)
+		txBytes, err := bcs.Marshal(tx)
+		if err != nil {
+			return nil, err
+		}
+		return &Transaction{TxnBytes: txBytes}, nil
 	})
 }
 
@@ -241,32 +262,57 @@ func (t *Token) BuildTransferAll(sender, receiver string) (txn base.Transaction,
 	if coins.HasNextPage {
 		return nil, ErrNeedMergeCoin
 	}
-	totalAmount := big.NewInt(0)
-	coinIds := make([]sui_types.ObjectID, len(coins.Data))
-	for idx, coin := range coins.Data {
-		coinIds[idx] = coin.CoinObjectId
-		totalAmount.Add(totalAmount, big.NewInt(0).SetUint64(coin.Balance.Uint64()))
+
+	var pickedCoins *types.PickedCoins
+	var pickedGasCoins *types.PickedCoins
+	if t.IsSUI() {
+		pickedCoins = nil
+		pickedGasCoins = pickAllCoins(coins)
+	} else {
+		pickedCoins = pickAllCoins(coins)
+		pickedGasCoins, err = t.chain.PickGasCoins(*signer, MaxGasForTransfer)
+		if err != nil {
+			return
+		}
 	}
 
-	return t.chain.EstimateTransactionFeeAndRebuildTransaction(MaxGasForTransfer, func(gasBudget uint64) (*Transaction, error) {
-		gasInt := types.NewSafeSuiBigInt(gasBudget)
-		var txnBytes *types.TransactionBytes
+	gasPrice, _ := t.chain.CachedGasPrice()
+	maxGasBudget := maxGasBudget(pickedGasCoins, MaxGasForTransfer)
+	return t.chain.EstimateTransactionFeeAndRebuildTransactionBCS(maxGasBudget, func(gasBudget uint64) (*Transaction, error) {
+		ptb := sui_types.NewProgrammableTransactionBuilder()
 		if t.IsSUI() {
-			txnBytes, err = cli.PayAllSui(context.Background(), *signer,
-				*recipient,
-				coinIds,
-				gasInt)
+			err = ptb.PayAllSui(*recipient)
 		} else {
-			txnBytes, err = cli.Pay(context.Background(), *signer,
-				coinIds,
+			err = ptb.Pay(
+				pickedCoins.CoinRefs(),
 				[]sui_types.SuiAddress{*recipient},
-				[]types.SafeSuiBigInt[uint64]{types.NewSafeSuiBigInt(totalAmount.Uint64())},
-				nil, gasInt)
+				[]uint64{pickedCoins.TotalAmount.Uint64()},
+			)
 		}
 		if err != nil {
 			return nil, err
 		}
 
-		return &Transaction{Txn: *txnBytes}, nil
+		pt := ptb.Finish()
+		tx := sui_types.NewProgrammable(*signer, pickedGasCoins.CoinRefs(), pt, gasBudget, gasPrice)
+		txBytes, err := bcs.Marshal(tx)
+		if err != nil {
+			return nil, err
+		}
+		return &Transaction{TxnBytes: txBytes}, nil
 	})
+}
+
+func pickAllCoins(coins *types.CoinPage) *types.PickedCoins {
+	total := big.NewInt(0)
+	pickedCoins := make([]types.Coin, len(coins.Data))
+	for idx, coin := range coins.Data {
+		total.Add(total, big.NewInt(0).SetUint64(coin.Balance.Uint64()))
+		pickedCoins[idx] = coin
+	}
+	return &types.PickedCoins{
+		Coins:        pickedCoins,
+		TotalAmount:  *total,
+		TargetAmount: *big.NewInt(0),
+	}
 }

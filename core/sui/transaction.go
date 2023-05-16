@@ -12,6 +12,8 @@ import (
 type Transaction struct {
 	Txn types.TransactionBytes
 
+	TxnBytes lib.Base64Data
+
 	EstimateGasFee int64
 }
 
@@ -23,17 +25,26 @@ type SignedTransaction struct {
 	Signature *sui_types.Signature `json:"signature"`
 }
 
+func (t *Transaction) TransactionBytes() []byte {
+	if t.TxnBytes != nil {
+		return t.TxnBytes
+	}
+	return t.Txn.TxBytes
+}
+
 func (t *Transaction) SignWithAccount(account base.Account) (signedTx *base.OptionalString, err error) {
 	acc, ok := account.(*Account)
 	if !ok {
 		return nil, base.ErrInvalidAccountType
 	}
-	signature, err := acc.account.SignSecureWithoutEncode(t.Txn.TxBytes, sui_types.DefaultIntent())
+	txnBytes := t.TransactionBytes()
+	signature, err := acc.account.SignSecureWithoutEncode(txnBytes, sui_types.DefaultIntent())
 	if err != nil {
 		return nil, err
 	}
+	base64data := lib.Base64Data(txnBytes)
 	signedTxn := SignedTransaction{
-		TxBytes:   &t.Txn.TxBytes,
+		TxBytes:   &base64data,
 		Signature: &signature,
 	}
 	bytes, err := json.Marshal(signedTxn)

@@ -63,6 +63,29 @@ func TestFetchTransactionDetail(t *testing.T) {
 	t.Log(detail)
 }
 
+func TestChain_SendRawTransaction(t *testing.T) {
+	chain := TestnetChain()
+	account := M3Account(t)
+	token := NewTokenMain(chain)
+	amount := SUI(0.01).String()
+
+	txn, err := token.BuildTransfer(account.Address(), account.Address(), amount)
+	require.Nil(t, err)
+
+	signedTxn, err := txn.SignWithAccount(account)
+	require.Nil(t, err)
+
+	run := false
+	// run = true
+	if run {
+		hash, err := chain.SendRawTransaction(signedTxn.Value)
+		require.Nil(t, err)
+		t.Log(hash)
+	} else {
+		simulateTxnCheck(t, chain, txn.(*Transaction), true)
+	}
+}
+
 func TestSplit(t *testing.T) {
 	account := M1Account(t)
 	chain := TestnetChain()
@@ -95,19 +118,6 @@ func TestFaucet(t *testing.T) {
 	}
 }
 
-func Test_EstimateFee_And_RebuildTxn(t *testing.T) {
-	account := M1Account(t)
-	chain := TestnetChain()
-	token := NewTokenMain(chain)
-
-	txn, err := chain.EstimateTransactionFeeAndRebuildTransaction(MinGasBudget, func(gasBudget uint64) (*Transaction, error) {
-		return token.BuildTransferTransaction(account, account.Address(), SUI(1).String())
-	})
-	require.Nil(t, err)
-
-	t.Log(txn)
-}
-
 func Test_TryToFindTheMiniumGasBudget(t *testing.T) {
 	chain := MainnetChain()
 
@@ -119,7 +129,6 @@ func Test_TryToFindTheMiniumGasBudget(t *testing.T) {
 	_, err = chain.BuildMergeCoinPreview(req)
 	require.Nil(t, err)
 	// 我们需要修改下面方法的第一次构建的 maxGasBudget 的值，保证它在第一次模拟交易能通过
-	// chain.EstimateTransactionFeeAndRebuildTransaction()
 }
 
 func Test_TryBuild(t *testing.T) {
@@ -147,6 +156,23 @@ func Test_Err_CannotFindGasCoinForSigner(t *testing.T) {
 		nil, types.NewSafeSuiBigInt(SUI(10).Uint64()))
 	require.Error(t, err)
 	// "Cannot find gas coin for signer address [0xd77955e670f42c1bc5e94b9e68e5fe9bdbed9134d784f2a14dfe5fc1b24b5d9f] with amount sufficient for the required gas amount [10000000000]."
+}
+
+func simulateTxnCheck(t *testing.T, chain *Chain, txn *Transaction, showJson bool) *types.DryRunTransactionBlockResponse {
+	cli, err := chain.Client()
+	require.Nil(t, err)
+	resp, err := cli.DryRunTransaction(context.Background(), txn.TransactionBytes())
+	require.Nil(t, err)
+	require.Equal(t, resp.Effects.Data.V1.Status.Error, "")
+	require.True(t, resp.Effects.Data.IsSuccess())
+	if showJson {
+		data, err := json.Marshal(resp)
+		require.Nil(t, err)
+		respStr := string(data)
+		t.Log("simulate run resp: ", respStr)
+	}
+	t.Log("simulate gas price = ", resp.Effects.Data.GasFee())
+	return resp
 }
 
 func simulateCheck(t *testing.T, chain *Chain, txn *types.TransactionBytes, showJson bool) *types.DryRunTransactionBlockResponse {

@@ -81,15 +81,30 @@ func TestTransfer(t *testing.T) {
 	token := NewTokenMain(chain)
 
 	toAddress := M3Account(t).Address()
-	amount := strconv.FormatUint(uint64(25e9), 10)
+	amount := SUI(0.5).String()
 	// toAddress := account.Address()
 	// amount := strconv.FormatUint(4e9, 10) // test big amount transfer
 
 	txn, err := token.BuildTransferTransaction(account, toAddress, amount)
 	require.Nil(t, err)
 
-	simulateCheck(t, chain, &txn.Txn, false)
+	simulateTxnCheck(t, chain, txn, false)
 	// executeTransaction(t, chain, &txn.Txn, account.account)
+}
+
+func TestToken_TransferAll(t *testing.T) {
+	account := M3Account(t)
+	chain := TestnetChain()
+	token := NewTokenMain(chain)
+
+	toAddress := M1Account(t).Address()
+
+	txn, err := token.BuildTransferAll(account.Address(), toAddress)
+	require.Nil(t, err)
+
+	txnn := txn.(*Transaction)
+	resp := simulateTxnCheck(t, chain, txnn, false)
+	t.Log(resp.Effects.Data.V1.Status)
 }
 
 func TestToken_Transfer_Use_Pay(t *testing.T) {

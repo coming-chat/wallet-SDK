@@ -3,12 +3,12 @@ package sui
 import (
 	"context"
 	"math/big"
-	"sort"
 	"strconv"
 
 	"github.com/coming-chat/go-sui/v2/sui_types"
 	"github.com/coming-chat/go-sui/v2/types"
 	"github.com/coming-chat/wallet-SDK/core/base"
+	"github.com/fardream/go-bcs/bcs"
 )
 
 type MergeCoinRequest struct {
@@ -17,7 +17,7 @@ type MergeCoinRequest struct {
 	TargetAmount string
 
 	// queried coins
-	Coins      types.Coins
+	Coins      types.PickedCoins
 	CoinsCount int
 	// If the transaction is executed, owner will receive a coin amount that is not less than this.
 	EstimateAmount string
@@ -48,33 +48,44 @@ func (c *Chain) BuildMergeCoinPreview(request *MergeCoinRequest) (preview *Merge
 	if err != nil {
 		return
 	}
-	cli, err := c.Client()
-	if err != nil {
-		return
+
+	var pickedCoins *types.PickedCoins
+	var pickedGasCoins *types.PickedCoins
+	if request.CoinType == SUI_COIN_TYPE {
+		pickedCoins = nil
+		pickedGasCoins = &request.Coins
+	} else {
+		pickedCoins = &request.Coins
+		pickedGasCoins, err = c.PickGasCoins(*ownerAddr, MaxGasForTransfer)
+		if err != nil {
+			return
+		}
 	}
 
-	totalAmount := big.NewInt(0)
-	mergeIds := make([]sui_types.ObjectID, 0)
-	for _, coin := range request.Coins {
-		totalAmount.Add(totalAmount, big.NewInt(0).SetUint64(coin.Balance.Uint64()))
-		mergeIds = append(mergeIds, coin.CoinObjectId)
-	}
-
-	txn, err := c.EstimateTransactionFeeAndRebuildTransaction(MinGasBudget, func(gasBudget uint64) (*Transaction, error) {
-		var txnBytes *types.TransactionBytes
-		gasInt := types.NewSafeSuiBigInt(gasBudget)
+	gasPrice, _ := c.CachedGasPrice()
+	maxGasBudget := maxGasBudget(pickedGasCoins, MaxGasForTransfer)
+	txn, err := c.EstimateTransactionFeeAndRebuildTransactionBCS(maxGasBudget, func(gasBudget uint64) (*Transaction, error) {
+		ptb := sui_types.NewProgrammableTransactionBuilder()
 		if request.CoinType == SUI_COIN_TYPE {
-			txnBytes, err = cli.PayAllSui(context.Background(), *ownerAddr, *ownerAddr, mergeIds, gasInt)
+			err = ptb.PayAllSui(*ownerAddr)
 		} else {
-			txnBytes, err = cli.Pay(context.Background(), *ownerAddr, mergeIds,
+			err = ptb.Pay(
+				pickedCoins.CoinRefs(),
 				[]sui_types.SuiAddress{*ownerAddr},
-				[]types.SafeSuiBigInt[uint64]{types.NewSafeSuiBigInt(totalAmount.Uint64())},
-				nil, gasInt)
+				[]uint64{pickedCoins.TotalAmount.Uint64()},
+			)
 		}
 		if err != nil {
 			return nil, err
 		}
-		return &Transaction{Txn: *txnBytes}, nil
+
+		pt := ptb.Finish()
+		tx := sui_types.NewProgrammable(*ownerAddr, pickedGasCoins.CoinRefs(), pt, gasBudget, gasPrice)
+		txBytes, err := bcs.Marshal(tx)
+		if err != nil {
+			return nil, err
+		}
+		return &Transaction{TxnBytes: txBytes}, nil
 	})
 
 	return &MergeCoinPreview{
@@ -115,37 +126,21 @@ func (c *Chain) BuildMergeCoinRequest(owner, coinType, targetAmount string) (req
 	if len(pageCoins.Data) <= 0 {
 		return nil, ErrNoCoinsFound
 	}
-	coins := pageCoins.Data
-	sort.Slice(coins, func(i, j int) bool {
-		return coins[i].Balance.Uint64() > coins[j].Balance.Uint64()
-	})
-
-	amountBigInt := big.NewInt(0).SetUint64(amountInt)
-	totalAmount := big.NewInt(0)
-	mergingCoins := []types.Coin{}
-	for _, coin := range coins {
-		if coin.Balance.Uint64() >= amountBigInt.Uint64() {
-			return nil, ErrNoNeedMergeCoin
-		}
-		totalAmount.Add(totalAmount, big.NewInt(0).SetUint64(coin.Balance.Uint64()))
-		mergingCoins = append(mergingCoins, coin)
-		if totalAmount.Cmp(amountBigInt) >= 0 {
-			break
-		}
-	}
-	if len(mergingCoins) == 1 {
+	pickedCoins := pickAllCoins(pageCoins)
+	if len(pickedCoins.Coins) == 1 {
 		return nil, ErrMergeOneCoin
 	}
+	willBeAchieved := pickedCoins.TotalAmount.Cmp(big.NewInt(0).SetUint64(amountInt)) >= 0
 
 	return &MergeCoinRequest{
 		Owner:        owner,
 		CoinType:     coinType,
 		TargetAmount: targetAmount,
 
-		Coins:          mergingCoins,
-		CoinsCount:     len(mergingCoins),
-		EstimateAmount: totalAmount.String(),
-		WillBeAchieved: totalAmount.Cmp(amountBigInt) >= 0,
+		Coins:          *pickedCoins,
+		CoinsCount:     len(pickedCoins.Coins),
+		EstimateAmount: pickedCoins.TotalAmount.String(),
+		WillBeAchieved: willBeAchieved,
 	}, nil
 }
 

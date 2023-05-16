@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"math/big"
 	"regexp"
 	"strconv"
 	"strings"
@@ -13,6 +14,7 @@ import (
 	"github.com/coming-chat/go-sui/v2/sui_types"
 	"github.com/coming-chat/go-sui/v2/types"
 	"github.com/coming-chat/wallet-SDK/core/base"
+	"github.com/fardream/go-bcs/bcs"
 )
 
 const (
@@ -30,6 +32,8 @@ const (
 type Chain struct {
 	rpcClient *client.Client
 	RpcUrl    string
+
+	gasPrice uint64
 }
 
 func NewChainWithRpcUrl(rpcUrl string) *Chain {
@@ -214,7 +218,7 @@ func (c *Chain) BatchFetchTransactionStatus(hashListString string) string {
 func (c *Chain) TransferObject(sender, receiver, objectId string, gasBudget int64) (txn *Transaction, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
 
-	senderAddress, err := sui_types.NewAddressFromHex(sender)
+	signer, err := sui_types.NewAddressFromHex(sender)
 	if err != nil {
 		return
 	}
@@ -230,13 +234,33 @@ func (c *Chain) TransferObject(sender, receiver, objectId string, gasBudget int6
 	if err != nil {
 		return
 	}
-	return c.EstimateTransactionFeeAndRebuildTransaction(uint64(gasBudget), func(maxGas uint64) (*Transaction, error) {
-		gasInt := types.NewSafeSuiBigInt(maxGas)
-		txBytes, err := client.TransferObject(context.Background(), *senderAddress, *receiverAddress, *nftObject, nil, gasInt)
+	object, err := client.GetObject(context.Background(), *nftObject, nil)
+	if err != nil {
+		return
+	}
+	gasUint := base.Max(uint64(gasBudget), MinGasBudget)
+	pickedGasCoins, err := c.PickGasCoins(*signer, gasUint)
+	if err != nil {
+		return
+	}
+
+	maxGasBudget := maxGasBudget(pickedGasCoins, gasUint)
+	gasPrice, _ := c.CachedGasPrice()
+	return c.EstimateTransactionFeeAndRebuildTransactionBCS(maxGasBudget, func(gasBudget uint64) (*Transaction, error) {
+		ptb := sui_types.NewProgrammableTransactionBuilder()
+		reference := object.Data.Reference()
+		err = ptb.TransferObject(*receiverAddress, []*sui_types.ObjectRef{&reference})
 		if err != nil {
 			return nil, err
 		}
-		return &Transaction{Txn: *txBytes}, nil
+
+		pt := ptb.Finish()
+		tx := sui_types.NewProgrammable(*signer, pickedGasCoins.CoinRefs(), pt, gasBudget, gasPrice)
+		txBytes, err := bcs.Marshal(tx)
+		if err != nil {
+			return nil, err
+		}
+		return &Transaction{TxnBytes: txBytes}, nil
 	})
 }
 
@@ -255,6 +279,25 @@ func (c *Chain) GasPrice() (gasprice *base.OptionalString, err error) {
 	return &base.OptionalString{Value: str}, nil
 }
 
+func (c *Chain) CachedGasPrice() (price uint64, err error) {
+	if c.gasPrice > 0 {
+		return c.gasPrice, nil
+	}
+
+	price = 1000
+	defer base.CatchPanicAndMapToBasicError(&err)
+	cli, err := c.Client()
+	if err != nil {
+		return
+	}
+	gasPrice, err := cli.GetReferenceGasPrice(context.Background())
+	if err != nil {
+		return
+	}
+	c.gasPrice = gasPrice.Uint64()
+	return c.gasPrice, nil
+}
+
 func (c *Chain) EstimateTransactionFee(transaction base.Transaction) (fee *base.OptionalString, err error) {
 	txn, ok := transaction.(*Transaction)
 	if !ok {
@@ -268,7 +311,7 @@ func (c *Chain) EstimateTransactionFee(transaction base.Transaction) (fee *base.
 	if err != nil {
 		return
 	}
-	effects, err := cli.DryRunTransaction(context.Background(), txn.Txn.TxBytes)
+	effects, err := cli.DryRunTransaction(context.Background(), txn.TransactionBytes())
 	if err != nil {
 		return
 	}
@@ -306,6 +349,44 @@ func FaucetFundAccount(address string, faucetUrl string) (h *base.OptionalString
 		return nil, err
 	}
 	return &base.OptionalString{Value: hash}, nil
+}
+
+func (c *Chain) PickGasCoins(owner sui_types.SuiAddress, maxGasBudget uint64) (picked *types.PickedCoins, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
+	cli, err := c.Client()
+	if err != nil {
+		return
+	}
+	coins, err := cli.GetCoins(context.Background(), owner, nil, nil, 30)
+	if err != nil {
+		return
+	}
+	return types.PickupCoins(coins, *big.NewInt(0), maxGasBudget, 30, 0)
+}
+
+func (c *Chain) EstimateTransactionFeeAndRebuildTransactionBCS(maxGasBudget uint64, buildTransaction func(gasBudget uint64) (*Transaction, error)) (*Transaction, error) {
+	if maxGasBudget < MinGasBudget {
+		maxGasBudget = MinGasBudget
+	}
+	txn, err := buildTransaction(maxGasBudget)
+	if err != nil {
+		return nil, err
+	}
+	_, err = c.EstimateTransactionFee(txn)
+	if err != nil {
+		return nil, err
+	}
+	if txn.EstimateGasFee < MinGasBudget {
+		txn.EstimateGasFee = MinGasBudget
+	}
+
+	// second call the builder
+	newTxn, err := buildTransaction(uint64(txn.EstimateGasFee))
+	if err != nil {
+		return nil, err
+	}
+	newTxn.EstimateGasFee = txn.EstimateGasFee
+	return newTxn, nil
 }
 
 // @param maxGasBudget: the firstly build required gas

@@ -3,7 +3,6 @@ package sui
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"sort"
 	"strings"
 
@@ -117,25 +116,7 @@ func TransformNFT(nft *types.SuiObjectResponse) *base.NFT {
 }
 
 func (c *Chain) MintNFT(creator, name, description, uri string) (txn *Transaction, err error) {
-	defer base.CatchPanicAndMapToBasicError(&err)
-
-	signer, err := sui_types.NewAddressFromHex(creator)
-	if err != nil {
-		return nil, errors.New("Invalid creator address")
-	}
-	client, err := c.Client()
-	if err != nil {
-		return
-	}
-	return c.EstimateTransactionFeeAndRebuildTransaction(MinGasBudget, func(gasBudget uint64) (*Transaction, error) {
-		txBytes, err := client.MintNFT(context.Background(), *signer, name, description, uri, nil, gasBudget)
-		if err != nil {
-			return nil, err
-		}
-		return &Transaction{
-			Txn: *txBytes,
-		}, nil
-	})
+	return nil, base.ErrUnsupportedFunction
 }
 
 // Just encapsulation and callbacks to method `TransferObject`.
