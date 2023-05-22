@@ -3,11 +3,16 @@ package wallet
 import (
 	"strings"
 
+	"github.com/coming-chat/wallet-SDK/core/aptos"
 	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/coming-chat/wallet-SDK/core/btc"
 	"github.com/coming-chat/wallet-SDK/core/cosmos"
+	"github.com/coming-chat/wallet-SDK/core/doge"
 	"github.com/coming-chat/wallet-SDK/core/eth"
+	"github.com/coming-chat/wallet-SDK/core/polka"
 	"github.com/coming-chat/wallet-SDK/core/solana"
+	"github.com/coming-chat/wallet-SDK/core/starcoin"
+	"github.com/coming-chat/wallet-SDK/core/sui"
 )
 
 const (
@@ -45,34 +50,34 @@ func ChainTypeOfWatchAddress(address string) *base.StringArray {
 		if eth.IsValidAddress(address) {
 			res.Append(ChainTypeEthereum)
 		}
-		// if aptos.IsValidAddress(address) {
-		// 	res.Append(ChainTypeAptos)
-		// }
-		// if sui.IsValidAddress(address) {
-		// 	res.Append(ChainTypeSui)
-		// }
-		// if starcoin.IsValidAddress(address) {
-		// 	res.Append(ChainTypeStarcoin)
-		// }
+		if aptos.IsValidAddress(address) {
+			res.Append(ChainTypeAptos)
+		}
+		if sui.IsValidAddress(address) {
+			res.Append(ChainTypeSui)
+		}
+		if starcoin.IsValidAddress(address) {
+			res.Append(ChainTypeStarcoin)
+		}
 	} else {
-		// if polka.IsValidAddress(address) {
-		// 	res.Append(ChainTypePolka)
-		// }
+		if polka.IsValidAddress(address) {
+			res.Append(ChainTypePolka)
+		}
 		if btc.IsValidAddress(address, btc.ChainMainnet) {
 			res.Append(ChainTypeBitcoin)
 		}
-		// if btc.IsValidAddress(address, btc.ChainSignet) {
-		// 	res.Append(ChainTypeSignet)
-		// }
-		// if doge.IsValidAddress(address, doge.ChainMainnet) {
-		// 	res.Append(ChainTypeDoge)
-		// }
+		if btc.IsValidAddress(address, btc.ChainSignet) {
+			res.Append(ChainTypeSignet)
+		}
+		if doge.IsValidAddress(address, doge.ChainMainnet) {
+			res.Append(ChainTypeDoge)
+		}
 		if cosmos.IsValidAddress(address, cosmos.CosmosPrefix) {
 			res.Append(ChainTypeCosmos)
 		}
-		// if cosmos.IsValidAddress(address, cosmos.TerraPrefix) {
-		// 	res.Append(ChainTypeTerra)
-		// }
+		if cosmos.IsValidAddress(address, cosmos.TerraPrefix) {
+			res.Append(ChainTypeTerra)
+		}
 		if solana.IsValidAddress(address) {
 			res.Append(ChainTypeSolana)
 		}
