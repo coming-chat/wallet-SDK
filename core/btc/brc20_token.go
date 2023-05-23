@@ -1,7 +1,6 @@
 package btc
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
@@ -37,13 +36,13 @@ func (t *Brc20Token) TokenInfo() (*base.TokenInfo, error) {
 }
 
 func (t *Brc20Token) BalanceOfAddress(address string) (*base.Balance, error) {
-	return nil, nil
+	return nil, base.ErrUnsupportedFunction
 }
 func (t *Brc20Token) BalanceOfPublicKey(publicKey string) (*base.Balance, error) {
-	return nil, nil
+	return nil, base.ErrUnsupportedFunction
 }
 func (t *Brc20Token) BalanceOfAccount(account Account) (*base.Balance, error) {
-	return nil, nil
+	return nil, base.ErrUnsupportedFunction
 }
 
 func (t *Brc20Token) BuildTransfer(sender, receiver, amount string) (txn base.Transaction, err error) {
@@ -75,7 +74,7 @@ func (t *Brc20Token) FullTokenInfo() (info *Brc20TokenInfo, err error) {
 		return
 	}
 	info = &Brc20TokenInfo{}
-	if err = decodeUnisatResponse(*resp, info); err != nil {
+	if err = decodeUnisatResponseV2(*resp, info); err != nil {
 		return
 	}
 	brc20InfoCache[key] = info
@@ -114,24 +113,4 @@ func NewBrc20TokenInfoWithJsonString(str string) (*Brc20TokenInfo, error) {
 	var o Brc20TokenInfo
 	err := base.FromJsonString(str, &o)
 	return &o, err
-}
-
-// the resp.Body should like `{code: *, msg: *, data: *}`
-func decodeUnisatResponse(resp httpUtil.Res, out interface{}) error {
-	if resp.Code != http.StatusOK {
-		return fmt.Errorf("code: %v, body: %v", resp.Code, string(resp.Body))
-	}
-	var data struct {
-		Code int             `json:"code"`
-		Msg  string          `json:"msg"`
-		Data json.RawMessage `json:"data"`
-	}
-	err := json.Unmarshal(resp.Body, &data)
-	if err != nil {
-		return err
-	}
-	if data.Code != 0 || data.Msg != "ok" {
-		return fmt.Errorf("code: %v, message: %v", data.Code, data.Msg)
-	}
-	return json.Unmarshal(data.Data, out)
 }
