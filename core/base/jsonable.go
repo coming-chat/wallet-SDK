@@ -23,6 +23,9 @@ type Jsonable interface {
 	//	func NewXxxArrayWithJsonString(str string) (*base.AnyArray, error) {
 	//		var o []*Xxx
 	//		err := base.FromJsonString(str, &o)
+	//		if err != nil {
+	//			return nil, err
+	//		}
 	//		arr := make([]any, len(o))
 	//		for i, v := range o {
 	//			arr[i] = v

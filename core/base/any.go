@@ -13,8 +13,8 @@ type Aniable interface {
 	// func AsXxx(a *Any) *Xxx
 
 	// ======= template
-	// func (o *Xxx) AsAny() *base.Any {
-	// 	return &base.Any{Value: o}
+	// func (a *Xxx) AsAny() *base.Any {
+	// 	return &base.Any{Value: a}
 	// }
 	//	func AsXxx(a *base.Any) *Xxx {
 	//		if r, ok := a.Value.(*Xxx); ok {
