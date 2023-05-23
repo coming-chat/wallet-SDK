@@ -110,6 +110,23 @@ func AsBrc20Inscription(a *base.Any) *Brc20Inscription {
 	return nil
 }
 
+func (bi *Brc20Inscription) AsNFT() *base.NFT {
+	return &base.NFT{
+		Timestamp:  bi.Timestamp,
+		HashString: bi.GenesisTransaction,
+
+		Id:              bi.InscriptionId,
+		Name:            "",
+		Image:           bi.Content,
+		Standard:        "brc-20",
+		Collection:      "",
+		Description:     "",
+		ContractAddress: "",
+
+		RelatedUrl: bi.Preview,
+	}
+}
+
 type Brc20InscriptionPage struct {
 	*inter.SdkPageable[*Brc20Inscription]
 }
@@ -122,4 +139,23 @@ func NewBrc20InscriptionPageWithJsonString(str string) (*Brc20InscriptionPage, e
 
 type rawBrc20InscriptionPage struct {
 	unisatRawPage[*Brc20Inscription]
+}
+
+type NFTPage struct {
+	*inter.SdkPageable[*base.NFT]
+}
+
+func (bp *Brc20InscriptionPage) AsNFTPage() *NFTPage {
+	nftArr := make([]*base.NFT, len(bp.Items))
+	for i, bi := range bp.Items {
+		nftArr[i] = bi.AsNFT()
+	}
+	return &NFTPage{SdkPageable: &inter.SdkPageable[*base.NFT]{
+		TotalCount_:    bp.TotalCount_,
+		CurrentCount_:  bp.CurrentCount(),
+		CurrentCursor_: bp.CurrentCursor_,
+		HasNextPage_:   bp.HasNextPage_,
+
+		Items: nftArr,
+	}}
 }
