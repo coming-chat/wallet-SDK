@@ -1,8 +1,10 @@
 package btc
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/coming-chat/wallet-SDK/core/base"
@@ -113,4 +115,33 @@ func NewBrc20TokenInfoWithJsonString(str string) (*Brc20TokenInfo, error) {
 	var o Brc20TokenInfo
 	err := base.FromJsonString(str, &o)
 	return &o, err
+}
+
+func FetchBrc20TokenBalance(owner string, cursor string, pageSize int) (page *Brc20TokenBalancePage, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
+	if cursor == "" {
+		cursor = "0"
+	}
+	offset, err := strconv.ParseInt(cursor, 10, 64)
+	if err != nil {
+		return nil, errors.New("invalid cursor")
+	}
+
+	header := map[string]string{
+		"X-Client":  "UniSat Wallet",
+		"X-Version": "1.1.20",
+		"x-address": "bc1qppc323aw52gegsfyfw34rn66csffcz5jz5z7fv",
+	}
+	url := fmt.Sprintf("https://unisat.io/wallet-api-v4/brc20/tokens?address=%v&cursor=%v&size=%v", owner, offset, pageSize)
+	resp, err := httpUtil.Request(http.MethodGet, url, header, nil)
+	if err != nil {
+		return
+	}
+	var rawPage rawBrc20TokenBalancePage
+	if err = decodeUnisatResponseV4(*resp, &rawPage); err != nil {
+		return
+	}
+
+	res := rawPage.MapToSdkPage(int(offset), pageSize)
+	return &Brc20TokenBalancePage{res}, nil
 }

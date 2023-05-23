@@ -24,6 +24,53 @@ func (p *unisatRawPage[T]) MapToSdkPage(offset, size int) *inter.SdkPageable[T] 
 	}
 }
 
+// - MARK -
+
+type Brc20TokenBalance struct {
+	Ticker              string `json:"ticker"`              //: "zbit",
+	OverallBalance      string `json:"overallBalance"`      //: "0",
+	TransferableBalance string `json:"transferableBalance"` //: "0",
+	AvailableBalance    string `json:"availableBalance"`    //: "0"
+}
+
+func (j *Brc20TokenBalance) JsonString() (*base.OptionalString, error) {
+	return base.JsonString(j)
+}
+func NewBrc20TokenBalanceWithJsonString(str string) (*Brc20TokenBalance, error) {
+	var o Brc20TokenBalance
+	err := base.FromJsonString(str, &o)
+	return &o, err
+}
+
+func (a *Brc20TokenBalance) AsAny() *base.Any {
+	return &base.Any{Value: a}
+}
+func AsBrc20TokenBalance(a *base.Any) *Brc20TokenBalance {
+	if r, ok := a.Value.(*Brc20TokenBalance); ok {
+		return r
+	}
+	if r, ok := a.Value.(Brc20TokenBalance); ok {
+		return &r
+	}
+	return nil
+}
+
+type Brc20TokenBalancePage struct {
+	*inter.SdkPageable[*Brc20TokenBalance]
+}
+
+func NewBrc20TokenBalancePageWithJsonString(str string) (*Brc20TokenBalancePage, error) {
+	var o Brc20TokenBalancePage
+	err := base.FromJsonString(str, &o)
+	return &o, err
+}
+
+type rawBrc20TokenBalancePage struct {
+	unisatRawPage[*Brc20TokenBalance]
+}
+
+// - MARK -
+
 type Brc20Inscription struct {
 	InscriptionId      string `json:"inscriptionId"`
 	InscriptionNumber  int64  `json:"inscriptionNumber"`

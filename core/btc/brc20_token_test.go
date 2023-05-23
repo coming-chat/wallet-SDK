@@ -33,3 +33,11 @@ func TestBrc20Token_FullTokenInfo(t *testing.T) {
 	require.True(t, timeSpent < 10) // The second use of the cache should be very fast
 	require.Equal(t, info, info222)
 }
+
+func TestBrc20TokenBalances(t *testing.T) {
+	owner := "bc1qdgflzu306s75lgskkgssmz3vscpvuawvafv3xjshyc6t73x3zzvquvtafp"
+
+	balancePage, err := FetchBrc20TokenBalance(owner, "0", 10)
+	require.Nil(t, err)
+	t.Log(balancePage.ItemArray().Values...)
+}
