@@ -1,7 +1,6 @@
 package solana
 
 import (
-	"github.com/tyler-smith/go-bip39"
 	"strings"
 
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
