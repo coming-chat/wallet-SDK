@@ -2,6 +2,7 @@ package eth
 
 import (
 	"crypto/ecdsa"
+	"github.com/tyler-smith/go-bip39"
 	"testing"
 
 	"github.com/btcsuite/btcd/btcutil/hdkeychain"

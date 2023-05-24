@@ -2,8 +2,9 @@ package btc
 
 import (
 	"errors"
-
 	"github.com/btcsuite/btcd/btcec/v2"
+	"github.com/btcsuite/btcd/btcutil"
+	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/tyler-smith/go-bip39"
@@ -40,16 +41,40 @@ func NewAccountWithMnemonic(mnemonic, chainnet string) (*Account, error) {
 }
 
 func AccountWithPrivateKey(prikey string, chainnet string) (*Account, error) {
-	seed, err := types.HexDecodeString(prikey)
+	var (
+		pri     *btcec.PrivateKey
+		pubData []byte
+		chain   *chaincfg.Params
+	)
+	wif, err := btcutil.DecodeWIF(prikey)
 	if err != nil {
-		return nil, err
+		seed, err := types.HexDecodeString(prikey)
+		if err != nil {
+			return nil, err
+		}
+		var pub *btcec.PublicKey
+		pri, pub = btcec.PrivKeyFromBytes(seed)
+		pubData = pub.SerializeCompressed()
+		chain, err = netParamsOf(chainnet)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		pri = wif.PrivKey
+		pubData = wif.SerializePubKey()
+		if wif.IsForNet(&chaincfg.SigNetParams) {
+			chain = &chaincfg.SigNetParams
+			chainnet = "signet"
+		} else if wif.IsForNet(&chaincfg.MainNetParams) {
+			chain = &chaincfg.MainNetParams
+			chainnet = "mainnet"
+		} else {
+			return nil, ErrUnsupportedChain
+		}
 	}
 
-	pri, pub := btcec.PrivKeyFromBytes(seed)
 	priData := pri.Serialize()
-	pubData := pub.SerializeUncompressed()
-
-	address, err := EncodePublicDataToAddress(pubData, chainnet)
+	taprootAddress, err := btcutil.NewAddressTaproot(pubData[1:33], chain)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +82,7 @@ func AccountWithPrivateKey(prikey string, chainnet string) (*Account, error) {
 	return &Account{
 		privateKey: priData,
 		publicKey:  pubData,
-		address:    address,
+		address:    taprootAddress.EncodeAddress(),
 		Chainnet:   chainnet,
 	}, nil
 }

@@ -3,6 +3,7 @@ package eth
 import (
 	"crypto/ecdsa"
 	"fmt"
+	"github.com/tyler-smith/go-bip39"
 	"strings"
 
 	"github.com/btcsuite/btcd/btcutil/hdkeychain"
