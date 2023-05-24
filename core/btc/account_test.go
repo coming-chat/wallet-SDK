@@ -8,8 +8,8 @@ import (
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/coming-chat/wallet-SDK/core/testcase"
-	"github.com/cosmos/go-bip39"
 	"github.com/stretchr/testify/require"
+	"github.com/tyler-smith/go-bip39"
 )
 
 type TestAccountCase struct {

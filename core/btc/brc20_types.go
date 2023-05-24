@@ -1,6 +1,7 @@
 package btc
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/coming-chat/wallet-SDK/core/base"
@@ -119,7 +120,7 @@ func (bi *Brc20Inscription) AsNFT() *base.NFT {
 		HashString: bi.GenesisTransaction,
 
 		Id:              bi.InscriptionId,
-		Name:            "",
+		Name:            fmt.Sprintf("Inscription %v", bi.InscriptionNumber),
 		Image:           bi.Content,
 		Standard:        "brc-20",
 		Collection:      "",

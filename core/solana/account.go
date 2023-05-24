@@ -5,9 +5,9 @@ import (
 
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/coming-chat/wallet-SDK/core/base"
-	"github.com/cosmos/go-bip39"
 	"github.com/portto/solana-go-sdk/pkg/hdwallet"
 	solana "github.com/portto/solana-go-sdk/types"
+	"github.com/tyler-smith/go-bip39"
 )
 
 type Account struct {

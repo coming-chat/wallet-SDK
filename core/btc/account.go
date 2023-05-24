@@ -6,7 +6,7 @@ import (
 	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/coming-chat/wallet-SDK/core/base"
-	"github.com/cosmos/go-bip39"
+	"github.com/tyler-smith/go-bip39"
 )
 
 type Account struct {

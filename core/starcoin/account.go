@@ -9,8 +9,8 @@ import (
 	"github.com/coming-chat/go-aptos/crypto/derivation"
 	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/coming-chat/wallet-SDK/core/eth"
-	"github.com/cosmos/go-bip39"
 	starTypes "github.com/starcoinorg/starcoin-go/types"
+	"github.com/tyler-smith/go-bip39"
 	"golang.org/x/crypto/sha3"
 )
 

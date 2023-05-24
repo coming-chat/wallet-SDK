@@ -10,10 +10,10 @@ import (
 	"github.com/coming-chat/wallet-SDK/core/aptos"
 	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/coming-chat/wallet-SDK/core/testcase"
-	"github.com/cosmos/go-bip39"
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
+	"github.com/tyler-smith/go-bip39"
 )
 
 type TestAccountCase struct {
