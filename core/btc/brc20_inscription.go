@@ -20,11 +20,7 @@ func FetchBrc20Inscription(owner string, cursor string, pageSize int) (page *Brc
 		return nil, errors.New("invalid cursor")
 	}
 
-	header := map[string]string{
-		"X-Client":  "UniSat Wallet",
-		"X-Version": "1.1.20",
-		"x-address": "bc1qppc323aw52gegsfyfw34rn66csffcz5jz5z7fv",
-	}
+	header := unisatRequestHeader()
 	url := fmt.Sprintf("https://unisat.io/wallet-api-v4/address/inscriptions?address=%v&cursor=%v&size=%v", owner, offset, pageSize)
 	resp, err := httpUtil.Request(http.MethodGet, url, header, nil)
 	if err != nil {

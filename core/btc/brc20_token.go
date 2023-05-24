@@ -70,8 +70,9 @@ func (t *Brc20Token) FullTokenInfo() (info *Brc20TokenInfo, err error) {
 	} else if cache, exists := brc20InfoCache[key]; exists {
 		return cache, nil
 	}
+	header := unisatRequestHeader()
 	url := fmt.Sprintf("https://unisat.io/brc20-api-v2/brc20/%v/info", t.Ticker)
-	resp, err := httpUtil.Request(http.MethodGet, url, nil, nil)
+	resp, err := httpUtil.Request(http.MethodGet, url, header, nil)
 	if err != nil {
 		return
 	}
@@ -127,11 +128,7 @@ func FetchBrc20TokenBalance(owner string, cursor string, pageSize int) (page *Br
 		return nil, errors.New("invalid cursor")
 	}
 
-	header := map[string]string{
-		"X-Client":  "UniSat Wallet",
-		"X-Version": "1.1.20",
-		"x-address": "bc1qppc323aw52gegsfyfw34rn66csffcz5jz5z7fv",
-	}
+	header := unisatRequestHeader()
 	url := fmt.Sprintf("https://unisat.io/wallet-api-v4/brc20/tokens?address=%v&cursor=%v&size=%v", owner, offset, pageSize)
 	resp, err := httpUtil.Request(http.MethodGet, url, header, nil)
 	if err != nil {
