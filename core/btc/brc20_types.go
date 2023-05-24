@@ -85,6 +85,9 @@ type Brc20Inscription struct {
 	GenesisTransaction string `json:"genesisTransaction"`
 	Location           string `json:"location"`
 	Output             string `json:"output"`
+
+	// only has value if the content type starts with 'text/'
+	ContentText string `json:"contentText"`
 	// Offset             int64  `json:"offset"`
 }
 
