@@ -142,6 +142,18 @@ func TestAccount_PrivateKey(t *testing.T) {
 	}
 }
 
+func TestAccountWithPrivateKey(t *testing.T) {
+	acc, err := NewAccountWithMnemonic(testcase.M1, ChainMainnet)
+	require.Nil(t, err)
+	privateKey, err := acc.PrivateKeyHex()
+	require.Nil(t, err)
+
+	acc2, err := AccountWithPrivateKey(privateKey, ChainMainnet)
+	require.Nil(t, err)
+	require.Equal(t, acc.privateKey, acc2.privateKey)
+	require.Equal(t, acc.address, acc2.address)
+}
+
 func TestIsValidAddress(t *testing.T) {
 	type args struct {
 		chainnet string
