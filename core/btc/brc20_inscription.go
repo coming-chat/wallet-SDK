@@ -47,7 +47,7 @@ func batchFetchContentText(inscriptions []*Brc20Inscription) {
 		if !ok {
 			return nil, nil
 		}
-		if !strings.HasPrefix(inscription.ContentType, "text") {
+		if !strings.HasPrefix(inscription.ContentType, "text/plain") {
 			return nil, nil
 		}
 		res, err := httpUtil.Request(http.MethodGet, inscription.Content, nil, nil)
