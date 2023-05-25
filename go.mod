@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/ChainSafe/go-schnorrkel v0.0.0-20210318173838-ccb5cd955283
-	github.com/btcsuite/btcd v0.22.3
+	github.com/btcsuite/btcd v0.23.4
 	github.com/btcsuite/btcd/btcec/v2 v2.2.0
 	github.com/btcsuite/btcd/btcutil v1.1.1
 	github.com/btcsuite/btcd/chaincfg/chainhash v1.0.1
@@ -36,6 +36,7 @@ require (
 	github.com/99designs/keyring v1.1.6 // indirect
 	github.com/DataDog/zstd v1.4.5 // indirect
 	github.com/StackExchange/wmi v0.0.0-20190523213315-cbe66965904d // indirect
+	github.com/aead/siphash v1.0.1 // indirect
 	github.com/armon/go-metrics v0.3.10 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
@@ -44,6 +45,7 @@ require (
 	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce // indirect
 	github.com/btcsuite/go-socks v0.0.0-20170105172521-4720035b7bfd // indirect
 	github.com/btcsuite/websocket v0.0.0-20150119174127-31079b680792 // indirect
+	github.com/btcsuite/winsvc v1.0.0 // indirect
 	github.com/buger/jsonparser v1.1.1 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
@@ -58,6 +60,7 @@ require (
 	github.com/deckarep/golang-set v1.8.0 // indirect
 	github.com/decred/dcrd/crypto/blake256 v1.0.0 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.1 // indirect
+	github.com/decred/dcrd/lru v1.0.0 // indirect
 	github.com/dgraph-io/badger/v2 v2.2007.2 // indirect
 	github.com/dgraph-io/ristretto v0.0.3 // indirect
 	github.com/dgryski/go-farm v0.0.0-20200201041132-a6ae2369ad13 // indirect
@@ -93,7 +96,10 @@ require (
 	github.com/holiman/uint256 v1.2.0 // indirect
 	github.com/huandu/xstrings v1.3.2 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
+	github.com/jessevdk/go-flags v1.4.0 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
+	github.com/jrick/logrotate v1.0.0 // indirect
+	github.com/kkdai/bstream v0.0.0-20161212061736-f391b8402d23 // indirect
 	github.com/libp2p/go-buffer-pool v0.0.2 // indirect
 	github.com/magiconair/properties v1.8.5 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
