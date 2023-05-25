@@ -100,11 +100,11 @@ func (a *Account) DeriveAccountAt(chainnet string) (*Account, error) {
 	}, nil
 }
 
-func (a *Account) DerivePath() string {
-	return "m/44'/0'/0'/0/0"
-}
 func (a *Account) AddressType() string {
 	return "Taproot (P2TR)"
+}
+func (a *Account) DerivePath() string {
+	return "--"
 }
 
 // MARK - Implement the protocol Account
