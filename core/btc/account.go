@@ -44,7 +44,6 @@ func NewAccountWithMnemonic(mnemonic, chainnet string) (*Account, error) {
 func AccountWithPrivateKey(prikey string, chainnet string) (*Account, error) {
 	var (
 		pri     *btcec.PrivateKey
-		pub     *btcec.PublicKey
 		pubData []byte
 		chain   *chaincfg.Params
 	)
@@ -54,19 +53,15 @@ func AccountWithPrivateKey(prikey string, chainnet string) (*Account, error) {
 		if err != nil {
 			return nil, err
 		}
+		var pub *btcec.PublicKey
 		pri, pub = btcec.PrivKeyFromBytes(seed)
 		chain, err = netParamsOf(chainnet)
 		if err != nil {
 			return nil, err
 		}
 		pubData = pub.SerializeCompressed()
-		chain, err = netParamsOf(chainnet)
-		if err != nil {
-			return nil, err
-		}
 	} else {
 		pri = wif.PrivKey
-		pub = wif.PrivKey.PubKey()
 		if wif.IsForNet(&chaincfg.SigNetParams) {
 			chain = &chaincfg.SigNetParams
 		} else if wif.IsForNet(&chaincfg.MainNetParams) {
@@ -126,6 +121,14 @@ func (a *Account) TaprootAddress() (string, error) {
 	return address.EncodeAddress(), nil
 }
 
+func (a *Account) ComingTaprootAddress() (string, error) {
+	taproot, err := btcutil.NewAddressTaproot(a.address.ScriptAddress()[1:33], a.chain)
+	if err != nil {
+		return "", err
+	}
+	return taproot.EncodeAddress(), nil
+}
+
 // LegacyAddress P2PKH just for m/44'/
 func (a *Account) LegacyAddress() (string, error) {
 	return a.address.AddressPubKeyHash().EncodeAddress(), nil
@@ -174,6 +177,10 @@ func (a *Account) PublicKey() []byte {
 // @return publicKey string that will start with 0x.
 func (a *Account) PublicKeyHex() string {
 	return types.HexEncodeToString(a.address.ScriptAddress())
+}
+
+func (a *Account) MultiSignaturePubKey() string {
+	return types.HexEncodeToString(a.address.PubKey().SerializeUncompressed())
 }
 
 // @return default is the mainnet address
