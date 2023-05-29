@@ -59,8 +59,11 @@ func AccountWithPrivateKey(prikey string, chainnet string) (*Account, error) {
 	var (
 		pri     *btcec.PrivateKey
 		pubData []byte
-		chain   *chaincfg.Params
 	)
+	chain, err := netParamsOf(chainnet)
+	if err != nil {
+		return nil, err
+	}
 	wif, err := btcutil.DecodeWIF(prikey)
 	if err != nil {
 		seed, err := types.HexDecodeString(prikey)
@@ -69,20 +72,12 @@ func AccountWithPrivateKey(prikey string, chainnet string) (*Account, error) {
 		}
 		var pub *btcec.PublicKey
 		pri, pub = btcec.PrivKeyFromBytes(seed)
-		chain, err = netParamsOf(chainnet)
-		if err != nil {
-			return nil, err
-		}
 		pubData = pub.SerializeCompressed()
 	} else {
-		pri = wif.PrivKey
-		if wif.IsForNet(&chaincfg.SigNetParams) {
-			chain = &chaincfg.SigNetParams
-		} else if wif.IsForNet(&chaincfg.MainNetParams) {
-			chain = &chaincfg.MainNetParams
-		} else {
-			return nil, ErrUnsupportedChain
+		if !wif.IsForNet(chain) {
+			return nil, fmt.Errorf("the specified chainnet does not match the wif private key")
 		}
+		pri = wif.PrivKey
 		pubData = wif.SerializePubKey()
 	}
 

@@ -251,7 +251,7 @@ func TestAccountWithPrivatekey(t *testing.T) {
 
 func TestAccountP2WPKHAddress(t *testing.T) {
 	//Native Segwit(P2WPKH)
-	account, err := AccountWithPrivateKey("cPLpgDV8njCYGWCrXtvfSXo8fBkiCuoDjXfYbawNNaQkF3RyT2Km", "")
+	account, err := AccountWithPrivateKey("cPLpgDV8njCYGWCrXtvfSXo8fBkiCuoDjXfYbawNNaQkF3RyT2Km", ChainSignet)
 	require.NoError(t, err)
 	wantAddress := "tb1qcal96xxt64xtl0hp55erejn4awnmyx9c88nnmh"
 	address, err := account.NativeSegwitAddress()
@@ -261,7 +261,7 @@ func TestAccountP2WPKHAddress(t *testing.T) {
 
 func TestAddressP2SH_P2WPKH(t *testing.T) {
 	//Nested Segwit(P2SH-P2WPKH)
-	account, err := AccountWithPrivateKey("cMkXm38MtiLpeorUNtmMt5rrvfUZXkmyYtEtirEFsLFGVmWRThWq", "")
+	account, err := AccountWithPrivateKey("cMkXm38MtiLpeorUNtmMt5rrvfUZXkmyYtEtirEFsLFGVmWRThWq", ChainSignet)
 	require.NoError(t, err)
 	wantAddress := "2N489AZCJpazr2xLEygsGwUKbxixvUZaV6P"
 	address, err := account.NestedSegwitAddress()
@@ -271,7 +271,7 @@ func TestAddressP2SH_P2WPKH(t *testing.T) {
 
 func TestAddressP2TR(t *testing.T) {
 	//Taproot (P2TR)
-	account, err := AccountWithPrivateKey("cSyGeGDKpaw6Y6vqJMDzVaN73YYZT64koA2JBuiifckAnhGS6SHZ", "")
+	account, err := AccountWithPrivateKey("cSyGeGDKpaw6Y6vqJMDzVaN73YYZT64koA2JBuiifckAnhGS6SHZ", ChainSignet)
 	require.NoError(t, err)
 	wantAddress := "tb1pdq423fm5dv00sl2uckmcve8y3w7guev8ka6qfweljlu23mmsw63qk6w2v3"
 	address, err := account.TaprootAddress()
@@ -281,7 +281,7 @@ func TestAddressP2TR(t *testing.T) {
 
 func TestP2PKH(t *testing.T) {
 	//Legacy (P2PKH)
-	account, err := AccountWithPrivateKey("cTkZaPpb1pDdor36V5VY4uu5LE6tgzrjRADvrEXimEqWqvwRbfXY", "")
+	account, err := AccountWithPrivateKey("cTkZaPpb1pDdor36V5VY4uu5LE6tgzrjRADvrEXimEqWqvwRbfXY", ChainSignet)
 	require.NoError(t, err)
 	wantAddress := "mxZX45K9oFMdJBpJXSVieMT3Wof3sCWUB6"
 	address, err := account.LegacyAddress()
