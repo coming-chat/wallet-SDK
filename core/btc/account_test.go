@@ -76,7 +76,7 @@ func TestNewAccountWithMnemonic(t *testing.T) {
 				return
 			}
 			address, err := got.TaprootAddress()
-			if (err == nil) && address != tt.wantAddress {
+			if (err == nil) && address.Value != tt.wantAddress {
 				t.Errorf("NewAccountWithMnemonic() got = %v, want %v", got.address, tt.wantAddress)
 			}
 		})
@@ -106,7 +106,7 @@ func TestAccount_DeriveAccountAt(t *testing.T) {
 				return
 			}
 			address, err := got.TaprootAddress()
-			if (err == nil) && address != tt.wantAddress {
+			if (err == nil) && address.Value != tt.wantAddress {
 				t.Errorf("DeriveAccountAt() got = %v, want %v", got.address, tt.wantAddress)
 			}
 		})
@@ -256,7 +256,7 @@ func TestAccountP2WPKHAddress(t *testing.T) {
 	wantAddress := "tb1qcal96xxt64xtl0hp55erejn4awnmyx9c88nnmh"
 	address, err := account.NativeSegwitAddress()
 	require.NoError(t, err)
-	require.Equal(t, wantAddress, address)
+	require.Equal(t, wantAddress, address.Value)
 }
 
 func TestAddressP2SH_P2WPKH(t *testing.T) {
@@ -266,7 +266,7 @@ func TestAddressP2SH_P2WPKH(t *testing.T) {
 	wantAddress := "2N489AZCJpazr2xLEygsGwUKbxixvUZaV6P"
 	address, err := account.NestedSegwitAddress()
 	require.NoError(t, err)
-	require.Equal(t, wantAddress, address)
+	require.Equal(t, wantAddress, address.Value)
 }
 
 func TestAddressP2TR(t *testing.T) {
@@ -276,7 +276,7 @@ func TestAddressP2TR(t *testing.T) {
 	wantAddress := "tb1pdq423fm5dv00sl2uckmcve8y3w7guev8ka6qfweljlu23mmsw63qk6w2v3"
 	address, err := account.TaprootAddress()
 	require.NoError(t, err)
-	require.Equal(t, wantAddress, address)
+	require.Equal(t, wantAddress, address.Value)
 }
 
 func TestP2PKH(t *testing.T) {
@@ -286,5 +286,5 @@ func TestP2PKH(t *testing.T) {
 	wantAddress := "mxZX45K9oFMdJBpJXSVieMT3Wof3sCWUB6"
 	address, err := account.LegacyAddress()
 	require.NoError(t, err)
-	require.Equal(t, wantAddress, address)
+	require.Equal(t, wantAddress, address.Value)
 }

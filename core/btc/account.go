@@ -84,54 +84,54 @@ func AccountWithPrivateKey(prikey string, chainnet string) (*Account, error) {
 }
 
 // NativeSegwitAddress P2WPKH just for m/84'/
-func (a *Account) NativeSegwitAddress() (string, error) {
+func (a *Account) NativeSegwitAddress() (*base.OptionalString, error) {
 	address, err := btcutil.NewAddressWitnessPubKeyHash(a.address.AddressPubKeyHash().ScriptAddress(), a.chain)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return address.EncodeAddress(), nil
+	return &base.OptionalString{Value: address.EncodeAddress()}, nil
 }
 
 // NestedSegwitAddress P2SH-P2WPKH just for m/49'/
-func (a *Account) NestedSegwitAddress() (string, error) {
+func (a *Account) NestedSegwitAddress() (*base.OptionalString, error) {
 	witAddr, err := btcutil.NewAddressWitnessPubKeyHash(a.address.AddressPubKeyHash().ScriptAddress(), a.chain)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	witnessProgram, err := txscript.PayToAddrScript(witAddr)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	address, err := btcutil.NewAddressScriptHash(witnessProgram, a.chain)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return address.EncodeAddress(), nil
+	return &base.OptionalString{Value: address.EncodeAddress()}, nil
 }
 
 // TaprootAddress P2TR just for m/86'/
-func (a *Account) TaprootAddress() (string, error) {
+func (a *Account) TaprootAddress() (*base.OptionalString, error) {
 	tapKey := txscript.ComputeTaprootKeyNoScript(a.address.PubKey())
 	address, err := btcutil.NewAddressTaproot(
 		schnorr.SerializePubKey(tapKey), a.chain,
 	)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return address.EncodeAddress(), nil
+	return &base.OptionalString{Value: address.EncodeAddress()}, nil
 }
 
-func (a *Account) ComingTaprootAddress() (string, error) {
+func (a *Account) ComingTaprootAddress() (*base.OptionalString, error) {
 	taproot, err := btcutil.NewAddressTaproot(a.address.ScriptAddress()[1:33], a.chain)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return taproot.EncodeAddress(), nil
+	return &base.OptionalString{Value: taproot.EncodeAddress()}, nil
 }
 
 // LegacyAddress P2PKH just for m/44'/
-func (a *Account) LegacyAddress() (string, error) {
-	return a.address.AddressPubKeyHash().EncodeAddress(), nil
+func (a *Account) LegacyAddress() (*base.OptionalString, error) {
+	return &base.OptionalString{Value: a.address.AddressPubKeyHash().EncodeAddress()}, nil
 }
 
 func (a *Account) DeriveAccountAt(chainnet string) (*Account, error) {
