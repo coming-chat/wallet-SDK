@@ -9,9 +9,46 @@ import (
 	"strings"
 
 	"github.com/coming-chat/wallet-SDK/core/base"
+	"github.com/coming-chat/wallet-SDK/core/base/inter"
 	"github.com/coming-chat/wallet-SDK/pkg/httpUtil"
 )
 
+type StringMap struct {
+	inter.AnyMap[string]
+}
+
+func NewStringMap() *StringMap {
+	return &StringMap{inter.AnyMap[string]{Values: map[string]string{}}}
+}
+
+// BatchQueryBalance
+// @return If any address is successfully queried, it will return normally, and the amount of failed request is 0
+// @throw error if all address query balance failed
+func BatchQueryBalance(addresses *base.StringArray, chainnet string) (*StringMap, error) {
+	var (
+		res     = NewStringMap()
+		success = false
+		anyErr  error
+	)
+	base.MapListConcurrentStringToString(addresses.Values, func(address string) (string, error) {
+		balance, err := queryBalance(address, chainnet)
+		if err != nil {
+			anyErr = err
+			res.SetValue("0", address)
+		} else {
+			success = true
+			res.SetValue(balance, address)
+		}
+		return "", nil
+	})
+	if success {
+		return res, nil
+	} else {
+		return nil, anyErr
+	}
+}
+
+// queryBalance
 // query the balance according to the address.
 func queryBalance(address, chainnet string) (string, error) {
 	host, err := scanHostOf(chainnet)
@@ -28,6 +65,7 @@ func queryBalance(address, chainnet string) (string, error) {
 	return parseBalanceResponse(response)
 }
 
+// queryBalancePubkey
 // query the balance according to the public key.
 func queryBalancePubkey(pubkey, chainnet string) (string, error) {
 	pubkey = strings.TrimPrefix(pubkey, "0x")

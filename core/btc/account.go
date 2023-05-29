@@ -161,11 +161,13 @@ func (a *Account) DeriveAccountAt(chainnet string) (*Account, error) {
 
 func (a *Account) AddressTypeString() string {
 	switch a.AddressType {
+	case AddressTypeComingTaproot:
+		return "Coming Taproot"
 	case AddressTypeNativeSegwit:
 		return "Native Segwit (P2WPKH)"
 	case AddressTypeNestedSegwit:
 		return "Nested Segwit (P2SH-P2WPKH)"
-	case AddressTypeTaproot, AddressTypeComingTaproot:
+	case AddressTypeTaproot:
 		return "Taproot (P2TR)"
 	case AddressTypeLegacy:
 		return "Legacy (P2PKH)"
