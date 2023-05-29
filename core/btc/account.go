@@ -1,7 +1,8 @@
 package btc
 
 import (
-	"errors"
+	"fmt"
+
 	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/btcec/v2/schnorr"
 	"github.com/btcsuite/btcd/btcutil"
@@ -12,10 +13,23 @@ import (
 	"github.com/tyler-smith/go-bip39"
 )
 
+type AddressType = base.SDKEnumInt
+
+const (
+	AddressTypeComingTaproot AddressType = 0
+	AddressTypeNativeSegwit  AddressType = 1
+	AddressTypeNestedSegwit  AddressType = 2
+	AddressTypeTaproot       AddressType = 3
+	AddressTypeLegacy        AddressType = 4
+)
+
 type Account struct {
 	privateKey *btcec.PrivateKey
 	address    *btcutil.AddressPubKey
 	chain      *chaincfg.Params
+
+	// Default is `AddressTypeComingTaproot`
+	AddressType AddressType
 }
 
 func NewAccountWithMnemonic(mnemonic, chainnet string) (*Account, error) {
@@ -150,11 +164,49 @@ func (a *Account) DeriveAccountAt(chainnet string) (*Account, error) {
 	}, nil
 }
 
-func (a *Account) AddressType() string {
-	return "Taproot (P2TR)"
+func (a *Account) AddressTypeString() string {
+	switch a.AddressType {
+	case AddressTypeNativeSegwit:
+		return "Native Segwit (P2WPKH)"
+	case AddressTypeNestedSegwit:
+		return "Nested Segwit (P2SH-P2WPKH)"
+	case AddressTypeTaproot, AddressTypeComingTaproot:
+		return "Taproot (P2TR)"
+	case AddressTypeLegacy:
+		return "Legacy (P2PKH)"
+	}
+	return "--"
 }
 func (a *Account) DerivePath() string {
+	switch a.AddressType {
+	case AddressTypeComingTaproot:
+		return "--"
+	case AddressTypeNativeSegwit:
+		return "m/84'/0'/0/0"
+	case AddressTypeNestedSegwit:
+		return "m/49'/0'/0/0"
+	case AddressTypeTaproot:
+		return "m/86'/0'/0/0"
+	case AddressTypeLegacy:
+		return "m/44'/0'/0/0"
+	}
 	return "--"
+}
+
+func (a *Account) AddressWithType(addrType AddressType) (*base.OptionalString, error) {
+	switch a.AddressType {
+	case AddressTypeComingTaproot:
+		return a.ComingTaprootAddress()
+	case AddressTypeNativeSegwit:
+		return a.NativeSegwitAddress()
+	case AddressTypeNestedSegwit:
+		return a.NestedSegwitAddress()
+	case AddressTypeTaproot:
+		return a.TaprootAddress()
+	case AddressTypeLegacy:
+		return a.LegacyAddress()
+	}
+	return nil, fmt.Errorf("unknow address type `%v`", addrType)
 }
 
 // MARK - Implement the protocol Account
@@ -185,17 +237,21 @@ func (a *Account) MultiSignaturePubKey() string {
 
 // @return default is the mainnet address
 func (a *Account) Address() string {
-	return a.address.EncodeAddress()
+	addr, err := a.AddressWithType(a.AddressType)
+	if err != nil {
+		return "--"
+	}
+	return addr.Value
 }
 
 // TODO: function not implement yet.
 func (a *Account) Sign(message []byte, password string) ([]byte, error) {
-	return nil, errors.New("TODO: function not implement yet.")
+	return nil, base.ErrUnsupportedFunction
 }
 
 // TODO: function not implement yet.
 func (a *Account) SignHex(messageHex string, password string) (*base.OptionalString, error) {
-	return nil, errors.New("TODO: function not implement yet.")
+	return nil, base.ErrUnsupportedFunction
 }
 
 // MARK - Implement the protocol AddressUtil
