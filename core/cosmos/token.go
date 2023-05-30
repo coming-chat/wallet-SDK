@@ -3,6 +3,8 @@ package cosmos
 import (
 	"context"
 	"errors"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	"math/big"
 	"strconv"
 
@@ -11,7 +13,6 @@ import (
 	clientTx "github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -122,8 +123,9 @@ func (t *Token) buildTransferTx(privateKey types.PrivKey, receiverAddress, gasPr
 	latestHeight := blockInfo.Block.Height
 
 	// Create a new TxBuilder.
-	encCfg := simapp.MakeTestEncodingConfig()
-	txBuilder := encCfg.TxConfig.NewTxBuilder()
+	cdc := codec.NewLegacyAmino()
+	txConfig := legacytx.StdTxConfig{Cdc: cdc}
+	txBuilder := txConfig.NewTxBuilder()
 	msg1 := &banktypes.MsgSend{
 		FromAddress: addressString,
 		ToAddress:   receiverAddress,
@@ -142,7 +144,7 @@ func (t *Token) buildTransferTx(privateKey types.PrivKey, receiverAddress, gasPr
 	sigV2 := signing.SignatureV2{
 		PubKey: privateKey.PubKey(),
 		Data: &signing.SingleSignatureData{
-			SignMode:  encCfg.TxConfig.SignModeHandler().DefaultMode(),
+			SignMode:  txConfig.SignModeHandler().DefaultMode(),
 			Signature: nil,
 		},
 		Sequence: sequence,
@@ -158,8 +160,8 @@ func (t *Token) buildTransferTx(privateKey types.PrivKey, receiverAddress, gasPr
 		Sequence:      sequence,
 	}
 	sigV2, err = clientTx.SignWithPrivKey(
-		encCfg.TxConfig.SignModeHandler().DefaultMode(), signerData,
-		txBuilder, privateKey, encCfg.TxConfig, sequence)
+		txConfig.SignModeHandler().DefaultMode(), signerData,
+		txBuilder, privateKey, txConfig, sequence)
 	if err != nil {
 		return
 	}
@@ -168,7 +170,7 @@ func (t *Token) buildTransferTx(privateKey types.PrivKey, receiverAddress, gasPr
 		return
 	}
 
-	txBytes, err := encCfg.TxConfig.TxEncoder()(txBuilder.GetTx())
+	txBytes, err := txConfig.TxEncoder()(txBuilder.GetTx())
 	if err != nil {
 		return
 	}

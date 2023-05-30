@@ -4,22 +4,23 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	coretypes "github.com/cometbft/cometbft/rpc/core/types"
+	"github.com/cosmos/cosmos-sdk/client"
 	"strconv"
 	"strings"
 
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
+	"github.com/cometbft/cometbft/rpc/client/http"
 	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	bankTypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	tendermintHttp "github.com/tendermint/tendermint/rpc/client/http"
-	tendermintTypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
 type Chain struct {
 	RpcUrl  string
 	RestUrl string
 
-	client *tendermintHttp.HTTP
+	client *http.HTTP
 }
 
 func NewChainWithRpc(rpcUrl string, restUrl string) *Chain {
@@ -56,7 +57,7 @@ func (c *Chain) BalanceOfAccount(account base.Account) (*base.Balance, error) {
 // Send the raw transaction on-chain
 // @return the hex hash string
 func (c *Chain) SendRawTransaction(signedTx string) (string, error) {
-	client, err := c.GetClient()
+	cosmosClient, err := c.GetClient()
 	if err != nil {
 		return "", err
 	}
@@ -65,7 +66,7 @@ func (c *Chain) SendRawTransaction(signedTx string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	commit, err := client.BroadcastTxSync(context.Background(), txBytes)
+	commit, err := cosmosClient.BroadcastTxSync(context.Background(), txBytes)
 	if err != nil {
 		return "", err
 	}
@@ -133,7 +134,7 @@ func (c *Chain) FetchTransactionStatus(hash string) base.TransactionStatus {
 	}
 }
 
-func (c *Chain) fetchTxResult(hash string) (*tendermintTypes.ResultTx, error) {
+func (c *Chain) fetchTxResult(hash string) (*coretypes.ResultTx, error) {
 	client, err := c.GetClient()
 	if err != nil {
 		return nil, err
@@ -170,14 +171,14 @@ func (c *Chain) EstimateTransactionFeeUsePublicKey(transaction base.Transaction,
 
 // MARK - Client
 
-func (c *Chain) GetClient() (*tendermintHttp.HTTP, error) {
+func (c *Chain) GetClient() (*http.HTTP, error) {
 	if c.client != nil {
 		return c.client, nil
 	}
 
-	client, err := tendermintHttp.New(c.RpcUrl, "/websocket")
+	cosmosClient, err := client.NewClientFromNode(c.RpcUrl)
 	if err == nil {
-		c.client = client
+		c.client = cosmosClient
 	}
-	return client, base.MapAnyToBasicError(err)
+	return cosmosClient, base.MapAnyToBasicError(err)
 }
