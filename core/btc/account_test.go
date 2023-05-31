@@ -313,3 +313,8 @@ func TestPublicKeyTransform(t *testing.T) {
 	pubkey, err = PublicKeyTransform(pubkeyErr, true)
 	require.Error(t, err)
 }
+
+func TestIsValidPrivateKey(t *testing.T) {
+	valid := IsValidPrivateKey("cTkZaPpb1pDdor36V5VY4uu5LE6tgzrjRADvrEXimEqWqvwRbfXY")
+	t.Log(valid)
+}

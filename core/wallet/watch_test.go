@@ -49,3 +49,9 @@ func TestChainTypeOfPrivateKey(t *testing.T) {
 		})
 	}
 }
+
+func TestChainTypeOfPrivateKey_btc(t *testing.T) {
+	prikey := "cTkZaPpb1pDdor36V5VY4uu5LE6tgzrjRADvrEXimEqWqvwRbfXY"
+	typeArr := ChainTypeOfPrivateKey(prikey)
+	t.Log(typeArr.Values)
+}

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"math/big"
 	"strconv"
+	"strings"
 	"sync"
 )
 
@@ -11,14 +12,18 @@ import (
 // @param list: [TYPE1], a list that all item is TYPE1
 // @param limit: maximum number of tasks to execute, 0 means no limit
 // @param maper: func(TYPE1) (TYPE2, error), a function that input TYPE1, return TYPE2
-//                you can throw an error to finish task.
+//
+//	you can throw an error to finish task.
+//
 // @return : [TYPE2], a list that all item is TYPE2
 // @example : ```
-//     nums := []interface{}{1, 2, 3, 4, 5, 6}
-//     res, _ := MapListConcurrent(nums, func(i interface{}) (interface{}, error) {
-//         return strconv.Itoa(i.(int) * 100), nil
-//     })
-//     println(res) // ["100" "200" "300" "400" "500" "600"]
+//
+//	nums := []interface{}{1, 2, 3, 4, 5, 6}
+//	res, _ := MapListConcurrent(nums, func(i interface{}) (interface{}, error) {
+//	    return strconv.Itoa(i.(int) * 100), nil
+//	})
+//	println(res) // ["100" "200" "300" "400" "500" "600"]
+//
 // ```
 func MapListConcurrent(list []interface{}, limit int, maper func(interface{}) (interface{}, error)) ([]interface{}, error) {
 	thread := 0
@@ -160,4 +165,18 @@ func MapAnyToBasicError(e any) error {
 	}
 
 	return errors.New("panic error: unexpected error.")
+}
+
+// IsValidHexString
+func IsValidHexString(str string) (valid bool, length int) {
+	if strings.HasPrefix(str, "0x") || strings.HasPrefix(str, "0X") {
+		str = str[2:] // remove 0x prefix
+	}
+	for _, ch := range []byte(str) {
+		valid := (ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'f') || (ch >= 'A' && ch <= 'F')
+		if !valid {
+			return false, 0
+		}
+	}
+	return true, len(str)
 }

@@ -87,31 +87,27 @@ func ChainTypeOfWatchAddress(address string) *base.StringArray {
 
 func ChainTypeOfPrivateKey(prikey string) *base.StringArray {
 	res := &base.StringArray{}
-	if strings.HasPrefix(prikey, "0x") || strings.HasPrefix(prikey, "0X") {
-		prikey = prikey[2:] // remote 0x prefix
-	}
-	for _, ch := range []byte(prikey) {
-		valid := (ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'f') || (ch >= 'A' && ch <= 'F')
-		if !valid {
-			return res
+	isValid, length := base.IsValidHexString(prikey)
+	if isValid {
+		if length == 64 {
+			res.Append(ChainTypeBitcoin)
+			res.Append(ChainTypeEthereum)
+			res.Append(ChainTypePolka)
+			res.Append(ChainTypeSignet)
+			res.Append(ChainTypeDoge)
+			res.Append(ChainTypeCosmos)
+			res.Append(ChainTypeTerra)
+			res.Append(ChainTypeAptos)
+			res.Append(ChainTypeSui)
+			res.Append(ChainTypeStarcoin)
 		}
-	}
-	switch len(prikey) {
-	case 64:
-		res.Append(ChainTypeBitcoin)
-		res.Append(ChainTypeEthereum)
-		res.Append(ChainTypePolka)
-		res.Append(ChainTypeSignet)
-		res.Append(ChainTypeDoge)
-		res.Append(ChainTypeCosmos)
-		res.Append(ChainTypeTerra)
-		res.Append(ChainTypeAptos)
-		res.Append(ChainTypeSui)
-		res.Append(ChainTypeStarcoin)
-	case 128:
-		res.Append(ChainTypeSolana)
-	default:
-		break
+		if length == 128 {
+			res.Append(ChainTypeSolana)
+		}
+	} else {
+		if btc.IsValidPrivateKey(prikey) {
+			res.Append(ChainTypeBitcoin)
+		}
 	}
 	return res
 }

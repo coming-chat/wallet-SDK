@@ -1,8 +1,11 @@
 package btc
 
 import (
+	"strings"
+
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
+	"github.com/coming-chat/wallet-SDK/core/base"
 )
 
 type Util struct {
@@ -77,4 +80,16 @@ func IsValidAddress(address, chainnet string) bool {
 		return false
 	}
 	return true
+}
+
+func IsValidPrivateKey(prikey string) bool {
+	if strings.HasPrefix(prikey, "0x") || strings.HasPrefix(prikey, "0X") {
+		prikey = prikey[2:] // remove 0x prefix
+	}
+	valid, length := base.IsValidHexString(prikey)
+	if valid && length == 64 {
+		return true
+	}
+	_, err := btcutil.DecodeWIF(prikey)
+	return err == nil
 }
