@@ -25,7 +25,7 @@ func TestCache(t *testing.T) {
 		require.Nil(t, err)
 		require.Equal(t, ethereumAddress.Value, testcase.Accounts.Ethereum.Address)
 
-		bitcoinAddress, err := wallet.BitcoinAccountInfo("mainnet").Address()
+		bitcoinAddress, err := wallet.BitcoinAccountInfo("mainnet", 0).Address()
 		require.Nil(t, err)
 		require.Equal(t, bitcoinAddress.Value, testcase.Accounts.BtcMainnet.Address)
 
@@ -69,7 +69,7 @@ func TestCache(t *testing.T) {
 		require.Nil(t, err)
 		require.Equal(t, polkaAddress.Value, watchWallet.watchAddress)
 
-		bitcoinAddress, err := wallet.BitcoinAccountInfo("mainnet").Address()
+		bitcoinAddress, err := wallet.BitcoinAccountInfo("mainnet", 0).Address()
 		require.Nil(t, err)
 		require.Equal(t, bitcoinAddress.Value, watchWallet.watchAddress)
 	}
