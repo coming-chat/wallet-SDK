@@ -274,3 +274,26 @@ func AsBitcoinAccount(account base.Account) *Account {
 		return nil
 	}
 }
+
+// PublicKeyTransform
+// @param pubkey the original public key, can be uncompressed, compressed, or hybrid
+// @param compress the transformed public key should be compressed or not
+func PublicKeyTransform(pubkey string, compress bool) (string, error) {
+	pubData, err := types.HexDecodeString(pubkey)
+	if err != nil {
+		return "", err
+	}
+	btcPubkey, err := btcutil.NewAddressPubKey(pubData, &chaincfg.MainNetParams)
+	if err != nil {
+		return "", err
+	}
+	isCompressed := btcPubkey.Format() == btcutil.PKFCompressed
+	if isCompressed == compress {
+		return types.HexEncodeToString(pubData), nil
+	}
+	if compress {
+		return types.HexEncodeToString(btcPubkey.PubKey().SerializeCompressed()), nil
+	} else {
+		return types.HexEncodeToString(btcPubkey.PubKey().SerializeUncompressed()), nil
+	}
+}

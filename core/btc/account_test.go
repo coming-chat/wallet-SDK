@@ -288,3 +288,28 @@ func TestP2PKH(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, wantAddress, address.Value)
 }
+
+func TestPublicKeyTransform(t *testing.T) {
+	pubkeyCompressed := "0x02cfb7f626025d6826253f8fc5858e7a5c4b853350b4385ae909cf66138b71ec77"
+	pubkeyUncompressed := "0x04cfb7f626025d6826253f8fc5858e7a5c4b853350b4385ae909cf66138b71ec772bac329b29f6eca2e1d25170a346c041e3dca5ebd68a91ac36cc53cd3be4908c"
+
+	var pubkey string
+	var err error
+
+	pubkey, err = PublicKeyTransform(pubkeyCompressed, true)
+	require.NoError(t, err)
+	require.Equal(t, pubkey, pubkeyCompressed)
+	pubkey, err = PublicKeyTransform(pubkeyCompressed, false)
+	require.NoError(t, err)
+	require.Equal(t, pubkey, pubkeyUncompressed)
+	pubkey, err = PublicKeyTransform(pubkeyUncompressed, true)
+	require.NoError(t, err)
+	require.Equal(t, pubkey, pubkeyCompressed)
+	pubkey, err = PublicKeyTransform(pubkeyUncompressed, false)
+	require.NoError(t, err)
+	require.Equal(t, pubkey, pubkeyUncompressed)
+
+	pubkeyErr := "0x02cfb7f626025d6826253f8fc5858e7a5c4b853350b4385ae909cf66138b71ec71"
+	pubkey, err = PublicKeyTransform(pubkeyErr, true)
+	require.Error(t, err)
+}
