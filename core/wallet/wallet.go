@@ -104,7 +104,7 @@ func (w *Wallet) GetOrCreatePolkaAccount(network int) (*polka.Account, error) {
 }
 
 // Get or create the bitcoin account with specified chainnet.
-func (w *Wallet) GetOrCreateBitcoinAccount(chainnet string) (*btc.Account, error) {
+func (w *Wallet) GetOrCreateBitcoinAccount(chainnet string, addressType btc.AddressType) (*btc.Account, error) {
 	key := "bitcoin-" + chainnet
 	if cache, ok := w.multiAccounts.Load(key); ok {
 		if acc, ok := cache.(*btc.Account); ok {
@@ -119,6 +119,7 @@ func (w *Wallet) GetOrCreateBitcoinAccount(chainnet string) (*btc.Account, error
 	if err != nil {
 		return nil, err
 	}
+	account.AddressType = addressType
 
 	// save to cache
 	w.multiAccounts.Store(key, account)

@@ -37,12 +37,12 @@ func TestAccounts(t *testing.T) {
 	require.Equal(t, account.Address(), "0x4be5b6c8657dAe87031B6fF1906A08953d4204E5")
 
 	t.Log("Bitcoin")
-	account, _ = wal.GetOrCreateBitcoinAccount("mainnet")
+	account, _ = wal.GetOrCreateBitcoinAccount("mainnet", 0)
 	showAccount(t, account)
 	require.Equal(t, account.Address(), "bc1p5s8866n4h959679ylqdpkhcthld6y6dhp0phru5eaqpwxnfdxnaqp9g9jl")
 
 	t.Log("Bitcoin signet")
-	account, _ = wal.GetOrCreateBitcoinAccount("signet")
+	account, _ = wal.GetOrCreateBitcoinAccount("signet", 0)
 	showAccount(t, account)
 	require.Equal(t, account.Address(), "tb1p5s8866n4h959679ylqdpkhcthld6y6dhp0phru5eaqpwxnfdxnaqkd72gs")
 
