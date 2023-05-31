@@ -3,6 +3,8 @@ package wallet
 import (
 	"strings"
 
+	"github.com/btcsuite/btcd/btcutil"
+	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/coming-chat/wallet-SDK/core/aptos"
 	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/coming-chat/wallet-SDK/core/base/inter"
@@ -106,8 +108,16 @@ func ChainTypeOfPrivateKey(prikey string) *base.StringArray {
 			res.Append(ChainTypeSolana)
 		}
 	} else {
-		if btc.IsValidPrivateKey(prikey) {
-			res.Append(ChainTypeBitcoin)
+		if strings.HasPrefix(prikey, "0x") || strings.HasPrefix(prikey, "0X") {
+			prikey = prikey[2:] // remove 0x prefix
+		}
+		wif, err := btcutil.DecodeWIF(prikey)
+		if err == nil {
+			if wif.IsForNet(&chaincfg.MainNetParams) {
+				res.Append(ChainTypeBitcoin)
+			} else {
+				res.Append(ChainTypeSignet)
+			}
 		}
 	}
 	return res
