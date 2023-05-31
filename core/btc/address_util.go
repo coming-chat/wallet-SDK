@@ -5,7 +5,7 @@ import (
 
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
-	"github.com/coming-chat/wallet-SDK/core/base"
+	"github.com/coming-chat/wallet-SDK/core/base/inter"
 )
 
 type Util struct {
@@ -86,7 +86,7 @@ func IsValidPrivateKey(prikey string) bool {
 	if strings.HasPrefix(prikey, "0x") || strings.HasPrefix(prikey, "0X") {
 		prikey = prikey[2:] // remove 0x prefix
 	}
-	valid, length := base.IsValidHexString(prikey)
+	valid, length := inter.IsValidHexString(prikey)
 	if valid && length == 64 {
 		return true
 	}

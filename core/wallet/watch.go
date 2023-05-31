@@ -5,6 +5,7 @@ import (
 
 	"github.com/coming-chat/wallet-SDK/core/aptos"
 	"github.com/coming-chat/wallet-SDK/core/base"
+	"github.com/coming-chat/wallet-SDK/core/base/inter"
 	"github.com/coming-chat/wallet-SDK/core/btc"
 	"github.com/coming-chat/wallet-SDK/core/cosmos"
 	"github.com/coming-chat/wallet-SDK/core/doge"
@@ -87,7 +88,7 @@ func ChainTypeOfWatchAddress(address string) *base.StringArray {
 
 func ChainTypeOfPrivateKey(prikey string) *base.StringArray {
 	res := &base.StringArray{}
-	isValid, length := base.IsValidHexString(prikey)
+	isValid, length := inter.IsValidHexString(prikey)
 	if isValid {
 		if length == 64 {
 			res.Append(ChainTypeBitcoin)
