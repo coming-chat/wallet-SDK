@@ -16,7 +16,7 @@ func sendRawTransaction(signedTx, chainnet string) (string, error) {
 		return "", err
 	}
 
-	tx, err := decodeTx(signedTx)
+	tx, err := DecodeTx(signedTx)
 	if err != nil {
 		return "", err
 	}
@@ -29,7 +29,7 @@ func sendRawTransaction(signedTx, chainnet string) (string, error) {
 	return hash.String(), nil
 }
 
-func decodeTx(txHex string) (*wire.MsgTx, error) {
+func DecodeTx(txHex string) (*wire.MsgTx, error) {
 	tx := wire.NewMsgTx(wire.TxVersion)
 	raw, err := hex.DecodeString(txHex)
 	if err != nil {
