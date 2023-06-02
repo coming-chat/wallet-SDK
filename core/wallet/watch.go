@@ -10,7 +10,6 @@ import (
 	"github.com/coming-chat/wallet-SDK/core/base/inter"
 	"github.com/coming-chat/wallet-SDK/core/btc"
 	"github.com/coming-chat/wallet-SDK/core/cosmos"
-	"github.com/coming-chat/wallet-SDK/core/doge"
 	"github.com/coming-chat/wallet-SDK/core/eth"
 	"github.com/coming-chat/wallet-SDK/core/polka"
 	"github.com/coming-chat/wallet-SDK/core/solana"
@@ -69,12 +68,12 @@ func ChainTypeOfWatchAddress(address string) *base.StringArray {
 		if btc.IsValidAddress(address, btc.ChainMainnet) {
 			res.Append(ChainTypeBitcoin)
 		}
-		if btc.IsValidAddress(address, btc.ChainSignet) {
-			res.Append(ChainTypeSignet)
-		}
-		if doge.IsValidAddress(address, doge.ChainMainnet) {
-			res.Append(ChainTypeDoge)
-		}
+		// if btc.IsValidAddress(address, btc.ChainSignet) {
+		// 	res.Append(ChainTypeSignet)
+		// }
+		// if doge.IsValidAddress(address, doge.ChainMainnet) {
+		// 	res.Append(ChainTypeDoge)
+		// }
 		if cosmos.IsValidAddress(address, cosmos.CosmosPrefix) {
 			res.Append(ChainTypeCosmos)
 		}
