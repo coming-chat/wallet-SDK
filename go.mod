@@ -7,6 +7,7 @@ require (
 	github.com/btcsuite/btcd v0.23.4
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2
 	github.com/btcsuite/btcd/btcutil v1.1.2
+	github.com/btcsuite/btcd/btcutil/psbt v1.1.8
 	github.com/btcsuite/btcd/chaincfg/chainhash v1.0.1
 	github.com/centrifuge/go-substrate-rpc-client/v4 v4.0.0
 	github.com/cometbft/cometbft v0.37.1
