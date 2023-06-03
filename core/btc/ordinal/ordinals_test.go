@@ -1,4 +1,4 @@
-package btc
+package ordinal
 
 import (
 	"encoding/hex"

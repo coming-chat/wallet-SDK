@@ -1,6 +1,14 @@
 package btc
 
 import (
+	"bytes"
+	"encoding/hex"
+	"github.com/btcsuite/btcd/btcutil/psbt"
+	"github.com/btcsuite/btcd/chaincfg"
+	"github.com/btcsuite/btcd/chaincfg/chainhash"
+	"github.com/btcsuite/btcd/rpcclient"
+	"github.com/btcsuite/btcd/txscript"
+	"github.com/stretchr/testify/require"
 	"strings"
 	"testing"
 
@@ -169,4 +177,55 @@ func TestSendRawTransaction(t *testing.T) {
 		t.Fatal("send raw transaction error: ", err)
 	}
 	t.Log("send raw transaction success: ", hashString)
+}
+
+func TestBtcClient(t *testing.T) {
+	c, err := rpcclient.New(&rpcclient.ConnConfig{
+		Host:         "k8s-chainpro-bitcoint-b4cc02de2a-782f891c88532615.elb.us-east-2.amazonaws.com:18332",
+		User:         "auth",
+		Pass:         "bitcoin-b2dd077",
+		DisableTLS:   true,
+		HTTPPostMode: true,
+	}, nil)
+	require.NoError(t, err)
+	info, err := c.GetBlockChainInfo()
+	require.NoError(t, err)
+	t.Log(info)
+	hash := chainhash.Hash{}
+	err = chainhash.Decode(&hash, "86398781cc7cdc5e736b88984d43eb41e70179dd8f7c5a2639012f40af7704a9")
+	require.NoError(t, err)
+	transaction, err := c.GetRawTransaction(&hash)
+	require.NoError(t, err)
+	t.Log(transaction)
+	require.NoError(t, err)
+	b := bytes.NewBuffer([]byte{})
+	err = transaction.MsgTx().Serialize(b)
+	require.NoError(t, err)
+	t.Logf("%x", b.Bytes())
+	psbtPackge, err := hex.DecodeString("70736274ff01007d0100000001026daad8c0c609877bc93d71494444038b7e5f5b7e9b063208220ccba27b2abe0000000000fdffffff0284660000000000002251200f46df23ae8a7725afd1b3f68699ea605c881ec606f6d75f5866af3dee8400233d41190000000000160014d31f560e89a32a2252544ed8e2878c234122b748000000000001011f0dbf190000000000160014d31f560e89a32a2252544ed8e2878c234122b74801086c02483045022100849d91c702cbf19c63a5d2ca9eb1c6cb0175c1e215fecdcc6136794a88cf52f5022078cb31b0f2170c21b4f85e3a0453949d718885e9249ab4b789d350e194b5c8d50121031bed49dd1a78ed1ff5cffef83d79d6936fc50624cc73d99da6c766297342b52f000000")
+	require.NoError(t, err)
+	psbtPack, err := psbt.NewFromRawBytes(bytes.NewReader(psbtPackge), false)
+	require.NoError(t, err)
+	extract, err := psbt.Extract(psbtPack)
+	b1 := bytes.NewBuffer([]byte{})
+	err = extract.Serialize(b1)
+	require.NoError(t, err)
+	require.Equal(t, b1.Bytes(), b.Bytes())
+	rv1, err := DecodeTx("")
+	require.NoError(t, err)
+	rv2, err := DecodeTx("010000000001013622e96374e1ff2e1ef1a0ccb2d7237bba4ffb83ca556668d9989f91fd38b7c50100000000fdffffff022202000000000000160014d31f560e89a32a2252544ed8e2878c234122b748c6180000000000002251200f46df23ae8a7725afd1b3f68699ea605c881ec606f6d75f5866af3dee84002303402afe6303364ccd9dcd2d1e7d35f8652f27b09482deb4c670c16a4feef614c25fbbfc75bdad2e7ad9e08581a68405579f48e651f8bd052e4e7ebf8bed9566b42776208651980c1703275f50edf7e024e8ec5acffe21003250704dfe8cfa07333ea545ac0063036f7264010118746578742f706c61696e3b636861727365743d7574662d3800307b2270223a226272632d3230222c226f70223a226d696e74222c227469636b223a2232323232222c22616d74223a317d6821c08651980c1703275f50edf7e024e8ec5acffe21003250704dfe8cfa07333ea54500000000")
+	require.NoError(t, err)
+	rv3, err := DecodeTx("0100000000010101bb7ac806b1a480cc60831d102e9fe51e68419ea6eb06826566d8c98e48670c0100000000fdffffff012202000000000000160014d31f560e89a32a2252544ed8e2878c234122b748034069bffa1de44309fcd657ce9ecfc61742b657cffaa07a477af17ff196a5fce68a16c35c8738d01c1cf5e64f082338bef54d3367f7cf93ad443604723ce7b88d7976208651980c1703275f50edf7e024e8ec5acffe21003250704dfe8cfa07333ea545ac0063036f7264010118746578742f706c61696e3b636861727365743d7574662d3800307b2270223a226272632d3230222c226f70223a226d696e74222c227469636b223a2232323232222c22616d74223a317d6821c08651980c1703275f50edf7e024e8ec5acffe21003250704dfe8cfa07333ea54500000000")
+	require.NoError(t, err)
+	t.Log(rv1.TxHash().String())
+	t.Logf("%x", rv1.TxIn[0].Witness[1])
+	_, addrs, _, err := txscript.ExtractPkScriptAddrs(rv1.TxOut[0].PkScript, &chaincfg.SigNetParams)
+	require.NoError(t, err)
+	//txscript.ExtractWitnessProgramInfo()
+	t.Log(addrs)
+	//_, info, err := txscript.ExtractWitnessProgramInfo(rv1.TxIn[0].Witness[1])
+	//require.NoError(t, err)
+	//t.Log(info)
+	t.Log(rv2.TxHash().String())
+	t.Log(rv3.TxHash().String())
 }
