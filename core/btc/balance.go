@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/coming-chat/wallet-SDK/core/base/inter"
@@ -25,23 +26,35 @@ func NewStringMap() *StringMap {
 // @return If any address is successfully queried, it will return normally, and the amount of failed request is 0
 // @throw error if all address query balance failed
 func BatchQueryBalance(addresses *base.StringArray, chainnet string) (*StringMap, error) {
+	if addresses == nil {
+		return NewStringMap(), nil
+	}
 	var (
-		res     = NewStringMap()
-		success = false
-		anyErr  error
+		balanceMap sync.Map
+		success    = false
+		anyErr     error
 	)
 	base.MapListConcurrentStringToString(addresses.Values, func(address string) (string, error) {
 		balance, err := queryBalance(address, chainnet)
 		if err != nil {
 			anyErr = err
-			res.SetValue("0", address)
+			balanceMap.Store(address, "0")
 		} else {
 			success = true
-			res.SetValue(balance, address)
+			balanceMap.Store(address, balance)
 		}
 		return "", nil
 	})
 	if success {
+		res := NewStringMap()
+		for _, address := range addresses.Values {
+			res.SetValue("0", address)
+			if balance, ok := balanceMap.Load(address); ok {
+				if balanceStr, ok := balance.(string); ok {
+					res.SetValue(balanceStr, address)
+				}
+			}
+		}
 		return res, nil
 	} else {
 		return nil, anyErr
