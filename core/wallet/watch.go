@@ -14,6 +14,7 @@ import (
 	"github.com/coming-chat/wallet-SDK/core/polka"
 	"github.com/coming-chat/wallet-SDK/core/solana"
 	"github.com/coming-chat/wallet-SDK/core/starcoin"
+	"github.com/coming-chat/wallet-SDK/core/starknet"
 	"github.com/coming-chat/wallet-SDK/core/sui"
 )
 
@@ -32,6 +33,7 @@ const (
 	ChainTypeAptos    = "aptos"
 	ChainTypeSui      = "sui"
 	ChainTypeStarcoin = "starcoin"
+	ChainTypeStarknet = "starknet"
 )
 
 // Deprecated: renamed to `ChainTypeOfWatchAddress()`.
@@ -60,6 +62,9 @@ func ChainTypeOfWatchAddress(address string) *base.StringArray {
 		}
 		if starcoin.IsValidAddress(address) {
 			res.Append(ChainTypeStarcoin)
+		}
+		if starknet.IsValidAddress(address) {
+			res.Append(ChainTypeStarknet)
 		}
 	} else {
 		if polka.IsValidAddress(address) {
@@ -102,6 +107,7 @@ func ChainTypeOfPrivateKey(prikey string) *base.StringArray {
 			res.Append(ChainTypeAptos)
 			res.Append(ChainTypeSui)
 			res.Append(ChainTypeStarcoin)
+			res.Append(ChainTypeStarknet)
 		}
 		if length == 128 {
 			res.Append(ChainTypeSolana)

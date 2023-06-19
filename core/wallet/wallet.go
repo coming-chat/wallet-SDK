@@ -14,6 +14,7 @@ import (
 	"github.com/coming-chat/wallet-SDK/core/polka"
 	"github.com/coming-chat/wallet-SDK/core/solana"
 	"github.com/coming-chat/wallet-SDK/core/starcoin"
+	"github.com/coming-chat/wallet-SDK/core/starknet"
 	"github.com/coming-chat/wallet-SDK/core/sui"
 )
 
@@ -31,6 +32,7 @@ type Wallet struct {
 	aptosAccount    *aptos.Account
 	suiAccount      *sui.Account
 	starcoinAccount *starcoin.Account
+	starknetAccount *starknet.Account
 
 	WatchAddress string
 }
@@ -264,6 +266,25 @@ func (w *Wallet) GetOrCreateStarcoinAccount() (*starcoin.Account, error) {
 	}
 	// save to cache
 	w.starcoinAccount = account
+	return account, nil
+}
+
+// Get or create the starknet account.
+func (w *Wallet) GetOrCreateStarknetAccount() (*starknet.Account, error) {
+	cache := w.starknetAccount
+	if cache != nil {
+		return cache, nil
+	}
+	if len(w.Mnemonic) <= 0 {
+		return nil, ErrInvalidMnemonic
+	}
+
+	account, err := starknet.NewAccountWithMnemonic(w.Mnemonic)
+	if err != nil {
+		return nil, err
+	}
+	// save to cache
+	w.starknetAccount = account
 	return account, nil
 }
 

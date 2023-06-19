@@ -13,6 +13,7 @@ import (
 	"github.com/coming-chat/wallet-SDK/core/polka"
 	"github.com/coming-chat/wallet-SDK/core/solana"
 	"github.com/coming-chat/wallet-SDK/core/starcoin"
+	"github.com/coming-chat/wallet-SDK/core/starknet"
 	"github.com/coming-chat/wallet-SDK/core/sui"
 )
 
@@ -266,6 +267,19 @@ func (w *CacheWallet) StarcoinAccountInfo() *AccountInfo {
 		},
 		privkeyCreator: func(val string) (base.Account, error) {
 			return starcoin.AccountWithPrivateKey(val)
+		},
+	}
+}
+
+func (w *CacheWallet) StarknetAccountInfo() *AccountInfo {
+	return &AccountInfo{
+		Wallet:   w,
+		cacheKey: "starknet",
+		mnemonicCreator: func(val string) (base.Account, error) {
+			return starknet.NewAccountWithMnemonic(val)
+		},
+		privkeyCreator: func(val string) (base.Account, error) {
+			return starknet.AccountWithPrivateKey(val)
 		},
 	}
 }
