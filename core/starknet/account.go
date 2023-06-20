@@ -130,3 +130,7 @@ func AsStarknetAccount(account base.Account) *Account {
 		return nil
 	}
 }
+
+func (a *Account) SignHash(msgHash *big.Int) (*big.Int, *big.Int, error) {
+	return caigo.Curve.Sign(msgHash, a.privateKey)
+}

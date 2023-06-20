@@ -25,6 +25,13 @@ const (
 	pollInterval = 5
 )
 
+func M1Account(t *testing.T) *Account {
+	mnemonic := testcase.M1
+	acc, err := NewAccountWithMnemonic(mnemonic)
+	require.Nil(t, err)
+	return acc
+}
+
 func TestAccount(t *testing.T) {
 	mnemonic := testcase.M1
 	account, err := NewAccountWithMnemonic(mnemonic)

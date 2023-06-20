@@ -3,8 +3,6 @@ package starknet
 import (
 	"regexp"
 
-	"github.com/NethermindEth/juno/core"
-	"github.com/NethermindEth/juno/core/felt"
 	"github.com/coming-chat/wallet-SDK/core/base"
 )
 
@@ -38,28 +36,11 @@ func EncodePublicKeyToAddress(publicKey string) (string, error) {
 }
 
 func encodePublicKeyToAddressArgentX(publicKey string) (string, error) {
-	pub, err := new(felt.Felt).SetString(publicKey)
+	txn, err := deployAccountTxnForArgentX(publicKey)
 	if err != nil {
-		return "", base.ErrInvalidPublicKey
+		return "", err
 	}
-	callerAddress, _ := new(felt.Felt).SetString("0x0000000000000000000000000000000000000000")
-	classHash, _ := new(felt.Felt).SetString("0x25ec026985a3bf9d0cc1fe17326b245dfdc3ff89b8fde106542a3ea56c5a918")
-
-	data1, _ := new(felt.Felt).SetString("0x33434ad846cdd5f23eb73ff09fe6fddd568284a0fb7d1be20ee482f044dabe2")
-	data2, _ := new(felt.Felt).SetString("0x79dc0da7c54b95f10aa182ad0a46400db63156920adb65eca2654c0945a463") // getSelectorFromName("initialize")
-	data3, _ := new(felt.Felt).SetString("0x2")
-	data4 := pub
-	data5, _ := new(felt.Felt).SetString("0x0")
-	callData := []*felt.Felt{
-		data1,
-		data2,
-		data3,
-		data4,
-		data5,
-	}
-
-	address := core.ContractAddress(callerAddress, classHash, pub, callData)
-	return address.String(), nil
+	return txn.ContractAddress.String(), nil
 }
 
 // func encodePublicKeyToAddressBraavos(publicKey string) (string, error) {
