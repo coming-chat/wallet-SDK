@@ -18,5 +18,7 @@ var (
 
 	ErrMissingTransaction = errors.New("missing transaction information")
 
+	ErrNotCoinTransferTxn = errors.New("not a coin transfer transaction")
+
 	ErrEstimateGasNeedPublicKey = errors.New("the estimated fee should invoking `EstimateTransactionFeeUsePublicKey`")
 )

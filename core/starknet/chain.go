@@ -2,8 +2,10 @@ package starknet
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"math/big"
+	"strconv"
 	"strings"
 
 	"github.com/NethermindEth/juno/utils"
@@ -101,6 +103,7 @@ func (c *Chain) SendRawTransaction(signedTx string) (string, error) {
 
 func (c *Chain) SendSignedTransaction(signedTxn base.SignedTransaction) (hash *base.OptionalString, err_ error) {
 	defer base.CatchPanicAndMapToBasicError(&err_)
+
 	txn := signedTxn.(*SignedTransaction)
 	if txn == nil {
 		return nil, base.ErrInvalidTransactionType
@@ -128,13 +131,101 @@ func (c *Chain) SendSignedTransaction(signedTxn base.SignedTransaction) (hash *b
 }
 
 // Fetch transaction details through transaction hash
-func (c *Chain) FetchTransactionDetail(hash string) (*base.TransactionDetail, error) {
-	return nil, nil
+func (c *Chain) FetchTransactionDetail(hash string) (detail *base.TransactionDetail, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
+
+	ctx := context.Background()
+	opt := makeTransactionOpt(hash)
+	txn, err := c.gw.Transaction(ctx, opt)
+	if err != nil {
+		return nil, err
+	}
+	calldata := txn.Transaction.Calldata
+	if len(calldata) < 9 && calldata[2] != erc20TransferSelectorHash {
+		return nil, base.ErrNotCoinTransferTxn
+	}
+
+	receiver := calldata[6]
+	amountHex := calldata[7]
+	amountInt := hexToBigInt(amountHex)
+	detail = &base.TransactionDetail{
+		HashString: txn.Transaction.TransactionHash,
+
+		FromAddress: txn.Transaction.SenderAddress,
+		ToAddress:   receiver,
+
+		Amount: amountInt.String(),
+		Status: mapTransactionStatus(txn.Status),
+		// EstimateFees string
+		// FinishTimestamp int64
+		// FailureMessage string
+	}
+
+	switch detail.Status {
+	case base.TransactionStatusFailure:
+		detail.FailureMessage, _ = c.fetchTransactionFailureMessage(detail.HashString)
+	case base.TransactionStatusSuccess:
+		detail.FinishTimestamp, _ = c.fetchBlockTimestamp(txn.BlockHash)
+		detail.EstimateFees, _ = c.fetchTransactionFee(detail.HashString)
+	}
+	return detail, nil
+}
+
+func (c *Chain) fetchBlockTimestamp(blockHash string) (time int64, err error) {
+	block, err := c.gw.Block(context.Background(), &gateway.BlockOptions{
+		BlockHash: blockHash,
+	})
+	if err != nil {
+		return 0, err
+	}
+	return int64(block.Timestamp), nil
+}
+
+func (c *Chain) fetchTransactionFee(hash string) (string, error) {
+	receipt, err := c.gw.TransactionReceipt(context.Background(), hash)
+	if err != nil {
+		return "", err
+	}
+	for i := len(receipt.Events) - 1; i >= 0; i-- {
+		event := receipt.Events[i]
+		data, err := json.Marshal(event)
+		if err != nil {
+			return "", err
+		}
+		var ee gateway.Event
+		err = json.Unmarshal(data, &ee)
+		if err != nil {
+			return "", err
+		}
+		transferSelectorHash := "0x99cd8bde557814842a3121e8ddfd433a539b8c9f14bf31ebf108d12e6196e9"
+		if len(ee.Keys) > 0 && ee.Keys[0].String() == transferSelectorHash && len(ee.Data) > 2 {
+			return ee.Data[2].Int.String(), nil
+		}
+	}
+	return "", nil
+}
+
+func (c *Chain) fetchTransactionFailureMessage(hash string) (string, error) {
+	status, err := c.gw.TransactionStatus(context.Background(), gateway.TransactionStatusOptions{
+		TransactionHash: hash,
+	})
+	if err != nil {
+		return "", err
+	}
+	return status.TxFailureReason.ErrorMessage, nil
 }
 
 // Fetch transaction status through transaction hash
 func (c *Chain) FetchTransactionStatus(hash string) base.TransactionStatus {
-	return base.TransactionStatusFailure
+	opt := makeTransactionOpt(hash)
+	status, err := c.gw.TransactionStatus(context.Background(), gateway.TransactionStatusOptions{
+		TransactionHash: opt.TransactionHash,
+		TransactionId:   opt.TransactionId,
+	})
+	if err != nil {
+		return base.TransactionStatusFailure
+	}
+	return mapTransactionStatus(status.TxStatus)
 }
 
 // Batch fetch the transaction status, the hash list and the return value,
@@ -142,7 +233,11 @@ func (c *Chain) FetchTransactionStatus(hash string) base.TransactionStatus {
 // @param hashListString The hash of the transactions to be queried in batches, a string concatenated with ",": "hash1,hash2,hash3"
 // @return Batch transaction status, its order is consistent with hashListString: "status1,status2,status3"
 func (c *Chain) BatchFetchTransactionStatus(hashListString string) string {
-	return ""
+	hashList := strings.Split(hashListString, ",")
+	statuses, _ := base.MapListConcurrentStringToString(hashList, func(s string) (string, error) {
+		return strconv.Itoa(c.FetchTransactionStatus(s)), nil
+	})
+	return strings.Join(statuses, ",")
 }
 
 // unsupported
@@ -168,7 +263,10 @@ func (c *Chain) EstimateTransactionFeeUseAccount(transaction base.Transaction, a
 			return nil, err
 		}
 		res, err := caigoAcc.EstimateFee(context.Background(), txn.calls, txn.details)
-		b, _ := big.NewInt(0).SetString(strings.TrimLeft(string(res.OverallFee), "0x"), 16)
+		if err != nil {
+			return nil, err
+		}
+		b := hexToBigInt(string(res.OverallFee))
 		return &base.OptionalString{Value: b.String()}, nil
 	}
 	return nil, base.ErrInvalidTransactionType
@@ -188,4 +286,48 @@ func (c *Chain) BuildDeployAccountTransaction(publicKey string) (*DeployAccountT
 
 func caigoAccount(chain *Chain, acc *Account) (*caigo.Account, error) {
 	return caigo.NewGatewayAccount(acc.privateKey.String(), acc.Address(), &gateway.GatewayProvider{Gateway: *chain.gw}, caigo.AccountVersion1)
+}
+
+func makeTransactionOpt(hashOrId string) gateway.TransactionOptions {
+	if strings.HasPrefix(hashOrId, "0x") {
+		return gateway.TransactionOptions{
+			TransactionHash: hashOrId,
+		}
+	} else {
+		id, err := strconv.ParseUint(hashOrId, 10, 64)
+		if err != nil {
+			return gateway.TransactionOptions{}
+		}
+		return gateway.TransactionOptions{
+			TransactionId: id,
+		}
+	}
+}
+
+func mapTransactionStatus(status string) base.TransactionStatus {
+	switch types.TransactionState(status) {
+	case types.TransactionNotReceived:
+		return base.TransactionStatusNone
+
+	case types.TransactionReceived,
+		types.TransactionPending:
+		return base.TransactionStatusPending
+
+	case types.TransactionAcceptedOnL1,
+		types.TransactionAcceptedOnL2:
+		return base.TransactionStatusSuccess
+
+	case types.TransactionRejected:
+		return base.TransactionStatusFailure
+	}
+	return base.TransactionStatusNone
+}
+
+func hexToBigInt(hexNumber string) big.Int {
+	hexNumber = strings.TrimPrefix(hexNumber, "0x")
+	if res, ok := big.NewInt(0).SetString(hexNumber, 16); ok {
+		return *res
+	} else {
+		return big.Int{}
+	}
 }
