@@ -85,6 +85,10 @@ func (c *Chain) SendRawTransaction(signedTx string) (string, error) {
 	return res, nil
 }
 
+func (c *Chain) SendSignedTransaction(signedTxn base.SignedTransaction) (hash *base.OptionalString, err error) {
+	return nil, base.ErrUnsupportedFunction
+}
+
 // Fetch transaction details through transaction hash
 func (c *Chain) FetchTransactionDetail(hash string) (*base.TransactionDetail, error) {
 	response, err := c.client().GetTransaction(context.Background(), hash)

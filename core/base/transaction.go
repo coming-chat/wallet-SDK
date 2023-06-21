@@ -7,11 +7,12 @@ import (
 
 type Transaction interface {
 	SignWithAccount(account Account) (signedTxn *OptionalString, err error)
+	SignedTransactionWithAccount(account Account) (signedTxn SignedTransaction, err error)
 }
 
-// type SignedTransaction interface {
-// 	String() string
-// }
+type SignedTransaction interface {
+	// HashString() string
+}
 
 type TransactionStatus = SDKEnumInt
 

@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	coretypes "github.com/cometbft/cometbft/rpc/core/types"
-	"github.com/cosmos/cosmos-sdk/client"
 	"strconv"
 	"strings"
+
+	coretypes "github.com/cometbft/cometbft/rpc/core/types"
+	"github.com/cosmos/cosmos-sdk/client"
 
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/cometbft/cometbft/rpc/client/http"
@@ -71,6 +72,10 @@ func (c *Chain) SendRawTransaction(signedTx string) (string, error) {
 		return "", err
 	}
 	return commit.Hash.String(), nil
+}
+
+func (c *Chain) SendSignedTransaction(signedTxn base.SignedTransaction) (hash *base.OptionalString, err error) {
+	return nil, base.ErrUnsupportedFunction
 }
 
 // Fetch transaction details through transaction hash

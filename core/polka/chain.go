@@ -84,6 +84,10 @@ func (c *Chain) SendRawTransaction(signedTx string) (s string, err error) {
 	return hashString, nil
 }
 
+func (c *Chain) SendSignedTransaction(signedTxn base.SignedTransaction) (hash *base.OptionalString, err error) {
+	return nil, base.ErrUnsupportedFunction
+}
+
 func (c *Chain) FetchTransactionDetail(hashString string) (*base.TransactionDetail, error) {
 	if c.ScanUrl == "" {
 		return nil, errors.New("Scan url is Empty.")

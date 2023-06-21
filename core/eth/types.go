@@ -279,3 +279,7 @@ func (tx *Transaction) TotalAmount() string {
 func (t *Transaction) SignWithAccount(account base.Account) (signedTx *base.OptionalString, err error) {
 	return nil, base.ErrUnsupportedFunction
 }
+
+func (t *Transaction) SignedTransactionWithAccount(account base.Account) (signedTx base.SignedTransaction, err error) {
+	return nil, base.ErrUnsupportedFunction
+}

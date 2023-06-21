@@ -58,6 +58,10 @@ func (c *Chain) SendRawTransaction(signedTx string) (string, error) {
 	return sendRawTransaction(signedTx, c.Chainnet)
 }
 
+func (c *Chain) SendSignedTransaction(signedTxn base.SignedTransaction) (hash *base.OptionalString, err error) {
+	return nil, base.ErrUnsupportedFunction
+}
+
 // Fetch transaction details through transaction hash
 // Note: The input parsing of bitcoin is very complex and the network cost is relatively high,
 // So only the status and timestamp can be queried.

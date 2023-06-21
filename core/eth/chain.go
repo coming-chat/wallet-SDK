@@ -84,6 +84,10 @@ func (c *Chain) SendRawTransaction(signedTx string) (string, error) {
 	return chain.SendRawTransaction(signedTx)
 }
 
+func (c *Chain) SendSignedTransaction(signedTxn base.SignedTransaction) (hash *base.OptionalString, err error) {
+	return nil, base.ErrUnsupportedFunction
+}
+
 // Fetch transaction details through transaction hash
 // Support normal or erc20 transfer
 func (c *Chain) FetchTransactionDetail(hash string) (*base.TransactionDetail, error) {

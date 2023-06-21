@@ -11,6 +11,10 @@ type Chain interface {
 	// @return the hex hash string
 	SendRawTransaction(signedTx string) (string, error)
 
+	// Send the signed transaction on-chain
+	// @return the hex hash string
+	SendSignedTransaction(signedTxn SignedTransaction) (*OptionalString, error)
+
 	// Fetch transaction details through transaction hash
 	FetchTransactionDetail(hash string) (*TransactionDetail, error)
 

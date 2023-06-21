@@ -55,3 +55,7 @@ func (t *Transaction) SignWithAccount(account base.Account) (signedTx *base.Opti
 
 	return &base.OptionalString{Value: txnString}, nil
 }
+
+func (t *Transaction) SignedTransactionWithAccount(account base.Account) (signedTx base.SignedTransaction, err error) {
+	return nil, base.ErrUnsupportedFunction
+}

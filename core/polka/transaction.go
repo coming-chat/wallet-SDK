@@ -43,6 +43,10 @@ func (t *Transaction) SignWithAccount(account base.Account) (signedTx *base.Opti
 	return nil, base.ErrUnsupportedFunction
 }
 
+func (t *Transaction) SignedTransactionWithAccount(account base.Account) (signedTx base.SignedTransaction, err error) {
+	return nil, base.ErrUnsupportedFunction
+}
+
 func (t *Transaction) GetSignData(genesisHashString string, nonce int64, specVersion, transVersion int32) ([]byte, error) {
 	var methodBytes []byte
 	genesisHash, err := types.NewHashFromHexString(genesisHashString)
