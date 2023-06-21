@@ -13,5 +13,10 @@ var (
 	ErrInvalidAccountType     = errors.New("invalid account type")
 	ErrInvalidTransactionType = errors.New("invalid transaction type")
 
+	ErrInvalidAccountAddress = errors.New("invalid account address")
+	ErrInvalidAmount         = errors.New("invalid amount")
+
+	ErrMissingTransaction = errors.New("missing transaction information")
+
 	ErrEstimateGasNeedPublicKey = errors.New("the estimated fee should invoking `EstimateTransactionFeeUsePublicKey`")
 )

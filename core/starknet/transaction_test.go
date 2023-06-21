@@ -15,7 +15,7 @@ func TestDeployAccountTransactionHash(t *testing.T) {
 	require.Nil(t, err)
 
 	txn.MaxFee = new(felt.Felt).SetUint64(10000000000)
-	txhash, err := TransactionHash(txn, utils.Network(utils.GOERLI))
+	txhash, err := deployAccountTransactionHash(txn, utils.Network(utils.GOERLI))
 	require.Nil(t, err)
 	require.Equal(t, txhash.String(), "0x794ddc51a8298b57064667cd8fb9ef79d7410c71d8f8ad8098b4462520f582e")
 }

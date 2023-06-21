@@ -3,7 +3,10 @@ package starknet
 import (
 	"context"
 	"errors"
+	"math/big"
+	"strings"
 
+	"github.com/NethermindEth/juno/utils"
 	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/dontpanicdao/caigo"
 	"github.com/dontpanicdao/caigo/gateway"
@@ -13,6 +16,10 @@ import (
 const (
 	BaseRpcUrlMainnet = gateway.MAINNET_BASE
 	BaseRpcUrlGoerli  = gateway.GOERLI_BASE
+
+	NetworkMainnet = int(utils.MAINNET)
+	NetworkGoerli  = int(utils.GOERLI)
+	NetworkGoerli2 = int(utils.GOERLI2)
 )
 
 var (
@@ -20,33 +27,41 @@ var (
 )
 
 type Chain struct {
-	gw *gateway.Gateway
+	gw      *gateway.Gateway
+	network utils.Network
 }
 
-func NewChainWithRpc(baseRpc string) *Chain {
+func NewChainWithRpc(baseRpc string, network int) *Chain {
 	gw := gateway.NewClient(gateway.WithBaseURL(baseRpc))
-	return &Chain{gw: gw}
+	return &Chain{
+		gw:      gw,
+		network: utils.Network(network),
+	}
 }
 
 // MARK - Implement the protocol Chain
 
-func (c *Chain) NewToken(tokenContractAddress string) *Token {
-	return NewToken(c, tokenContractAddress)
+func (c *Chain) NewToken(tokenAddress string) (*Token, error) {
+	return NewToken(c, tokenAddress)
 }
 
-// warning: please use `chain.NewToken(contractAddress)` instead.
 func (c *Chain) MainToken() base.Token {
-	return nil
+	t, _ := NewToken(c, ETHTokenAddress)
+	return t
 }
 
 func (c *Chain) BalanceOfAddress(address string) (b *base.Balance, err error) {
-	return nil, errors.New("please call with `chain.NewToken(contractAddress).BalanceOf...`")
+	return c.BalanceOf(address, ETHTokenAddress)
 }
 func (c *Chain) BalanceOfPublicKey(publicKey string) (*base.Balance, error) {
-	return c.BalanceOfAddress("")
+	address, err := encodePublicKeyToAddressArgentX(publicKey)
+	if err != nil {
+		return nil, err
+	}
+	return c.BalanceOf(address, ETHTokenAddress)
 }
 func (c *Chain) BalanceOfAccount(account base.Account) (*base.Balance, error) {
-	return c.BalanceOfAddress("")
+	return c.BalanceOf(account.Address(), ETHTokenAddress)
 }
 
 func (c *Chain) BalanceOf(ownerAddress, erc20Address string) (b *base.Balance, err error) {
@@ -81,11 +96,35 @@ func (c *Chain) BalanceOf(ownerAddress, erc20Address string) (b *base.Balance, e
 // Send the raw transaction on-chain
 // @return the hex hash string
 func (c *Chain) SendRawTransaction(signedTx string) (string, error) {
-	return "", nil
+	return "", base.ErrUnsupportedFunction
 }
 
-func (c *Chain) SendSignedTransaction(signedTxn base.SignedTransaction) (hash *base.OptionalString, err error) {
-	return nil, base.ErrUnsupportedFunction
+func (c *Chain) SendSignedTransaction(signedTxn base.SignedTransaction) (hash *base.OptionalString, err_ error) {
+	defer base.CatchPanicAndMapToBasicError(&err_)
+	txn := signedTxn.(*SignedTransaction)
+	if txn == nil {
+		return nil, base.ErrInvalidTransactionType
+	}
+
+	if txn.depolyTxn != nil {
+		resp, err := c.gw.DeployAccount(context.Background(), *txn.depolyTxn)
+		if err != nil {
+			return nil, err
+		}
+		return &base.OptionalString{Value: resp.TransactionHash}, nil
+	}
+	if txn.invokeTxn != nil && txn.Account != nil {
+		caigoAccount, err := caigoAccount(c, txn.Account)
+		if err != nil {
+			return nil, err
+		}
+		resp, err := caigoAccount.Execute(context.Background(), txn.invokeTxn.calls, txn.invokeTxn.details)
+		if err != nil {
+			return nil, err
+		}
+		return &base.OptionalString{Value: resp.TransactionHash}, nil
+	}
+	return nil, base.ErrMissingTransaction
 }
 
 // Fetch transaction details through transaction hash
@@ -106,18 +145,47 @@ func (c *Chain) BatchFetchTransactionStatus(hashListString string) string {
 	return ""
 }
 
-// Most chains can estimate the fee directly to the transaction object
-// **But two chains don't work: `aptos`, `starcoin`**
+// unsupported
 func (c *Chain) EstimateTransactionFee(transaction base.Transaction) (fee *base.OptionalString, err error) {
-	return nil, nil
+	return nil, base.ErrUnsupportedFunction
 }
 
-// All chains can call this method to estimate the gas fee.
-// **Chain  `aptos`, `starcoin` must pass in publickey**
+// unsupported
 func (c *Chain) EstimateTransactionFeeUsePublicKey(transaction base.Transaction, pubkey string) (fee *base.OptionalString, err error) {
-	return nil, nil
+	return nil, base.ErrUnsupportedFunction
 }
 
-func (c *Chain) DeployAccount(contractAddress string) {
+func (c *Chain) EstimateTransactionFeeUseAccount(transaction base.Transaction, acc *Account) (fee *base.OptionalString, err_ error) {
+	defer base.CatchPanicAndMapToBasicError(&err_)
 
+	if txn, ok := transaction.(*DeployAccountTransaction); ok {
+		fee := txn.txn.MaxFee.BigInt(big.NewInt(0))
+		return &base.OptionalString{Value: fee.String()}, nil
+	}
+	if txn, ok := transaction.(*Transaction); ok {
+		caigoAcc, err := caigoAccount(c, acc)
+		if err != nil {
+			return nil, err
+		}
+		res, err := caigoAcc.EstimateFee(context.Background(), txn.calls, txn.details)
+		b, _ := big.NewInt(0).SetString(strings.TrimLeft(string(res.OverallFee), "0x"), 16)
+		return &base.OptionalString{Value: b.String()}, nil
+	}
+	return nil, base.ErrInvalidTransactionType
+}
+
+func (c *Chain) BuildDeployAccountTransaction(publicKey string) (*DeployAccountTransaction, error) {
+	txn, err := deployAccountTxnForArgentX(publicKey)
+	if err != nil {
+		return nil, err
+	}
+
+	return &DeployAccountTransaction{
+		txn:     txn,
+		network: c.network,
+	}, nil
+}
+
+func caigoAccount(chain *Chain, acc *Account) (*caigo.Account, error) {
+	return caigo.NewGatewayAccount(acc.privateKey.String(), acc.Address(), &gateway.GatewayProvider{Gateway: *chain.gw}, caigo.AccountVersion1)
 }

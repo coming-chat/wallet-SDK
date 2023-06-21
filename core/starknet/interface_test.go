@@ -5,7 +5,10 @@ import (
 )
 
 var (
-	_ base.Account = (*Account)(nil)
-	_ base.Chain   = (*Chain)(nil)
-	_ base.Token   = (*Token)(nil)
+	_ base.Account     = (*Account)(nil)
+	_ base.Chain       = (*Chain)(nil)
+	_ base.Token       = (*Token)(nil)
+	_ base.Transaction = (*Transaction)(nil)
+
+	_ base.Transaction = (*DeployAccountTransaction)(nil)
 )
