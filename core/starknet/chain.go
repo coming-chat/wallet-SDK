@@ -7,9 +7,11 @@ import (
 	"math/big"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/NethermindEth/juno/utils"
 	"github.com/coming-chat/wallet-SDK/core/base"
+	"github.com/coming-chat/wallet-SDK/pkg/httpUtil"
 	"github.com/dontpanicdao/caigo"
 	"github.com/dontpanicdao/caigo/gateway"
 	"github.com/dontpanicdao/caigo/types"
@@ -22,6 +24,9 @@ const (
 	NetworkMainnet = int(utils.MAINNET)
 	NetworkGoerli  = int(utils.GOERLI)
 	// NetworkGoerli2 = int(utils.GOERLI2)
+
+	graphqlMainnet = "https://starkscan.stellate.sh"
+	graphqlGoerli  = "https://api-testnet.starkscan.co/graphql"
 )
 
 var (
@@ -33,15 +38,19 @@ var (
 type Chain struct {
 	gw      *gateway.Gateway
 	network utils.Network
+	graphql string
 }
 
 func NewChainWithRpc(baseRpc string, network int) (*Chain, error) {
 	var chainIdOpt gateway.Option
+	var graphql string
 	switch network {
 	case NetworkMainnet:
 		chainIdOpt = gateway.WithChain(gateway.MAINNET_ID)
+		graphql = graphqlMainnet
 	case NetworkGoerli:
 		chainIdOpt = gateway.WithChain(gateway.GOERLI_ID)
+		graphql = graphqlGoerli
 	default:
 		return nil, errors.New("invalid starknet network")
 	}
@@ -49,6 +58,7 @@ func NewChainWithRpc(baseRpc string, network int) (*Chain, error) {
 	return &Chain{
 		gw:      gw,
 		network: utils.Network(network),
+		graphql: graphql,
 	}, nil
 }
 
@@ -152,7 +162,7 @@ func (c *Chain) FetchTransactionDetail(hash string) (detail *base.TransactionDet
 		return nil, err
 	}
 	calldata := txn.Transaction.Calldata
-	if len(calldata) < 9 && calldata[2] != erc20TransferSelectorHash {
+	if len(calldata) < 9 || calldata[2] != erc20TransferSelectorHash {
 		return nil, base.ErrNotCoinTransferTxn
 	}
 
@@ -176,44 +186,83 @@ func (c *Chain) FetchTransactionDetail(hash string) (detail *base.TransactionDet
 	case base.TransactionStatusFailure:
 		detail.FailureMessage, _ = c.fetchTransactionFailureMessage(detail.HashString)
 	case base.TransactionStatusSuccess:
-		detail.FinishTimestamp, _ = c.fetchBlockTimestamp(txn.BlockHash)
-		detail.EstimateFees, _ = c.fetchTransactionFee(detail.HashString)
+		detail.EstimateFees, detail.FinishTimestamp, _ = c.fetchTransactionFeeAndTimestampUseGraphql(detail.HashString)
 	}
 	return detail, nil
 }
 
-func (c *Chain) fetchBlockTimestamp(blockHash string) (time int64, err error) {
-	block, err := c.gw.Block(context.Background(), &gateway.BlockOptions{
-		BlockHash: blockHash,
-	})
-	if err != nil {
-		return 0, err
-	}
-	return int64(block.Timestamp), nil
-}
+// func (c *Chain) fetchBlockTimestamp(blockHash string) (time int64, err error) {
+// 	block, err := c.gw.Block(context.Background(), &gateway.BlockOptions{
+// 		BlockHash: blockHash,
+// 	})
+// 	if err != nil {
+// 		return 0, err
+// 	}
+// 	return int64(block.Timestamp), nil
+// }
 
-func (c *Chain) fetchTransactionFee(hash string) (string, error) {
-	receipt, err := c.gw.TransactionReceipt(context.Background(), hash)
+// func (c *Chain) fetchTransactionFee(hash string) (string, error) {
+// 	receipt, err := c.gw.TransactionReceipt(context.Background(), hash)
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	for i := len(receipt.Events) - 1; i >= 0; i-- {
+// 		event := receipt.Events[i]
+// 		data, err := json.Marshal(event)
+// 		if err != nil {
+// 			return "", err
+// 		}
+// 		var ee gateway.Event
+// 		err = json.Unmarshal(data, &ee)
+// 		if err != nil {
+// 			return "", err
+// 		}
+// 		transferSelectorHash := types.BigToHex(types.GetSelectorFromName("Transfer"))
+// 		if len(ee.Keys) > 0 && ee.Keys[0].String() == transferSelectorHash && len(ee.Data) > 2 {
+// 			return ee.Data[2].Int.String(), nil
+// 		}
+// 	}
+// 	return "", nil
+// }
+
+func (c *Chain) fetchTransactionFeeAndTimestampUseGraphql(hash string) (txnFee string, timestamp int64, err error) {
+	query := map[string]any{
+		"query": "query TransactionPageTabs_TransactionQuery(\n  $input: TransactionInput\u0021\n) {\n  transaction(input: $input) {\n    transaction_hash\n    transaction_status\n    number_of_events\n    number_of_message_logs\n    ...TransactionPageOverviewTab\n    id\n  }\n}\n\nfragment TransactionActualFeesItem_transaction on Transaction {\n  actual_fee\n  actual_fee_display\n  erc20_transfer_events {\n    id\n    call_invocation_type\n  }\n  ...TransactionActualFeesTransferredItems_transaction\n}\n\nfragment TransactionActualFeesTransferredItem on ERC20TransferEvent {\n  id\n  from_address\n  from_erc20_identifier\n  transfer_amount_display\n  transfer_to_address\n  transfer_to_identifier\n  call_invocation_type\n}\n\nfragment TransactionActualFeesTransferredItems_transaction on Transaction {\n  erc20_transfer_events {\n    id\n    ...TransactionActualFeesTransferredItem\n  }\n}\n\nfragment TransactionCalldataItem_transaction on Transaction {\n  entry_point_selector_name\n  calldata\n  calldata_decoded\n  entry_point_selector\n  initiator_address\n  initiator_identifier\n  main_calls {\n    selector_name\n    calldata_decoded\n    selector\n    calldata\n    contract_address\n    contract_identifier\n    id\n  }\n}\n\nfragment TransactionConstructorCalldataItem_transaction on Transaction {\n  entry_point_selector_name\n  calldata_decoded\n  entry_point_selector\n  constructor_calldata\n  initiator_address\n  initiator_identifier\n}\n\nfragment TransactionDeployedContractsItem_transaction on Transaction {\n  deployed_contracts {\n    id\n    contract_address\n    contract_identifier\n  }\n}\n\nfragment TransactionExecutionResourcesItem_transaction on Transaction {\n  execution_resources {\n    execution_resources_n_steps\n    execution_resources_n_memory_holes\n    execution_resources_builtin_instance_counter {\n      name\n      value\n    }\n  }\n}\n\nfragment TransactionNFTEventsItem_transaction on Transaction {\n  nft_events {\n    id\n    type\n    nft_contract_address\n    nft_contract_nft_identifier\n    nft_token_id\n    from_address\n    from_identifier\n    to_address\n    to_identifier\n    nft {\n      image_small_url\n      name\n      id\n    }\n  }\n}\n\nfragment TransactionPageOverviewTab on Transaction {\n  transaction_hash\n  block_hash\n  block_number\n  transaction_status\n  timestamp\n  transaction_type\n  contract_address\n  contract_identifier\n  sender_address\n  sender_identifier\n  class_hash\n  entry_point_selector\n  max_fee\n  max_fee_display\n  nonce\n  ...TransactionDeployedContractsItem_transaction\n  ...TransactionActualFeesItem_transaction\n  ...TransactionTokensTransferredItem_transaction\n  ...TransactionCalldataItem_transaction\n  ...TransactionConstructorCalldataItem_transaction\n  ...TransactionSignatureItem_transaction\n  ...TransactionExecutionResourcesItem_transaction\n  ...TransactionNFTEventsItem_transaction\n}\n\nfragment TransactionSignatureItem_transaction on Transaction {\n  signature\n}\n\nfragment TransactionTokensTransferredItem_transaction on Transaction {\n  erc20_transfer_events {\n    id\n    from_address\n    from_erc20_identifier\n    transfer_amount_display\n    transfer_to_address\n    transfer_to_identifier\n    transfer_from_address\n    transfer_from_identifier\n    call_invocation_type\n  }\n}\n",
+		"variables": map[string]any{
+			"input": map[string]string{
+				"transaction_hash": hash,
+			},
+		},
+	}
+	body, err := json.Marshal(query)
 	if err != nil {
-		return "", err
+		return
 	}
-	for i := len(receipt.Events) - 1; i >= 0; i-- {
-		event := receipt.Events[i]
-		data, err := json.Marshal(event)
-		if err != nil {
-			return "", err
-		}
-		var ee gateway.Event
-		err = json.Unmarshal(data, &ee)
-		if err != nil {
-			return "", err
-		}
-		transferSelectorHash := types.BigToHex(types.GetSelectorFromName("Transfer"))
-		if len(ee.Keys) > 0 && ee.Keys[0].String() == transferSelectorHash && len(ee.Data) > 2 {
-			return ee.Data[2].Int.String(), nil
-		}
+	params := httpUtil.RequestParams{
+		Header: map[string]string{
+			"Content-Type": "application/json",
+			"User-Agent":   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36",
+		},
+		Body:    body,
+		Timeout: time.Duration(20 * int64(time.Second)),
 	}
-	return "", nil
+	response, err := httpUtil.Post(c.graphql, params)
+	if err != nil {
+		return
+	}
+	var resp struct {
+		Data struct {
+			Transaction struct {
+				Timestamp  int64  `json:"timestamp"`
+				Actual_fee string `json:"actual_fee"`
+			} `json:"transaction"`
+		} `json:"data"`
+	}
+	err = json.Unmarshal(response, &resp)
+	if err != nil {
+		return
+	}
+	return resp.Data.Transaction.Actual_fee, resp.Data.Transaction.Timestamp, nil
 }
 
 func (c *Chain) fetchTransactionFailureMessage(hash string) (string, error) {
