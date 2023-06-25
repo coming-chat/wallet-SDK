@@ -17,9 +17,10 @@ pkgSolana =  $(pkgCore)/solana
 pkgAptos =  $(pkgCore)/aptos
 pkgSui =  $(pkgCore)/sui
 pkgStarcoin =  $(pkgCore)/starcoin
+pkgStarknet =  $(pkgCore)/starknet
 pkgMSCheck = ${pkgCore}/multi-signature-check
 
-pkgAll = ${pkgBase} ${pkgWallet} ${pkgPolka} ${pkgBtc} ${pkgEth} ${pkgCosmos} ${pkgMSCheck} ${pkgDoge} ${pkgSolana} ${pkgAptos} ${pkgSui} ${pkgStarcoin}
+pkgAll = ${pkgBase} ${pkgWallet} ${pkgPolka} ${pkgBtc} ${pkgEth} ${pkgCosmos} ${pkgMSCheck} ${pkgDoge} ${pkgSolana} ${pkgAptos} ${pkgSui} ${pkgStarcoin} ${pkgStarknet}
 # pkgAll = ${module}/ggtest
 
 iosPackageName=Wallet.xcframework

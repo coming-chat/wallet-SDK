@@ -9,8 +9,8 @@ import (
 	hexTypes "github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/coming-chat/go-aptos/crypto/derivation"
 	"github.com/coming-chat/wallet-SDK/core/base"
-	"github.com/cosmos/go-bip39"
 	"github.com/dontpanicdao/caigo"
+	"github.com/tyler-smith/go-bip39"
 )
 
 type Account struct {

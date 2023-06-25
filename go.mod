@@ -17,7 +17,6 @@ require (
 	github.com/coming-chat/lcs v0.0.0-20220829063658-0fa8432d2bdf
 	github.com/coming-chat/merlin v0.1.2-0.20211216101619-d46ce5719651
 	github.com/cosmos/cosmos-sdk v0.47.2
-	github.com/cosmos/go-bip39 v1.0.0
 	github.com/decred/base58 v1.0.3
 	github.com/dontpanicdao/caigo v0.4.1
 	github.com/ethereum/go-ethereum v1.10.26
@@ -69,6 +68,7 @@ require (
 	github.com/consensys/gnark-crypto v0.10.1-0.20230414110055-e500f2f0ff3a // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.2 // indirect
+	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogoproto v1.4.8 // indirect
 	github.com/cosmos/iavl v0.20.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.12.1 // indirect
