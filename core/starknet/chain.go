@@ -21,11 +21,13 @@ const (
 
 	NetworkMainnet = int(utils.MAINNET)
 	NetworkGoerli  = int(utils.GOERLI)
-	NetworkGoerli2 = int(utils.GOERLI2)
+	// NetworkGoerli2 = int(utils.GOERLI2)
 )
 
 var (
 	MAX_FEE = caigo.MAX_FEE.String()
+
+	erc20TransferSelectorHash = types.BigToHex(types.GetSelectorFromName("transfer"))
 )
 
 type Chain struct {
@@ -33,12 +35,21 @@ type Chain struct {
 	network utils.Network
 }
 
-func NewChainWithRpc(baseRpc string, network int) *Chain {
-	gw := gateway.NewClient(gateway.WithBaseURL(baseRpc))
+func NewChainWithRpc(baseRpc string, network int) (*Chain, error) {
+	var chainIdOpt gateway.Option
+	switch network {
+	case NetworkMainnet:
+		chainIdOpt = gateway.WithChain(gateway.MAINNET_ID)
+	case NetworkGoerli:
+		chainIdOpt = gateway.WithChain(gateway.GOERLI_ID)
+	default:
+		return nil, errors.New("invalid starknet network")
+	}
+	gw := gateway.NewClient(gateway.WithBaseURL(baseRpc), chainIdOpt)
 	return &Chain{
 		gw:      gw,
 		network: utils.Network(network),
-	}
+	}, nil
 }
 
 // MARK - Implement the protocol Chain
@@ -197,7 +208,7 @@ func (c *Chain) fetchTransactionFee(hash string) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		transferSelectorHash := "0x99cd8bde557814842a3121e8ddfd433a539b8c9f14bf31ebf108d12e6196e9"
+		transferSelectorHash := types.BigToHex(types.GetSelectorFromName("Transfer"))
 		if len(ee.Keys) > 0 && ee.Keys[0].String() == transferSelectorHash && len(ee.Data) > 2 {
 			return ee.Data[2].Int.String(), nil
 		}
@@ -323,6 +334,7 @@ func mapTransactionStatus(status string) base.TransactionStatus {
 	return base.TransactionStatusNone
 }
 
+// return zero if number is invalid
 func hexToBigInt(hexNumber string) big.Int {
 	hexNumber = strings.TrimPrefix(hexNumber, "0x")
 	if res, ok := big.NewInt(0).SetString(hexNumber, 16); ok {
