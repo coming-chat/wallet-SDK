@@ -1,6 +1,8 @@
 package starknet
 
 import (
+	"context"
+	"errors"
 	"math/big"
 
 	hexTypes "github.com/centrifuge/go-substrate-rpc-client/v4/types"
@@ -35,8 +37,48 @@ func (t *Token) Chain() base.Chain {
 }
 
 // Warning: Main token does not support
-func (t *Token) TokenInfo() (*base.TokenInfo, error) {
-	return nil, base.ErrUnsupportedFunction // TODO: todo
+func (t *Token) TokenInfo() (info *base.TokenInfo, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
+
+	if t == nil || t.chain == nil || t.chain.gw == nil {
+		return nil, errors.New("nil params")
+	}
+	ctx := context.Background()
+
+	nameHex, err := t.callContract(ctx, "name")
+	if err != nil {
+		return
+	}
+	nameBytes, _ := types.HexToBytes(nameHex)
+
+	symbolHex, err := t.callContract(ctx, "symbol")
+	if err != nil {
+		return
+	}
+	symbolBytes, _ := types.HexToBytes(symbolHex)
+
+	decimalHex, err := t.callContract(ctx, "decimals")
+	if err != nil {
+		return
+	}
+	decimal := types.HexToBN(decimalHex).Int64()
+
+	return &base.TokenInfo{
+		Name:    string(nameBytes),
+		Symbol:  string(symbolBytes),
+		Decimal: int16(decimal),
+	}, nil
+}
+
+func (t *Token) callContract(ctx context.Context, funcName string) (string, error) {
+	res, err := t.chain.gw.Call(ctx, types.FunctionCall{
+		ContractAddress:    types.HexToHash(t.TokenAddress),
+		EntryPointSelector: funcName,
+	}, "")
+	if err != nil || len(res) <= 0 {
+		return "", err
+	}
+	return res[0], nil
 }
 
 func (t *Token) BalanceOfAddress(address string) (*base.Balance, error) {
