@@ -30,7 +30,7 @@ type RSS3Metadata struct {
 	Image           string `json:"image"`
 	Standard        string `json:"standard"`
 	Collection      string `json:"collection"`
-	Description     string `json:"description"`
+	Descr           string `json:"description"`
 	ContractAddress string `json:"contract_address"`
 }
 
@@ -43,16 +43,16 @@ type RSS3NoteAction struct {
 	Metadata    *RSS3Metadata `json:"metadata"`
 	RelatedUrls []string      `json:"related_urls"`
 
-	Timestamp int64
-	Hash      string
+	Timestamp  int64
+	HashString string
 }
 
 type RSS3Note struct {
-	Timestamp time.Time         `json:"timestamp"`
-	Hash      string            `json:"hash"`
-	Success   bool              `json:"success"`
-	Network   string            `json:"network"`
-	Actions   []*RSS3NoteAction `json:"actions"`
+	Timestamp  time.Time         `json:"timestamp"`
+	HashString string            `json:"hash"`
+	Success    bool              `json:"success"`
+	Network    string            `json:"network"`
+	Actions    []*RSS3NoteAction `json:"actions"`
 }
 
 func (a *RSS3NoteAction) IsNftAction() bool {
@@ -71,7 +71,7 @@ func (a *RSS3NoteAction) RelatedScanUrl() string {
 	if len(a.RelatedUrls) == 0 {
 		return ""
 	}
-	scanComponent := "/tx/" + a.Hash
+	scanComponent := "/tx/" + a.HashString
 	for _, url := range a.RelatedUrls {
 		if strings.Contains(url, scanComponent) {
 			return url
@@ -91,11 +91,11 @@ func (a *RSS3NoteAction) Nft() *base.NFT {
 	n.Image = strings.Replace(a.Metadata.Image, "ipfs://", "https://ipfs.io/ipfs/", 1)
 	n.Standard = a.Metadata.Standard
 	n.Collection = a.Metadata.Collection
-	n.Description = a.Metadata.Description
+	n.Descr = a.Metadata.Descr
 	n.ContractAddress = a.Metadata.ContractAddress
 	n.RelatedUrl = a.RelatedScanUrl()
 	n.Timestamp = a.Timestamp
-	n.HashString = a.Hash
+	n.HashString = a.HashString
 	return n
 }
 
@@ -184,7 +184,7 @@ func (f *RSS3Fetcher) FetchNFTs(owner string) (map[string][]*base.NFT, error) {
 				if action.To == f.Owner { // receive a nft
 					actions[nftKey] = action
 					action.Timestamp = note.Timestamp.Unix()
-					action.Hash = note.Hash
+					action.HashString = note.HashString
 				} else if action.From == f.Owner { // send a nft
 					_, exits := actions[nftKey]
 					if exits {

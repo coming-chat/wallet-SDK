@@ -19,7 +19,7 @@ type TransactionOutput struct {
 
 type Transaction struct {
 	// Demo: https://api.blockcypher.com/v1/doge/main/txs/7bc313903372776e1eb81d321e3fe27c9721ce8e71a9bcfee1bde6baea31b5c2
-	Hash          string               `json:"hash"`
+	HashString    string               `json:"hash"`
 	Total         *big.Int             `json:"total"`
 	Fees          *big.Int             `json:"fees"`
 	Received      *time.Time           `json:"received"`
@@ -86,7 +86,7 @@ func (t *Transaction) SdkDetail() *base.TransactionDetail {
 		amountString = amount.String()
 	}
 	return &base.TransactionDetail{
-		HashString:      t.Hash,
+		HashString:      t.HashString,
 		Amount:          amountString,
 		EstimateFees:    t.Fees.String(),
 		FromAddress:     t.From(),

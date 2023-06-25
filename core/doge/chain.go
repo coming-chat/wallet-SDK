@@ -49,7 +49,7 @@ func (c *Chain) SendRawTransaction(signedTx string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return transaction.Hash, nil
+	return transaction.HashString, nil
 }
 
 func (c *Chain) SendSignedTransaction(signedTxn base.SignedTransaction) (hash *base.OptionalString, err error) {

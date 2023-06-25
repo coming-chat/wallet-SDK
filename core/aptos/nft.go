@@ -148,7 +148,7 @@ func transformNFT(token *nft.NFTInfo) *base.NFT {
 		Image:           strings.Replace(token.TokenData.Uri, "ipfs://", "https://ipfs.io/ipfs/", 1),
 		Standard:        "",
 		Collection:      token.TokenData.Collection,
-		Description:     token.TokenData.Description,
+		Descr:           token.TokenData.Description,
 		ContractAddress: token.TokenId.Creator,
 		RelatedUrl:      "",
 	}
@@ -169,7 +169,7 @@ func transformGraphToken(token nft.GraphQLToken) *base.NFT {
 		Image:           strings.Replace(token.CurrentTokenData.MetadataUri, "ipfs://", "https://ipfs.io/ipfs/", 1),
 		Standard:        "",
 		Collection:      token.CollectionName,
-		Description:     token.CurrentTokenData.Description,
+		Descr:           token.CurrentTokenData.Description,
 		ContractAddress: token.CreatorAddress,
 		RelatedUrl:      "",
 

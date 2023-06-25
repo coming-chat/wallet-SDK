@@ -107,11 +107,11 @@ func TransformNFT(nft *types.SuiObjectResponse) *base.NFT {
 		HashString:      hash,
 		ContractAddress: contractAddress,
 
-		Name:        name,
-		Id:          nft.Data.ObjectId.String(),
-		Description: nftStruct.Data.Description,
-		RelatedUrl:  nftStruct.Data.Link,
-		Image:       strings.Replace(nftStruct.Data.ImageUrl, "ipfs://", "https://ipfs.io/ipfs/", 1),
+		Name:       name,
+		Id:         nft.Data.ObjectId.String(),
+		Descr:      nftStruct.Data.Description,
+		RelatedUrl: nftStruct.Data.Link,
+		Image:      strings.Replace(nftStruct.Data.ImageUrl, "ipfs://", "https://ipfs.io/ipfs/", 1),
 	}
 }
 

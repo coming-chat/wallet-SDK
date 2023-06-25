@@ -124,7 +124,7 @@ func (bi *Brc20Inscription) AsNFT() *base.NFT {
 		Image:           bi.Content,
 		Standard:        "brc-20",
 		Collection:      "",
-		Description:     "",
+		Descr:           "",
 		ContractAddress: "",
 
 		RelatedUrl: bi.Preview,

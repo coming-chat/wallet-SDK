@@ -17,7 +17,7 @@ type NFT struct {
 	Image           string `json:"image"`
 	Standard        string `json:"standard"`
 	Collection      string `json:"collection"`
-	Description     string `json:"description"`
+	Descr           string `json:"descr"`
 	ContractAddress string `json:"contract_address"`
 
 	RelatedUrl string `json:"related_url"`
