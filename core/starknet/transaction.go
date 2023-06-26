@@ -14,7 +14,7 @@ type SignedTransaction struct {
 	Account *Account
 
 	// depoly Txn
-	depolyTxn *types.DeployAccountRequest
+	depolyTxn *DeployAccountTransaction
 
 	// invoke Txn
 	invokeTxn *Transaction

@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/NethermindEth/juno/utils"
 	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/coming-chat/wallet-SDK/pkg/httpUtil"
 	"github.com/dontpanicdao/caigo"
@@ -20,10 +19,6 @@ import (
 const (
 	BaseRpcUrlMainnet = gateway.MAINNET_BASE
 	BaseRpcUrlGoerli  = gateway.GOERLI_BASE
-
-	NetworkMainnet = int(utils.MAINNET)
-	NetworkGoerli  = int(utils.GOERLI)
-	// NetworkGoerli2 = int(utils.GOERLI2)
 
 	graphqlMainnet = "https://starkscan.stellate.sh"
 	graphqlGoerli  = "https://api-testnet.starkscan.co/graphql"
@@ -37,11 +32,11 @@ var (
 
 type Chain struct {
 	gw      *gateway.Gateway
-	network utils.Network
+	network Network
 	graphql string
 }
 
-func NewChainWithRpc(baseRpc string, network int) (*Chain, error) {
+func NewChainWithRpc(baseRpc string, network Network) (*Chain, error) {
 	var chainIdOpt gateway.Option
 	var graphql string
 	switch network {
@@ -57,7 +52,7 @@ func NewChainWithRpc(baseRpc string, network int) (*Chain, error) {
 	gw := gateway.NewClient(gateway.WithBaseURL(baseRpc), chainIdOpt)
 	return &Chain{
 		gw:      gw,
-		network: utils.Network(network),
+		network: network,
 		graphql: graphql,
 	}, nil
 }
@@ -131,7 +126,8 @@ func (c *Chain) SendSignedTransaction(signedTxn base.SignedTransaction) (hash *b
 	}
 
 	if txn.depolyTxn != nil {
-		resp, err := c.gw.DeployAccount(context.Background(), *txn.depolyTxn)
+		request := txn.depolyTxn.CaigoDeployAccountRequest()
+		resp, err := c.gw.DeployAccount(context.Background(), *request)
 		if err != nil {
 			return nil, err
 		}
@@ -314,8 +310,7 @@ func (c *Chain) EstimateTransactionFeeUseAccount(transaction base.Transaction, a
 	defer base.CatchPanicAndMapToBasicError(&err_)
 
 	if txn, ok := transaction.(*DeployAccountTransaction); ok {
-		fee := txn.txn.MaxFee.BigInt(big.NewInt(0))
-		return &base.OptionalString{Value: fee.String()}, nil
+		return &base.OptionalString{Value: txn.MaxFee.String()}, nil
 	}
 	if txn, ok := transaction.(*Transaction); ok {
 		caigoAcc, err := caigoAccount(c, acc)
@@ -333,15 +328,18 @@ func (c *Chain) EstimateTransactionFeeUseAccount(transaction base.Transaction, a
 }
 
 func (c *Chain) BuildDeployAccountTransaction(publicKey string) (*DeployAccountTransaction, error) {
-	txn, err := deployAccountTxnForArgentX(publicKey)
+	return newDeployAccountTransactionForArgentX(publicKey, c.network)
+}
+
+func (c *Chain) IsContractAddressDeployed(contractAddress string) (b *base.OptionalBool, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
+
+	n, err := c.gw.Nonce(context.Background(), contractAddress, "")
 	if err != nil {
 		return nil, err
 	}
-
-	return &DeployAccountTransaction{
-		txn:     txn,
-		network: c.network,
-	}, nil
+	deployed := (n != nil && n.Cmp(&big.Int{}) > 0)
+	return &base.OptionalBool{Value: deployed}, nil
 }
 
 func caigoAccount(chain *Chain, acc *Account) (*caigo.Account, error) {

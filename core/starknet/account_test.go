@@ -45,6 +45,8 @@ func TestAccount(t *testing.T) {
 	require.Equal(t, account.PublicKey(), account2.PublicKey())
 	require.Equal(t, account.Address(), account2.Address())
 
+	require.Equal(t, account.Address(), "0x63242861a734490bf31412bcb84a6ad37e370c99a5697de6dd3e8c2ebd40539")
+
 	t.Log(prikey)
 	t.Log(account.PublicKeyHex())
 	t.Log(account.Address())

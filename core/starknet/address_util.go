@@ -4,6 +4,7 @@ import (
 	"regexp"
 
 	"github.com/coming-chat/wallet-SDK/core/base"
+	"github.com/dontpanicdao/caigo/types"
 )
 
 type Util struct {
@@ -36,11 +37,11 @@ func EncodePublicKeyToAddress(publicKey string) (string, error) {
 }
 
 func encodePublicKeyToAddressArgentX(publicKey string) (string, error) {
-	txn, err := deployAccountTxnForArgentX(publicKey)
+	txn, err := newDeployAccountTransactionForArgentX(publicKey, 0)
 	if err != nil {
 		return "", err
 	}
-	return txn.ContractAddress.String(), nil
+	return types.BigToHex(txn.ContractAddress), nil
 }
 
 // func encodePublicKeyToAddressBraavos(publicKey string) (string, error) {

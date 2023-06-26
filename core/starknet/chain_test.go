@@ -42,6 +42,19 @@ func TestDeployAccount(t *testing.T) {
 	t.Log(hash.Value)
 }
 
+func TestChain_IsContractAddressDeployed(t *testing.T) {
+	addr := "0x63242861a734490bf31412bcb84a6ad37e370c99a5697de6dd3e8c2ebd40539"
+	chain := GoerliChain()
+
+	deployed, err := chain.IsContractAddressDeployed(addr)
+	require.Nil(t, err)
+	require.True(t, deployed.Value)
+
+	deployed2, err := MainnetChain().IsContractAddressDeployed(addr)
+	require.Nil(t, err)
+	require.False(t, deployed2.Value)
+}
+
 func TestTransfer(t *testing.T) {
 	acc := M1Account(t)
 	chain := GoerliChain()
