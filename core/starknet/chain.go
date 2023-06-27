@@ -25,7 +25,7 @@ const (
 )
 
 var (
-	MAX_FEE = caigo.MAX_FEE.String()
+	MaxFee = caigo.MAX_FEE.String()
 
 	erc20TransferSelectorHash = types.BigToHex(types.GetSelectorFromName("transfer"))
 )
@@ -327,8 +327,25 @@ func (c *Chain) EstimateTransactionFeeUseAccount(transaction base.Transaction, a
 	return nil, base.ErrInvalidTransactionType
 }
 
-func (c *Chain) BuildDeployAccountTransaction(publicKey string) (*DeployAccountTransaction, error) {
-	return newDeployAccountTransactionForArgentX(publicKey, c.network)
+// BuildDeployAccountTransaction
+// @param maxFee default is 0.0002
+func (c *Chain) BuildDeployAccountTransaction(publicKey string, maxFee string) (*DeployAccountTransaction, error) {
+	var feeInt *big.Int
+	var ok bool
+	if maxFee == "" {
+		feeInt = big.NewInt(2e14)
+	} else {
+		if feeInt, ok = big.NewInt(0).SetString(maxFee, 10); !ok {
+			return nil, base.ErrInvalidAmount
+		}
+	}
+
+	txn, err := newDeployAccountTransactionForArgentX(publicKey, c.network)
+	if err != nil {
+		return nil, err
+	}
+	txn.MaxFee = feeInt
+	return txn, nil
 }
 
 func (c *Chain) IsContractAddressDeployed(contractAddress string) (b *base.OptionalBool, err error) {

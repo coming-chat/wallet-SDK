@@ -30,7 +30,7 @@ func TestDeployAccount(t *testing.T) {
 	acc := M1Account(t)
 	chain := GoerliChain()
 
-	txn, err := chain.BuildDeployAccountTransaction(acc.PublicKeyHex())
+	txn, err := chain.BuildDeployAccountTransaction(acc.PublicKeyHex(), "")
 	require.Nil(t, err)
 
 	signedTxn, err := txn.SignedTransactionWithAccount(acc)

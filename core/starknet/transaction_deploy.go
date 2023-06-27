@@ -88,7 +88,7 @@ func newDeployAccountTransactionForArgentX(pubkey string, network Network) (*Dep
 			types.HexToBN("0x0"),
 		},
 		Version: big.NewInt(1),
-		MaxFee:  big.NewInt(1e13),
+		MaxFee:  big.NewInt(2e14), // 0.0002
 		Nonce:   big.NewInt(0),
 
 		Network: network,
