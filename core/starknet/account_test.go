@@ -52,6 +52,21 @@ func TestAccount(t *testing.T) {
 	t.Log(account.Address())
 }
 
+func TestAccount_ImportPrivateKey(t *testing.T) {
+	priHex := "0x1234567890"
+	priDecimal := "78187493520"
+	require.Equal(t, types.HexToBN(priHex), types.StrToBig(priDecimal))
+
+	accountHex, err := AccountWithPrivateKey(priHex)
+	require.Nil(t, err)
+	accountDecimal, err := AccountWithPrivateKey(priDecimal)
+	require.Nil(t, err)
+
+	require.Equal(t, accountHex.PublicKey(), accountDecimal.PublicKey())
+	require.Equal(t, accountHex.Address(), accountDecimal.Address())
+	require.Equal(t, accountHex.Address(), "0x7d090c124f2cac618e5b53ad97cdb204debc61e9fc63f94d63f4f75a183ceef")
+}
+
 func TestAccount22(t *testing.T) {
 	gw := gateway.NewClient(gateway.WithChain(env))
 

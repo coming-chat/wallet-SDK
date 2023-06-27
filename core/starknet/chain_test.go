@@ -145,3 +145,23 @@ func TestFetchTransactionStatus(t *testing.T) {
 	status := chain.FetchTransactionStatus(hash)
 	t.Log(status)
 }
+
+func TestNotdeployedAccount(t *testing.T) {
+	acc, err := AccountWithPrivateKey("0x123456fffff")
+	require.Nil(t, err)
+
+	chain := GoerliChain()
+	token := chain.MainToken()
+
+	txn, err := token.BuildTransfer(acc.Address(), acc.Address(), "100000000")
+	require.Nil(t, err)
+
+	_, err = chain.EstimateTransactionFeeUseAccount(txn, acc)
+	t.Log(IsNotDeployedError(err))
+
+	signedTxn, err := txn.SignedTransactionWithAccount(acc)
+	require.Nil(t, err)
+
+	_, err = chain.SendSignedTransaction(signedTxn)
+	t.Log(IsNotDeployedError(err))
+}
