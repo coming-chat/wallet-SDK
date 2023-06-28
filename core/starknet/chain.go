@@ -117,10 +117,10 @@ func (c *Chain) SendRawTransaction(signedTx string) (string, error) {
 	return "", base.ErrUnsupportedFunction
 }
 
-func (c *Chain) SendSignedTransaction(signedTxn base.SignedTransaction) (hash *base.OptionalString, err_ error) {
-	defer base.CatchPanicAndMapToBasicError(&err_)
+func (c *Chain) SendSignedTransaction(signedTxn base.SignedTransaction) (hash *base.OptionalString, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
 
-	txn := signedTxn.(*SignedTransaction)
+	txn := AsSignedTransaction(signedTxn)
 	if txn == nil {
 		return nil, base.ErrInvalidTransactionType
 	}
@@ -140,7 +140,33 @@ func (c *Chain) SendSignedTransaction(signedTxn base.SignedTransaction) (hash *b
 		}
 		resp, err := caigoAccount.Execute(context.Background(), txn.invokeTxn.calls, txn.invokeTxn.details)
 		if err != nil {
-			return nil, err
+			needDeploy := txn.NeedAutoDeploy && IsNotDeployedError(err)
+			if !needDeploy {
+				return nil, err
+			}
+
+			// we need deploy the account firstly, and resend the original txn with fixed Nonce 1
+			deployTxn, err := c.BuildDeployAccountTransaction(txn.Account.PublicKeyHex(), "")
+			if err != nil {
+				return nil, err
+			}
+			signedDeployTxn, err := deployTxn.SignedTransactionWithAccount(txn.Account)
+			if err != nil {
+				return nil, err
+			}
+			_, err = c.SendSignedTransaction(signedDeployTxn)
+			if err != nil {
+				return nil, err
+			}
+			// now resend the original txn
+			txn.invokeTxn.details = types.ExecuteDetails{
+				Nonce:  big.NewInt(1),
+				MaxFee: caigo.MAX_FEE,
+			}
+			resp, err = caigoAccount.Execute(context.Background(), txn.invokeTxn.calls, txn.invokeTxn.details)
+			if err != nil {
+				return nil, err
+			}
 		}
 		return &base.OptionalString{Value: resp.TransactionHash}, nil
 	}

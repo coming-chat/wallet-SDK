@@ -71,6 +71,8 @@ func TestTransfer(t *testing.T) {
 
 	// signedTxn, err := txn.SignedTransactionWithAccount(acc)
 	// require.Nil(t, err)
+	// xx := signedTxn.(*SignedTransaction)
+	// xx.NeedAutoDeploy = true
 	// hash, err := chain.SendSignedTransaction(signedTxn)
 	// require.Nil(t, err)
 	// t.Log(hash.Value)

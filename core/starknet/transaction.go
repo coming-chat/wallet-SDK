@@ -13,6 +13,9 @@ type Transaction struct {
 type SignedTransaction struct {
 	Account *Account
 
+	// Do you need to automatically deploy the contract address first when you send the transaction for the first time? default NO
+	NeedAutoDeploy bool
+
 	// depoly Txn
 	depolyTxn *DeployAccountTransaction
 
@@ -33,4 +36,14 @@ func (t *Transaction) SignedTransactionWithAccount(account base.Account) (signed
 		Account:   starknetAccount,
 		invokeTxn: t,
 	}, nil
+}
+
+func AsSignedTransaction(txn base.SignedTransaction) *SignedTransaction {
+	if res, ok := txn.(*SignedTransaction); ok {
+		return res
+	}
+	if res, ok := txn.(SignedTransaction); ok {
+		return &res
+	}
+	return nil
 }
