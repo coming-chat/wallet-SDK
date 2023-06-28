@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"math/big"
+	"math/rand"
 	"strconv"
 	"strings"
 	"time"
@@ -161,7 +162,7 @@ func (c *Chain) SendSignedTransaction(signedTxn base.SignedTransaction) (hash *b
 			// now resend the original txn
 			txn.invokeTxn.details = types.ExecuteDetails{
 				Nonce:  big.NewInt(1),
-				MaxFee: big.NewInt(1e14),
+				MaxFee: big.NewInt(0).SetUint64(1e14 + random(1e12)),
 			}
 			resp, err = caigoAccount.Execute(context.Background(), txn.invokeTxn.calls, txn.invokeTxn.details)
 			if err != nil {
@@ -361,7 +362,7 @@ func (c *Chain) BuildDeployAccountTransaction(publicKey string, maxFee string) (
 	var feeInt *big.Int
 	var ok bool
 	if maxFee == "" {
-		feeInt = big.NewInt(2e14)
+		feeInt = big.NewInt(0).SetUint64(1e15 + random(1e13))
 	} else {
 		if feeInt, ok = big.NewInt(0).SetString(maxFee, 10); !ok {
 			return nil, base.ErrInvalidAmount
@@ -434,4 +435,8 @@ func hexToBigInt(hexNumber string) big.Int {
 	} else {
 		return big.Int{}
 	}
+}
+
+func random(max uint64) uint64 {
+	return rand.New(rand.NewSource(time.Now().UnixNano())).Uint64() % max
 }
