@@ -161,7 +161,7 @@ func (c *Chain) SendSignedTransaction(signedTxn base.SignedTransaction) (hash *b
 			// now resend the original txn
 			txn.invokeTxn.details = types.ExecuteDetails{
 				Nonce:  big.NewInt(1),
-				MaxFee: caigo.MAX_FEE,
+				MaxFee: big.NewInt(1e14),
 			}
 			resp, err = caigoAccount.Execute(context.Background(), txn.invokeTxn.calls, txn.invokeTxn.details)
 			if err != nil {
@@ -191,6 +191,7 @@ func (c *Chain) FetchTransactionDetail(hash string) (detail *base.TransactionDet
 	receiver := calldata[6]
 	amountHex := calldata[7]
 	amountInt := hexToBigInt(amountHex)
+	maxFeeInt := hexToBigInt(txn.Transaction.MaxFee)
 	detail = &base.TransactionDetail{
 		HashString: txn.Transaction.TransactionHash,
 
@@ -199,7 +200,8 @@ func (c *Chain) FetchTransactionDetail(hash string) (detail *base.TransactionDet
 
 		Amount: amountInt.String(),
 		Status: mapTransactionStatus(txn.Status),
-		// EstimateFees string
+
+		EstimateFees: maxFeeInt.String(),
 		// FinishTimestamp int64
 		// FailureMessage string
 	}
