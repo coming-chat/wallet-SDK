@@ -34,12 +34,17 @@ func grindKey(seed []byte) (*big.Int, error) {
 	return nil, errors.New("grindKey is broken: tried 100k vals")
 }
 
+func IsValidPrivateKey(key string) bool {
+	_, err := AccountWithPrivateKey(key)
+	return err == nil
+}
+
 func NewAccountWithMnemonic(mnemonic string) (*Account, error) {
 	seed, err := bip39.NewSeedWithErrorChecking(mnemonic, "")
 	if err != nil {
 		return nil, err
 	}
-	key, err := derivation.DeriveForPath("m/44'/9004'/0'/0/0", seed)
+	key, err := derivation.DeriveForPath("m/44'/9004'/0'/0", seed)
 	if err != nil {
 		return nil, err
 	}

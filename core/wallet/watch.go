@@ -107,6 +107,8 @@ func ChainTypeOfPrivateKey(prikey string) *base.StringArray {
 			res.Append(ChainTypeAptos)
 			res.Append(ChainTypeSui)
 			res.Append(ChainTypeStarcoin)
+		}
+		if starknet.IsValidPrivateKey(prikey) {
 			res.Append(ChainTypeStarknet)
 		}
 		if length == 128 {
