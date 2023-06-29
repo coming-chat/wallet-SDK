@@ -4,6 +4,7 @@ import (
 	"errors"
 	"math/big"
 	"strconv"
+	"strings"
 	"sync"
 )
 
@@ -164,4 +165,42 @@ func MapAnyToBasicError(e any) error {
 	}
 
 	return errors.New("panic error: unexpected error.")
+}
+
+// ParseNumber
+// @param num any format number, such as decimal "1237890123", hex "0x123ef0", "123ef0"
+func ParseNumber(num string) (*big.Int, error) {
+	if strings.HasPrefix(num, "0x") || strings.HasPrefix(num, "0X") {
+		num = num[2:]
+		if b, ok := big.NewInt(0).SetString(num, 16); ok {
+			return b, nil
+		}
+	}
+	if b, ok := big.NewInt(0).SetString(num, 10); ok {
+		return b, nil
+	}
+	if b, ok := big.NewInt(0).SetString(num, 16); ok {
+		return b, nil
+	}
+	return nil, errors.New("invalid number")
+}
+
+// ParseNumberToHex
+// @param num any format number, such as decimal "1237890123", hex "0x123ef0", "123ef0"
+// @return hex number start with 0x, characters include 0-9 a-f
+func ParseNumberToHex(num string) string {
+	if b, err := ParseNumber(num); err == nil {
+		return "0x" + b.Text(16)
+	}
+	return "0x0"
+}
+
+// ParseNumberToDecimal
+// @param num any format number, such as decimal "1237890123", hex "0x123ef0", "123ef0"
+// @return decimal number, characters include 0-9
+func ParseNumberToDecimal(num string) string {
+	if b, err := ParseNumber(num); err == nil {
+		return b.Text(10)
+	}
+	return "0"
 }

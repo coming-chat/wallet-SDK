@@ -4,7 +4,6 @@ import (
 	"crypto/sha256"
 	"errors"
 	"math/big"
-	"strings"
 
 	hexTypes "github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/coming-chat/go-aptos/crypto/derivation"
@@ -58,22 +57,12 @@ func NewAccountWithMnemonic(mnemonic string) (*Account, error) {
 }
 
 func AccountWithPrivateKey(privatekey string) (*Account, error) {
-	var priKey *big.Int
-	if strings.HasPrefix(privatekey, "0x") {
-		priData, err := hexTypes.HexDecodeString(privatekey)
-		if err != nil {
-			return nil, err
-		}
-		priKey = big.NewInt(0).SetBytes(priData)
-	} else {
-		var ok bool
-		priKey, ok = big.NewInt(0).SetString(privatekey, 10)
-		if !ok {
-			return nil, base.ErrInvalidPrivateKey
-		}
+	priKey, err := base.ParseNumber(privatekey)
+	if err != nil {
+		return nil, base.ErrInvalidPrivateKey
 	}
 
-	_, _, err := caigo.Curve.PrivateToPoint(priKey)
+	_, _, err = caigo.Curve.PrivateToPoint(priKey)
 	if err != nil {
 		return nil, err
 	}

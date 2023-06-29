@@ -429,9 +429,8 @@ func mapTransactionStatus(status string) base.TransactionStatus {
 
 // return zero if number is invalid
 func hexToBigInt(hexNumber string) big.Int {
-	hexNumber = strings.TrimPrefix(hexNumber, "0x")
-	if res, ok := big.NewInt(0).SetString(hexNumber, 16); ok {
-		return *res
+	if b, err := base.ParseNumber(hexNumber); err == nil {
+		return *b
 	} else {
 		return big.Int{}
 	}
