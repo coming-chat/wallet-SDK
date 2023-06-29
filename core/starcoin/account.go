@@ -41,6 +41,9 @@ func AccountWithPrivateKey(privateKey string) (*Account, error) {
 	if err != nil {
 		return nil, err
 	}
+	if ed25519.SeedSize != len(key) {
+		return nil, base.ErrInvalidPrivateKey
+	}
 	return accountWithKey(key), nil
 }
 

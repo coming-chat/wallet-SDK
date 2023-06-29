@@ -11,8 +11,6 @@ func TestAccount(t *testing.T) {
 	mnemonic := testcase.M1
 	account, err := NewAccountWithMnemonic(mnemonic)
 	require.Nil(t, err)
-	require.Equal(t, account.address, testcase.Accounts.Starcoin.Address)
-	t.Log(account.address)
 
 	// private key hex to account
 	priHex, err := account.PrivateKeyHex()

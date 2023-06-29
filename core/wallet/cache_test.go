@@ -4,6 +4,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/coming-chat/wallet-SDK/core/btc"
+	"github.com/coming-chat/wallet-SDK/core/cosmos"
+	"github.com/coming-chat/wallet-SDK/core/doge"
 	"github.com/coming-chat/wallet-SDK/core/testcase"
 	"github.com/stretchr/testify/require"
 )
@@ -147,3 +150,23 @@ var (
 		cacheKey: "empty",
 	}
 )
+
+func TestDecimalPrivatekey(t *testing.T) {
+	decimalKey := "2522809042406563759994430227158123451351879727850354505141300412651234567890"
+	argWallet := WalletStore{
+		cacheKey:   "decimal_privatekey",
+		privateKey: decimalKey,
+	}
+
+	wallet := NewCacheWallet(&argWallet)
+	t.Log(wallet.PolkaAccountInfo(44).Address())
+	t.Log(wallet.BitcoinAccountInfo(btc.ChainMainnet, btc.AddressTypeComingTaproot).Address())
+	t.Log(wallet.EthereumAccountInfo().Address())
+	t.Log(wallet.CosmosAccountInfo(cosmos.CosmosAtom.Cointype, cosmos.CosmosAtom.Prefix).Address())
+	t.Log(wallet.DogecoinAccountInfo(doge.ChainMainnet).Address())
+	t.Log(wallet.SolanaAccountInfo().Address())
+	t.Log(wallet.AptosAccountInfo().Address())
+	t.Log(wallet.SuiAccountInfo().Address())
+	t.Log(wallet.StarcoinAccountInfo().Address())
+	t.Log(wallet.StarknetAccountInfo().Address())
+}

@@ -1,6 +1,7 @@
 package aptos
 
 import (
+	"crypto/ed25519"
 	"encoding/hex"
 	"errors"
 
@@ -27,6 +28,9 @@ func AccountWithPrivateKey(prikey string) (*Account, error) {
 	seed, err := types.HexDecodeString(prikey)
 	if err != nil {
 		return nil, err
+	}
+	if len(seed) != ed25519.SeedSize {
+		return nil, base.ErrInvalidPrivateKey
 	}
 	account := aptosaccount.NewAccount(seed)
 	return &Account{account: account}, nil
