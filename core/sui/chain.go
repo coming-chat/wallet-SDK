@@ -147,21 +147,23 @@ func (c *Chain) FetchTransactionDetail(hash string) (detail *base.TransactionDet
 	if err != nil {
 		return nil, err
 	}
-	if len(transaction.Inputs) != 2 {
-		return nil, notCoinTransferErr
-	}
-	for _, input := range transaction.Inputs {
-		if input.Type != "pure" {
-			return nil, notCoinTransferErr
+	if len(transaction.Inputs) == 2 {
+		for _, input := range transaction.Inputs {
+			if input.Type != "pure" {
+				return nil, notCoinTransferErr
+			}
+			switch input.ValueType {
+			case "address":
+				firstRecipient = input.Value
+			case "u64":
+				total = input.Value
+			default:
+				return nil, notCoinTransferErr
+			}
 		}
-		switch input.ValueType {
-		case "address":
-			firstRecipient = input.Value
-		case "u64":
-			total = input.Value
-		default:
-			return nil, notCoinTransferErr
-		}
+	} else {
+		firstRecipient = ""
+		total = ""
 	}
 
 	var effects types.SuiTransactionBlockEffects
