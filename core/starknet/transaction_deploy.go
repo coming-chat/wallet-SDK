@@ -4,7 +4,6 @@ import (
 	"errors"
 	"math/big"
 
-	hexTypes "github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/dontpanicdao/caigo"
 	"github.com/dontpanicdao/caigo/gateway"
@@ -70,56 +69,24 @@ func (txn *DeployAccountTransaction) SignedTransactionWithAccount(account base.A
 	}, nil
 }
 
-// var newDeployAccountTransaction = newDeployAccountTransactionForArgentX
-var newDeployAccountTransaction = newDeployAccountTransactionForBraavos
+// var newDeployAccountTransaction = newDeployAccountTransactionForBraavos
+var newDeployAccountTransaction = newDeployAccountTransactionForArgentX
 
-// func newDeployAccountTransactionForArgentX(pubkey string, network Network) (*DeployAccountTransaction, error) {
-// 	pubData, err := hexTypes.HexDecodeString(pubkey)
-// 	if err != nil {
-// 		return nil, base.ErrInvalidPublicKey
-// 	}
-// 	pubkeyInt := big.NewInt(0).SetBytes(pubData)
-
-// 	txn := DeployAccountTransaction{
-// 		ClassHash:           types.HexToBN("0x25ec026985a3bf9d0cc1fe17326b245dfdc3ff89b8fde106542a3ea56c5a918"),
-// 		ContractAddressSalt: pubkeyInt,
-// 		ConstructorCallData: []*big.Int{
-// 			types.HexToBN("0x33434ad846cdd5f23eb73ff09fe6fddd568284a0fb7d1be20ee482f044dabe2"),
-// 			types.HexToBN("0x79dc0da7c54b95f10aa182ad0a46400db63156920adb65eca2654c0945a463"),
-// 			types.HexToBN("0x2"),
-// 			pubkeyInt,
-// 			types.HexToBN("0x0"),
-// 		},
-// 		Version: big.NewInt(1),
-// 		MaxFee:  big.NewInt(2e14), // 0.0002
-// 		Nonce:   big.NewInt(0),
-
-// 		Network: network,
-// 	}
-
-// 	callerAddress := big.NewInt(0)
-// 	txn.ContractAddress, err = txn.ComputeContractAddress(callerAddress)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return &txn, nil
-// }
-
-func newDeployAccountTransactionForBraavos(pubkey string, network Network) (*DeployAccountTransaction, error) {
-	pubData, err := hexTypes.HexDecodeString(pubkey)
+func newDeployAccountTransactionForArgentX(pubkey string, network Network) (*DeployAccountTransaction, error) {
+	pubkeyInt, err := base.ParseNumber(pubkey)
 	if err != nil {
 		return nil, base.ErrInvalidPublicKey
 	}
-	pubkeyInt := big.NewInt(0).SetBytes(pubData)
 
 	txn := DeployAccountTransaction{
-		ClassHash:           types.HexToBN("0x03131fa018d520a037686ce3efddeab8f28895662f019ca3ca18a626650f7d1e"),
+		ClassHash:           types.HexToBN("0x25ec026985a3bf9d0cc1fe17326b245dfdc3ff89b8fde106542a3ea56c5a918"),
 		ContractAddressSalt: pubkeyInt,
 		ConstructorCallData: []*big.Int{
-			types.HexToBN("0x5aa23d5bb71ddaa783da7ea79d405315bafa7cf0387a74f4593578c3e9e6570"),
-			types.HexToBN("0x2dd76e7ad84dbed81c314ffe5e7a7cacfb8f4836f01af4e913f275f89a3de1a"),
-			types.HexToBN("0x1"),
+			types.HexToBN("0x33434ad846cdd5f23eb73ff09fe6fddd568284a0fb7d1be20ee482f044dabe2"),
+			types.HexToBN("0x79dc0da7c54b95f10aa182ad0a46400db63156920adb65eca2654c0945a463"),
+			types.HexToBN("0x2"),
 			pubkeyInt,
+			types.HexToBN("0x0"),
 		},
 		Version: big.NewInt(1),
 		MaxFee:  big.NewInt(2e14), // 0.0002
@@ -135,6 +102,37 @@ func newDeployAccountTransactionForBraavos(pubkey string, network Network) (*Dep
 	}
 	return &txn, nil
 }
+
+// func newDeployAccountTransactionForBraavos(pubkey string, network Network) (*DeployAccountTransaction, error) {
+// 	pubData, err := hexTypes.HexDecodeString(pubkey)
+// 	if err != nil {
+// 		return nil, base.ErrInvalidPublicKey
+// 	}
+// 	pubkeyInt := big.NewInt(0).SetBytes(pubData)
+
+// 	txn := DeployAccountTransaction{
+// 		ClassHash:           types.HexToBN("0x03131fa018d520a037686ce3efddeab8f28895662f019ca3ca18a626650f7d1e"),
+// 		ContractAddressSalt: pubkeyInt,
+// 		ConstructorCallData: []*big.Int{
+// 			types.HexToBN("0x5aa23d5bb71ddaa783da7ea79d405315bafa7cf0387a74f4593578c3e9e6570"),
+// 			types.HexToBN("0x2dd76e7ad84dbed81c314ffe5e7a7cacfb8f4836f01af4e913f275f89a3de1a"),
+// 			types.HexToBN("0x1"),
+// 			pubkeyInt,
+// 		},
+// 		Version: big.NewInt(1),
+// 		MaxFee:  big.NewInt(2e14), // 0.0002
+// 		Nonce:   big.NewInt(0),
+
+// 		Network: network,
+// 	}
+
+// 	callerAddress := big.NewInt(0)
+// 	txn.ContractAddress, err = txn.ComputeContractAddress(callerAddress)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return &txn, nil
+// }
 
 // ContractAddress computes the address of a Starknet contract.
 func (txn *DeployAccountTransaction) ComputeContractAddress(callerAddress *big.Int) (*big.Int, error) {
