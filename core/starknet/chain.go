@@ -162,7 +162,7 @@ func (c *Chain) SendSignedTransaction(signedTxn base.SignedTransaction) (hash *b
 			// now resend the original txn
 			txn.invokeTxn.details = types.ExecuteDetails{
 				Nonce:  big.NewInt(1),
-				MaxFee: big.NewInt(0).SetUint64(1e14 + random(1e12)),
+				MaxFee: big.NewInt(0).SetUint64(1e14 + random(1e11)),
 			}
 			resp, err = caigoAccount.Execute(context.Background(), txn.invokeTxn.calls, txn.invokeTxn.details)
 			if err != nil {
@@ -362,14 +362,14 @@ func (c *Chain) BuildDeployAccountTransaction(publicKey string, maxFee string) (
 	var feeInt *big.Int
 	var ok bool
 	if maxFee == "" {
-		feeInt = big.NewInt(0).SetUint64(1e15 + random(1e13))
+		feeInt = big.NewInt(0).SetUint64(1e15 + random(1e12))
 	} else {
 		if feeInt, ok = big.NewInt(0).SetString(maxFee, 10); !ok {
 			return nil, base.ErrInvalidAmount
 		}
 	}
 
-	txn, err := newDeployAccountTransactionForArgentX(publicKey, c.network)
+	txn, err := newDeployAccountTransaction(publicKey, c.network)
 	if err != nil {
 		return nil, err
 	}

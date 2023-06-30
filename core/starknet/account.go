@@ -5,10 +5,13 @@ import (
 	"errors"
 	"math/big"
 
+	"github.com/btcsuite/btcd/btcutil/hdkeychain"
+	"github.com/btcsuite/btcd/chaincfg"
 	hexTypes "github.com/centrifuge/go-substrate-rpc-client/v4/types"
-	"github.com/coming-chat/go-aptos/crypto/derivation"
 	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/dontpanicdao/caigo"
+	"github.com/ethereum/go-ethereum/accounts"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/tyler-smith/go-bip39"
 )
 
@@ -16,21 +19,29 @@ type Account struct {
 	privateKey *big.Int
 }
 
-func grindKey(seed []byte) (*big.Int, error) {
-	// order := caigo.Curve.N
-	// max := big.NewInt(0).Exp(big.NewInt(2), big.NewInt(256), nil)
-	// limit := big.NewInt(0).Sub(max, big.NewInt(0).Mod(max, order))
-	limit := caigo.Curve.N
+func grindKey(keySeed []byte) (*big.Int, error) {
+	keyValueLimit := caigo.Curve.N
+	sha256EcMaxDigest := big.NewInt(0).Exp(big.NewInt(2), big.NewInt(256), nil)
+	maxAllowedVal := big.NewInt(0).Sub(sha256EcMaxDigest, big.NewInt(0).Mod(sha256EcMaxDigest, keyValueLimit))
 
 	for i := 0; i < 100000; i++ {
-		bb := append(seed, big.NewInt(int64(i)).Bytes()...)
-		key := sha256.Sum256(bb)
-		kb := big.NewInt(0).SetBytes(key[:])
-		if kb.Cmp(limit) == -1 {
-			return kb, nil
+		key := hashKeyWithIndex(keySeed, i)
+		if key.Cmp(maxAllowedVal) == -1 {
+			return big.NewInt(0).Mod(key, keyValueLimit), nil
 		}
 	}
 	return nil, errors.New("grindKey is broken: tried 100k vals")
+}
+
+func hashKeyWithIndex(seed []byte, i int) *big.Int {
+	var payload []byte
+	if i == 0 {
+		payload = append(seed, 0)
+	} else {
+		payload = append(seed, big.NewInt(int64(i)).Bytes()...)
+	}
+	hash := sha256.Sum256(payload)
+	return big.NewInt(0).SetBytes(hash[:])
 }
 
 func IsValidPrivateKey(key string) bool {
@@ -43,11 +54,26 @@ func NewAccountWithMnemonic(mnemonic string) (*Account, error) {
 	if err != nil {
 		return nil, err
 	}
-	key, err := derivation.DeriveForPath("m/44'/9004'/0'/0", seed)
+	masterKey, err := hdkeychain.NewMaster(seed, &chaincfg.MainNetParams)
 	if err != nil {
 		return nil, err
 	}
-	prikey, err := grindKey(key.Key)
+	path, err := accounts.ParseDerivationPath("m/44'/9004'/0'/0/0")
+	if err != nil {
+		return nil, err
+	}
+	key := masterKey
+	for _, n := range path {
+		key, err = key.DeriveNonStandard(n)
+		if err != nil {
+			return nil, err
+		}
+	}
+	privateKey, err := key.ECPrivKey()
+	if err != nil {
+		return nil, err
+	}
+	prikey, err := grindKey(crypto.FromECDSA(privateKey.ToECDSA()))
 	if err != nil {
 		return nil, err
 	}

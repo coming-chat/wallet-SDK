@@ -45,11 +45,11 @@ func TestAccount(t *testing.T) {
 	require.Equal(t, account.PublicKey(), account2.PublicKey())
 	require.Equal(t, account.Address(), account2.Address())
 
-	require.Equal(t, account.Address(), "0x6c3642d74e5053a135f9ab59ff71d14992c2525c6e65c68363bf8f1fce58d49")
-
 	t.Log(prikey)
 	t.Log(account.PublicKeyHex())
 	t.Log(account.Address())
+
+	require.Equal(t, account.Address(), "0x8debaf4740ac184b2e879d4d3fd773f2c7f5d453b795212d4098899a73fc19")
 }
 
 func TestAccount_ImportPrivateKey(t *testing.T) {
@@ -65,6 +65,15 @@ func TestAccount_ImportPrivateKey(t *testing.T) {
 	require.Equal(t, accountHex.PublicKey(), accountDecimal.PublicKey())
 	require.Equal(t, accountHex.Address(), accountDecimal.Address())
 	require.Equal(t, accountHex.Address(), "0x7d090c124f2cac618e5b53ad97cdb204debc61e9fc63f94d63f4f75a183ceef")
+}
+
+func TestGrindKey(t *testing.T) {
+	prikey := "86F3E7293141F20A8BAFF320E8EE4ACCB9D4A4BF2B4D295E8CEE784DB46E0519"
+	seed, ok := big.NewInt(0).SetString(prikey, 16)
+	require.True(t, ok)
+	res, err := grindKey(seed.Bytes())
+	require.Nil(t, err)
+	require.Equal(t, res.Text(16), "5c8c8683596c732541a59e03007b2d30dbbbb873556fe65b5fb63c16688f941")
 }
 
 func TestAccount22(t *testing.T) {
