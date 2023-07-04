@@ -36,8 +36,6 @@ type zksync_Transaction struct {
 	S                    hexutil.Big    `json:"s"`
 }
 
-// func (t *zksync_Transaction)
-
 func (e *EthChain) zksync_FetchTransactionDetail(hashString string) (detail *base.TransactionDetail, data []byte, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
 

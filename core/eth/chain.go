@@ -95,7 +95,7 @@ func (c *Chain) FetchTransactionDetail(hash string) (*base.TransactionDetail, er
 	if err != nil {
 		return nil, err
 	}
-	detail, data, err := chain.FetchTransactionDetail(hash)
+	detail, data, err := chain.fetchTransactionDetail(hash)
 	if err != nil {
 		return nil, err
 	}

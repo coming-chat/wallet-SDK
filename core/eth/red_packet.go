@@ -213,7 +213,7 @@ func (c *Chain) FetchRedPacketCreationDetail(hash string) (*RedPacketDetail, err
 		return nil, err
 	}
 
-	detail, data, err := chain.FetchTransactionDetail(hash)
+	detail, data, err := chain.fetchTransactionDetail(hash)
 	if err != nil {
 		return nil, err
 	}
