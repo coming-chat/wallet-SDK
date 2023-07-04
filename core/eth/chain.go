@@ -95,11 +95,11 @@ func (c *Chain) FetchTransactionDetail(hash string) (*base.TransactionDetail, er
 	if err != nil {
 		return nil, err
 	}
-	detail, msg, err := chain.FetchTransactionDetail(hash)
+	detail, data, err := chain.FetchTransactionDetail(hash)
 	if err != nil {
 		return nil, err
 	}
-	if data := msg.Data(); len(data) > 0 {
+	if len(data) > 0 {
 		method, params, err := DecodeContractParams(Erc20AbiStr, data)
 		if err == nil && method == ERC20_METHOD_TRANSFER {
 			detail.ToAddress = params[0].(common.Address).String()

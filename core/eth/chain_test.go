@@ -7,11 +7,26 @@ import (
 
 	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/coming-chat/wallet-SDK/core/testcase"
+	"github.com/stretchr/testify/require"
 )
 
+func TestZK(t *testing.T) {
+
+	// rpc := "https://testnet.era.zksync.dev"
+	// hash := "0x590fae06853d27495f1c5d4d23ea35ad910454a30de012231cb390485bc8e268"
+
+	rpc := "https://mainnet.era.zksync.io"
+	hash := "0xc9ac881431a8df988bdcc00693e2c286848ce12f48e6af0323588cb68d822417"
+
+	chain := NewChainWithRpc(rpc)
+	detail, err := chain.FetchTransactionDetail(hash)
+	require.Nil(t, err)
+	t.Log(detail.Status)
+}
+
 func TestChainDetail(t *testing.T) {
-	hash := "0xd9efdb33723288e16c2a552f1699d8daddfdbaf4c79cec0fc95d2dcc9025da70"
-	chain := rpcs.arbitrumProd.Chain()
+	hash := "0xb5f9b89667d854555ce1b178a025c44d869dfcdef24ae4c5a1e790c5f41bbafb"
+	chain := rpcs.ethereumProd.Chain()
 
 	// hash := "0xa2b05fc52748ee21845c8596263d75d85f54c522575be2e399235d144cd5a153"
 	// chain := rpcs.optimismProd.Chain()
