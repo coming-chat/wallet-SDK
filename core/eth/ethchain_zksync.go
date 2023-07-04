@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/core/types"
 )
 
 const zksync_chainid = 324
@@ -36,7 +37,7 @@ type zksync_Transaction struct {
 	S                    hexutil.Big    `json:"s"`
 }
 
-func (e *EthChain) zksync_FetchTransactionDetail(hashString string) (detail *base.TransactionDetail, data []byte, err error) {
+func (e *EthChain) zksync_FetchTransactionDetail(hashString string) (detail *base.TransactionDetail, txn *types.Transaction, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
 
 	ctx, cancel := context.WithTimeout(context.Background(), e.timeout)
@@ -108,5 +109,8 @@ func (e *EthChain) zksync_FetchTransactionDetail(hashString string) (detail *bas
 	detail.EstimateFees = gasFeeInt.String()
 	detail.FinishTimestamp = int64(blockHeader.Time)
 
-	return detail, tx.Data, nil
+	txn = types.NewTx(&types.DynamicFeeTx{
+		Data: tx.Data, // only use data currently.
+	})
+	return detail, txn, nil
 }

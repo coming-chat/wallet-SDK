@@ -213,12 +213,12 @@ func (c *Chain) FetchRedPacketCreationDetail(hash string) (*RedPacketDetail, err
 		return nil, err
 	}
 
-	detail, data, err := chain.fetchTransactionDetail(hash)
+	detail, txn, err := chain.FetchTransactionDetail(hash)
 	if err != nil {
 		return nil, err
 	}
 	redDetail := &RedPacketDetail{detail, "", 0}
-	if len(data) > 0 {
+	if data := txn.Data(); len(data) > 0 {
 		method, params, err_ := DecodeContractParams(RedPacketABI, data)
 		if err_ != nil {
 			return nil, err_

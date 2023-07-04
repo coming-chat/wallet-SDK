@@ -41,7 +41,7 @@ func decodeSigner(txn *types.Transaction) (common.Address, error) {
 // 获取交易的详情
 // @param hashString 交易的 hash
 // @return 交易详情 和 交易原文信息
-func (e *EthChain) fetchTransactionDetail(hashString string) (detail *base.TransactionDetail, data []byte, err error) {
+func (e *EthChain) FetchTransactionDetail(hashString string) (detail *base.TransactionDetail, txn *types.Transaction, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
 
 	if e.chainId.Int64() == zksync_chainid || e.chainId.Int64() == zksync_chainid_testnet {
@@ -117,7 +117,7 @@ func (e *EthChain) fetchTransactionDetail(hashString string) (detail *base.Trans
 	detail.EstimateFees = gasFeeInt.String()
 	detail.FinishTimestamp = int64(blockHeader.Time)
 
-	return detail, tx.Data(), nil
+	return detail, tx, nil
 }
 
 // 获取交易的状态
