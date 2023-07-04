@@ -25,10 +25,23 @@ type Jsonable interface {
 	// NewXxxWithJsonString(s string) *Xxx
 }
 
+func decodeSigner(txn *types.Transaction) (common.Address, error) {
+	var signer types.Signer
+	switch {
+	case txn.Type() == types.AccessListTxType:
+		signer = types.NewEIP2930Signer(txn.ChainId())
+	case txn.Type() == types.DynamicFeeTxType:
+		signer = types.NewLondonSigner(txn.ChainId())
+	default:
+		signer = types.NewEIP155Signer(txn.ChainId())
+	}
+	return types.Sender(signer, txn)
+}
+
 // 获取交易的详情
 // @param hashString 交易的 hash
 // @return 交易详情 和 交易原文信息
-func (e *EthChain) FetchTransactionDetail(hashString string) (detail *base.TransactionDetail, msg types.Message, err error) {
+func (e *EthChain) FetchTransactionDetail(hashString string) (detail *base.TransactionDetail, txn *types.Transaction, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
 
 	ctx, cancel := context.WithTimeout(context.Background(), e.timeout)
@@ -37,17 +50,17 @@ func (e *EthChain) FetchTransactionDetail(hashString string) (detail *base.Trans
 	if err != nil {
 		return
 	}
-	msg, err = tx.AsMessage(types.NewLondonSigner(e.chainId), nil)
+	sender, err := decodeSigner(tx)
 	if err != nil {
 		return
 	}
 
-	gasFeeInt := big.NewInt(0).Mul(msg.GasPrice(), big.NewInt(0).SetUint64(msg.Gas()))
+	gasFeeInt := big.NewInt(0).Mul(tx.GasPrice(), big.NewInt(0).SetUint64(tx.Gas()))
 	detail = &base.TransactionDetail{
 		HashString:   hashString,
-		FromAddress:  msg.From().String(),
-		ToAddress:    msg.To().String(),
-		Amount:       msg.Value().String(),
+		FromAddress:  sender.String(),
+		ToAddress:    tx.To().String(),
+		Amount:       tx.Value().String(),
 		EstimateFees: gasFeeInt.String(),
 	}
 
@@ -71,15 +84,15 @@ func (e *EthChain) FetchTransactionDetail(hashString string) (detail *base.Trans
 		detail.Status = base.TransactionStatusFailure
 		// get error message
 		_, err := e.RemoteRpcClient.CallContract(ctx, ethereum.CallMsg{
-			From:       msg.From(),
-			To:         msg.To(),
-			Data:       msg.Data(),
-			Gas:        msg.Gas(),
-			GasPrice:   msg.GasPrice(),
-			GasFeeCap:  msg.GasFeeCap(),
-			GasTipCap:  msg.GasTipCap(),
-			Value:      msg.Value(),
-			AccessList: msg.AccessList(),
+			From:       sender,
+			To:         tx.To(),
+			Data:       tx.Data(),
+			Gas:        tx.Gas(),
+			GasPrice:   tx.GasPrice(),
+			GasFeeCap:  tx.GasFeeCap(),
+			GasTipCap:  tx.GasTipCap(),
+			Value:      tx.Value(),
+			AccessList: tx.AccessList(),
 		}, receipt.BlockNumber)
 		if err != nil {
 			detail.FailureMessage = err.Error()
@@ -90,7 +103,7 @@ func (e *EthChain) FetchTransactionDetail(hashString string) (detail *base.Trans
 		detail.Status = base.TransactionStatusSuccess
 	}
 
-	effectiveGasPrice := msg.GasPrice()
+	effectiveGasPrice := tx.GasPrice()
 	if receipt.EffectiveGasPrice != nil {
 		effectiveGasPrice = receipt.EffectiveGasPrice
 	}
@@ -101,7 +114,7 @@ func (e *EthChain) FetchTransactionDetail(hashString string) (detail *base.Trans
 	detail.EstimateFees = gasFeeInt.String()
 	detail.FinishTimestamp = int64(blockHeader.Time)
 
-	return detail, msg, nil
+	return detail, tx, nil
 }
 
 // 获取交易的状态
@@ -161,7 +174,7 @@ func (e *EthChain) TransactionByHash(txHash string) (*TransactionByHashResult, e
 	if err != nil {
 		return nil, err
 	}
-	msg, err := tx.AsMessage(types.NewEIP155Signer(e.chainId), nil)
+	sender, err := decodeSigner(tx)
 	if err != nil {
 		return nil, err
 	}
@@ -178,7 +191,7 @@ func (e *EthChain) TransactionByHash(txHash string) (*TransactionByHashResult, e
 
 	return &TransactionByHashResult{
 		tx,
-		msg.From(),
+		sender,
 		isPending,
 		status,
 		gasUsed,
