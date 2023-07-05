@@ -8,6 +8,7 @@ import (
 const (
 	ChainSignet  = "signet"
 	ChainMainnet = "mainnet"
+	ChainTestnet = "testnet"
 	// ComingChat used, similar mainnet's alias.
 	ChainBitcoin = "bitcoin"
 )
@@ -25,6 +26,8 @@ func netParamsOf(chainnet string) (*chaincfg.Params, error) {
 	switch chainnet {
 	case ChainSignet:
 		return &chaincfg.SigNetParams, nil
+	case ChainTestnet:
+		return &chaincfg.TestNet3Params, nil
 	case ChainMainnet, ChainBitcoin:
 		return &chaincfg.MainNetParams, nil
 	}
