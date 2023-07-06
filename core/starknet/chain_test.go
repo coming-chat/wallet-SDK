@@ -91,7 +91,7 @@ func TestNonce(t *testing.T) {
 
 func TestFetchTransactionDetail(t *testing.T) {
 	chain := GoerliChain()
-	hash := "0x01de50b64326c02a9830ea7bf825224103dd3ea4426309514039a01eaadcf5a4"
+	hash := "0x06bb5eaa8861e3bf95c61bd6723c758333b2675d9d80fee032f1aefef1bf9cbd"
 
 	detail, err := chain.FetchTransactionDetail(hash)
 	require.Nil(t, err)
