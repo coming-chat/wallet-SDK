@@ -22,6 +22,10 @@ func NewAccountWithMnemonic(mnemonic string) (*Account, error) {
 
 	path := "m/44'/501'/0'/0'"
 	derivedKey, err := hdwallet.Derived(path, seed)
+	if err != nil {
+		return nil, err
+	}
+	
 	account, err := solana.AccountFromSeed(derivedKey.PrivateKey)
 	if err != nil {
 		return nil, err
