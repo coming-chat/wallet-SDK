@@ -18,6 +18,16 @@ const (
 	mainnetRestUrl = "https://fullnode.mainnet.aptoslabs.com"
 )
 
+func ChainDevnet() *Chain {
+	return NewChainWithRestUrl(devnetRestUrl)
+}
+func ChainTestnet() *Chain {
+	return NewChainWithRestUrl(testnetRestUrl)
+}
+func ChainMainnet() *Chain {
+	return NewChainWithRestUrl(mainnetRestUrl)
+}
+
 func TestFaucet(t *testing.T) {
 	account, _ := NewAccountWithMnemonic(testcase.M1)
 	hashs, err := FaucetFundAccount(account.Address(), 10000000000, "")

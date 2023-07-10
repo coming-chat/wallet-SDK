@@ -3,7 +3,6 @@ package aptos
 import (
 	"testing"
 
-	"github.com/coming-chat/wallet-SDK/core/testcase"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -52,8 +51,7 @@ func TestTokenBalance(t *testing.T) {
 }
 
 func TestBuildTransferTxWithAccount(t *testing.T) {
-	account, err := NewAccountWithMnemonic(testcase.M1)
-	assert.Nil(t, err)
+	account := M1Account(t)
 	toAddress := "0x559c26e61a74a1c40244212e768ab282a2cbe2ed679ad8421f7d5ebfb2b79fb5"
 	amount := "100"
 
@@ -71,8 +69,7 @@ func TestBuildTransferTxWithAccount(t *testing.T) {
 }
 
 func TestBuildTransafer(t *testing.T) {
-	account, err := NewAccountWithMnemonic(testcase.M1)
-	assert.Nil(t, err)
+	account := M1Account(t)
 	toAddress := "0x559c26e61a74a1c40244212e768ab282a2cbe2ed679ad8421f7d5ebfb2b79fb5"
 	amount := "100"
 
@@ -97,8 +94,7 @@ func TestBuildTransafer(t *testing.T) {
 }
 
 func TestEstimateFee(t *testing.T) {
-	account, err := NewAccountWithMnemonic(testcase.M1)
-	assert.Nil(t, err)
+	account := M1Account(t)
 	toAddress := "0x559c26e61a74a1c40244212e768ab282a2cbe2ed679ad8421f7d5ebfb2b79fb5"
 	amount := "100"
 
@@ -112,8 +108,7 @@ func TestEstimateFee(t *testing.T) {
 
 func TestTokenRegister(t *testing.T) {
 	chain := NewChainWithRestUrl(devnetRestUrl)
-	account, err := NewAccountWithMnemonic(testcase.M1)
-	assert.Nil(t, err)
+	account := M1Account(t)
 
 	token, err := NewToken(chain, btcTag)
 	assert.Nil(t, err)
@@ -124,4 +119,25 @@ func TestTokenRegister(t *testing.T) {
 	// test duplicate registration
 	hash, err := token.RegisterTokenForOwner(account)
 	t.Log(hash, err)
+}
+
+func TestToken_BuildTransfer_SignedTransaction(t *testing.T) {
+	account := M1Account(t)
+	chain := ChainTestnet()
+	token := chain.MainToken()
+
+	balance, err := token.BalanceOfAddress(account.Address())
+	require.Nil(t, err)
+	t.Log(balance.Total)
+
+	txn, err := token.BuildTransfer(account.Address(), account.Address(), "1000")
+	require.Nil(t, err)
+
+	signedTxn, err := txn.SignedTransactionWithAccount(account)
+	require.Nil(t, err)
+
+	hash, err := chain.SendSignedTransaction(signedTxn)
+	require.Nil(t, err)
+
+	t.Log("send transaction success hash = ", hash.Value)
 }

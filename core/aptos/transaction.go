@@ -10,9 +10,11 @@ type Transaction struct {
 	RawTxn txbuilder.RawTransaction
 }
 
-// type SignedTransaction struct {
-// 	SignedBytes []byte
-// }
+type SignedTransaction struct {
+	RawTxn *txbuilder.RawTransaction
+
+	SignedBytes []byte
+}
 
 func (t *Transaction) SignWithAccount(account base.Account) (signedTx *base.OptionalString, err error) {
 	acc, ok := account.(*Account)
@@ -27,5 +29,26 @@ func (t *Transaction) SignWithAccount(account base.Account) (signedTx *base.Opti
 }
 
 func (t *Transaction) SignedTransactionWithAccount(account base.Account) (signedTx base.SignedTransaction, err error) {
-	return nil, base.ErrUnsupportedFunction
+	acc, ok := account.(*Account)
+	if !ok {
+		return nil, base.ErrInvalidAccountType
+	}
+	signedBytes, err := txbuilder.GenerateBCSTransaction(acc.account, &t.RawTxn)
+	if err != nil {
+		return nil, err
+	}
+	return &SignedTransaction{
+		RawTxn:      &t.RawTxn,
+		SignedBytes: signedBytes,
+	}, nil
+}
+
+func AsSignedTransaction(txn base.SignedTransaction) *SignedTransaction {
+	if res, ok := txn.(*SignedTransaction); ok {
+		return res
+	}
+	if res, ok := txn.(SignedTransaction); ok {
+		return &res
+	}
+	return nil
 }

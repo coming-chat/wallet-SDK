@@ -107,7 +107,21 @@ func (c *Chain) SendRawTransaction(signedTx string) (hash string, err error) {
 }
 
 func (c *Chain) SendSignedTransaction(signedTxn base.SignedTransaction) (hash *base.OptionalString, err error) {
-	return nil, base.ErrUnsupportedFunction
+	defer base.CatchPanicAndMapToBasicError(&err)
+
+	txn := AsSignedTransaction(signedTxn)
+	if txn == nil {
+		return nil, base.ErrInvalidTransactionType
+	}
+	client, err := c.client()
+	if err != nil {
+		return
+	}
+	resultTx, err := client.SubmitSignedBCSTransaction(txn.SignedBytes)
+	if err != nil {
+		return
+	}
+	return &base.OptionalString{Value: resultTx.Hash}, nil
 }
 
 // Fetch transaction details through transaction hash

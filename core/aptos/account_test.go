@@ -8,6 +8,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func M1Account(t *testing.T) *Account {
+	acc, err := NewAccountWithMnemonic(testcase.M1)
+	require.Nil(t, err)
+	return acc
+}
+
 var (
 	PriMartian1 = os.Getenv("PriMartian1")
 	PriMartian2 = os.Getenv("PriMartian2")
