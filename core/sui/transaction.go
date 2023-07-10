@@ -33,6 +33,20 @@ func (t *Transaction) TransactionBytes() []byte {
 }
 
 func (t *Transaction) SignWithAccount(account base.Account) (signedTx *base.OptionalString, err error) {
+	signedTxn, err := t.SignedTransactionWithAccount(account)
+	if err != nil {
+		return
+	}
+	bytes, err := json.Marshal(signedTxn)
+	if err != nil {
+		return
+	}
+	txnString := lib.Base64Data(bytes).String()
+
+	return &base.OptionalString{Value: txnString}, nil
+}
+
+func (t *Transaction) SignedTransactionWithAccount(account base.Account) (signedTx base.SignedTransaction, err error) {
 	acc, ok := account.(*Account)
 	if !ok {
 		return nil, base.ErrInvalidAccountType
@@ -47,15 +61,15 @@ func (t *Transaction) SignWithAccount(account base.Account) (signedTx *base.Opti
 		TxBytes:   &base64data,
 		Signature: &signature,
 	}
-	bytes, err := json.Marshal(signedTxn)
-	if err != nil {
-		return
-	}
-	txnString := lib.Base64Data(bytes).String()
-
-	return &base.OptionalString{Value: txnString}, nil
+	return &signedTxn, nil
 }
 
-func (t *Transaction) SignedTransactionWithAccount(account base.Account) (signedTx base.SignedTransaction, err error) {
-	return nil, base.ErrUnsupportedFunction
+func AsSignedTransaction(txn base.SignedTransaction) *SignedTransaction {
+	if res, ok := txn.(*SignedTransaction); ok {
+		return res
+	}
+	if res, ok := txn.(SignedTransaction); ok {
+		return &res
+	}
+	return nil
 }

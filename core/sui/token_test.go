@@ -191,3 +191,25 @@ func Test_TokenTransfer_Gas_Compare(t *testing.T) {
 		// InsufficientCoinBalance, because the sendCoin need balance=amount+gasfee
 	}
 }
+
+func TestToken_BuilderTransfer_SignedTransaction(t *testing.T) {
+	account := M1Account(t)
+	chain := TestnetChain()
+	token := chain.MainToken()
+
+	balance, err := token.BalanceOfAddress(account.Address())
+	require.Nil(t, err)
+	t.Log(balance.Total)
+
+	txn, err := token.BuildTransferAll(account.Address(), account.Address())
+	require.Nil(t, err)
+
+	signedTxn, err := txn.SignedTransactionWithAccount(account)
+	require.Nil(t, err)
+
+	if false {
+		hash, err := chain.SendSignedTransaction(signedTxn)
+		require.Nil(t, err)
+		t.Log("Transaction hash = ", hash.Value)
+	}
+}

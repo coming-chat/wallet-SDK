@@ -98,7 +98,28 @@ func (c *Chain) SendRawTransaction(signedTx string) (hash string, err error) {
 }
 
 func (c *Chain) SendSignedTransaction(signedTxn base.SignedTransaction) (hash *base.OptionalString, err error) {
-	return nil, base.ErrUnsupportedFunction
+	defer base.CatchPanicAndMapToBasicError(&err)
+
+	txn := AsSignedTransaction(signedTxn)
+	if txn == nil {
+		return nil, base.ErrInvalidTransactionType
+	}
+	cli, err := c.Client()
+	if err != nil {
+		return
+	}
+	options := types.SuiTransactionBlockResponseOptions{
+		ShowEffects: true,
+	}
+	response, err := cli.ExecuteTransactionBlock(context.Background(), txn.TxBytes.Data(), []any{txn.Signature}, &options, types.TxnRequestTypeWaitForLocalExecution)
+	if err != nil {
+		return
+	}
+	hash = &base.OptionalString{Value: response.Digest.String()}
+	if !response.Effects.Data.IsSuccess() {
+		return hash, errors.New(response.Effects.Data.V1.Status.Error)
+	}
+	return hash, nil
 }
 
 // Fetch transaction details through transaction hash
