@@ -9,4 +9,6 @@ var (
 	_ base.Chain       = (*Chain)(nil)
 	_ base.Token       = (*Token)(nil)
 	_ base.Transaction = (*Transaction)(nil)
+
+	_ base.SignedTransaction = (*SignedTransaction)(nil)
 )

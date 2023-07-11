@@ -10,5 +10,6 @@ var (
 	_ base.Token       = (*Token)(nil)
 	_ base.Transaction = (*Transaction)(nil)
 
-	_ base.Transaction = (*DeployAccountTransaction)(nil)
+	_ base.Transaction       = (*DeployAccountTransaction)(nil)
+	_ base.SignedTransaction = (*SignedTransaction)(nil)
 )

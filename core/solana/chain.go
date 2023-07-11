@@ -26,6 +26,8 @@ const (
 type Chain struct {
 	*Util
 	RpcUrl string
+
+	cli *client.Client
 }
 
 func NewChainWithRpc(rpcUrl string) *Chain {
@@ -37,7 +39,10 @@ func NewChainWithRpc(rpcUrl string) *Chain {
 }
 
 func (c *Chain) client() *client.Client {
-	return client.NewClient(c.RpcUrl)
+	if c.cli == nil {
+		c.cli = client.NewClient(c.RpcUrl)
+	}
+	return c.cli
 }
 
 // MARK - Implement the protocol Chain
@@ -86,7 +91,18 @@ func (c *Chain) SendRawTransaction(signedTx string) (string, error) {
 }
 
 func (c *Chain) SendSignedTransaction(signedTxn base.SignedTransaction) (hash *base.OptionalString, err error) {
-	return nil, base.ErrUnsupportedFunction
+	defer base.CatchPanicAndMapToBasicError(&err)
+	txn := AsSignedTransaction(signedTxn)
+	if txn == nil {
+		return nil, base.ErrInvalidTransactionType
+	}
+
+	client := c.client()
+	res, err := client.SendTransaction(context.Background(), txn.Transaction)
+	if err != nil {
+		return nil, err
+	}
+	return &base.OptionalString{Value: res}, nil
 }
 
 // Fetch transaction details through transaction hash
@@ -126,7 +142,19 @@ func (c *Chain) BatchFetchTransactionStatus(hashListString string) string {
 }
 
 func (c *Chain) EstimateTransactionFee(transaction base.Transaction) (fee *base.OptionalString, err error) {
-	return nil, base.ErrUnsupportedFunction
+	txn, ok := transaction.(*Transaction)
+	if !ok {
+		return nil, base.ErrInvalidTransactionType
+	}
+
+	client := c.client()
+	gasFee, err := client.GetFeeForMessage(context.Background(), txn.Message)
+	if err != nil {
+		return nil, err
+	}
+	feeString := strconv.FormatUint(*gasFee, 10)
+
+	return &base.OptionalString{Value: feeString}, nil
 }
 func (c *Chain) EstimateTransactionFeeUsePublicKey(transaction base.Transaction, pubkey string) (fee *base.OptionalString, err error) {
 	return c.EstimateTransactionFee(transaction)

@@ -7,6 +7,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func M1Account(t *testing.T) *Account {
+	acc, err := NewAccountWithMnemonic(testcase.M1)
+	require.Nil(t, err)
+	return acc
+}
+
 func TestNewAccountWithMnemonic(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -101,4 +107,8 @@ func TestAccountWithPrivatekey(t *testing.T) {
 	require.Nil(t, err)
 
 	require.Equal(t, accountFromMnemonic.Address(), accountFromPrikey.Address())
+
+	t.Log(accountFromMnemonic.PrivateKeyHex())
+	t.Log(accountFromMnemonic.PublicKeyHex())
+	t.Log(accountFromMnemonic.Address())
 }

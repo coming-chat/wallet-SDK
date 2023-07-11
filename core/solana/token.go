@@ -5,7 +5,6 @@ import (
 	"errors"
 	"strconv"
 
-	hexTypes "github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/portto/solana-go-sdk/client"
 	"github.com/portto/solana-go-sdk/common"
@@ -58,44 +57,23 @@ func (t *Token) BuildTransferTx(privateKey, receiverAddress, amount string) (*ba
 }
 
 func (t *Token) BuildTransferTxWithAccount(account *Account, receiverAddress, amount string) (*base.OptionalString, error) {
-	client := t.chain.client()
-	message, err := transactionMessage(client, account.Address(), receiverAddress, amount)
+	txn, err := t.BuildTransfer(account.Address(), receiverAddress, amount)
 	if err != nil {
 		return nil, err
 	}
-
-	// create tx by message + signer
-	tx, err := types.NewTransaction(types.NewTransactionParam{
-		Message: *message,
-		Signers: []types.Account{*account.account, *account.account},
-	})
+	signedTxn, err := txn.SignedTransactionWithAccount(account)
 	if err != nil {
 		return nil, err
 	}
-
-	bytes, err := tx.Serialize()
-	if err != nil {
-		return nil, err
-	}
-	hash := hexTypes.HexEncodeToString(bytes)
-
-	return &base.OptionalString{Value: hash}, nil
+	return signedTxn.HexString()
 }
 
 func (t *Token) EstimateFees(receiverAddress, amount string) (*base.OptionalString, error) {
-	client := t.chain.client()
-	message, err := transactionMessage(client, receiverAddress, receiverAddress, amount)
+	txn, err := t.BuildTransfer(receiverAddress, receiverAddress, amount)
 	if err != nil {
 		return nil, err
 	}
-
-	fee, err := client.GetFeeForMessage(context.Background(), *message)
-	if err != nil {
-		return nil, err
-	}
-	feeString := strconv.FormatUint(*fee, 10)
-
-	return &base.OptionalString{Value: feeString}, nil
+	return t.chain.EstimateTransactionFee(txn)
 }
 
 func transactionMessage(client *client.Client, fromAddress, toAddress, amount string) (*types.Message, error) {
@@ -132,7 +110,14 @@ func transactionMessage(client *client.Client, fromAddress, toAddress, amount st
 }
 
 func (t *Token) BuildTransfer(sender, receiver, amount string) (txn base.Transaction, err error) {
-	return nil, base.ErrUnsupportedFunction
+	client := t.chain.client()
+	message, err := transactionMessage(client, sender, receiver, amount)
+	if err != nil {
+		return nil, err
+	}
+	return &Transaction{
+		Message: *message,
+	}, nil
 }
 func (t *Token) CanTransferAll() bool {
 	return false

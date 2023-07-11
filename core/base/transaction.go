@@ -11,7 +11,7 @@ type Transaction interface {
 }
 
 type SignedTransaction interface {
-	// HashString() string
+	HexString() (res *OptionalString, err error)
 }
 
 type TransactionStatus = SDKEnumInt

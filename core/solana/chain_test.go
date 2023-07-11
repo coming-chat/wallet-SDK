@@ -18,6 +18,16 @@ func newChainAndAccount() (*Chain, *Account) {
 	return chain, account
 }
 
+func DevnetChain() *Chain {
+	return NewChainWithRpc(rpc.DevnetRPCEndpoint)
+}
+func TestnetChain() *Chain {
+	return NewChainWithRpc(rpc.TestnetRPCEndpoint)
+}
+func MainnetChain() *Chain {
+	return NewChainWithRpc(rpc.MainnetRPCEndpoint)
+}
+
 func TestAirdrop(t *testing.T) {
 	chain, account := newChainAndAccount()
 	txhash, err := chain.client().RequestAirdrop(context.Background(), account.Address(), 1e9)
@@ -29,7 +39,7 @@ func TestAirdrop(t *testing.T) {
 }
 
 func TestEstimateFee(t *testing.T) {
-	chain := NewChainWithRpc(rpc.DevnetRPCEndpoint)
+	chain := TestnetChain()
 	token := &Token{chain: chain}
 
 	receiver := "9B5XszUGdMaxCZ7uSQhPzdks5ZQSmWxrmzCSvtJ6Ns6g"

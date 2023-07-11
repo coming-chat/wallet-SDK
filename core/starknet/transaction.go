@@ -38,12 +38,13 @@ func (t *Transaction) SignedTransactionWithAccount(account base.Account) (signed
 	}, nil
 }
 
+func (txn *SignedTransaction) HexString() (res *base.OptionalString, err error) {
+	return nil, base.ErrUnsupportedFunction
+}
+
 func AsSignedTransaction(txn base.SignedTransaction) *SignedTransaction {
 	if res, ok := txn.(*SignedTransaction); ok {
 		return res
-	}
-	if res, ok := txn.(SignedTransaction); ok {
-		return &res
 	}
 	return nil
 }

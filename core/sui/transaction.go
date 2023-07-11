@@ -17,14 +17,6 @@ type Transaction struct {
 	EstimateGasFee int64
 }
 
-type SignedTransaction struct {
-	// transaction data bytes
-	TxBytes *lib.Base64Data `json:"tx_bytes"`
-
-	// transaction signature
-	Signature *sui_types.Signature `json:"signature"`
-}
-
 func (t *Transaction) TransactionBytes() []byte {
 	if t.TxnBytes != nil {
 		return t.TxnBytes
@@ -37,13 +29,7 @@ func (t *Transaction) SignWithAccount(account base.Account) (signedTx *base.Opti
 	if err != nil {
 		return
 	}
-	bytes, err := json.Marshal(signedTxn)
-	if err != nil {
-		return
-	}
-	txnString := lib.Base64Data(bytes).String()
-
-	return &base.OptionalString{Value: txnString}, nil
+	return signedTxn.HexString()
 }
 
 func (t *Transaction) SignedTransactionWithAccount(account base.Account) (signedTx base.SignedTransaction, err error) {
@@ -64,12 +50,27 @@ func (t *Transaction) SignedTransactionWithAccount(account base.Account) (signed
 	return &signedTxn, nil
 }
 
+type SignedTransaction struct {
+	// transaction data bytes
+	TxBytes *lib.Base64Data `json:"tx_bytes"`
+
+	// transaction signature
+	Signature *sui_types.Signature `json:"signature"`
+}
+
+func (txn *SignedTransaction) HexString() (res *base.OptionalString, err error) {
+	bytes, err := json.Marshal(txn)
+	if err != nil {
+		return
+	}
+	txnString := lib.Base64Data(bytes).String()
+
+	return &base.OptionalString{Value: txnString}, nil
+}
+
 func AsSignedTransaction(txn base.SignedTransaction) *SignedTransaction {
 	if res, ok := txn.(*SignedTransaction); ok {
 		return res
-	}
-	if res, ok := txn.(SignedTransaction); ok {
-		return &res
 	}
 	return nil
 }
