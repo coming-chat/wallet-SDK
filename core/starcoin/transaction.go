@@ -1,14 +1,15 @@
-package solana
+package starcoin
 
 import (
 	"encoding/hex"
 
 	"github.com/coming-chat/wallet-SDK/core/base"
-	"github.com/portto/solana-go-sdk/types"
+	"github.com/starcoinorg/starcoin-go/client"
+	"github.com/starcoinorg/starcoin-go/types"
 )
 
 type Transaction struct {
-	Message types.Message
+	Txn *types.RawUserTransaction
 }
 
 func (t *Transaction) SignWithAccount(account base.Account) (signedTxn *base.OptionalString, err error) {
@@ -20,30 +21,30 @@ func (t *Transaction) SignWithAccount(account base.Account) (signedTxn *base.Opt
 }
 
 func (t *Transaction) SignedTransactionWithAccount(account base.Account) (signedTxn base.SignedTransaction, err error) {
-	solanaAcc := AsSolanaAccount(account)
-	if solanaAcc == nil {
+	starcoinAcc := AsStarcoinAccount(account)
+	if starcoinAcc == nil {
 		return nil, base.ErrInvalidAccountType
 	}
 
-	// create tx by message + signer
-	txn, err := types.NewTransaction(types.NewTransactionParam{
-		Message: t.Message,
-		Signers: []types.Account{*solanaAcc.account, *solanaAcc.account},
-	})
+	privateKey, err := account.PrivateKey()
 	if err != nil {
-		return nil, err
+		return
+	}
+	txn, err := client.SignRawUserTransaction(types.Ed25519PrivateKey(privateKey), t.Txn)
+	if err != nil {
+		return
 	}
 	return &SignedTransaction{
-		Transaction: txn,
+		Txn: txn,
 	}, nil
 }
 
 type SignedTransaction struct {
-	Transaction types.Transaction
+	Txn *types.SignedUserTransaction
 }
 
 func (txn *SignedTransaction) HexString() (res *base.OptionalString, err error) {
-	txnBytes, err := txn.Transaction.Serialize()
+	txnBytes, err := txn.Txn.BcsSerialize()
 	if err != nil {
 		return nil, err
 	}

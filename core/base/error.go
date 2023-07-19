@@ -21,4 +21,6 @@ var (
 	ErrNotCoinTransferTxn = errors.New("not a coin transfer transaction")
 
 	ErrEstimateGasNeedPublicKey = errors.New("the estimated fee should invoking `EstimateTransactionFeeUsePublicKey`")
+
+	ErrInsufficientBalance = errors.New("insufficient account balance")
 )

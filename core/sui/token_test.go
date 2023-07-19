@@ -192,17 +192,22 @@ func Test_TokenTransfer_Gas_Compare(t *testing.T) {
 	}
 }
 
-func TestToken_BuilderTransfer_SignedTransaction(t *testing.T) {
+func TestToken_BuildTransfer_SignedTransaction(t *testing.T) {
 	account := M1Account(t)
 	chain := TestnetChain()
 	token := chain.MainToken()
 
 	balance, err := token.BalanceOfAddress(account.Address())
 	require.Nil(t, err)
-	t.Log(balance.Total)
+	t.Log("sender address = ", account.Address())
+	t.Log("balance = ", balance.Usable)
 
-	txn, err := token.BuildTransferAll(account.Address(), account.Address())
+	txn, err := token.BuildTransfer(account.Address(), account.Address(), "100")
 	require.Nil(t, err)
+
+	gasfee, err := chain.EstimateTransactionFeeUsePublicKey(txn, account.PublicKeyHex())
+	require.Nil(t, err)
+	t.Log("Estimate fee = ", gasfee.Value)
 
 	signedTxn, err := txn.SignedTransactionWithAccount(account)
 	require.Nil(t, err)

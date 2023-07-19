@@ -13,10 +13,16 @@ func TestToken_BuildTransfer_SignedTransaction(t *testing.T) {
 
 	balance, err := token.BalanceOfAddress(account.Address())
 	require.Nil(t, err)
-	t.Log(balance.Total)
+	t.Log("sender address = ", account.Address())
+	t.Log("balance = ", balance.Usable)
 
-	txn, err := token.BuildTransfer(account.Address(), account.Address(), "100000")
+	txn, err := token.BuildTransfer(account.Address(), account.Address(), "100")
 	require.Nil(t, err)
+
+	gasfee, err := chain.EstimateTransactionFeeUsePublicKey(txn, account.PublicKeyHex())
+	require.Nil(t, err)
+	t.Log("Estimate fee = ", gasfee.Value)
+
 	signedTxn, err := txn.SignedTransactionWithAccount(account)
 	require.Nil(t, err)
 
@@ -25,16 +31,4 @@ func TestToken_BuildTransfer_SignedTransaction(t *testing.T) {
 		require.Nil(t, err)
 		t.Log("Transaction hash = ", hash.Value)
 	}
-}
-
-func TestToken_BuildTransfer_GasFee(t *testing.T) {
-	account := M1Account(t)
-	chain := TestnetChain()
-	token := chain.MainToken()
-
-	txn, err := token.BuildTransfer(account.Address(), account.Address(), "10000")
-	require.Nil(t, err)
-	gas, err := chain.EstimateTransactionFee(txn)
-	require.Nil(t, err)
-	t.Log("Estimate gas fee = ", gas.Value)
 }

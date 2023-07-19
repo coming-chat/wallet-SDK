@@ -63,7 +63,17 @@ func (c *Chain) SendRawTransaction(signedTx string) (hash string, err error) {
 }
 
 func (c *Chain) SendSignedTransaction(signedTxn base.SignedTransaction) (hash *base.OptionalString, err error) {
-	return nil, base.ErrUnsupportedFunction
+	defer base.CatchPanicAndMapToBasicError(&err)
+
+	txn := AsSignedTransaction(signedTxn)
+	if txn == nil {
+		return nil, base.ErrInvalidTransactionType
+	}
+	hashString, err := c.client.SubmitSignedTransaction(context.Background(), txn.Txn)
+	if err != nil {
+		return nil, err
+	}
+	return &base.OptionalString{Value: hashString}, nil
 }
 
 // Fetch transaction details through transaction hash
@@ -173,10 +183,26 @@ func (c *Chain) BatchFetchTransactionStatus(hashListString string) string {
 }
 
 func (c *Chain) EstimateTransactionFee(transaction base.Transaction) (fee *base.OptionalString, err error) {
-	return nil, base.ErrUnsupportedFunction
+	return nil, base.ErrEstimateGasNeedPublicKey
 }
 func (c *Chain) EstimateTransactionFeeUsePublicKey(transaction base.Transaction, pubkey string) (fee *base.OptionalString, err error) {
-	return c.EstimateTransactionFee(transaction)
+	defer base.CatchPanicAndMapToBasicError(&err)
+
+	pubData, err := hexTypes.HexDecodeString(pubkey)
+	if err != nil {
+		return nil, base.ErrInvalidPublicKey
+	}
+	txn := transaction.(*Transaction)
+	if txn == nil {
+		return nil, base.ErrInvalidTransactionType
+	}
+	gasFee, err := c.client.EstimateGasByDryRunRaw(context.Background(), *txn.Txn, types.Ed25519PublicKey(pubData))
+	if err != nil {
+		return nil, err
+	}
+	gasFee = big.NewInt(0).Div(big.NewInt(0).Mul(gasFee, big.NewInt(3)), big.NewInt(2)) // gasFee * 3 / 2
+	txn.Txn.MaxGasAmount = gasFee.Uint64()
+	return &base.OptionalString{Value: gasFee.String()}, nil
 }
 
 func (c *Chain) GasPrice() (*base.OptionalString, error) {
@@ -187,26 +213,13 @@ func (c *Chain) GasPrice() (*base.OptionalString, error) {
 	return &base.OptionalString{Value: strconv.FormatInt(int64(price), 10)}, nil
 }
 
-func (c *Chain) BuildRawUserTransaction(from *Account, payload types.TransactionPayload) (txn *types.RawUserTransaction, err error) {
-	defer base.CatchPanicAndMapToBasicError(&err)
-
-	ctx := context.Background()
-	price, err := c.client.GetGasUnitPrice(ctx)
+func (c *Chain) GetState(context context.Context, address string) (*types.AccountResource, error) {
+	state, err := c.client.GetState(context, address)
 	if err != nil {
-		return
+		if strings.HasPrefix(err.Error(), "Bcs Deserialize AccountResource failed") {
+			return nil, base.ErrInsufficientBalance
+		}
+		return nil, err
 	}
-	state, err := c.client.GetState(ctx, from.Address())
-	if err != nil {
-		return
-	}
-	rawTxn, err := c.client.BuildRawUserTransaction(ctx, from.AccountAddress(), payload, price, MaxGasAmount, state.SequenceNumber)
-	if err != nil {
-		return
-	}
-	gasLimit, err := c.client.EstimateGasByDryRunRaw(ctx, *rawTxn, from.PublicKey())
-	if err != nil {
-		return
-	}
-	rawTxn.MaxGasAmount = big.NewInt(0).Div(big.NewInt(0).Mul(gasLimit, big.NewInt(3)), big.NewInt(2)).Uint64() // gaslimit * 1.5
-	return rawTxn, nil
+	return state, nil
 }

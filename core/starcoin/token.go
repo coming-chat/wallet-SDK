@@ -2,9 +2,7 @@ package starcoin
 
 import (
 	"context"
-	"encoding/hex"
 	"fmt"
-	"strconv"
 
 	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/starcoinorg/starcoin-go/client"
@@ -94,39 +92,23 @@ func (t *Token) BuildTransferTx(privateKey, receiverAddress, amount string) (*ba
 }
 
 func (t *Token) BuildTransferTxWithAccount(account *Account, receiverAddress, amount string) (s *base.OptionalString, err error) {
-	payload, err := t.BuildTransferPayload(receiverAddress, amount)
+	txn, err := t.BuildTransfer(account.Address(), receiverAddress, amount)
 	if err != nil {
 		return
 	}
-	txn, err := t.chain.BuildRawUserTransaction(account, payload)
+	signedTxn, err := txn.SignedTransactionWithAccount(account)
 	if err != nil {
 		return
 	}
-	privateKey, _ := account.PrivateKey()
-	signedTxn, err := client.SignRawUserTransaction(types.Ed25519PrivateKey(privateKey), txn)
-	if err != nil {
-		return
-	}
-	txnBytes, err := signedTxn.BcsSerialize()
-	if err != nil {
-		return
-	}
-	txnHex := "0x" + hex.EncodeToString(txnBytes)
-	return &base.OptionalString{Value: txnHex}, nil
+	return signedTxn.HexString()
 }
 
 func (t *Token) EstimateFees(account *Account, receiverAddress, amount string) (f *base.OptionalString, err error) {
-	defer base.CatchPanicAndMapToBasicError(&err)
-
-	payload, err := t.BuildTransferPayload(receiverAddress, amount)
+	txn, err := t.BuildTransfer(account.Address(), receiverAddress, amount)
 	if err != nil {
 		return
 	}
-	txn, err := t.chain.BuildRawUserTransaction(account, payload)
-	if err != nil {
-		return
-	}
-	return &base.OptionalString{Value: strconv.FormatUint(txn.MaxGasAmount, 10)}, nil
+	return t.chain.EstimateTransactionFeeUsePublicKey(txn, account.PublicKeyHex())
 }
 
 func (t *Token) BuildTransferPayload(receiverAddress, amount string) (p types.TransactionPayload, err error) {
@@ -143,7 +125,34 @@ func (t *Token) BuildTransferPayload(receiverAddress, amount string) (p types.Tr
 }
 
 func (t *Token) BuildTransfer(sender, receiver, amount string) (txn base.Transaction, err error) {
-	return nil, base.ErrUnsupportedFunction
+	defer base.CatchPanicAndMapToBasicError(&err)
+
+	senderAddress, err := NewAccountAddressFromHex(sender)
+	if err != nil {
+		return
+	}
+	payload, err := t.BuildTransferPayload(receiver, amount)
+	if err != nil {
+		return
+	}
+
+	ctx := context.Background()
+	cli := t.chain.client
+	price, err := cli.GetGasUnitPrice(ctx)
+	if err != nil {
+		return
+	}
+	state, err := t.chain.GetState(ctx, sender)
+	if err != nil {
+		return
+	}
+	rawTxn, err := cli.BuildRawUserTransaction(ctx, *senderAddress, payload, price, MaxGasAmount, state.SequenceNumber)
+	if err != nil {
+		return
+	}
+	return &Transaction{
+		Txn: rawTxn,
+	}, nil
 }
 func (t *Token) CanTransferAll() bool {
 	return false

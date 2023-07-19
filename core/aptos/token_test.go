@@ -128,10 +128,15 @@ func TestToken_BuildTransfer_SignedTransaction(t *testing.T) {
 
 	balance, err := token.BalanceOfAddress(account.Address())
 	require.Nil(t, err)
-	t.Log(balance.Total)
+	t.Log("sender address = ", account.Address())
+	t.Log("balance = ", balance.Usable)
 
-	txn, err := token.BuildTransfer(account.Address(), account.Address(), "1000")
+	txn, err := token.BuildTransfer(account.Address(), account.Address(), "100")
 	require.Nil(t, err)
+
+	gasfee, err := chain.EstimateTransactionFeeUsePublicKey(txn, account.PublicKeyHex())
+	require.Nil(t, err)
+	t.Log("Estimate fee = ", gasfee.Value)
 
 	signedTxn, err := txn.SignedTransactionWithAccount(account)
 	require.Nil(t, err)
