@@ -24,5 +24,13 @@ func ExtractPSBTPacketToMsgTx(psbtTx []byte, isBase64 bool) (*wire.MsgTx, error)
 	if err != nil {
 		return nil, err
 	}
+	if !psbtPacket.IsComplete() {
+		for i := range psbtPacket.Inputs {
+			err = psbt.Finalize(psbtPacket, i)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
 	return psbt.Extract(psbtPacket)
 }
