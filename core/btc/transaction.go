@@ -73,10 +73,13 @@ func SignPSBTTx(tx *psbt.Packet, account *Account) error {
 	privateKey, _ := account.PrivateKey()
 	prk, puk := btcec.PrivKeyFromBytes(privateKey)
 	for i := range tx.Inputs {
-		sigHashes := txscript.NewTxSigHashes(tx.UnsignedTx,
-			txscript.NewMultiPrevOutFetcher(prevOuts))
-		switch {
-		case txscript.IsPayToTaproot(tx.Inputs[i].WitnessUtxo.PkScript):
+		sigHashes := txscript.NewTxSigHashes(tx.UnsignedTx, txscript.NewMultiPrevOutFetcher(prevOuts))
+		scriptClass, _, _, err := txscript.ExtractPkScriptAddrs(tx.Inputs[i].WitnessUtxo.PkScript, account.chain)
+		if err != nil {
+			return err
+		}
+		switch scriptClass {
+		case txscript.WitnessV1TaprootTy:
 			updater.Upsbt.Inputs[i].TaprootInternalKey = schnorr.SerializePubKey(puk)
 			sig, err := txscript.TaprootWitnessSignature(tx.UnsignedTx, sigHashes,
 				i, tx.Inputs[i].WitnessUtxo.Value, tx.Inputs[i].WitnessUtxo.PkScript, txscript.SigHashDefault, prk)
@@ -85,7 +88,7 @@ func SignPSBTTx(tx *psbt.Packet, account *Account) error {
 			}
 
 			updater.Upsbt.Inputs[i].TaprootKeySpendSig = sig[0]
-		default:
+		case txscript.WitnessV0PubKeyHashTy:
 			sig, err := txscript.RawTxInWitnessSignature(tx.UnsignedTx, sigHashes, i,
 				tx.Inputs[i].WitnessUtxo.Value, tx.Inputs[i].WitnessUtxo.PkScript,
 				txscript.SigHashAll, prk)
@@ -99,6 +102,8 @@ func SignPSBTTx(tx *psbt.Packet, account *Account) error {
 			if success != psbt.SignSuccesful {
 				return err
 			}
+		default:
+			return ErrPsbtUnsupportedAccountType
 		}
 		// NOTE: Do not finalize to support multi sign
 	}
