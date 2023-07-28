@@ -3,6 +3,8 @@ package btc
 import (
 	"bytes"
 	"encoding/hex"
+	"github.com/btcsuite/btcd/btcutil/psbt"
+	"github.com/coming-chat/wallet-SDK/core/testcase"
 	"github.com/stretchr/testify/require"
 	"reflect"
 	"testing"
@@ -42,4 +44,63 @@ func TestExtractPsbtToMsgTx(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestSignPSBTTx(t *testing.T) {
+	type args struct {
+		tx      *psbt.Packet
+		account *Account
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "test for segwit v0",
+			args: args{
+				tx:      getPsbtPacketWithSegwitV0(t),
+				account: testAccount(t),
+			},
+			wantErr: false,
+		},
+		{
+			name: "test for segwit v1",
+			args: args{
+				tx:      getPsbtPacketWithSegwitV1(t),
+				account: testAccount(t),
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := SignPSBTTx(tt.args.tx, tt.args.account); (err != nil) != tt.wantErr {
+				t.Errorf("SignPSBTTx() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func testAccount(t *testing.T) *Account {
+	account, err := NewAccountWithMnemonic(testcase.M1, "testnet")
+	require.NoError(t, err)
+	address, err := account.TaprootAddress()
+	t.Log(address.Value)
+	segwitAddress, err := account.NativeSegwitAddress()
+	require.NoError(t, err)
+	t.Log(segwitAddress.Value)
+	return account
+}
+
+func getPsbtPacketWithSegwitV0(t *testing.T) *psbt.Packet {
+	packet, err := DecodePsbtTxToPacket("70736274ff01007d010000000158d38c41272f90e01d8dd3c5f9f6c4d37892ddcbaee155ecd826113c163003700000000000fdffffff02ea0500000000000022512073c9f2168a01fb0f0caa8a3fb7889ce4ab2cec67bfb16d272af4eea91fbd83e011cc240000000000160014f23a59a174bf387281535e2c0f6a395b77eb04a3000000000001011f2dd3240000000000160014f23a59a174bf387281535e2c0f6a395b77eb04a3000000")
+	require.NoError(t, err)
+	return packet
+}
+
+func getPsbtPacketWithSegwitV1(t *testing.T) *psbt.Packet {
+	packet, err := DecodePsbtTxToPacket("70736274ff0100b20100000002140af55e79fd4273fec16f597e148477340f6d03901b45bdf00d9dcc094dbfd40100000000fdfffffff7c67b76c3b94c30388fd49af18527511f721d01b48f8b2e1c56b1e6ca9855290000000000fdffffff02400500000000000022512049ad748ab7aea7493344af621351c28db2e5fbc979ec635e3eb4f025d41600c2140b030000000000225120bab7dd449084f708daf74e7e6511ec796bf3071e9fc56c812712329d1a1c7d84000000000001012be803000000000000225120bab7dd449084f708daf74e7e6511ec796bf3071e9fc56c812712329d1a1c7d840001012b400d030000000000225120bab7dd449084f708daf74e7e6511ec796bf3071e9fc56c812712329d1a1c7d84000000")
+	require.NoError(t, err)
+	return packet
 }
