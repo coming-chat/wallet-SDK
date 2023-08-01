@@ -77,8 +77,8 @@ func responseJsonCheck(resp httpUtil.Res) error {
 func unisatRequestHeader() map[string]string {
 	return map[string]string{
 		"X-Client":   "UniSat Wallet",
-		"X-Version":  "1.1.20",
-		"x-address":  "bc1qppc323aw52gegsfyfw34rn66csffcz5jz5z7fv",
+		"X-Version":  "1.1.25",
+		"x-address":  "bc1pdq423fm5dv00sl2uckmcve8y3w7guev8ka6qfweljlu23mmsw63qpjc9k7",
 		"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36",
 	}
 }

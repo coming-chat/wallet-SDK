@@ -1,6 +1,7 @@
 package btc
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -8,9 +9,12 @@ import (
 	"strings"
 
 	"github.com/coming-chat/wallet-SDK/core/base"
+	"github.com/coming-chat/wallet-SDK/core/base/inter"
 	"github.com/coming-chat/wallet-SDK/pkg/httpUtil"
 )
 
+// FetchBrc20Inscription
+// @param cursor start from 0
 func FetchBrc20Inscription(owner string, cursor string, pageSize int) (page *Brc20InscriptionPage, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
 	if cursor == "" {
@@ -57,4 +61,107 @@ func batchFetchContentText(inscriptions []*Brc20Inscription) {
 		inscription.ContentText = string(res.Body)
 		return nil, nil
 	})
+}
+
+func FetchBrc20TransferableInscription(owner string, ticker string) (page *Brc20TransferableInscriptionPage, err error) {
+	confirmedList, err := fetchBrc20ConfirmedTransferableInscription(owner, ticker)
+	if err != nil {
+		return
+	}
+	unconfirmedList, err := fetchBrc20UnconfirmedTransferableInscription(owner, ticker)
+	if err != nil {
+		unconfirmedList = []*Brc20TransferableInscription{}
+		err = nil
+	}
+
+	confirmedList = append(confirmedList, unconfirmedList...)
+	return &Brc20TransferableInscriptionPage{
+		SdkPageable: &inter.SdkPageable[*Brc20TransferableInscription]{
+			TotalCount_:    len(confirmedList),
+			CurrentCount_:  len(confirmedList),
+			CurrentCursor_: "end",
+			HasNextPage_:   false,
+			Items:          confirmedList,
+		},
+	}, nil
+}
+
+func fetchBrc20ConfirmedTransferableInscription(owner string, ticker string) (arr []*Brc20TransferableInscription, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
+
+	header := unisatRequestHeader()
+	url := fmt.Sprintf("https://unisat.io/wallet-api-v4/brc20/token-summary?address=%v&ticker=%v", owner, ticker)
+	resp, err := httpUtil.Request(http.MethodGet, url, header, nil)
+	if err != nil {
+		return
+	}
+
+	var resultData struct {
+		TransferableList []*Brc20TransferableInscription `json:"transferableList"`
+		// tokenBalance, historyList, tokenInfo
+	}
+	if err = decodeUnisatResponseV4(*resp, &resultData); err != nil {
+		return
+	}
+	return resultData.TransferableList, nil
+}
+
+func fetchBrc20UnconfirmedTransferableInscription(owner string, ticker string) (arr []*Brc20TransferableInscription, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
+
+	header := unisatRequestHeader()
+	url := fmt.Sprintf("https://unisat.io/wallet-api-v4/address/inscriptions?address=%v&cursor=%v&size=%v", owner, 0, 50)
+	resp, err := httpUtil.Request(http.MethodGet, url, header, nil)
+	if err != nil {
+		return
+	}
+	var rawPage rawBrc20InscriptionPage
+	if err = decodeUnisatResponseV4(*resp, &rawPage); err != nil {
+		return
+	}
+
+	var unconfirmedInscription = []interface{}{}
+	for _, inscription := range rawPage.List {
+		if inscription.Timestamp <= 10 {
+			unconfirmedInscription = append(unconfirmedInscription, inscription)
+		}
+	}
+	unconfirmedTransferableInscription, err := base.MapListConcurrent(unconfirmedInscription, 10, func(i interface{}) (interface{}, error) {
+		inscription := i.(*Brc20Inscription)
+		body, err := httpUtil.Get(inscription.Content, nil)
+		if err != nil {
+			return 0, nil
+		}
+		var obj struct {
+			// P    string `json:"p"`
+			// Op   string `json:"op"`
+			Tick string `json:"tick"`
+			Amt  string `json:"amt"`
+		}
+		err = json.Unmarshal(body, &obj)
+		if err != nil {
+			return 0, nil
+		}
+		if obj.Tick != ticker {
+			return 0, nil
+		}
+		return &Brc20TransferableInscription{
+			InscriptionId:     inscription.InscriptionId,
+			InscriptionNumber: inscription.InscriptionNumber,
+			Amount:            obj.Amt,
+			Ticker:            obj.Tick,
+			Unconfirmed:       true,
+		}, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	arr = []*Brc20TransferableInscription{}
+	for _, inscription := range unconfirmedTransferableInscription {
+		if item, ok := inscription.(*Brc20TransferableInscription); ok {
+			arr = append(arr, item)
+		}
+	}
+	return arr, nil
 }

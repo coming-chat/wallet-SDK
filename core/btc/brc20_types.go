@@ -163,3 +163,43 @@ func (bp *Brc20InscriptionPage) AsNFTPage() *NFTPage {
 		Items: nftArr,
 	}}
 }
+
+type Brc20TransferableInscription struct {
+	InscriptionId     string `json:"inscriptionId"`
+	InscriptionNumber int64  `json:"inscriptionNumber"`
+	Amount            string `json:"amount"`
+	Ticker            string `json:"ticker"`
+	Unconfirmed       bool   `json:"unconfirmed,omitempty"`
+}
+
+func (j *Brc20TransferableInscription) JsonString() (*base.OptionalString, error) {
+	return base.JsonString(j)
+}
+func NewBrc20TransferableInscriptionWithJsonString(str string) (*Brc20TransferableInscription, error) {
+	var o Brc20TransferableInscription
+	err := base.FromJsonString(str, &o)
+	return &o, err
+}
+
+func (a *Brc20TransferableInscription) AsAny() *base.Any {
+	return &base.Any{Value: a}
+}
+func AsBrc20TransferableInscription(a *base.Any) *Brc20TransferableInscription {
+	if r, ok := a.Value.(*Brc20TransferableInscription); ok {
+		return r
+	}
+	if r, ok := a.Value.(Brc20TransferableInscription); ok {
+		return &r
+	}
+	return nil
+}
+
+type Brc20TransferableInscriptionPage struct {
+	*inter.SdkPageable[*Brc20TransferableInscription]
+}
+
+func NewBrc20TransferableInscriptionPageWithJsonString(str string) (*Brc20TransferableInscriptionPage, error) {
+	var o Brc20TransferableInscriptionPage
+	err := base.FromJsonString(str, &o)
+	return &o, err
+}

@@ -7,9 +7,9 @@ import (
 )
 
 func TestFetchBrc20Inscription(t *testing.T) {
-	owner := "bc1p6wtl8gp8s6k94j3ryuqdeq4dgdcm4yyyc265g3rlh2x9m4cqn32scpts08"
+	owner := "bc1pdq423fm5dv00sl2uckmcve8y3w7guev8ka6qfweljlu23mmsw63qpjc9k7"
 
-	page, err := FetchBrc20Inscription(owner, "1", 20)
+	page, err := FetchBrc20Inscription(owner, "0", 20)
 	require.Nil(t, err)
 	require.True(t, page.TotalCount() >= 1)
 	t.Log(page.ItemArray().Values...)
@@ -21,4 +21,12 @@ func TestFetchBrc20Inscription(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, page.TotalCount_, rePage.TotalCount_)
 	require.Equal(t, page.Items[0], rePage.Items[0])
+}
+
+func TestFetchBrc20TransferableInscription(t *testing.T) {
+	owner := "bc1pdq423fm5dv00sl2uckmcve8y3w7guev8ka6qfweljlu23mmsw63qpjc9k7"
+
+	page, err := FetchBrc20TransferableInscription(owner, "MCSP")
+	require.Nil(t, err)
+	t.Log(page.ItemArray())
 }
