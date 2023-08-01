@@ -91,7 +91,7 @@ type FeeRate struct {
 }
 
 func SuggestFeeRate() (*FeeRate, error) {
-	url := "https://mempool-mainnet.coming.chat/api/v1/fees/recommended"
+	url := "https://mempool.coming.chat/mainnet/api/v1/fees/recommended"
 
 	response, err := httpUtil.Request(http.MethodGet, url, nil, nil)
 	if err != nil {
