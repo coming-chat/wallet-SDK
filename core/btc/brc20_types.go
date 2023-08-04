@@ -203,3 +203,9 @@ func NewBrc20TransferableInscriptionPageWithJsonString(str string) (*Brc20Transf
 	err := base.FromJsonString(str, &o)
 	return &o, err
 }
+
+type unisatTokenSummary struct {
+	TransferableList []*Brc20TransferableInscription `json:"transferableList"`
+	TokenBalance     *Brc20TokenBalance              `json:"tokenBalance"`
+	// historyList, tokenInfo
+}

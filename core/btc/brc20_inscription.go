@@ -68,7 +68,7 @@ func batchFetchContentText(inscriptions []*Brc20Inscription) {
 }
 
 func (c *Chain) FetchBrc20TransferableInscription(owner string, ticker string) (page *Brc20TransferableInscriptionPage, err error) {
-	confirmedList, err := c.fetchBrc20ConfirmedTransferableInscription(owner, ticker)
+	summary, err := c.fetchTokenSummary(owner, ticker)
 	if err != nil {
 		return
 	}
@@ -78,6 +78,7 @@ func (c *Chain) FetchBrc20TransferableInscription(owner string, ticker string) (
 		err = nil
 	}
 
+	confirmedList := summary.TransferableList
 	confirmedList = append(confirmedList, unconfirmedList...)
 	return &Brc20TransferableInscriptionPage{
 		SdkPageable: &inter.SdkPageable[*Brc20TransferableInscription]{
@@ -88,30 +89,6 @@ func (c *Chain) FetchBrc20TransferableInscription(owner string, ticker string) (
 			Items:          confirmedList,
 		},
 	}, nil
-}
-
-func (c *Chain) fetchBrc20ConfirmedTransferableInscription(owner string, ticker string) (arr []*Brc20TransferableInscription, err error) {
-	defer base.CatchPanicAndMapToBasicError(&err)
-	host, err := unisatHost(c.Chainnet)
-	if err != nil {
-		return nil, err
-	}
-
-	header := unisatRequestHeader()
-	url := fmt.Sprintf("%v/wallet-api-v4/brc20/token-summary?address=%v&ticker=%v", host, owner, ticker)
-	resp, err := httpUtil.Request(http.MethodGet, url, header, nil)
-	if err != nil {
-		return
-	}
-
-	var resultData struct {
-		TransferableList []*Brc20TransferableInscription `json:"transferableList"`
-		// tokenBalance, historyList, tokenInfo
-	}
-	if err = decodeUnisatResponseV4(*resp, &resultData); err != nil {
-		return
-	}
-	return resultData.TransferableList, nil
 }
 
 func (c *Chain) fetchBrc20UnconfirmedTransferableInscription(owner string, ticker string) (arr []*Brc20TransferableInscription, err error) {

@@ -146,3 +146,30 @@ func (c *Chain) FetchBrc20TokenBalance(owner string, cursor string, pageSize int
 	res := rawPage.MapToSdkPage(int(offset), pageSize)
 	return &Brc20TokenBalancePage{res}, nil
 }
+
+func (c *Chain) QueryBrc20Balance(owner, ticker string) (balance *Brc20TokenBalance, err error) {
+	summary, err := c.fetchTokenSummary(owner, ticker)
+	if err != nil {
+		return nil, err
+	}
+	return summary.TokenBalance, nil
+}
+
+func (c *Chain) fetchTokenSummary(owner, ticker string) (summary *unisatTokenSummary, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
+	host, err := unisatHost(c.Chainnet)
+	if err != nil {
+		return
+	}
+
+	header := unisatRequestHeader()
+	url := fmt.Sprintf("%v/wallet-api-v4/brc20/token-summary?address=%v&ticker=%v", host, owner, ticker)
+	resp, err := httpUtil.Request(http.MethodGet, url, header, nil)
+	if err != nil {
+		return
+	}
+	if err = decodeUnisatResponseV4(*resp, &summary); err != nil {
+		return
+	}
+	return summary, nil
+}
