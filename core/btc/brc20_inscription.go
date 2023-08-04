@@ -15,7 +15,7 @@ import (
 
 // FetchBrc20Inscription
 // @param cursor start from 0
-func FetchBrc20Inscription(owner string, cursor string, pageSize int) (page *Brc20InscriptionPage, err error) {
+func (c *Chain) FetchBrc20Inscription(owner string, cursor string, pageSize int) (page *Brc20InscriptionPage, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
 	if cursor == "" {
 		cursor = "0"
@@ -24,9 +24,13 @@ func FetchBrc20Inscription(owner string, cursor string, pageSize int) (page *Brc
 	if err != nil {
 		return nil, errors.New("invalid cursor")
 	}
+	host, err := unisatHost(c.Chainnet)
+	if err != nil {
+		return nil, err
+	}
 
 	header := unisatRequestHeader()
-	url := fmt.Sprintf("https://unisat.io/wallet-api-v4/address/inscriptions?address=%v&cursor=%v&size=%v", owner, offset, pageSize)
+	url := fmt.Sprintf("%v/wallet-api-v4/address/inscriptions?address=%v&cursor=%v&size=%v", host, owner, offset, pageSize)
 	resp, err := httpUtil.Request(http.MethodGet, url, header, nil)
 	if err != nil {
 		return
@@ -63,12 +67,12 @@ func batchFetchContentText(inscriptions []*Brc20Inscription) {
 	})
 }
 
-func FetchBrc20TransferableInscription(owner string, ticker string) (page *Brc20TransferableInscriptionPage, err error) {
-	confirmedList, err := fetchBrc20ConfirmedTransferableInscription(owner, ticker)
+func (c *Chain) FetchBrc20TransferableInscription(owner string, ticker string) (page *Brc20TransferableInscriptionPage, err error) {
+	confirmedList, err := c.fetchBrc20ConfirmedTransferableInscription(owner, ticker)
 	if err != nil {
 		return
 	}
-	unconfirmedList, err := fetchBrc20UnconfirmedTransferableInscription(owner, ticker)
+	unconfirmedList, err := c.fetchBrc20UnconfirmedTransferableInscription(owner, ticker)
 	if err != nil {
 		unconfirmedList = []*Brc20TransferableInscription{}
 		err = nil
@@ -86,11 +90,15 @@ func FetchBrc20TransferableInscription(owner string, ticker string) (page *Brc20
 	}, nil
 }
 
-func fetchBrc20ConfirmedTransferableInscription(owner string, ticker string) (arr []*Brc20TransferableInscription, err error) {
+func (c *Chain) fetchBrc20ConfirmedTransferableInscription(owner string, ticker string) (arr []*Brc20TransferableInscription, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
+	host, err := unisatHost(c.Chainnet)
+	if err != nil {
+		return nil, err
+	}
 
 	header := unisatRequestHeader()
-	url := fmt.Sprintf("https://unisat.io/wallet-api-v4/brc20/token-summary?address=%v&ticker=%v", owner, ticker)
+	url := fmt.Sprintf("%v/wallet-api-v4/brc20/token-summary?address=%v&ticker=%v", host, owner, ticker)
 	resp, err := httpUtil.Request(http.MethodGet, url, header, nil)
 	if err != nil {
 		return
@@ -106,11 +114,15 @@ func fetchBrc20ConfirmedTransferableInscription(owner string, ticker string) (ar
 	return resultData.TransferableList, nil
 }
 
-func fetchBrc20UnconfirmedTransferableInscription(owner string, ticker string) (arr []*Brc20TransferableInscription, err error) {
+func (c *Chain) fetchBrc20UnconfirmedTransferableInscription(owner string, ticker string) (arr []*Brc20TransferableInscription, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
+	host, err := unisatHost(c.Chainnet)
+	if err != nil {
+		return nil, err
+	}
 
 	header := unisatRequestHeader()
-	url := fmt.Sprintf("https://unisat.io/wallet-api-v4/address/inscriptions?address=%v&cursor=%v&size=%v", owner, 0, 50)
+	url := fmt.Sprintf("%v/wallet-api-v4/address/inscriptions?address=%v&cursor=%v&size=%v", host, owner, 0, 50)
 	resp, err := httpUtil.Request(http.MethodGet, url, header, nil)
 	if err != nil {
 		return

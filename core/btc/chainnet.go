@@ -15,7 +15,7 @@ const (
 
 func isValidChain(chainnet string) bool {
 	switch chainnet {
-	case ChainSignet, ChainBitcoin, ChainMainnet:
+	case ChainSignet, ChainBitcoin, ChainMainnet, ChainTestnet:
 		return true
 	default:
 		return false
@@ -40,6 +40,8 @@ func scanHostOf(chainnet string) (string, error) {
 		return "https://electrs.coming.chat/signet", nil
 	case ChainMainnet, ChainBitcoin:
 		return "https://electrs.coming.chat/mainnet", nil
+	case ChainTestnet:
+		return "https://electrs.coming.chat/testnet", nil
 	default:
 		return "", ErrUnsupportedChain
 	}
@@ -64,9 +66,27 @@ func rpcClientOf(chainnet string) (*rpcclient.Client, error) {
 			HTTPPostMode: true,
 			DisableTLS:   true,
 		}, nil)
+	case ChainTestnet:
+		return rpcclient.New(&rpcclient.ConnConfig{
+			Host:         "bitcoin.coming.chat/testnet/",
+			User:         "auth",
+			Pass:         "bitcoin-b2dd077",
+			HTTPPostMode: true,
+			DisableTLS:   true,
+		}, nil)
 	}
 
 	return nil, ErrUnsupportedChain
+}
+
+func unisatHost(chainnet string) (string, error) {
+	switch chainnet {
+	case ChainMainnet, ChainBitcoin:
+		return "https://unisat.io", nil
+	case ChainTestnet:
+		return "https://unisat.io/testnet", nil
+	}
+	return "", ErrUnsupportedChain
 }
 
 func nameOf(chainnet string) (string, error) {
@@ -74,6 +94,8 @@ func nameOf(chainnet string) (string, error) {
 	case ChainSignet:
 		return "sBTC", nil
 	case ChainMainnet, ChainBitcoin:
+		return "BTC", nil
+	case ChainTestnet:
 		return "BTC", nil
 	}
 	return "", ErrUnsupportedChain

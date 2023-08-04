@@ -9,7 +9,9 @@ import (
 func TestFetchBrc20Inscription(t *testing.T) {
 	owner := "bc1pdq423fm5dv00sl2uckmcve8y3w7guev8ka6qfweljlu23mmsw63qpjc9k7"
 
-	page, err := FetchBrc20Inscription(owner, "0", 20)
+	chain, err := NewChainWithChainnet(ChainMainnet)
+	require.Nil(t, err)
+	page, err := chain.FetchBrc20Inscription(owner, "0", 20)
 	require.Nil(t, err)
 	require.True(t, page.TotalCount() >= 1)
 	t.Log(page.ItemArray().Values...)
@@ -26,7 +28,9 @@ func TestFetchBrc20Inscription(t *testing.T) {
 func TestFetchBrc20TransferableInscription(t *testing.T) {
 	owner := "bc1pdq423fm5dv00sl2uckmcve8y3w7guev8ka6qfweljlu23mmsw63qpjc9k7"
 
-	page, err := FetchBrc20TransferableInscription(owner, "MCSP")
+	chain, err := NewChainWithChainnet(ChainMainnet)
+	require.Nil(t, err)
+	page, err := chain.FetchBrc20TransferableInscription(owner, "MCSP")
 	require.Nil(t, err)
 	t.Log(page.ItemArray())
 }
