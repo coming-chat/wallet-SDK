@@ -191,7 +191,7 @@ func (a *Account) DerivePath() string {
 }
 
 func (a *Account) AddressWithType(addrType AddressType) (*base.OptionalString, error) {
-	switch a.AddressType {
+	switch addrType {
 	case AddressTypeComingTaproot:
 		return a.ComingTaprootAddress()
 	case AddressTypeNativeSegwit:
