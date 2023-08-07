@@ -26,11 +26,11 @@ func TestFetchBrc20Inscription(t *testing.T) {
 }
 
 func TestFetchBrc20TransferableInscription(t *testing.T) {
-	owner := "bc1pdq423fm5dv00sl2uckmcve8y3w7guev8ka6qfweljlu23mmsw63qpjc9k7"
+	owner := "tb1p2hsjm57fsxrqcq5p42get87ttrw069kqa2ar444ma4ussquuaklqfsrknz"
 
-	chain, err := NewChainWithChainnet(ChainMainnet)
+	chain, err := NewChainWithChainnet(ChainTestnet)
 	require.Nil(t, err)
-	page, err := chain.FetchBrc20TransferableInscription(owner, "MCSP")
+	page, err := chain.FetchBrc20TransferableInscription(owner, "txtx")
 	require.Nil(t, err)
 	t.Log(page.ItemArray())
 }

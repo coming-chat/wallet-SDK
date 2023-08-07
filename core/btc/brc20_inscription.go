@@ -79,6 +79,16 @@ func (c *Chain) FetchBrc20TransferableInscription(owner string, ticker string) (
 	}
 
 	confirmedList := summary.TransferableList
+	// Remove duplicate elements in confirmedList from unconfirmedList
+	for idx := len(unconfirmedList) - 1; idx >= 0; idx-- {
+		unconfirmed := unconfirmedList[idx]
+		for _, confirmed := range confirmedList {
+			if confirmed.InscriptionId == unconfirmed.InscriptionId && confirmed.InscriptionNumber == unconfirmed.InscriptionNumber {
+				unconfirmedList = append(unconfirmedList[:idx], unconfirmedList[idx+1:]...)
+				break
+			}
+		}
+	}
 	confirmedList = append(confirmedList, unconfirmedList...)
 	return &Brc20TransferableInscriptionPage{
 		SdkPageable: &inter.SdkPageable[*Brc20TransferableInscription]{
