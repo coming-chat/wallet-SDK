@@ -59,7 +59,13 @@ func (c *Chain) SendRawTransaction(signedTx string) (string, error) {
 }
 
 func (c *Chain) SendSignedTransaction(signedTxn base.SignedTransaction) (hash *base.OptionalString, err error) {
-	return nil, base.ErrUnsupportedFunction
+	if brc20MintTxn := signedTxn.(*Brc20MintTransaction); brc20MintTxn != nil {
+		return brc20MintTxn.PublishWithChain(c)
+	}
+	if psbtTxn := signedTxn.(*SignedPsbtTransaction); psbtTxn != nil {
+		return psbtTxn.PublishWithChain(c)
+	}
+	return nil, base.ErrInvalidTransactionType
 }
 
 // Fetch transaction details through transaction hash

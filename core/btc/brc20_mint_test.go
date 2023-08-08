@@ -3,18 +3,29 @@ package btc
 import (
 	"testing"
 
+	"github.com/coming-chat/wallet-SDK/core/testcase"
 	"github.com/stretchr/testify/require"
 )
 
-func TestMintTransaction(t *testing.T) {
-	user := "tb1pdq423fm5dv00sl2uckmcve8y3w7guev8ka6qfweljlu23mmsw63qk6w2v3"
+func TestBrc20MintTransaction_SignAndSend(t *testing.T) {
+	account, err := NewAccountWithMnemonic(testcase.M1, ChainTestnet)
+	require.Nil(t, err)
 	tick := "ovvo"
 	amount := "1000"
 
+	user, err := account.TaprootAddress()
+	require.Nil(t, err)
 	chain, err := NewChainWithChainnet(ChainTestnet)
 	require.Nil(t, err)
-	txn, err := chain.BuildBrc20MintTransaction(user, user, tick, amount, 2)
+	txn, err := chain.BuildBrc20MintTransaction(user.Value, user.Value, "mint", tick, amount, 1)
 	require.Nil(t, err)
 
-	t.Log(txn)
+	signedTxn, err := txn.SignedTransactionWithAccount(account)
+	require.Nil(t, err)
+
+	if false {
+		hash, err := chain.SendSignedTransaction(signedTxn)
+		require.Nil(t, err)
+		t.Log("brc20 mint success:", hash.Value)
+	}
 }

@@ -10,4 +10,5 @@ var (
 
 	ErrPsbtEncode                 = errors.New("unsupported Psbt tx encode")
 	ErrPsbtUnsupportedAccountType = errors.New("account psbt sign unsupported")
+	ErrTransactionNotSigned       = errors.New("transaction not signed")
 )

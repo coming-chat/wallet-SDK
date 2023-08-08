@@ -10,7 +10,9 @@ type Transaction interface {
 	SignedTransactionWithAccount(account Account) (signedTxn SignedTransaction, err error)
 }
 
+// SignedTransaction can use chain to broadcast transactions, `chain.SendSignedTransaction(signedTxn)`
 type SignedTransaction interface {
+	// Hex string can use chain to broadcast transactions, `chain.SendRawTransaction(txString)`
 	HexString() (res *OptionalString, err error)
 }
 

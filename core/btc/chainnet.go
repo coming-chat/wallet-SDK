@@ -79,6 +79,26 @@ func rpcClientOf(chainnet string) (*rpcclient.Client, error) {
 	return nil, ErrUnsupportedChain
 }
 
+func zeroWalletHost(chainnet string) (string, error) {
+	switch chainnet {
+	case ChainMainnet, ChainBitcoin:
+		return "https://coming-zero-wallet.coming.chat", nil
+	case ChainTestnet:
+		return "https://coming-zero-wallet-pre.coming.chat", nil
+	}
+	return "", ErrUnsupportedChain
+}
+
+func comingOrdHost(chainnet string) (string, error) {
+	switch chainnet {
+	case ChainMainnet, ChainBitcoin:
+		return "https://bitcoin.coming.chat/ord", nil
+	case ChainTestnet:
+		return "https://bitcoin.coming.chat/ord_testnet", nil
+	}
+	return "", ErrUnsupportedChain
+}
+
 func unisatHost(chainnet string) (string, error) {
 	switch chainnet {
 	case ChainMainnet, ChainBitcoin:

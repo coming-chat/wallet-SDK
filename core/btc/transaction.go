@@ -21,16 +21,22 @@ func ExtractPsbtToMsgTx(psbtTx string) (*wire.MsgTx, error) {
 }
 
 func PsbtPacketToMsgTx(packet *psbt.Packet) (*wire.MsgTx, error) {
+	if err := EnsurePsbtFinalize(packet); err != nil {
+		return nil, err
+	}
+	return psbt.Extract(packet)
+}
+
+func EnsurePsbtFinalize(packet *psbt.Packet) error {
 	if !packet.IsComplete() {
 		for i := range packet.Inputs {
 			err := psbt.Finalize(packet, i)
 			if err != nil {
-				return nil, err
+				return err
 			}
 		}
 	}
-	return psbt.Extract(packet)
-
+	return nil
 }
 
 func DecodePsbtTxToPacket(encode string) (*psbt.Packet, error) {
