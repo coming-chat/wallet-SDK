@@ -59,10 +59,10 @@ func (c *Chain) SendRawTransaction(signedTx string) (string, error) {
 }
 
 func (c *Chain) SendSignedTransaction(signedTxn base.SignedTransaction) (hash *base.OptionalString, err error) {
-	if brc20MintTxn := signedTxn.(*Brc20MintTransaction); brc20MintTxn != nil {
+	if brc20MintTxn, ok := signedTxn.(*Brc20MintTransaction); ok {
 		return brc20MintTxn.PublishWithChain(c)
 	}
-	if psbtTxn := signedTxn.(*SignedPsbtTransaction); psbtTxn != nil {
+	if psbtTxn, ok := signedTxn.(*SignedPsbtTransaction); ok {
 		return psbtTxn.PublishWithChain(c)
 	}
 	return nil, base.ErrInvalidTransactionType
