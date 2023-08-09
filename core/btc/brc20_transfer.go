@@ -16,6 +16,10 @@ type Brc20TransferTransaction struct {
 	// CommitCustom []string `json:"commit_custom"`
 }
 
+func NewBrc20TransferTransaction() *Brc20TransferTransaction {
+	return &Brc20TransferTransaction{}
+}
+
 func (t *Brc20TransferTransaction) ToPsbtTransaction() (*PsbtTransaction, error) {
 	packet, err := DecodePsbtTxToPacket(t.Transaction)
 	if err != nil {

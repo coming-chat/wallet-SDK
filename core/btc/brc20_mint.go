@@ -26,6 +26,16 @@ type Brc20MintTransaction struct {
 	signedTxn *SignedPsbtTransaction
 }
 
+func NewBrc20MintTransactionWithJsonString(jsonStr string) (*Brc20MintTransaction, error) {
+	jsonBytes := []byte(jsonStr)
+	var res Brc20MintTransaction
+	err := json.Unmarshal(jsonBytes, &res)
+	if err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
 func (t *Brc20MintTransaction) RevealArray() *base.StringArray {
 	return &base.StringArray{Values: t.Reveal}
 }
