@@ -1,6 +1,7 @@
 package btc
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -70,18 +71,25 @@ func (t *Brc20Token) FullTokenInfo() (info *Brc20TokenInfo, err error) {
 	} else if cache, exists := brc20InfoCache[key]; exists {
 		return cache, nil
 	}
-	header := unisatRequestHeader()
-	url := fmt.Sprintf("https://unisat.io/brc20-api-v2/brc20/%v/info", t.Ticker)
-	resp, err := httpUtil.Request(http.MethodGet, url, header, nil)
+	host, _ := zeroWalletHost(ChainMainnet)
+	url := fmt.Sprintf("%v/ordinal/inscrptions/brc20/status?pageStart=0&pageSize=1&tick=%v", host, t.Ticker)
+	resp, err := httpUtil.Request(http.MethodGet, url, nil, nil)
 	if err != nil {
 		return
 	}
-	info = &Brc20TokenInfo{}
-	if err = decodeUnisatResponseV2(*resp, info); err != nil {
+	var resObj struct {
+		Detail []*Brc20TokenInfo `json:"detail"`
+	}
+	if err = json.Unmarshal(resp.Body, &resObj); err != nil {
 		return
 	}
+	if len(resObj.Detail) == 0 {
+		return nil, errors.New("token info not found")
+	}
+
+	info = resObj.Detail[0]
 	brc20InfoCache[key] = info
-	return
+	return info, nil
 }
 
 type Brc20TokenInfo struct {
@@ -95,8 +103,8 @@ type Brc20TokenInfo struct {
 	Minted                 string `json:"minted"`
 	TotalMinted            string `json:"totalMinted"`
 	ConfirmedMinted        string `json:"confirmedMinted"`
-	ConfirmedMinted1h      string `json:"confirmedMinted1h"`
-	ConfirmedMinted24h     string `json:"confirmedMinted24h"`
+	ConfirmedMinted1h      string `json:"confirmedMinted1H"`
+	ConfirmedMinted24h     string `json:"confirmedMinted24H"`
 	MintTimes              int64  `json:"mintTimes"`
 	Decimal                int16  `json:"decimal"`
 	Creator                string `json:"creator"`
@@ -107,6 +115,8 @@ type Brc20TokenInfo struct {
 	CompleteBlocktime      int64  `json:"completeBlocktime"`
 	InscriptionNumberStart int64  `json:"inscriptionNumberStart"`
 	InscriptionNumberEnd   int64  `json:"inscriptionNumberEnd"`
+
+	Price float64 `json:"price"`
 }
 
 func (j *Brc20TokenInfo) JsonString() (*base.OptionalString, error) {
