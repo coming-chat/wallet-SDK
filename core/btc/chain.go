@@ -96,37 +96,31 @@ type FeeRate struct {
 	High    int64
 }
 
-func SuggestFeeRate() (*FeeRate, error) {
-	url := "https://mempool.coming.chat/mainnet/api/v1/fees/recommended"
+func SuggestFeeRate() (rates *FeeRate, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
 
+	url := "https://mempool.space/api/v1/fees/recommended"
 	response, err := httpUtil.Request(http.MethodGet, url, nil, nil)
 	if err != nil {
-		return nil, base.MapAnyToBasicError(err)
+		return
 	}
-
 	if response.Code != http.StatusOK {
 		return nil, fmt.Errorf("code: %d, body: %s", response.Code, string(response.Body))
 	}
-	respDict := make(map[string]interface{})
-	err = json.Unmarshal(response.Body, &respDict)
-	if err != nil {
-		return nil, err
-	}
 
-	var low, avg, high float64
-	var ok bool
-	if low, ok = respDict["minimumFee"].(float64); !ok {
-		low = 1
+	var feeRates struct {
+		MinimumFee  float64 `json:"minimumFee"`
+		HalfHourFee float64 `json:"halfHourFee"`
+		FastestFee  float64 `json:"fastestFee"`
+		// economyFee, hourFee
 	}
-	if avg, ok = respDict["halfHourFee"].(float64); !ok {
-		avg = low
-	}
-	if high, ok = respDict["fastestFee"].(float64); !ok {
-		high = avg
+	err = json.Unmarshal(response.Body, &feeRates)
+	if err != nil {
+		return &FeeRate{1, 1, 1}, nil
 	}
 	return &FeeRate{
-		Low:     int64(low),
-		Average: int64(avg),
-		High:    int64(high),
+		Low:     int64(feeRates.MinimumFee),
+		Average: int64(feeRates.HalfHourFee),
+		High:    int64(feeRates.FastestFee),
 	}, nil
 }
