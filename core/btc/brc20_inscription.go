@@ -29,7 +29,7 @@ func (c *Chain) FetchBrc20Inscription(owner string, cursor string, pageSize int)
 		return nil, err
 	}
 
-	header := unisatRequestHeader()
+	header := unisatRequestHeader(owner)
 	url := fmt.Sprintf("%v/wallet-api-v4/address/inscriptions?address=%v&cursor=%v&size=%v", host, owner, offset, pageSize)
 	resp, err := httpUtil.Request(http.MethodGet, url, header, nil)
 	if err != nil {
@@ -108,7 +108,7 @@ func (c *Chain) fetchBrc20UnconfirmedTransferableInscription(owner string, ticke
 		return nil, err
 	}
 
-	header := unisatRequestHeader()
+	header := unisatRequestHeader(owner)
 	url := fmt.Sprintf("%v/wallet-api-v4/address/inscriptions?address=%v&cursor=%v&size=%v", host, owner, 0, 50)
 	resp, err := httpUtil.Request(http.MethodGet, url, header, nil)
 	if err != nil {

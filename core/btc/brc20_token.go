@@ -142,7 +142,7 @@ func (c *Chain) FetchBrc20TokenBalance(owner string, cursor string, pageSize int
 		return nil, err
 	}
 
-	header := unisatRequestHeader()
+	header := unisatRequestHeader(owner)
 	url := fmt.Sprintf("%v/wallet-api-v4/brc20/tokens?address=%v&cursor=%v&size=%v", host, owner, offset, pageSize)
 	resp, err := httpUtil.Request(http.MethodGet, url, header, nil)
 	if err != nil {
@@ -172,7 +172,7 @@ func (c *Chain) fetchTokenSummary(owner, ticker string) (summary *unisatTokenSum
 		return
 	}
 
-	header := unisatRequestHeader()
+	header := unisatRequestHeader(owner)
 	url := fmt.Sprintf("%v/wallet-api-v4/brc20/token-summary?address=%v&ticker=%v", host, owner, ticker)
 	resp, err := httpUtil.Request(http.MethodGet, url, header, nil)
 	if err != nil {

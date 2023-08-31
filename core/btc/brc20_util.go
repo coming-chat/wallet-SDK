@@ -74,11 +74,11 @@ func responseJsonCheck(resp httpUtil.Res) error {
 	return nil
 }
 
-func unisatRequestHeader() map[string]string {
+func unisatRequestHeader(address string) map[string]string {
 	return map[string]string{
 		"X-Client":   "UniSat Wallet",
-		"X-Version":  "1.1.25",
-		"x-address":  "bc1pdq423fm5dv00sl2uckmcve8y3w7guev8ka6qfweljlu23mmsw63qpjc9k7",
-		"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36",
+		"X-Version":  "1.1.30",
+		"x-address":  address,
+		"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36",
 	}
 }
