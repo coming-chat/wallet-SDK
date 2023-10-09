@@ -1,6 +1,17 @@
 package eth
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/coming-chat/wallet-SDK/core/testcase"
+)
+
+func ETH(amount float64) testcase.Amount {
+	return testcase.Amount{Amount: amount, Multiple: 1e18}
+}
+func Gwei(amount float64) testcase.Amount {
+	return testcase.Amount{Amount: amount, Multiple: 1e9}
+}
 
 func TestToken_EstimateGasLimit(t1 *testing.T) {
 	addressZero := "0x0000000000000000000000000000000000000000"

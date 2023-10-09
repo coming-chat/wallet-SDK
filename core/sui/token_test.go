@@ -2,24 +2,16 @@ package sui
 
 import (
 	"context"
-	"strconv"
 	"testing"
 
 	"github.com/coming-chat/go-sui/v2/sui_types"
 	"github.com/coming-chat/go-sui/v2/types"
+	"github.com/coming-chat/wallet-SDK/core/testcase"
 	"github.com/stretchr/testify/require"
 )
 
-type SUI float32
-
-func (s SUI) Int64() int64 {
-	return int64(s * 1e9)
-}
-func (s SUI) Uint64() uint64 {
-	return uint64(s * 1e9)
-}
-func (s SUI) String() string {
-	return strconv.FormatUint(s.Uint64(), 10)
+func SUI(amount float64) testcase.Amount {
+	return testcase.Amount{Amount: amount, Multiple: 1e9}
 }
 
 func TestBalance(t *testing.T) {
