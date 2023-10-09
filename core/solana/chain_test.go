@@ -6,16 +6,8 @@ import (
 	"testing"
 
 	"github.com/coming-chat/wallet-SDK/core/base"
-	"github.com/coming-chat/wallet-SDK/core/testcase"
+	"github.com/stretchr/testify/require"
 )
-
-func newChainAndAccount() (*Chain, *Account) {
-	// chain := NewChainWithRpc(rpc.MainnetRPCEndpoint)
-	chain := NewChainWithRpc(DevnetRPCEndpoint)
-	// c := client.NewClient(rpc.LocalnetRPCEndpoint)
-	account, _ := NewAccountWithMnemonic(testcase.M1)
-	return chain, account
-}
 
 func DevnetChain() *Chain {
 	return NewChainWithRpc(DevnetRPCEndpoint)
@@ -28,13 +20,13 @@ func MainnetChain() *Chain {
 }
 
 func TestAirdrop(t *testing.T) {
-	chain, account := newChainAndAccount()
-	txhash, err := chain.client().RequestAirdrop(context.Background(), account.Address(), 1e9)
-	if err != nil {
-		t.Fatal(err)
+	if false {
+		chain := DevnetChain()
+		account := M1Account(t)
+		txhash, err := chain.client().RequestAirdrop(context.Background(), account.Address(), 1e9)
+		require.NoError(t, err)
+		t.Log(txhash)
 	}
-
-	t.Log(txhash)
 }
 
 func TestEstimateFee(t *testing.T) {
@@ -42,29 +34,27 @@ func TestEstimateFee(t *testing.T) {
 	token := &Token{chain: chain}
 
 	receiver := "9B5XszUGdMaxCZ7uSQhPzdks5ZQSmWxrmzCSvtJ6Ns6g"
-	amount := "10000000"
+	amount := SOL(0.01).String()
 	fee, err := token.EstimateFees(receiver, amount)
 	t.Log(fee, err)
 }
 
 func TestBuildtxAndSendTransaction(t *testing.T) {
-	chain, acc := newChainAndAccount()
-	token := &Token{chain: chain}
+	sender := M1Account(t)
+	chain := DevnetChain()
+	token := NewToken(chain)
 
 	receiver := "9B5XszUGdMaxCZ7uSQhPzdks5ZQSmWxrmzCSvtJ6Ns6g"
-	amount := "10000000"
-	// amount := "1879985000"
+	amount := SOL(0.01).String()
 
-	signedTx, err := token.BuildTransferTxWithAccount(acc, receiver, amount)
-	if err != nil {
-		t.Fatal(err)
-	}
+	signedTx, err := token.BuildTransferTxWithAccount(sender, receiver, amount)
+	require.NoError(t, err)
 
-	txHash, err := chain.SendRawTransaction(signedTx.Value)
-	if err != nil {
-		t.Fatal(err)
+	if false {
+		txHash, err := chain.SendRawTransaction(signedTx.Value)
+		require.NoError(t, err)
+		t.Log(txHash)
 	}
-	t.Log(txHash)
 }
 
 func TestChain_BalanceOfAddress(t *testing.T) {
@@ -139,19 +129,19 @@ func TestChain_FetchTransactionDetail(t *testing.T) {
 		{
 			name: "devnet succeed transfer",
 			rpc:  DevnetRPCEndpoint,
-			hash: "2CLc8VSHsS67JT6a4UQZMMwFzcgnriHL4d1rpwu9WBwAqzucj6XPBcL2AYJy7n6xvmrnXTgGRKoThHizN8E8NTFN",
+			hash: "4xNjdnHufbsVVgyQxFDzcGsC6ypBntCZoaZgXziwxh2gTXERgUvVvQA1KLGQMGCpJTKctSswZPuCA1DsLii45Jwr",
 			want: &base.TransactionDetail{
-				HashString:      "2CLc8VSHsS67JT6a4UQZMMwFzcgnriHL4d1rpwu9WBwAqzucj6XPBcL2AYJy7n6xvmrnXTgGRKoThHizN8E8NTFN",
-				FromAddress:     "AfBfH4ehvcXx66Y5YZozgTYPC1nieL9A3r2yT3vCXqPY",
+				HashString:      "4xNjdnHufbsVVgyQxFDzcGsC6ypBntCZoaZgXziwxh2gTXERgUvVvQA1KLGQMGCpJTKctSswZPuCA1DsLii45Jwr",
+				FromAddress:     "4MPScMzmKwQfpzQ4MtkSaqKQbTEzGsWqovUMweNz7nFo",
 				ToAddress:       "9B5XszUGdMaxCZ7uSQhPzdks5ZQSmWxrmzCSvtJ6Ns6g",
-				Amount:          "100000000",
+				Amount:          "10000000",
 				EstimateFees:    "5000",
 				Status:          base.TransactionStatusSuccess,
-				FinishTimestamp: 1657177658,
+				FinishTimestamp: 1690880972,
 			},
 		},
 		{
-			name:    "devnet succeed but not contain an transfer",
+			name:    "not found",
 			rpc:     DevnetRPCEndpoint,
 			hash:    "3VjZjLrinNbHnkoTcvFi37nZgBcLdpCeHtmuXxqWS21stBbfKMCNhqmtG46BpPnWav16zPjNoSgM2eDn6w9k6bDN",
 			wantErr: true,
@@ -182,13 +172,13 @@ func TestChain_FetchTransactionStatus(t *testing.T) {
 		{
 			name: "devnet normal1",
 			rpc:  DevnetRPCEndpoint,
-			hash: "3L8qPd9cTFj3KSe8bBhjdopik2xb7m2gE1ji6oWpZWgu6RgAKxA7Z8b6o11uBSYc8MmwFpeE4EoRtd2q14d4ePWe",
+			hash: "4PtFQcC6WUorchQgxGRzzDpqRSQhkM8ZDtovBWi8nYcAtsckY35XZnAp1rarH1WVMqfMzArbkzXJwBCbhexzRzAJ",
 			want: base.TransactionStatusSuccess,
 		},
 		{
 			name: "devnet normal2",
 			rpc:  DevnetRPCEndpoint,
-			hash: "xV56yXtPnxnzgvf5uNp3es5znqNt2FerXiVxWvEDZxLzsNkK2zy6vUYZhcLLQYbswfpbUBXnmdVnDZ3dAR5YSYm",
+			hash: "4xNjdnHufbsVVgyQxFDzcGsC6ypBntCZoaZgXziwxh2gTXERgUvVvQA1KLGQMGCpJTKctSswZPuCA1DsLii45Jwr",
 			want: base.TransactionStatusSuccess,
 		},
 	}

@@ -3,8 +3,13 @@ package solana
 import (
 	"testing"
 
+	"github.com/coming-chat/wallet-SDK/core/testcase"
 	"github.com/stretchr/testify/require"
 )
+
+func SOL(amount float64) testcase.Amount {
+	return testcase.Amount{Amount: amount, Multiple: 1e9}
+}
 
 func TestToken_BuildTransfer_SignedTransaction(t *testing.T) {
 	account := M1Account(t)

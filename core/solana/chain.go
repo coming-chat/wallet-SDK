@@ -111,6 +111,9 @@ func (c *Chain) FetchTransactionDetail(hash string) (*base.TransactionDetail, er
 	if err != nil {
 		return nil, err
 	}
+	if response == nil {
+		return nil, errors.New("not found")
+	}
 	detail := &base.TransactionDetail{HashString: hash}
 	err = decodeTransaction(response, detail)
 	if err != nil {

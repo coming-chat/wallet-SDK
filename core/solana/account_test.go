@@ -8,6 +8,7 @@ import (
 )
 
 func M1Account(t *testing.T) *Account {
+	// M1 address: 4MPScMzmKwQfpzQ4MtkSaqKQbTEzGsWqovUMweNz7nFo
 	acc, err := NewAccountWithMnemonic(testcase.M1)
 	require.Nil(t, err)
 	return acc
