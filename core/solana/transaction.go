@@ -3,8 +3,8 @@ package solana
 import (
 	"encoding/hex"
 
+	"github.com/blocto/solana-go-sdk/types"
 	"github.com/coming-chat/wallet-SDK/core/base"
-	"github.com/portto/solana-go-sdk/types"
 )
 
 type Transaction struct {

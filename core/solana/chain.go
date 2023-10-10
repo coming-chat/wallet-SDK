@@ -7,14 +7,14 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/blocto/solana-go-sdk/client"
+	"github.com/blocto/solana-go-sdk/common"
+	"github.com/blocto/solana-go-sdk/program/system"
+	"github.com/blocto/solana-go-sdk/rpc"
+	"github.com/blocto/solana-go-sdk/types"
 	"github.com/coming-chat/wallet-SDK/core/base"
-	"github.com/portto/solana-go-sdk/client"
-	"github.com/portto/solana-go-sdk/common"
-	"github.com/portto/solana-go-sdk/program/sysprog"
-	"github.com/portto/solana-go-sdk/rpc"
 
 	hexTypes "github.com/centrifuge/go-substrate-rpc-client/v4/types"
-	"github.com/portto/solana-go-sdk/types"
 )
 
 const (
@@ -160,7 +160,7 @@ func (c *Chain) EstimateTransactionFeeUsePublicKey(transaction base.Transaction,
 	return c.EstimateTransactionFee(transaction)
 }
 
-func decodeTransaction(tx *client.GetTransactionResponse, to *base.TransactionDetail) error {
+func decodeTransaction(tx *client.Transaction, to *base.TransactionDetail) error {
 	base.CatchPanicAndMapToBasicError(nil)
 
 	if tx == nil || tx.BlockTime == nil {
@@ -179,13 +179,12 @@ func decodeTransaction(tx *client.GetTransactionResponse, to *base.TransactionDe
 		data := instruction.Data
 		instruct := binary.LittleEndian.Uint32(data[:4])
 		toidx := -1
-		switch sysprog.Instruction(instruct) {
-		case sysprog.InstructionTransfer:
+		switch system.Instruction(instruct) {
+		case system.InstructionTransfer:
 			toidx = instruction.Accounts[1]
-		case sysprog.InstructionTransferWithSeed:
+		case system.InstructionTransferWithSeed:
 			toidx = instruction.Accounts[2]
-		}
-		if toidx == -1 {
+		default:
 			continue
 		}
 

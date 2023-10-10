@@ -4,6 +4,7 @@ go 1.19
 
 require (
 	github.com/ChainSafe/go-schnorrkel v0.0.0-20210318173838-ccb5cd955283
+	github.com/blocto/solana-go-sdk v1.26.0
 	github.com/btcsuite/btcd v0.23.4
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2
 	github.com/btcsuite/btcd/btcutil v1.1.2
@@ -24,7 +25,6 @@ require (
 	github.com/itering/subscan v0.1.0
 	github.com/novifinancial/serde-reflection/serde-generate/runtime/golang v0.0.0-20210526181959-1694c58d103e
 	github.com/pierrec/xxHash v0.1.5
-	github.com/portto/solana-go-sdk v1.18.0
 	github.com/shopspring/decimal v1.3.1
 	github.com/starcoinorg/starcoin-go v0.0.0-20220821052347-0e482a42c59e
 	github.com/stretchr/testify v1.8.2

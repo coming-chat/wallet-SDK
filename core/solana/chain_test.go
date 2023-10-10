@@ -7,25 +7,24 @@ import (
 
 	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/coming-chat/wallet-SDK/core/testcase"
-	"github.com/portto/solana-go-sdk/rpc"
 )
 
 func newChainAndAccount() (*Chain, *Account) {
 	// chain := NewChainWithRpc(rpc.MainnetRPCEndpoint)
-	chain := NewChainWithRpc(rpc.DevnetRPCEndpoint)
+	chain := NewChainWithRpc(DevnetRPCEndpoint)
 	// c := client.NewClient(rpc.LocalnetRPCEndpoint)
 	account, _ := NewAccountWithMnemonic(testcase.M1)
 	return chain, account
 }
 
 func DevnetChain() *Chain {
-	return NewChainWithRpc(rpc.DevnetRPCEndpoint)
+	return NewChainWithRpc(DevnetRPCEndpoint)
 }
 func TestnetChain() *Chain {
-	return NewChainWithRpc(rpc.TestnetRPCEndpoint)
+	return NewChainWithRpc(TestnetRPCEndpoint)
 }
 func MainnetChain() *Chain {
-	return NewChainWithRpc(rpc.MainnetRPCEndpoint)
+	return NewChainWithRpc(MainnetRPCEndpoint)
 }
 
 func TestAirdrop(t *testing.T) {

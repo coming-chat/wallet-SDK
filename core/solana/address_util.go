@@ -1,8 +1,8 @@
 package solana
 
 import (
+	"github.com/blocto/solana-go-sdk/common"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
-	"github.com/portto/solana-go-sdk/common"
 )
 
 type Util struct {

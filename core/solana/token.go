@@ -5,11 +5,11 @@ import (
 	"errors"
 	"strconv"
 
+	"github.com/blocto/solana-go-sdk/client"
+	"github.com/blocto/solana-go-sdk/common"
+	"github.com/blocto/solana-go-sdk/program/system"
+	"github.com/blocto/solana-go-sdk/types"
 	"github.com/coming-chat/wallet-SDK/core/base"
-	"github.com/portto/solana-go-sdk/client"
-	"github.com/portto/solana-go-sdk/common"
-	"github.com/portto/solana-go-sdk/program/sysprog"
-	"github.com/portto/solana-go-sdk/types"
 )
 
 type Token struct {
@@ -88,7 +88,7 @@ func transactionMessage(client *client.Client, fromAddress, toAddress, amount st
 	pubFrom := common.PublicKeyFromString(fromAddress) // from is same as to, or it's must valid
 
 	// to fetch recent blockhash
-	res, err := client.GetRecentBlockhash(context.Background())
+	res, err := client.GetLatestBlockhash(context.Background())
 	if err != nil {
 		return nil, err
 	}
@@ -98,7 +98,7 @@ func transactionMessage(client *client.Client, fromAddress, toAddress, amount st
 		FeePayer:        pubFrom,
 		RecentBlockhash: res.Blockhash, // recent blockhash
 		Instructions: []types.Instruction{
-			sysprog.Transfer(sysprog.TransferParam{
+			system.Transfer(system.TransferParam{
 				From:   pubFrom, // from
 				To:     pubTo,   // to
 				Amount: amountUint,

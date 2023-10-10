@@ -3,10 +3,10 @@ package solana
 import (
 	"strings"
 
+	"github.com/blocto/solana-go-sdk/pkg/hdwallet"
+	solana "github.com/blocto/solana-go-sdk/types"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/coming-chat/wallet-SDK/core/base"
-	"github.com/portto/solana-go-sdk/pkg/hdwallet"
-	solana "github.com/portto/solana-go-sdk/types"
 	"github.com/tyler-smith/go-bip39"
 )
 
@@ -25,7 +25,7 @@ func NewAccountWithMnemonic(mnemonic string) (*Account, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	account, err := solana.AccountFromSeed(derivedKey.PrivateKey)
 	if err != nil {
 		return nil, err
