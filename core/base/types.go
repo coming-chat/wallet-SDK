@@ -13,9 +13,17 @@ type OptionalString struct {
 	Value string
 }
 
+func NewOptionalString(s string) *OptionalString {
+	return &OptionalString{Value: s}
+}
+
 // Optional bool for easy of writing iOS code
 type OptionalBool struct {
 	Value bool
+}
+
+func NewOptionalBool(b bool) *OptionalBool {
+	return &OptionalBool{Value: b}
 }
 
 type safeMap struct {

@@ -28,7 +28,7 @@ func (t *Transaction) SignedTransactionWithAccount(account base.Account) (signed
 	// create tx by message + signer
 	txn, err := types.NewTransaction(types.NewTransactionParam{
 		Message: t.Message,
-		Signers: []types.Account{*solanaAcc.account, *solanaAcc.account},
+		Signers: []types.Account{*solanaAcc.account},
 	})
 	if err != nil {
 		return nil, err

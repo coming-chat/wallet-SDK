@@ -10,4 +10,6 @@ var (
 	_ base.Token             = (*Token)(nil)
 	_ base.Transaction       = (*Transaction)(nil)
 	_ base.SignedTransaction = (*SignedTransaction)(nil)
+
+	_ base.Token = (*SPLToken)(nil)
 )
