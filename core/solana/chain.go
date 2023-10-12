@@ -208,5 +208,5 @@ func decodeTransaction(tx *client.Transaction, to *base.TransactionDetail) error
 
 		return nil
 	}
-	return errors.New("The transaction does not contain an amount transfer")
+	return base.ErrNotCoinTransferTxn
 }
