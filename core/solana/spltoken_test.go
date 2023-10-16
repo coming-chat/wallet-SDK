@@ -68,3 +68,19 @@ func TestSPLToken_BuildTransfer(t *testing.T) {
 		t.Log("transfer success hash = ", txhash)
 	}
 }
+
+func TestSPLToken_TokenInfo(t *testing.T) {
+	chain := MainnetChain()
+	token, err := NewSPLToken(chain, "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB") // USDT
+	require.Nil(t, err)
+	info, err := token.TokenInfo()
+	require.Nil(t, err)
+	t.Log(info)
+
+	chain = DevnetChain()
+	token, err = NewSPLToken(chain, "38GJtbJkJJQKkR6CTZwwok4hAXoKnByU2MFAZjgTe114")
+	require.Nil(t, err)
+	info, err = token.TokenInfo()
+	require.Nil(t, err)
+	t.Log(info)
+}

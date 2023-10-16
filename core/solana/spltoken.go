@@ -2,14 +2,19 @@ package solana
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"math/big"
+	"net/http"
 
 	"github.com/blocto/solana-go-sdk/common"
 	"github.com/blocto/solana-go-sdk/program/associated_token_account"
+	"github.com/blocto/solana-go-sdk/program/metaplex/token_metadata"
 	"github.com/blocto/solana-go-sdk/program/token"
 	"github.com/blocto/solana-go-sdk/types"
 	"github.com/coming-chat/wallet-SDK/core/base"
+	"github.com/coming-chat/wallet-SDK/pkg/httpUtil"
 )
 
 type SPLToken struct {
@@ -34,16 +39,91 @@ func (t *SPLToken) Chain() base.Chain {
 }
 
 func (t *SPLToken) TokenInfo() (*base.TokenInfo, error) {
+	return t.TokenInfoChainid(101) // mainnet chainid
+}
+
+// TokenInfoChainid
+// @param chainId mainnet 101, testnet 102, devnet 103
+func (t *SPLToken) TokenInfoChainid(chainId int) (info *base.TokenInfo, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
+
+	fetchApiInfo := func(chainId int) (*base.TokenInfo, error) {
+		header := map[string]string{
+			"content-type": "application/json",
+		}
+		bodyString := fmt.Sprintf(`{"addresses":["%v"]}`, t.MintAddress)
+		bodyBytes := []byte(bodyString)
+
+		url := fmt.Sprintf("https://token-list-api.solana.cloud/v1/mints?chainId=%v", chainId)
+		res, err := httpUtil.Request(http.MethodPost, url, header, bodyBytes)
+		if err != nil {
+			return nil, err
+		}
+		if res.Code != 200 && res.Code != 201 {
+			return nil, fmt.Errorf("fetch token info error, code: %v", res.Code)
+		}
+
+		var tokeninfo struct {
+			Content []struct {
+				Name     string `json:"name"`
+				Symbol   string `json:"symbol"`
+				Decimals int16  `json:"decimals"`
+				// Address  string `json:"address"`
+				// LogoURI  string `json:"logoURI"`
+			} `json:"content"`
+		}
+		err = json.Unmarshal(res.Body, &tokeninfo)
+		if err != nil {
+			return nil, err
+		}
+		if len(tokeninfo.Content) == 0 {
+			return nil, fmt.Errorf("not found")
+		}
+		tmp := tokeninfo.Content[0]
+		return &base.TokenInfo{
+			Name:    tmp.Name,
+			Symbol:  tmp.Symbol,
+			Decimal: tmp.Decimals,
+		}, nil
+	}
+	info, err = fetchApiInfo(chainId) // mainnet chainid
+	if err != nil {
+		// pass, continue other fetch way
+	} else {
+		return info, nil
+	}
+
+	info = &base.TokenInfo{
+		Name:   t.MintAddress,
+		Symbol: t.MintAddress,
+	}
 	cli := t.chain.client()
+	updateMetadata := func() {
+		tokenPub := common.PublicKeyFromString(t.MintAddress)
+		metaPubkey, err := token_metadata.GetTokenMetaPubkey(tokenPub)
+		if err != nil {
+			return
+		}
+		accoutInfo, err := cli.GetAccountInfo(context.Background(), metaPubkey.ToBase58())
+		if err != nil {
+			return
+		}
+		metadata, err := token_metadata.MetadataDeserialize(accoutInfo.Data)
+		if err != nil {
+			return
+		}
+		info.Name = metadata.Data.Name
+		info.Symbol = metadata.Data.Symbol
+	}
+	updateMetadata()
+
+	// fetch decimal
 	amt, err := cli.GetTokenSupply(context.Background(), t.MintAddress)
 	if err != nil {
-		return nil, base.MapAnyToBasicError(err)
+		return nil, err
 	}
-	return &base.TokenInfo{
-		Name:    t.MintAddress,
-		Symbol:  t.MintAddress,
-		Decimal: int16(amt.Decimals),
-	}, nil
+	info.Decimal = int16(amt.Decimals)
+	return info, nil
 }
 
 func (t *SPLToken) BalanceOfAddress(address string) (*base.Balance, error) {
