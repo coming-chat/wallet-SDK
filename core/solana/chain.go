@@ -115,10 +115,7 @@ func (c *Chain) FetchTransactionDetail(hash string) (*base.TransactionDetail, er
 		return nil, errors.New("not found")
 	}
 	detail := &base.TransactionDetail{HashString: hash}
-	err = decodeTransaction(response, detail)
-	if err != nil {
-		return nil, err
-	}
+	decodeTransaction(response, detail)
 	return detail, nil
 }
 
@@ -163,12 +160,21 @@ func (c *Chain) EstimateTransactionFeeUsePublicKey(transaction base.Transaction,
 	return c.EstimateTransactionFee(transaction)
 }
 
-func decodeTransaction(tx *client.Transaction, to *base.TransactionDetail) error {
+func decodeTransaction(tx *client.Transaction, to *base.TransactionDetail) {
 	base.CatchPanicAndMapToBasicError(nil)
 
 	if tx == nil || tx.BlockTime == nil {
 		to.Status = base.TransactionStatusPending
-		return nil
+		return
+	}
+
+	to.EstimateFees = strconv.FormatUint(tx.Meta.Fee, 10)
+	to.FinishTimestamp = *tx.BlockTime
+	if tx.Meta.Err == nil {
+		to.Status = base.TransactionStatusSuccess
+	} else {
+		to.Status = base.TransactionStatusFailure
+		to.FailureMessage = tx.Meta.LogMessages[len(tx.Meta.LogMessages)-1]
 	}
 
 	message := tx.Transaction.Message
@@ -196,17 +202,7 @@ func decodeTransaction(tx *client.Transaction, to *base.TransactionDetail) error
 		to.ToAddress = message.Accounts[toidx].ToBase58()
 		amount := binary.LittleEndian.Uint64(data[4:12])
 		to.Amount = strconv.FormatUint(amount, 10)
-		to.EstimateFees = strconv.FormatUint(tx.Meta.Fee, 10)
-		to.FinishTimestamp = *tx.BlockTime
-
-		if tx.Meta.Err == nil {
-			to.Status = base.TransactionStatusSuccess
-		} else {
-			to.Status = base.TransactionStatusFailure
-			to.FailureMessage = tx.Meta.LogMessages[len(tx.Meta.LogMessages)-1]
-		}
-
-		return nil
+		return
 	}
-	return base.ErrNotCoinTransferTxn
+	return
 }

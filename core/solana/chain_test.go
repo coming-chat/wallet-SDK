@@ -104,6 +104,16 @@ func TestChain_BalanceOfAddress(t *testing.T) {
 	}
 }
 
+func Test_FetchTransactionDetail(t *testing.T) {
+	hash := "4T5vtEFpn5hpRMSaz1bMAKidfptaL3FZsp5ECv9RpB7WFfzeQfJWtPCBjYjqQv57xnmviqNMj2VMbQ7kzoeC2e4p" // spl token
+	// hash := "JMnhxFzF6hceB3zLw6zvHy5RHqVJo2anAVXumaxvZe1FDFGpxEWwbjyNHBGMHMxXc4uX69KGsmVMZgbGWua7YQr" // SOL
+	chain := DevnetChain()
+
+	detail, err := chain.FetchTransactionDetail(hash)
+	require.Nil(t, err)
+	t.Log(detail.JsonString())
+}
+
 func TestChain_FetchTransactionDetail(t *testing.T) {
 	tests := []struct {
 		name    string
