@@ -97,7 +97,7 @@ func (t *SPLToken) TokenInfoChainid(chainId int) (info *base.TokenInfo, err erro
 		Name:   t.MintAddress,
 		Symbol: t.MintAddress,
 	}
-	cli := t.chain.client()
+	cli := t.chain.Client()
 	updateMetadata := func() {
 		tokenPub := common.PublicKeyFromString(t.MintAddress)
 		metaPubkey, err := token_metadata.GetTokenMetaPubkey(tokenPub)
@@ -274,7 +274,7 @@ func (t *SPLToken) BuildTransferAuto(sender, receiver, amount string, transferAl
 		}
 	}
 
-	cli := t.chain.client()
+	cli := t.chain.Client()
 	lastestBlock, err := cli.GetLatestBlockhash(context.Background())
 	if err != nil {
 		return nil, err
@@ -307,7 +307,7 @@ type TokenAccount struct {
 func (t *SPLToken) TokenAccountOfAddress(address string) (res []TokenAccount, unmatchToken bool, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
 
-	cli := t.chain.client()
+	cli := t.chain.Client()
 
 	// 先假设该地址是 token 账号地址
 	tokenAcc, err := cli.GetTokenAccount(context.Background(), address)
@@ -367,7 +367,7 @@ func (t *SPLToken) CreateTokenAccount(ownerAddress string, signerAddress string)
 		return
 	}
 
-	cli := t.chain.client()
+	cli := t.chain.Client()
 	latestBlock, err := cli.GetLatestBlockhash(context.Background())
 	if err != nil {
 		return

@@ -38,7 +38,7 @@ func NewChainWithRpc(rpcUrl string) *Chain {
 	}
 }
 
-func (c *Chain) client() *client.Client {
+func (c *Chain) Client() *client.Client {
 	if c.cli == nil {
 		c.cli = client.NewClient(c.RpcUrl)
 	}
@@ -52,7 +52,7 @@ func (c *Chain) MainToken() base.Token {
 }
 
 func (c *Chain) BalanceOfAddress(address string) (*base.Balance, error) {
-	client := c.client()
+	client := c.Client()
 	balance, err := client.GetBalance(context.Background(), address)
 	if err != nil {
 		return nil, err
@@ -74,7 +74,7 @@ func (c *Chain) BalanceOfAccount(account base.Account) (*base.Balance, error) {
 // Send the raw transaction on-chain
 // @return the hex hash string
 func (c *Chain) SendRawTransaction(signedTx string) (string, error) {
-	client := c.client()
+	client := c.Client()
 	bytes, err := hexTypes.HexDecodeString(signedTx)
 	if err != nil {
 		return "", err
@@ -97,7 +97,7 @@ func (c *Chain) SendSignedTransaction(signedTxn base.SignedTransaction) (hash *b
 		return nil, base.ErrInvalidTransactionType
 	}
 
-	client := c.client()
+	client := c.Client()
 	res, err := client.SendTransaction(context.Background(), txn.Transaction)
 	if err != nil {
 		return nil, err
@@ -107,7 +107,7 @@ func (c *Chain) SendSignedTransaction(signedTxn base.SignedTransaction) (hash *b
 
 // Fetch transaction details through transaction hash
 func (c *Chain) FetchTransactionDetail(hash string) (*base.TransactionDetail, error) {
-	response, err := c.client().GetTransaction(context.Background(), hash)
+	response, err := c.Client().GetTransaction(context.Background(), hash)
 	if err != nil {
 		return nil, err
 	}
@@ -120,7 +120,7 @@ func (c *Chain) FetchTransactionDetail(hash string) (*base.TransactionDetail, er
 }
 
 func (c *Chain) FetchTransactionStatus(hash string) base.TransactionStatus {
-	response, err := c.client().GetTransaction(context.Background(), hash)
+	response, err := c.Client().GetTransaction(context.Background(), hash)
 	if err != nil {
 		return base.TransactionStatusNone
 	}
@@ -147,7 +147,7 @@ func (c *Chain) EstimateTransactionFee(transaction base.Transaction) (fee *base.
 		return nil, base.ErrInvalidTransactionType
 	}
 
-	client := c.client()
+	client := c.Client()
 	gasFee, err := client.GetFeeForMessage(context.Background(), txn.Message)
 	if err != nil {
 		return nil, err

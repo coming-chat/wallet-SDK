@@ -23,7 +23,7 @@ func TestAirdrop(t *testing.T) {
 	if false {
 		chain := DevnetChain()
 		account := M1Account(t)
-		txhash, err := chain.client().RequestAirdrop(context.Background(), account.Address(), 1e9)
+		txhash, err := chain.Client().RequestAirdrop(context.Background(), account.Address(), 1e9)
 		require.NoError(t, err)
 		t.Log(txhash)
 	}

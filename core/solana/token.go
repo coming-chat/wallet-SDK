@@ -110,7 +110,7 @@ func transactionMessage(client *client.Client, fromAddress, toAddress, amount st
 }
 
 func (t *Token) BuildTransfer(sender, receiver, amount string) (txn base.Transaction, err error) {
-	client := t.chain.client()
+	client := t.chain.Client()
 	message, err := transactionMessage(client, sender, receiver, amount)
 	if err != nil {
 		return nil, err
