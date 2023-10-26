@@ -14,6 +14,10 @@ type Account struct {
 	account *solana.Account
 }
 
+func (acc *Account) Account() *solana.Account {
+	return acc.account
+}
+
 func NewAccountWithMnemonic(mnemonic string) (*Account, error) {
 	seed, err := bip39.NewSeedWithErrorChecking(mnemonic, "")
 	if err != nil {
