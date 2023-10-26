@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/blocto/solana-go-sdk/common"
+	"github.com/blocto/solana-go-sdk/pkg/bincode"
 	"github.com/blocto/solana-go-sdk/types"
 	"github.com/coming-chat/wallet-SDK/core/solana"
 	"github.com/stretchr/testify/require"
@@ -163,7 +164,7 @@ func deriveForeignContractKey(programId string, chainId uint16) (common.PublicKe
 	pub := common.PublicKeyFromString(programId)
 	seed := [][]byte{
 		[]byte("foreign_contract"),
-		binary.LittleEndian.AppendUint16(make([]byte, 0), chainId),
+		bincode.MustSerializeData(chainId),
 	}
 	addr, _, err := common.FindProgramAddress(seed, pub)
 	return addr, err
@@ -173,7 +174,7 @@ func derivePriceManagerKey(programId string, chainId uint16) (common.PublicKey, 
 	pub := common.PublicKeyFromString(programId)
 	seed := [][]byte{
 		[]byte("foreign_contract"),
-		binary.LittleEndian.AppendUint16(make([]byte, 0), chainId),
+		bincode.MustSerializeData(chainId),
 		[]byte("price_manager"),
 	}
 	addr, _, err := common.FindProgramAddress(seed, pub)

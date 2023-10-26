@@ -24,7 +24,7 @@ func SerializeU256(num *big.Int) ([]byte, error) {
 		return nil, errors.New("invalid U256: too large number")
 	}
 
-	data := make([]byte, 0)
+	data := make([]byte, 0, 256/8)
 	for t := 0; t < 256/64; t++ {
 		data = binary.LittleEndian.AppendUint64(data, cop.Uint64())
 		cop = cop.Rsh(cop, 64)
@@ -47,19 +47,11 @@ func (so *SoData) Serialize() ([]byte, error) {
 
 	data = append(data, SerializeBytesWithLength(so.TransactionId)...)
 	data = append(data, SerializeBytesWithLength(so.Receiver)...)
-	d, err := bincode.SerializeData(so.SourceChainId)
-	if err != nil {
-		return nil, err
-	}
-	data = append(data, d...)
+	data = append(data, bincode.MustSerializeData(so.SourceChainId)...)
 	data = append(data, SerializeBytesWithLength(so.SendingAssetId)...)
-	d, err = bincode.SerializeData(so.DestinationChainId)
-	if err != nil {
-		return nil, err
-	}
-	data = append(data, d...)
+	data = append(data, bincode.MustSerializeData(so.DestinationChainId)...)
 	data = append(data, SerializeBytesWithLength(so.ReceivingAssetId)...)
-	d, err = SerializeU256(so.Amount)
+	d, err := SerializeU256(so.Amount)
 	if err != nil {
 		return nil, err
 	}
@@ -93,13 +85,9 @@ type WormholeData struct {
 func (self *WormholeData) Serialize() ([]byte, error) {
 	data := make([]byte, 0, 1024)
 
-	d, err := bincode.SerializeData(self.DstWormholeChainId)
-	if err != nil {
-		return nil, err
-	}
-	data = append(data, d...)
+	data = append(data, bincode.MustSerializeData(self.DstWormholeChainId)...)
 
-	d, _ = SerializeU256(big.NewInt(0).SetUint64(self.DstMaxGasPriceInWeiForRelayer))
+	d, _ := SerializeU256(big.NewInt(0).SetUint64(self.DstMaxGasPriceInWeiForRelayer))
 	data = append(data, d...)
 
 	d, _ = SerializeU256(big.NewInt(0).SetUint64(self.WormholeFee))
