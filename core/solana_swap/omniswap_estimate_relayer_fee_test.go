@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/blocto/solana-go-sdk/common"
-	"github.com/blocto/solana-go-sdk/pkg/bincode"
 	"github.com/blocto/solana-go-sdk/types"
 	"github.com/coming-chat/wallet-SDK/core/solana"
 	"github.com/stretchr/testify/require"
@@ -69,7 +68,7 @@ func Omniswap_estimate_relayer_fee(chain *solana.Chain,
 	wormholeData []byte,
 	soData []byte,
 	swapDataDst []byte) (*RelayerFee, error) {
-	payer := m1Account
+	payer := account
 	omniswap_program_id := config.Program.SoDiamond
 	wormhole_program_id := config.Program.Wormhole
 
@@ -139,44 +138,4 @@ func Omniswap_estimate_relayer_fee(chain *solana.Chain,
 		ConsumeValue: consumeValue,
 		DstMaxGas:    dstMaxGas,
 	}, nil
-}
-
-func findProgramAddress(pubStr string, key string) (common.PublicKey, error) {
-	pub := common.PublicKeyFromString(pubStr)
-	addr, _, err := common.FindProgramAddress([][]byte{[]byte(key)}, pub)
-	return addr, err
-}
-
-func deriveSoFeeConfigKey(pubStr string) (common.PublicKey, error) {
-	return findProgramAddress(pubStr, "so_fee")
-}
-func deriveSenderConfigKey(pubStr string) (common.PublicKey, error) {
-	return findProgramAddress(pubStr, "sender")
-}
-func deriveRedeemerConfigKey(pubStr string) (common.PublicKey, error) {
-	return findProgramAddress(pubStr, "redeemer")
-}
-func deriveWormholeBridgeDataKey(pubStr string) (common.PublicKey, error) {
-	return findProgramAddress(pubStr, "Bridge")
-}
-
-func deriveForeignContractKey(programId string, chainId uint16) (common.PublicKey, error) {
-	pub := common.PublicKeyFromString(programId)
-	seed := [][]byte{
-		[]byte("foreign_contract"),
-		bincode.MustSerializeData(chainId),
-	}
-	addr, _, err := common.FindProgramAddress(seed, pub)
-	return addr, err
-}
-
-func derivePriceManagerKey(programId string, chainId uint16) (common.PublicKey, error) {
-	pub := common.PublicKeyFromString(programId)
-	seed := [][]byte{
-		[]byte("foreign_contract"),
-		bincode.MustSerializeData(chainId),
-		[]byte("price_manager"),
-	}
-	addr, _, err := common.FindProgramAddress(seed, pub)
-	return addr, err
 }

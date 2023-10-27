@@ -6,8 +6,6 @@ import (
 	"github.com/blocto/solana-go-sdk/types"
 )
 
-const Identifier = "!\xe9(\x129\xfa:\x85"
-
 type EstimateRelayerFeeArgs struct {
 	ChainId      uint16
 	SoData       []byte
@@ -33,7 +31,7 @@ type EstimateRelayerFeeAccounts struct {
 
 func EstimateRelayerFee(args EstimateRelayerFeeArgs, accounts EstimateRelayerFeeAccounts) types.Instruction {
 	data := args.Serialize()
-	identifer := []byte(Identifier)
+	identifer := []byte("!\xe9(\x129\xfa:\x85")
 	data = append(identifer, data...)
 
 	return types.Instruction{

@@ -4,8 +4,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"math/big"
-
-	"github.com/blocto/solana-go-sdk/pkg/bincode"
 )
 
 func SerializeBytesWithLength(bytes []byte) []byte {
@@ -44,18 +42,13 @@ type SoData struct {
 
 func (so *SoData) Serialize() ([]byte, error) {
 	data := make([]byte, 0, 1024)
-
-	data = append(data, SerializeBytesWithLength(so.TransactionId)...)
-	data = append(data, SerializeBytesWithLength(so.Receiver)...)
-	data = append(data, bincode.MustSerializeData(so.SourceChainId)...)
-	data = append(data, SerializeBytesWithLength(so.SendingAssetId)...)
-	data = append(data, bincode.MustSerializeData(so.DestinationChainId)...)
-	data = append(data, SerializeBytesWithLength(so.ReceivingAssetId)...)
-	d, err := SerializeU256(so.Amount)
-	if err != nil {
-		return nil, err
-	}
-	data = append(data, d...)
+	serialize_vector_with_length(data, so.TransactionId)
+	serialize_vector_with_length(data, so.Receiver)
+	serialize_u16(data, so.SourceChainId)
+	serialize_vector_with_length(data, so.SendingAssetId)
+	serialize_u16(data, so.DestinationChainId)
+	serialize_vector_with_length(data, so.ReceivingAssetId)
+	serialize_u256(data, *so.Amount)
 	return data, nil
 }
 
@@ -84,16 +77,9 @@ type WormholeData struct {
 
 func (self *WormholeData) Serialize() ([]byte, error) {
 	data := make([]byte, 0, 1024)
-
-	data = append(data, bincode.MustSerializeData(self.DstWormholeChainId)...)
-
-	d, _ := SerializeU256(big.NewInt(0).SetUint64(self.DstMaxGasPriceInWeiForRelayer))
-	data = append(data, d...)
-
-	d, _ = SerializeU256(big.NewInt(0).SetUint64(self.WormholeFee))
-	data = append(data, d...)
-
-	data = append(data, SerializeBytesWithLength(self.DstSoDiamond)...)
-
+	serialize_u16(data, self.DstWormholeChainId)
+	serialize_u256(data, *big.NewInt(0).SetUint64(self.DstMaxGasPriceInWeiForRelayer))
+	serialize_u256(data, *big.NewInt(0).SetUint64(self.WormholeFee))
+	serialize_vector_with_length(data, self.DstSoDiamond)
 	return data, nil
 }

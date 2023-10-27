@@ -21,7 +21,8 @@ type ConfigWormhole struct {
 }
 
 type ConfigDSTChain struct {
-	Chainid              int
+	OmnibtcChainid       uint16
+	Chainid              uint16
 	Base_gas             int
 	Per_byte_gas         int
 	Price_manager        string
@@ -50,11 +51,12 @@ type ConfigLookupTable struct {
 }
 
 type Config struct {
-	Program      ConfigProgram
-	Wormhole     ConfigWormhole
-	Token        ConfigTokenss
-	Pools        ConfigPools
-	Lookup_Table ConfigLookupTable
+	OmnibtcChainid uint16
+	Program        ConfigProgram
+	Wormhole       ConfigWormhole
+	Token          ConfigTokenss
+	Pools          ConfigPools
+	Lookup_Table   ConfigLookupTable
 
 	Beneficiary    string
 	Redeemer_proxy string
@@ -62,8 +64,9 @@ type Config struct {
 }
 
 var DevnetConfig = Config{
+	OmnibtcChainid: 30006,
 	Program: ConfigProgram{
-		SoDiamond:   "FpdkugsrDzCn57xeFPo6fwRmsnH7FUdJiDK717p3dico",
+		SoDiamond:   "5DncnqicaHDZTMfkcfzKaYP5XzD5D9jg3PGNTT5J1Qg7",
 		Wormhole:    "3u8hJUVTA4jH1wYAyUur7FFZVQ8H635K3tSHHF4ssjQ5",
 		TokenBridge: "DZnkkTmCiFWfYTfT41X3Rd1kDgozqzxWaHqsw6W4x2oe",
 		Whirlpools:  "whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc",
@@ -73,6 +76,7 @@ var DevnetConfig = Config{
 		Actual_reserve:   110000000,
 		Estimate_reserve: 120000000,
 		Dst_chain: ConfigDSTChain{
+			OmnibtcChainid:       30003,
 			Chainid:              4,
 			Base_gas:             700000,
 			Per_byte_gas:         68,
@@ -155,7 +159,7 @@ var DevnetConfig = Config{
 }
 
 var config = DevnetConfig
-var m1Account, _ = solana.NewAccountWithMnemonic(testcase.M1)
+var account, _ = solana.NewAccountWithMnemonic(testcase.M3)
 var devChain = solana.NewChainWithRpc(solana.DevnetRPCEndpoint)
 
-var PROGRAM_ID = common.PublicKeyFromString("FpdkugsrDzCn57xeFPo6fwRmsnH7FUdJiDK717p3dico")
+var PROGRAM_ID = common.PublicKeyFromString("5DncnqicaHDZTMfkcfzKaYP5XzD5D9jg3PGNTT5J1Qg7")
