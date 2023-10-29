@@ -6,14 +6,14 @@ import (
 	"math/big"
 )
 
-func SerializeBytesWithLength(bytes []byte) []byte {
+func LittleEndianSerializeBytesWithLength(bytes []byte) []byte {
 	res := make([]byte, 0, len(bytes))
 	res = binary.LittleEndian.AppendUint64(res, uint64(len(bytes)))
 	res = append(res, bytes...)
 	return res
 }
 
-func SerializeU256(num *big.Int) ([]byte, error) {
+func LittleEndianSerializeU256(num *big.Int) ([]byte, error) {
 	cop := big.NewInt(0).Set(num)
 	if cop.Sign() < 0 {
 		return nil, errors.New("invalid U256: negative number")
@@ -41,7 +41,8 @@ type SoData struct {
 }
 
 func (so *SoData) Serialize() ([]byte, error) {
-	data := make([]byte, 0, 1024)
+	rdata := make([]byte, 0, 1024)
+	data := &rdata
 	serialize_vector_with_length(data, so.TransactionId)
 	serialize_vector_with_length(data, so.Receiver)
 	serialize_u16(data, so.SourceChainId)
@@ -49,7 +50,7 @@ func (so *SoData) Serialize() ([]byte, error) {
 	serialize_u16(data, so.DestinationChainId)
 	serialize_vector_with_length(data, so.ReceivingAssetId)
 	serialize_u256(data, *so.Amount)
-	return data, nil
+	return rdata, nil
 }
 
 type SwapData struct {
@@ -76,10 +77,11 @@ type WormholeData struct {
 }
 
 func (self *WormholeData) Serialize() ([]byte, error) {
-	data := make([]byte, 0, 1024)
+	rdata := make([]byte, 0, 1024)
+	data := &rdata
 	serialize_u16(data, self.DstWormholeChainId)
 	serialize_u256(data, *big.NewInt(0).SetUint64(self.DstMaxGasPriceInWeiForRelayer))
 	serialize_u256(data, *big.NewInt(0).SetUint64(self.WormholeFee))
 	serialize_vector_with_length(data, self.DstSoDiamond)
-	return data, nil
+	return rdata, nil
 }
