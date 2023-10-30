@@ -1,32 +1,8 @@
 package solanaswap
 
 import (
-	"encoding/binary"
-	"errors"
 	"math/big"
 )
-
-func LittleEndianSerializeBytesWithLength(buf *[]byte, bytes []byte) {
-	*buf = binary.LittleEndian.AppendUint32(*buf, uint32(len(bytes)))
-	*buf = append(*buf, bytes...)
-}
-
-func LittleEndianSerializeU256(num *big.Int) ([]byte, error) {
-	cop := big.NewInt(0).Set(num)
-	if cop.Sign() < 0 {
-		return nil, errors.New("invalid U256: negative number")
-	}
-	if cop.BitLen() > 256 {
-		return nil, errors.New("invalid U256: too large number")
-	}
-
-	data := make([]byte, 0, 256/8)
-	for t := 0; t < 256/64; t++ {
-		data = binary.LittleEndian.AppendUint64(data, cop.Uint64())
-		cop = cop.Rsh(cop, 64)
-	}
-	return data, nil
-}
 
 type SoData struct {
 	TransactionId      []byte
@@ -38,17 +14,16 @@ type SoData struct {
 	Amount             *big.Int
 }
 
-func (so *SoData) Serialize() ([]byte, error) {
-	rdata := make([]byte, 0, 1024)
-	data := &rdata
-	serialize_vector_with_length(data, so.TransactionId)
-	serialize_vector_with_length(data, so.Receiver)
-	serialize_u16(data, so.SourceChainId)
-	serialize_vector_with_length(data, so.SendingAssetId)
-	serialize_u16(data, so.DestinationChainId)
-	serialize_vector_with_length(data, so.ReceivingAssetId)
-	serialize_u256(data, *so.Amount)
-	return rdata, nil
+func (so *SoData) Serialize() []byte {
+	sl := NewEthSerializer(1024)
+	sl.AppendBytesWithLenth(so.TransactionId)
+	sl.AppendBytesWithLenth(so.Receiver)
+	sl.AppendU16(so.DestinationChainId)
+	sl.AppendBytesWithLenth(so.SendingAssetId)
+	sl.AppendU16(so.DestinationChainId)
+	sl.AppendBytesWithLenth(so.ReceivingAssetId)
+	sl.AppendU256(*so.Amount)
+	return sl.Bytes()
 }
 
 type SwapData struct {
@@ -74,12 +49,11 @@ type WormholeData struct {
 	DstSoDiamond                  []byte
 }
 
-func (self *WormholeData) Serialize() ([]byte, error) {
-	rdata := make([]byte, 0, 1024)
-	data := &rdata
-	serialize_u16(data, self.DstWormholeChainId)
-	serialize_u256(data, *big.NewInt(0).SetUint64(self.DstMaxGasPriceInWeiForRelayer))
-	serialize_u256(data, *big.NewInt(0).SetUint64(self.WormholeFee))
-	serialize_vector_with_length(data, self.DstSoDiamond)
-	return rdata, nil
+func (self *WormholeData) Serialize() []byte {
+	s := NewEthSerializer(1024)
+	s.AppendU16(self.DstWormholeChainId)
+	s.AppendU256(*big.NewInt(0).SetUint64(self.DstMaxGasPriceInWeiForRelayer))
+	s.AppendU256(*big.NewInt(0).SetUint64(self.WormholeFee))
+	s.AppendBytesWithLenth(self.DstSoDiamond)
+	return s.Bytes()
 }

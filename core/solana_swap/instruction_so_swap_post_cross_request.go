@@ -13,13 +13,12 @@ type SoSwapPostCrossRequestArgs struct {
 }
 
 func (args *SoSwapPostCrossRequestArgs) Serialize() []byte {
-	data := make([]byte, 0, 1024)
-	buf := &data
-	LittleEndianSerializeBytesWithLength(buf, args.so_data)
-	LittleEndianSerializeBytesWithLength(buf, args.swap_data_src)
-	LittleEndianSerializeBytesWithLength(buf, args.wormhole_data)
-	LittleEndianSerializeBytesWithLength(buf, args.swap_data_dst)
-	return data
+	sl := NewSolanaSerializer(1024)
+	sl.AppendBytesWithLenth(args.so_data)
+	sl.AppendBytesWithLenth(args.swap_data_src)
+	sl.AppendBytesWithLenth(args.wormhole_data)
+	sl.AppendBytesWithLenth(args.swap_data_dst)
+	return sl.Bytes()
 }
 
 type SoSwapPostCrossRequestAccounts struct {

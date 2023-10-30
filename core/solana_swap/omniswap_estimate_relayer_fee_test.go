@@ -43,10 +43,8 @@ func TestOmniswap_estimate_relayer_fee(t *testing.T) {
 		DstSoDiamond:                  diamond,
 	}
 
-	soDataBytes, err := soData.Serialize()
-	require.Nil(t, err)
-	wormholeBytes, err := wormholeData.Serialize()
-	require.Nil(t, err)
+	soDataBytes := soData.Serialize()
+	wormholeBytes := wormholeData.Serialize()
 	fee, err := Omniswap_estimate_relayer_fee(devChain,
 		uint16(bsc_wormhole_chain_id),
 		wormholeBytes,

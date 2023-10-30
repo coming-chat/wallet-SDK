@@ -48,8 +48,8 @@ func OmniswapSendNativeTokenTransaction(cli *client.Client) (txn *types.Transact
 	// usdc account
 	// usdc_account := common.PublicKeyFromString("68DjnBuZ6UtM6dGoTGhu2rqV5ZSowsPGgv2AWD1xuGB4")
 	usdc_account := common.PublicKeyFromString("9LcCRussWRZqX7jXU6iB1KsXHHpbkRj2GrbH6wE6dyNs")
-	// send 1 usdc
-	amount := 1e6
+	// send 0.1 usdc
+	amount := 1e5
 	// recipient
 	recipient_address, _ := hex.DecodeString("cAF084133CBdBE27490d3afB0Da220a40C32E307")
 	usdc_token_on_bsc, _ := hex.DecodeString("51a3cc54eA30Da607974C5D07B8502599801AC08")
@@ -92,20 +92,14 @@ func OmniswapSendNativeTokenTransaction(cli *client.Client) (txn *types.Transact
 		ReceivingAssetId:   usdc_token_on_bsc,
 		Amount:             big.NewInt(int64(amount)),
 	}
-	soDataBytes, err := soData.Serialize()
-	if err != nil {
-		return
-	}
+	soDataBytes := soData.Serialize()
 	wormholeData := WormholeData{
 		DstWormholeChainId:            wormhole_dst_chain,
 		DstMaxGasPriceInWeiForRelayer: 1e10,
 		WormholeFee:                   0,
 		DstSoDiamond:                  dst_so_diamond_padding,
 	}
-	wormholeDataBytes, err := wormholeData.Serialize()
-	if err != nil {
-		return
-	}
+	wormholeDataBytes := wormholeData.Serialize()
 	request_key, err := post_cross_requset(
 		cli,
 		wormhole_dst_chain,
