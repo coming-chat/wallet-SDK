@@ -21,6 +21,8 @@ func TestSerializeU256(t *testing.T) {
 
 func TestSerializeBytes(t *testing.T) {
 	bytes := []byte("abcdef")
-	data := LittleEndianSerializeBytesWithLength(bytes)
+	data := make([]byte, 0)
+	buf := &data
+	LittleEndianSerializeBytesWithLength(buf, bytes)
 	require.Equal(t, data, []byte{6, 0, 0, 0, 0, 0, 0, 0, 'a', 'b', 'c', 'd', 'e', 'f'})
 }

@@ -24,6 +24,10 @@ func TestTransfer_SendNativeToken(t *testing.T) {
 	simulate, err := cli.SimulateTransaction(context.Background(), *txn)
 	require.Nil(t, err)
 	t.Log(simulate)
+
+	hash, err := cli.SendTransaction(context.Background(), *txn)
+	require.Nil(t, err)
+	t.Log(hash)
 }
 
 func OmniswapSendNativeTokenTransaction(cli *client.Client) (txn *types.Transaction, err error) {
@@ -94,8 +98,8 @@ func OmniswapSendNativeTokenTransaction(cli *client.Client) (txn *types.Transact
 	}
 	wormholeData := WormholeData{
 		DstWormholeChainId:            wormhole_dst_chain,
-		DstMaxGasPriceInWeiForRelayer: 100000,
-		WormholeFee:                   716184,
+		DstMaxGasPriceInWeiForRelayer: 1e10,
+		WormholeFee:                   0,
 		DstSoDiamond:                  dst_so_diamond_padding,
 	}
 	wormholeDataBytes, err := wormholeData.Serialize()
@@ -167,7 +171,7 @@ func OmniswapSendNativeTokenTransaction(cli *client.Client) (txn *types.Transact
 		RecentBlockhash:            blockhash.Blockhash,
 		AddressLookupTableAccounts: []types.AddressLookupTableAccount{lookup_table},
 	})
-	print(message.AddressLookupTables)
+	print(message.Version)
 
 	txnn, err := types.NewTransaction(types.NewTransactionParam{
 		Message: message,

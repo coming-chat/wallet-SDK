@@ -6,11 +6,9 @@ import (
 	"math/big"
 )
 
-func LittleEndianSerializeBytesWithLength(bytes []byte) []byte {
-	res := make([]byte, 0, len(bytes))
-	res = binary.LittleEndian.AppendUint64(res, uint64(len(bytes)))
-	res = append(res, bytes...)
-	return res
+func LittleEndianSerializeBytesWithLength(buf *[]byte, bytes []byte) {
+	*buf = binary.LittleEndian.AppendUint32(*buf, uint32(len(bytes)))
+	*buf = append(*buf, bytes...)
 }
 
 func LittleEndianSerializeU256(num *big.Int) ([]byte, error) {

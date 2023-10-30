@@ -14,10 +14,11 @@ type SoSwapPostCrossRequestArgs struct {
 
 func (args *SoSwapPostCrossRequestArgs) Serialize() []byte {
 	data := make([]byte, 0, 1024)
-	data = append(data, SerializeBytesWithLength(args.so_data)...)
-	data = append(data, SerializeBytesWithLength(args.swap_data_src)...)
-	data = append(data, SerializeBytesWithLength(args.wormhole_data)...)
-	data = append(data, SerializeBytesWithLength(args.swap_data_dst)...)
+	buf := &data
+	LittleEndianSerializeBytesWithLength(buf, args.so_data)
+	LittleEndianSerializeBytesWithLength(buf, args.swap_data_src)
+	LittleEndianSerializeBytesWithLength(buf, args.wormhole_data)
+	LittleEndianSerializeBytesWithLength(buf, args.swap_data_dst)
 	return data
 }
 

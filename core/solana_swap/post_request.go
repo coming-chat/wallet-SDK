@@ -3,6 +3,8 @@ package solanaswap
 import (
 	"context"
 	"encoding/binary"
+	"errors"
+	"time"
 
 	"github.com/blocto/solana-go-sdk/client"
 	"github.com/blocto/solana-go-sdk/common"
@@ -64,13 +66,13 @@ func post_cross_requset(
 		},
 	)
 
-	hash, err := client.GetLatestBlockhash(context.Background())
+	blockHash, err := client.GetLatestBlockhash(context.Background())
 	if err != nil {
 		return
 	}
 	message := types.NewMessage(types.NewMessageParam{
 		FeePayer:        payer.Account().PublicKey,
-		RecentBlockhash: hash.Blockhash,
+		RecentBlockhash: blockHash.Blockhash,
 		Instructions:    []types.Instruction{ix},
 	})
 
@@ -81,10 +83,22 @@ func post_cross_requset(
 	if err != nil {
 		return
 	}
-	simulate, err := client.SimulateTransaction(context.Background(), txn)
+	// simulate, err := client.SimulateTransaction(context.Background(), txn)
+	// if err != nil {
+	// 	return
+	// }
+	// println(simulate.Logs)
+	hash, err := client.SendTransaction(context.Background(), txn)
 	if err != nil {
 		return
 	}
-	println(simulate.Logs)
-	return request_key, nil
+	for num := 0; num < 10; num++ {
+		print("Transaction not confirmed yet. Waiting...")
+		time.Sleep(5 * time.Second)
+		resp, _ := client.GetTransaction(context.Background(), hash)
+		if resp != nil && resp.BlockTime != nil {
+			return request_key, nil
+		}
+	}
+	return common.PublicKey{}, errors.New("post request timeout")
 }

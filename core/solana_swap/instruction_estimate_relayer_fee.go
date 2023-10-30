@@ -1,8 +1,9 @@
 package solanaswap
 
 import (
+	"encoding/binary"
+
 	"github.com/blocto/solana-go-sdk/common"
-	"github.com/blocto/solana-go-sdk/pkg/bincode"
 	"github.com/blocto/solana-go-sdk/types"
 )
 
@@ -15,10 +16,11 @@ type EstimateRelayerFeeArgs struct {
 
 func (args *EstimateRelayerFeeArgs) Serialize() []byte {
 	data := make([]byte, 0, 1024)
-	data = append(data, bincode.MustSerializeData(args.ChainId)...)
-	data = append(data, SerializeBytesWithLength(args.SoData)...)
-	data = append(data, SerializeBytesWithLength(args.WormholeData)...)
-	data = append(data, SerializeBytesWithLength(args.SwapDataDst)...)
+	buf := &data
+	*buf = binary.LittleEndian.AppendUint16(*buf, args.ChainId)
+	LittleEndianSerializeBytesWithLength(buf, args.SoData)
+	LittleEndianSerializeBytesWithLength(buf, args.WormholeData)
+	LittleEndianSerializeBytesWithLength(buf, args.SwapDataDst)
 	return data
 }
 
