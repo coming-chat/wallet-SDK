@@ -36,7 +36,7 @@ type SwapQuoteParam struct {
 	tokenMint         string
 	tokenAmount       uint64
 	isInput           bool
-	slippageTolerance float64
+	slippageTolerance Percentage
 	refresh           bool
 }
 
@@ -61,8 +61,39 @@ func GetSwapQuote(cli *client.Client, param SwapQuoteParam) (quote *SwapQuote, e
 		return
 	}
 	swapDirection := whirlpool.TokenMintA.ToBase58() == param.tokenMint
-	println(swapDirection)
-	return
+
+	output, err := simulateSwap(cli,
+		SwapSimulationBaseInput{
+			poolAddress:   param.poolAddress,
+			whirlpoolData: whirlpool,
+			swapDirection: swapDirection,
+		},
+		SwapSimulationInput{
+			amount:              big.NewInt(0).SetUint64(param.tokenAmount),
+			currentSqrtPriceX64: whirlpool.SqrtPrice,
+			currentTickIndex:    whirlpool.TickCurrentIndex,
+			currentLiquidity:    whirlpool.Liquidity,
+		},
+	)
+	if err != nil {
+		return
+	}
+
+	otherAmountThreshold := adjustAmountForSlippage(
+		output.amountIn,
+		output.amountOut,
+		param.slippageTolerance,
+	)
+
+	return &SwapQuote{
+		poolAddress:          param.poolAddress,
+		otherAmountThreshold: otherAmountThreshold.Uint64(),
+		sqrtPriceLimitX64:    output.sqrtPriceLimitX64,
+		amountIn:             quote.amountIn,
+		amountOut:            quote.amountOut,
+		aToB:                 swapDirection == SwapDirectionAtoB,
+		fixedInput:           true,
+	}, nil
 }
 
 type SwapSimulationBaseInput struct {
@@ -506,6 +537,14 @@ func getAmountFixedDelta(currentSqrtPriceX64, targetSqrtPriceX64, liquidity *big
 	} else {
 		return getTokenBFromLiquidity(liquidity, currentSqrtPriceX64, targetSqrtPriceX64, true)
 	}
+}
+
+func adjustAmountForSlippage(amountIn, amountOut *big.Int, precent Percentage) *big.Int {
+	den := big.NewInt(0).SetUint64(precent.Denominator)
+	num := big.NewInt(0).SetUint64(precent.Numerator)
+	x := big.NewInt(0).Mul(amountOut, den)
+	y := big.NewInt(0).Add(den, num)
+	return big.NewInt(0).Div(x, y)
 }
 
 func getTokenAFromLiquidity(liquidity, sqrtPrice0X64, sqrtPrice1X64 *big.Int, roundUp bool) *big.Int {
