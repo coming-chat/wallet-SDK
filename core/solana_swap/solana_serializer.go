@@ -50,6 +50,10 @@ func (s *SolanaDeserializer) TakeBytes(len int) []byte {
 	return res
 }
 
+func (s *SolanaDeserializer) TakeBool() bool {
+	return s.TakeBytes(1)[0] > 0
+}
+
 func (s *SolanaDeserializer) TakeU8() uint8 {
 	return s.TakeBytes(1)[0]
 }
@@ -71,6 +75,10 @@ func (s *SolanaDeserializer) TakeU64() uint64 {
 }
 
 func (s *SolanaDeserializer) TakeU128() *big.Int {
+	return newIntLittleEndianBytes(s.TakeBytes(16))
+}
+
+func (s *SolanaDeserializer) TakeI128() *big.Int {
 	return newIntLittleEndianBytes(s.TakeBytes(16))
 }
 
