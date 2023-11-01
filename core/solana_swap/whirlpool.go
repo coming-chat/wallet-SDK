@@ -139,42 +139,49 @@ func getPoolsData(cli *client.Client, addresses []string) (map[string]*Whirlpool
 }
 
 type SearchedWhirlpoolData struct {
-	Tick1   *WhirlpoolData
-	Tick8   *WhirlpoolData
-	Tick64  *WhirlpoolData
-	Tick128 *WhirlpoolData
+	Address common.PublicKey
+	Data    WhirlpoolData
 }
 
-func SearchWhirlpool(cli *client.Client, programId string, whirlpoolConfigKey, mintA, mintB string) (*SearchedWhirlpoolData, error) {
-	address1, err := getWhirlpoolPDA(programId, whirlpoolConfigKey, mintA, mintB, 1)
+type SearchedWhirlpoolList struct {
+	Tick1   *SearchedWhirlpoolData
+	Tick8   *SearchedWhirlpoolData
+	Tick64  *SearchedWhirlpoolData
+	Tick128 *SearchedWhirlpoolData
+}
+
+func SearchWhirlpool(cli *client.Client, programId string, whirlpoolConfigKey, mintA, mintB string) (*SearchedWhirlpoolList, error) {
+	addresses := []string{}
+	keys := map[string]*common.PublicKey{}
+	putSearchKey := func(key string, tickSpacing uint16) {
+		if addr, err := getWhirlpoolPDA(programId, whirlpoolConfigKey, mintA, mintB, tickSpacing); err == nil {
+			addresses = append(addresses, addr.ToBase58())
+			keys[key] = &addr
+		}
+	}
+	putSearchKey("tick1", 1)
+	putSearchKey("tick8", 8)
+	putSearchKey("tick64", 64)
+	putSearchKey("tick128", 128)
+	dataMap, err := getPoolsData(cli, addresses)
 	if err != nil {
 		return nil, err
 	}
-	address8, err := getWhirlpoolPDA(programId, whirlpoolConfigKey, mintA, mintB, 8)
-	if err != nil {
-		return nil, err
+	takeWhirlpoolData := func(key string) *SearchedWhirlpoolData {
+		if addr := keys[key]; addr != nil {
+			if data := dataMap[addr.ToBase58()]; data != nil {
+				return &SearchedWhirlpoolData{
+					Address: *addr,
+					Data:    *data,
+				}
+			}
+		}
+		return nil
 	}
-	address64, err := getWhirlpoolPDA(programId, whirlpoolConfigKey, mintA, mintB, 64)
-	if err != nil {
-		return nil, err
-	}
-	address128, err := getWhirlpoolPDA(programId, whirlpoolConfigKey, mintA, mintB, 128)
-	if err != nil {
-		return nil, err
-	}
-	dataMap, err := getPoolsData(cli, []string{
-		address1.ToBase58(),
-		address8.ToBase58(),
-		address64.ToBase58(),
-		address128.ToBase58(),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return &SearchedWhirlpoolData{
-		Tick1:   dataMap[address1.ToBase58()],
-		Tick8:   dataMap[address8.ToBase58()],
-		Tick64:  dataMap[address64.ToBase58()],
-		Tick128: dataMap[address128.ToBase58()],
+	return &SearchedWhirlpoolList{
+		Tick1:   takeWhirlpoolData("tick1"),
+		Tick8:   takeWhirlpoolData("tick8"),
+		Tick64:  takeWhirlpoolData("tick64"),
+		Tick128: takeWhirlpoolData("tick128"),
 	}, nil
 }
