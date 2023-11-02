@@ -416,6 +416,7 @@ func (d *TickArrayData) Deserializer(data []byte) error {
 			ds.TakeU128(),
 			ds.TakeU128(),
 		}
+		ticks = append(ticks, tick)
 	}
 	d.ticks = ticks
 	d.whirlpool = ds.TakePublicKey()

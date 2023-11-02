@@ -99,7 +99,14 @@ func (s *SolanaDeserializer) TakeU128() *big.Int {
 }
 
 func (s *SolanaDeserializer) TakeI128() *big.Int {
-	return newIntLittleEndianBytes(s.TakeBytes(16))
+	bts := s.TakeBytes(16)
+	u128 := newIntLittleEndianBytes(bts)
+	if bts[0]&0x80 == 0 { // positive
+		return u128
+	} else { // negtive
+		pow128 := big.NewInt(0).Exp(big.NewInt(2), big.NewInt(128), nil)
+		return u128.Sub(u128, pow128)
+	}
 }
 
 func (s *SolanaDeserializer) TakePublicKey() common.PublicKey {
