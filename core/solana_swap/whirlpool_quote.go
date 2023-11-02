@@ -49,6 +49,7 @@ type SwapQuote struct {
 	amountOut            uint64 // estimated_amount_out
 	aToB                 bool
 	fixedInput           bool
+	tickArray            [3]common.PublicKey
 }
 
 const (
@@ -95,6 +96,7 @@ func GetSwapQuote(cli *client.Client, param SwapQuoteParam) (quote *SwapQuote, e
 		amountOut:            output.amountOut.Uint64(),
 		aToB:                 swapDirection == SwapDirectionAtoB,
 		fixedInput:           true,
+		tickArray:            output.tickArray,
 	}, nil
 }
 
@@ -115,6 +117,7 @@ type SwapSimulationOutput struct {
 	amountIn          *big.Int
 	amountOut         *big.Int
 	sqrtPriceLimitX64 *big.Int
+	tickArray         [3]common.PublicKey
 }
 
 type SwapStepSimulationInput struct {
@@ -132,6 +135,7 @@ type SwapStepSimulationOutput struct {
 	output             *big.Int
 	tickArraysCrossed  int
 	hasReachedNextTick bool
+	tickArray          []common.PublicKey
 }
 
 func simulateSwap(cli *client.Client,
@@ -151,6 +155,8 @@ func simulateSwap(cli *client.Client,
 	tickArraysCrossed := 0
 	var sqrtPriceLimitX64 *big.Int
 
+	tickArray := []common.PublicKey{}
+
 	for specifiedAmountLeft.Cmp(big.NewInt(0)) > 0 {
 		if tickArraysCrossed > MAX_TICK_ARRAY_CROSSINGS {
 			return nil, errors.New("Crossed the maximum number of tick arrays")
@@ -166,6 +172,7 @@ func simulateSwap(cli *client.Client,
 		if err != nil {
 			return nil, err
 		}
+		tickArray = append(tickArray, swapStepSimulationOutput.tickArray...)
 
 		nextTickIndex := swapStepSimulationOutput.nextTickIndex
 
@@ -206,10 +213,24 @@ func simulateSwap(cli *client.Client,
 		}
 	}
 
+	var resTickArray [3]common.PublicKey
+	l := len(tickArray)
+	if l == 0 {
+		resTickArray = [3]common.PublicKey{}
+	} else if l >= 3 {
+		copy(resTickArray[:], tickArray[0:3])
+	} else {
+		copy(resTickArray[:], tickArray)
+		last := tickArray[l-1]
+		for i := 0; i < 3-l; i++ {
+			resTickArray[l+i] = common.PublicKeyFromString(last.ToBase58())
+		}
+	}
 	return &SwapSimulationOutput{
 		amountIn:          inputAmount,
 		amountOut:         outputAmount,
 		sqrtPriceLimitX64: sqrtPriceLimitX64,
+		tickArray:         resTickArray,
 	}, nil
 }
 
@@ -223,7 +244,7 @@ func simulateSwapStep(cli *client.Client,
 
 	feeRatePercentage := getFeeRate(baseInput.whirlpoolData.FeeRate)
 
-	nextTickIndex, tickArraysCrossedUpdate, err := getNextInitializedTickIndex(cli, baseInput, input.tickIndex, input.tickArraysCrossed)
+	nextTickIndex, tickArraysCrossedUpdate, tickArray, err := getNextInitializedTickIndex(cli, baseInput, input.tickIndex, input.tickArraysCrossed)
 	if err != nil {
 		return
 	}
@@ -278,6 +299,7 @@ func simulateSwapStep(cli *client.Client,
 		output:             outputDelta,
 		tickArraysCrossed:  tickArraysCrossedUpdate,
 		hasReachedNextTick: hasReachedNextTick,
+		tickArray:          tickArray,
 	}, nil
 }
 
@@ -295,16 +317,18 @@ func tickIndexToSqrtPriceX64(tickIndex int32) (*big.Int, error) {
 func getNextInitializedTickIndex(cli *client.Client,
 	baseInput SwapSimulationBaseInput,
 	currentTickIndex int32,
-	tickArraysCrossed int) (tickIndex int32, crossed int, err error) {
+	tickArraysCrossed int) (tickIndex int32, crossed int, tickArray []common.PublicKey, err error) {
 
 	tickSpacing := baseInput.whirlpoolData.TickSpacing
+	tickArray = []common.PublicKey{}
 
 	var nextInitializedTickIndex *int32
 	for nextInitializedTickIndex == nil {
-		currentTickArray, err := fetchTickArray(cli, baseInput, currentTickIndex)
+		currentTickArray, tickAddr, err := fetchTickArray(cli, baseInput, currentTickIndex)
 		if err != nil {
-			return 0, 0, err
+			return 0, 0, nil, err
 		}
+		tickArray = append(tickArray, *tickAddr)
 		temp := int32(0)
 		if baseInput.swapDirection == SwapDirectionAtoB {
 			temp, err = getPrevInitializedTickIndex(*currentTickArray, currentTickIndex, baseInput.whirlpoolData.TickSpacing)
@@ -331,21 +355,25 @@ func getNextInitializedTickIndex(cli *client.Client,
 		}
 	}
 
-	return *nextInitializedTickIndex, tickArraysCrossed, nil
+	return *nextInitializedTickIndex, tickArraysCrossed, tickArray, nil
 }
 
 func fetchTickArray(cli *client.Client,
 	baseInput SwapSimulationBaseInput,
-	tickIndex int32) (data *TickArrayData, err error) {
+	tickIndex int32) (data *TickArrayData, tickAddr *common.PublicKey, err error) {
 	address, err := getPdaWithTickIndex(tickIndex, baseInput.whirlpoolData.TickSpacing, baseInput.poolAddress, WhirlpoolProgramId, 0)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return getTickArray(cli, address.ToBase58())
+	data, err = getTickArray(cli, address.ToBase58())
+	if err != nil {
+		return nil, nil, err
+	}
+	return data, &address, nil
 }
 
 func fetchTick(cli *client.Client, baseInput SwapSimulationBaseInput, tickIndex int32) (data *TickData, err error) {
-	tickArray, err := fetchTickArray(cli, baseInput, tickIndex)
+	tickArray, _, err := fetchTickArray(cli, baseInput, tickIndex)
 	if err != nil {
 		return
 	}
