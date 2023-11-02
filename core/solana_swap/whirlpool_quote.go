@@ -42,10 +42,11 @@ type SwapQuoteParam struct {
 
 type SwapQuote struct {
 	poolAddress          string
-	otherAmountThreshold uint64
+	poolData             WhirlpoolData
+	otherAmountThreshold uint64 // min_amount_out
 	sqrtPriceLimitX64    *big.Int
 	amountIn             uint64
-	amountOut            uint64
+	amountOut            uint64 // estimated_amount_out
 	aToB                 bool
 	fixedInput           bool
 }
@@ -87,10 +88,11 @@ func GetSwapQuote(cli *client.Client, param SwapQuoteParam) (quote *SwapQuote, e
 
 	return &SwapQuote{
 		poolAddress:          param.poolAddress,
+		poolData:             *whirlpool,
 		otherAmountThreshold: otherAmountThreshold.Uint64(),
 		sqrtPriceLimitX64:    output.sqrtPriceLimitX64,
-		amountIn:             quote.amountIn,
-		amountOut:            quote.amountOut,
+		amountIn:             output.amountIn.Uint64(),
+		amountOut:            output.amountOut.Uint64(),
 		aToB:                 swapDirection == SwapDirectionAtoB,
 		fixedInput:           true,
 	}, nil
@@ -135,7 +137,7 @@ type SwapStepSimulationOutput struct {
 func simulateSwap(cli *client.Client,
 	baseInput SwapSimulationBaseInput,
 	input SwapSimulationInput) (out *SwapSimulationOutput, err error) {
-	specifiedAmountLeft := input.amount
+	specifiedAmountLeft := big.NewInt(0).Set(input.amount)
 	currentLiquidity := input.currentLiquidity
 	currentTickIndex := input.currentTickIndex
 	currentSqrtPriceX64 := input.currentSqrtPriceX64
@@ -394,15 +396,15 @@ type TickData struct {
 }
 
 func (d *TickArrayData) Deserializer(data []byte) error {
-	// if len(data) < 8+261+128 {
-	// 	return errors.New("data length not enough")
-	// }
 	ds := NewSolanaDeserializer(data)
-	_ = ds.TakeBytes(8) // ignore
+	if !ds.IsWhirlpoolDataType("TickArray") {
+		return errors.New("invalid tick array data")
+	}
+	ds.StartWhirlpoolDataParse()
 
 	d.startTickIndex = ds.TakeI32()
-	ticks := make([]TickData, 0, 88)
-	for i := 0; i < 88; i++ {
+	ticks := make([]TickData, 0, TICK_ARRAY_SIZE)
+	for i := 0; i < TICK_ARRAY_SIZE; i++ {
 		tick := TickData{}
 		tick.initialized = ds.TakeBool()
 		tick.liquidityNet = ds.TakeI128()

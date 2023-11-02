@@ -44,11 +44,11 @@ type WhirlpoolData struct {
 }
 
 func (d *WhirlpoolData) Deserializer(data []byte) error {
-	if len(data) < 8+261+128 {
-		return errors.New("data length not enough")
-	}
 	ds := NewSolanaDeserializer(data)
-	_ = ds.TakeBytes(8) // ignore
+	if !ds.IsWhirlpoolDataType("Whirlpool") {
+		return errors.New("invalid whirlpool data")
+	}
+	ds.StartWhirlpoolDataParse()
 
 	d.WhirlpoolsConfig = ds.TakePublicKey()
 	d.WhirlpoolBump = ds.TakeBytes(1)

@@ -2,6 +2,7 @@ package solanaswap
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"encoding/binary"
 	"math/big"
 
@@ -42,6 +43,25 @@ func NewSolanaDeserializer(b []byte) *SolanaDeserializer {
 	return &SolanaDeserializer{
 		data: b,
 	}
+}
+
+func (s *SolanaDeserializer) IsWhirlpoolDataType(typeName string) bool {
+	if len(s.data) < ACCOUNT_DISCRIMINATOR_SIZE {
+		return false
+	}
+	return bytes.Compare(s.data[:ACCOUNT_DISCRIMINATOR_SIZE], nameDiscriminator(typeName)) == 0
+}
+
+func (s *SolanaDeserializer) StartWhirlpoolDataParse() {
+	s.idx = 8
+}
+
+const ACCOUNT_DISCRIMINATOR_SIZE = 8
+
+func nameDiscriminator(name string) []byte {
+	key := `account:` + name // camelcase
+	temp := (sha256.Sum256([]byte(key)))
+	return temp[:ACCOUNT_DISCRIMINATOR_SIZE]
 }
 
 func (s *SolanaDeserializer) TakeBytes(len int) []byte {
