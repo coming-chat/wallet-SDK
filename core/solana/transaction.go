@@ -5,10 +5,23 @@ import (
 
 	"github.com/blocto/solana-go-sdk/types"
 	"github.com/coming-chat/wallet-SDK/core/base"
+	"github.com/mr-tron/base58"
 )
 
 type Transaction struct {
 	Message types.Message
+}
+
+func NewTransaction(rawBase58String string) (*Transaction, error) {
+	data, err := base58.Decode(rawBase58String)
+	if err != nil {
+		return nil, err
+	}
+	msg, err := types.MessageDeserialize(data)
+	if err != nil {
+		return nil, err
+	}
+	return &Transaction{Message: msg}, nil
 }
 
 func (t *Transaction) SignWithAccount(account base.Account) (signedTxn *base.OptionalString, err error) {
