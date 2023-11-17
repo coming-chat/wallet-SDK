@@ -13,12 +13,14 @@ import (
 )
 
 type Brc20Token struct {
-	Ticker string
+	Ticker   string
+	Chainnet string
 }
 
-func NewBrc20Token(ticker string) *Brc20Token {
+func NewBrc20Token(ticker string, chainnet string) *Brc20Token {
 	return &Brc20Token{
-		Ticker: ticker,
+		Ticker:   ticker,
+		Chainnet: chainnet,
 	}
 }
 
@@ -71,7 +73,10 @@ func (t *Brc20Token) FullTokenInfo() (info *Brc20TokenInfo, err error) {
 	} else if cache, exists := brc20InfoCache[key]; exists {
 		return cache, nil
 	}
-	host, _ := zeroWalletHost(ChainMainnet)
+	host, err := zeroWalletHost(t.Chainnet)
+	if err != nil {
+		return nil, err
+	}
 	url := fmt.Sprintf("%v/ordinal/inscrptions/brc20/status?pageStart=0&pageSize=1&tick=%v", host, t.Ticker)
 	resp, err := httpUtil.Request(http.MethodGet, url, nil, nil)
 	if err != nil {

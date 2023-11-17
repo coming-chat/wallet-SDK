@@ -26,7 +26,7 @@ func netParamsOf(chainnet string) (*chaincfg.Params, error) {
 	switch chainnet {
 	case ChainSignet:
 		return &chaincfg.SigNetParams, nil
-	case ChainTestnet:
+	case ChainTestnet, "testnet3":
 		return &chaincfg.TestNet3Params, nil
 	case ChainMainnet, ChainBitcoin:
 		return &chaincfg.MainNetParams, nil
