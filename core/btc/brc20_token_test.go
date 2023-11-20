@@ -36,10 +36,11 @@ func TestBrc20Token_FullTokenInfo(t *testing.T) {
 }
 
 func TestBrc20TokenBalances(t *testing.T) {
-	owner := "bc1qdgflzu306s75lgskkgssmz3vscpvuawvafv3xjshyc6t73x3zzvquvtafp"
+	// owner := "bc1qdgflzu306s75lgskkgssmz3vscpvuawvafv3xjshyc6t73x3zzvquvtafp"
+	// chain, err := NewChainWithChainnet(ChainMainnet)
 
-	chain, err := NewChainWithChainnet(ChainMainnet)
-	// chain, err := NewChainWithChainnet(ChainTestnet)
+	owner := "tb1p6udzumpasl8ydf2mwfxlvmjzhxh9pg2vz097sle6hq98ahra0tvs3pvvgu"
+	chain, err := NewChainWithChainnet(ChainTestnet)
 	require.Nil(t, err)
 	balancePage, err := chain.FetchBrc20TokenBalance(owner, "0", 10)
 	require.Nil(t, err)

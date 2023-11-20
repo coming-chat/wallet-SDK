@@ -102,9 +102,9 @@ func comingOrdHost(chainnet string) (string, error) {
 func unisatHost(chainnet string) (string, error) {
 	switch chainnet {
 	case ChainMainnet, ChainBitcoin:
-		return "https://unisat.io", nil
+		return "https://api.unisat.io", nil
 	case ChainTestnet:
-		return "https://unisat.io/testnet", nil
+		return "https://api-testnet.unisat.io", nil
 	}
 	return "", ErrUnsupportedChain
 }
