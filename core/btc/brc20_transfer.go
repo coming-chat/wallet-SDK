@@ -13,11 +13,22 @@ import (
 type Brc20TransferTransaction struct {
 	Transaction string `json:"transaction"`
 	NetworkFee  int64  `json:"network_fee"`
-	// CommitCustom []string `json:"commit_custom"`
+
+	CommitCustom *Brc20CommitCustom `json:"commit_custom"`
 }
 
 func NewBrc20TransferTransaction() *Brc20TransferTransaction {
 	return &Brc20TransferTransaction{}
+}
+
+func NewBrc20TransferTransactionWithJsonString(jsonStr string) (*Brc20TransferTransaction, error) {
+	data := []byte(jsonStr)
+	var out Brc20TransferTransaction
+	err := json.Unmarshal(data, &out)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
 }
 
 func (t *Brc20TransferTransaction) ToPsbtTransaction() (*PsbtTransaction, error) {

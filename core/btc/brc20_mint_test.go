@@ -59,3 +59,33 @@ func TestNewBrc20MintTransactionWithJsonString(t *testing.T) {
 	require.Equal(t, txn.Commit, "abc")
 	require.Equal(t, txn.Reveal[1], "22")
 }
+
+func Test_Marshal_Brc20MintTransaction(t *testing.T) {
+	jsonStr := `
+	{
+		"inscription": [
+			"9ea4ca939fb364944a1a51ca42aa5a8e99c06b2d0e7dce45bf317c601ebd4d21i0"
+		],
+		"commit": "70736274ff010",
+		"commit_custom": [
+			"0118b014000000",
+			"ed4fa9e028aa59e5384b219562034b8254347d591c3f667855616e8f33ab561e",
+			"2"
+		],
+		"reveal": [
+			"0100000000010"
+		],
+		"service_fee": 0,
+		"satpoint_fee": 546,
+		"network_fee": 70716,
+		"commit_vsize": 154,
+		"commit_fee": 37422
+	}
+	`
+
+	txn, err := NewBrc20MintTransactionWithJsonString(jsonStr)
+	require.Nil(t, err)
+	require.Equal(t, txn.CommitCustom.BaseTx, "0118b014000000")
+	require.Equal(t, txn.CommitCustom.Utxos.Count(), 1)
+	require.Equal(t, txn.CommitCustom.Utxos.ValueAt(0).Index, int64(2))
+}

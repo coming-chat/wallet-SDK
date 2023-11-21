@@ -1,6 +1,8 @@
 package btc
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 
@@ -208,4 +210,81 @@ type unisatTokenSummary struct {
 	TransferableList []*Brc20TransferableInscription `json:"transferableList"`
 	TokenBalance     *Brc20TokenBalance              `json:"tokenBalance"`
 	// historyList, tokenInfo
+}
+
+type Brc20UTXO struct {
+	Txid  string `json:"txid"`
+	Index int64  `json:"index"`
+}
+
+func NewBrc20UTXO(txid string, index int64) *Brc20UTXO {
+	return &Brc20UTXO{Txid: txid, Index: index}
+}
+
+type Brc20UTXOArray struct {
+	inter.AnyArray[*Brc20UTXO]
+}
+
+func NewBrc20UTXOArray() *Brc20UTXOArray {
+	return &Brc20UTXOArray{}
+}
+
+func (a *Brc20UTXOArray) UnmarshalJSON(data []byte) error {
+	var out []*Brc20UTXO
+	err := json.Unmarshal(data, &out)
+	if err == nil {
+		*a = Brc20UTXOArray{
+			inter.AnyArray[*Brc20UTXO](out),
+		}
+	}
+	return err
+}
+
+type Brc20CommitCustom struct {
+	BaseTx string          `json:"baseTx"`
+	Utxos  *Brc20UTXOArray `json:"utxos"`
+}
+
+func (a *Brc20CommitCustom) UnmarshalJSON(data []byte) error {
+	var temp struct {
+		BaseTx string          `json:"baseTx"`
+		Utxos  *Brc20UTXOArray `json:"utxos"`
+	}
+	err := json.Unmarshal(data, &temp)
+	if err == nil {
+		(*a).BaseTx = temp.BaseTx
+		(*a).Utxos = temp.Utxos
+		return nil
+	}
+
+	var strs []string
+	err = json.Unmarshal(data, &strs)
+	if err == nil {
+		if len(strs) < 3 || len(strs)%2 == 0 {
+			return errors.New("invalid commit data")
+		}
+		utxos := NewBrc20UTXOArray()
+		for i := 0; i < len(strs)/2; i++ {
+			txid := strs[i*2+1]
+			index, err := strconv.ParseInt(strs[i*2+2], 10, 64)
+			if err != nil {
+				return err
+			}
+			utxos.Append(NewBrc20UTXO(txid, index))
+		}
+		(*a).BaseTx = strs[0]
+		(*a).Utxos = utxos
+		return nil
+	}
+	return err
+}
+
+func (j *Brc20CommitCustom) JsonString() (*base.OptionalString, error) {
+	return base.JsonString(j)
+}
+
+func NewBrc20CommitCustomJson(json string) *Brc20CommitCustom {
+	var o Brc20CommitCustom
+	_ = base.FromJsonString(json, &o)
+	return &o
 }

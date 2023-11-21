@@ -65,3 +65,27 @@ func inscriptionIds(t *testing.T, chain *Chain, owner string, tick string, maxCo
 	}
 	return idList
 }
+
+func Test_Marshal_Brc20TransferTransaction(t *testing.T) {
+	jsonStr := `
+	{
+		"transaction": "70736274ff0100e701",
+		"commit_custom": [
+			"02220200000000000",
+			"8d3fd6c21cf9242110d1646d5ae313a1233c2f4e8b597c0115d0f2a798334f13",
+			"0",
+			"ad683b00dc5e63ed0034263ee7cb92db972f550ce861dc6785316e1e095041cb",
+			"1"
+		],
+		"network_fee": 795
+	}
+	`
+
+	txn, err := NewBrc20TransferTransactionWithJsonString(jsonStr)
+	require.Nil(t, err)
+	cmt := txn.CommitCustom
+	require.Equal(t, cmt.BaseTx, "02220200000000000")
+	require.Equal(t, cmt.Utxos.Count(), 2)
+	require.Equal(t, cmt.Utxos.ValueAt(0).Txid, "8d3fd6c21cf9242110d1646d5ae313a1233c2f4e8b597c0115d0f2a798334f13")
+	require.Equal(t, cmt.Utxos.ValueAt(1).Index, int64(1))
+}

@@ -15,7 +15,8 @@ type Brc20MintTransaction struct {
 	Commit      string   `json:"commit"`
 	Reveal      []string `json:"reveal"`
 	Inscription []string `json:"inscription"`
-	// CommitCustom []string `json:"commit_custom"`
+
+	CommitCustom *Brc20CommitCustom `json:"commit_custom"`
 
 	NetworkFee  int64 `json:"network_fee"`
 	SatpointFee int64 `json:"satpoint_fee"`
@@ -122,18 +123,28 @@ func (t *Brc20MintTransaction) PublishWithChain(c *Chain) (s *base.OptionalStrin
 // BuildBrc20MintTransaction
 // @param op "mint" or "transfer"
 func (c *Chain) BuildBrc20MintTransaction(sender, receiver string, op, ticker, amount string, feeRate int64) (txn *Brc20MintTransaction, err error) {
+	return c.BuildBrc20MintWithPostage(sender, receiver, op, ticker, amount, feeRate, 546)
+}
+
+// BuildBrc20MintWithPostage
+// @param postage default is 546 if less than 546
+func (c *Chain) BuildBrc20MintWithPostage(sender, receiver string, op, ticker, amount string, feeRate int64, postage int64) (txn *Brc20MintTransaction, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
+
+	if postage < 546 {
+		postage = 546
+	}
 
 	host, err := comingOrdHost(c.Chainnet)
 	if err != nil {
 		return
 	}
-	url := fmt.Sprintf("%v/mint", host)
+	url := fmt.Sprintf("%v/mintWithPostage", host)
 	header := map[string]string{"Content-Type": "application/json"}
 	requestBody := map[string]any{
 		"jsonrpc": "2.0",
 		"id":      1,
-		"method":  "mint",
+		"method":  "mintWithPostage",
 		"params": map[string]any{
 			"source":      sender,
 			"fee_rate":    feeRate,
@@ -141,6 +152,8 @@ func (c *Chain) BuildBrc20MintTransaction(sender, receiver string, op, ticker, a
 			"destination": receiver,
 			"extension":   ".txt",
 			"repeat":      1,
+
+			"target_postage": postage,
 		},
 	}
 	requestBytes, _ := json.Marshal(requestBody)
