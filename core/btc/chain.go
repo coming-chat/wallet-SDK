@@ -96,6 +96,15 @@ type FeeRate struct {
 	High    int64
 }
 
+func (c *Chain) SuggestFeeRate() (rates *FeeRate, err error) {
+	switch c.Chainnet {
+	case ChainBitcoin, ChainMainnet:
+		return SuggestFeeRate()
+	default:
+		return &FeeRate{1, 1, 1}, nil
+	}
+}
+
 func SuggestFeeRate() (rates *FeeRate, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
 

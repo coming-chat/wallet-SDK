@@ -157,7 +157,21 @@ func TestChain_FetchTransactionDetail(t *testing.T) {
 }
 
 func TestChain_SuggestFeeRate(t *testing.T) {
-	t.Log(SuggestFeeRate())
+	chains := []string{
+		ChainMainnet,
+		ChainSignet,
+		ChainTestnet,
+	}
+	for _, chainnet := range chains {
+		t.Run(chainnet, func(t *testing.T) {
+			t.Logf("===== %v =====", chainnet)
+			chain, err := NewChainWithChainnet(chainnet)
+			require.Nil(t, err)
+			rate, err := chain.SuggestFeeRate()
+			require.Nil(t, err)
+			t.Logf("\n high: %v\n average: %v\n low: %v\n", rate.High, rate.Average, rate.Low)
+		})
+	}
 }
 
 func TestChain_BatchFetchTransactionStatus(t *testing.T) {
