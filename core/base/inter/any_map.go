@@ -2,62 +2,76 @@ package inter
 
 import (
 	"encoding/json"
-
-	"github.com/coming-chat/wallet-SDK/core/base"
 )
 
-type AnyMap[T any] struct {
-	Values map[string]T
+// AnyMap
+// ### Usage example for SDK
+//
+//	type StringMap struct { AnyMap[string, string] }
+//	func NewStringMap() *StringMap { return &StringMap{map[string]string{}} }
+//
+// ### Usage Done
+type AnyMap[K comparable, V any] map[K]V
+
+func (a AnyMap[K, V]) MarshalJSON() ([]byte, error) {
+	var temp map[K]V = a
+	return json.Marshal(temp)
 }
 
-// `AnyMap` only support Marshal
-func (a AnyMap[T]) MarshalJSON() ([]byte, error) {
-	return json.Marshal(a.Values)
-}
-func (a *AnyMap[T]) UnmarshalJSON(data []byte) error {
-	err := json.Unmarshal(data, &a.Values)
+func (a *AnyMap[K, V]) UnmarshalJSON(data []byte) error {
+	var out map[K]V
+	err := json.Unmarshal(data, &out)
+	*a = out
 	return err
 }
 
-func (a *AnyMap[T]) JsonString() (*base.OptionalString, error) {
-	return base.JsonString(a)
-}
-
-func (a *AnyMap[T]) ValueOf(key string) T {
-	return a.Values[key]
-}
-
-func (a *AnyMap[T]) SetValue(value T, key string) {
-	a.Values[key] = value
-}
-
-func (a *AnyMap[T]) Remove(key string) T {
-	if v, ok := a.Values[key]; ok {
-		delete(a.Values, key)
-		return v
-	}
-	return a.Values[key]
-}
-
-func (a *AnyMap[T]) HasKey(key string) bool {
-	_, ok := a.Values[key]
-	return ok
-}
-
-func (a *AnyMap[T]) Keys() *base.StringArray {
-	keys := make([]string, len(a.Values))
-	i := 0
-	for k := range a.Values {
-		keys[i] = k
-		i++
-	}
-	return &base.StringArray{Values: keys}
-}
-
-func (a *AnyMap[T]) String() string {
-	data, err := json.Marshal(a.Values)
+func (a AnyMap[K, V]) JsonString() string {
+	data, err := json.Marshal(a)
 	if err != nil {
 		return "{}"
 	}
 	return string(data)
+}
+
+func (a AnyMap[K, V]) Count() int {
+	return len(a)
+}
+
+func (a AnyMap[K, V]) ValueOf(key K) V {
+	return a[key]
+}
+
+func (a *AnyMap[K, V]) SetValue(value V, key K) {
+	(*a)[key] = value
+}
+
+func (a *AnyMap[K, V]) Remove(key K) V {
+	if v, ok := (*a)[key]; ok {
+		delete((*a), key)
+		return v
+	}
+	return (*a)[key]
+}
+
+// Deprecated: Use Contains(key) instead.
+func (a AnyMap[K, V]) HasKey(key K) bool {
+	_, ok := a[key]
+	return ok
+}
+
+func (a AnyMap[K, V]) Contains(key K) bool {
+	_, ok := a[key]
+	return ok
+}
+
+// Keys
+// 该方法的返回值无法打包到 sdk, 因此从对象方法中移出为公共方法
+func KeysOf[K comparable, V any](m map[K]V) []K {
+	keys := make([]K, len(m))
+	idx := 0
+	for k := range m {
+		keys[idx] = k
+		idx++
+	}
+	return keys
 }

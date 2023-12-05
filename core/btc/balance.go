@@ -15,11 +15,11 @@ import (
 )
 
 type StringMap struct {
-	inter.AnyMap[string]
+	inter.AnyMap[string, string]
 }
 
 func NewStringMap() *StringMap {
-	return &StringMap{inter.AnyMap[string]{Values: map[string]string{}}}
+	return &StringMap{map[string]string{}}
 }
 
 // BatchQueryBalance
