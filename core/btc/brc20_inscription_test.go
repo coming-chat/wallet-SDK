@@ -14,12 +14,11 @@ func TestFetchBrc20Inscription(t *testing.T) {
 	page, err := chain.FetchBrc20Inscription(owner, "0", 20)
 	require.Nil(t, err)
 	require.True(t, page.TotalCount() >= 1)
-	t.Log(page.ItemArray().Values...)
+	t.Log(page.Items)
 	t.Log(page.ItemAt(0))
 
-	jsonstring, err := page.JsonString()
-	require.Nil(t, err)
-	rePage, err := NewBrc20InscriptionPageWithJsonString(jsonstring.Value)
+	jsonstring := page.JsonString()
+	rePage, err := NewBrc20InscriptionPageWithJsonString(jsonstring)
 	require.Nil(t, err)
 	require.Equal(t, page.TotalCount_, rePage.TotalCount_)
 	require.Equal(t, page.Items[0], rePage.Items[0])
@@ -32,5 +31,5 @@ func TestFetchBrc20TransferableInscription(t *testing.T) {
 	require.Nil(t, err)
 	page, err := chain.FetchBrc20TransferableInscription(owner, "txtx")
 	require.Nil(t, err)
-	t.Log(page.ItemArray())
+	t.Log(page.Items)
 }

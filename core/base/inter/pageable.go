@@ -1,6 +1,8 @@
 package inter
 
-import "github.com/coming-chat/wallet-SDK/core/base"
+import (
+	"encoding/json"
+)
 
 // `SdkPageable` implemented wallet-SDK/base's interface `Jsonable`
 // If you new class `Xxx` extends it, you should implement `NewXxxWithJsonString` by your self.
@@ -10,8 +12,7 @@ type SdkPageable[T any] struct {
 	CurrentCursor_ string `json:"currentCursor"`
 	HasNextPage_   bool   `json:"hasNextPage"`
 
-	Items    []T `json:"items"`
-	anyArray *base.AnyArray
+	Items []T `json:"items"`
 }
 
 func (p *SdkPageable[T]) TotalCount() int {
@@ -31,19 +32,12 @@ func (p *SdkPageable[T]) HasNextPage() bool {
 	return p.HasNextPage_
 }
 
-func (p *SdkPageable[T]) JsonString() (*base.OptionalString, error) {
-	return base.JsonString(p)
-}
-
-func (p *SdkPageable[T]) ItemArray() *base.AnyArray {
-	if p.anyArray == nil {
-		a := make([]any, len(p.Items))
-		for idx, n := range p.Items {
-			a[idx] = n
-		}
-		p.anyArray = &base.AnyArray{Values: a}
+func (p *SdkPageable[T]) JsonString() string {
+	data, err := json.Marshal(p)
+	if err != nil {
+		return "null"
 	}
-	return p.anyArray
+	return string(data)
 }
 
 // It's will crash when index out of range

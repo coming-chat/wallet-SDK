@@ -46,7 +46,7 @@ func TestFetchBrc20InscriptionList(t *testing.T) {
 
 	list, err := chain.FetchBrc20Inscription(addr.Value, "", 10)
 	require.Nil(t, err)
-	t.Log(list.ItemArray().Values...)
+	t.Log(list.Items)
 }
 
 func TestNewBrc20MintTransactionWithJsonString(t *testing.T) {

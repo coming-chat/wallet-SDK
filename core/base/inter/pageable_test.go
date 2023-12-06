@@ -2,8 +2,6 @@ package inter
 
 import (
 	"testing"
-
-	"github.com/coming-chat/wallet-SDK/core/base"
 )
 
 type Person struct {
@@ -37,7 +35,6 @@ func TestSdkPageable(t *testing.T) {
 	t.Log(p.ItemAt(0))
 	t.Log(p.SecondObject())
 
-	t.Log(p.ItemArray().Values...)
 	t.Log(p.TotalCount())
 	t.Log(p.CurrentCount())
 }
@@ -47,9 +44,5 @@ func TestFlowInterface(t *testing.T) {
 		&SdkPageable[*Person]{},
 	}
 
-	var jj base.Jsonable = vv
-	t.Log(jj.JsonString())
-
-	var pp base.Pageable = vv
-	t.Log(pp.ItemArray())
+	t.Log(vv.JsonString())
 }

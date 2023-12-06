@@ -54,7 +54,7 @@ func TestBrc20TransferTransaction_SignAndSend(t *testing.T) {
 func inscriptionIds(t *testing.T, chain *Chain, owner string, tick string, maxCount int) []string {
 	arr, err := chain.FetchBrc20TransferableInscription(owner, tick)
 	require.Nil(t, err)
-	require.Greater(t, arr.ItemArray().Count(), 0, "the user has no inscription")
+	require.Greater(t, arr.CurrentCount(), 0, "the user has no inscription")
 
 	idList := []string{}
 	for _, item := range arr.Items {
