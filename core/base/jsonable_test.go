@@ -24,11 +24,11 @@ func NewJsonObjWithJsonString(str string) (*JsonObj, error) {
 func NewJsonObjArrayWithJsonString(str string) (*AnyArray, error) {
 	var o []*JsonObj
 	err := FromJsonString(str, &o)
-	arr := make([]any, len(o))
+	arr := make([]*Any, len(o))
 	for i, v := range o {
-		arr[i] = v
+		arr[i] = &Any{Value: v}
 	}
-	return &AnyArray{Values: arr}, err
+	return &AnyArray{AnyArray: arr}, err
 }
 
 func (o *JsonObj) AsAny() *Any {
@@ -61,20 +61,19 @@ func TestJsonForAny(t *testing.T) {
 	// ======================
 	o2 := JsonObj{Name: "A22", Age: 17}
 
-	arr1 := AnyArray{Values: []any{a1, o2}} // a1 is Any, o2 is JsonObj
-	jsonStrArr1, err := arr1.JsonString()
-	require.Nil(t, err)
+	arr1 := AnyArray{[]*Any{a1, o2.AsAny()}} // a1 is Any, o2 is JsonObj
+	jsonStrArr1 := arr1.JsonString()
+	t.Log(jsonStrArr1)
 	arr2 := []JsonObj{o1, o2}
 	jsonStrArr2, err := JsonString(arr2)
 	require.Nil(t, err)
 
-	require.Equal(t, jsonStrArr1, jsonStrArr2)
-	t.Log(jsonStrArr1.Value)
+	require.Equal(t, jsonStrArr1, jsonStrArr2.Value)
 
 	// ======================= new array
-	objArray, err := NewJsonObjArrayWithJsonString(jsonStrArr1.Value)
+	objArray, err := NewJsonObjArrayWithJsonString(jsonStrArr1)
 	require.Nil(t, err)
-	t.Log(objArray.Values...)
+	t.Log(objArray.AnyArray)
 }
 
 func TestJsonForNestAny(t *testing.T) {
@@ -89,10 +88,9 @@ func TestJsonForNestAny(t *testing.T) {
 	t.Log(jsonStr.Value)
 
 	// ===============
-	arr1 := AnyArray{Values: []any{a1}}
-	arr2 := AnyArray{Values: []any{arr1}}
-	arr3 := AnyArray{Values: []any{arr2}}
-	jsonStrArr, err := arr3.JsonString()
-	require.Nil(t, err)
-	t.Log(jsonStrArr.Value)
+	arr1 := AnyArray{[]*Any{{a1}}}
+	arr2 := AnyArray{[]*Any{{arr1}}}
+	arr3 := AnyArray{[]*Any{{arr2}}}
+	jsonStrArr := arr3.JsonString()
+	t.Log(jsonStrArr)
 }

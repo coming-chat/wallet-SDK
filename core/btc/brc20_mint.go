@@ -12,9 +12,9 @@ import (
 )
 
 type Brc20MintTransaction struct {
-	Commit      string   `json:"commit"`
-	Reveal      []string `json:"reveal"`
-	Inscription []string `json:"inscription"`
+	Commit      string            `json:"commit"`
+	Reveal      *base.StringArray `json:"reveal"`
+	Inscription *base.StringArray `json:"inscription"`
 
 	CommitCustom *Brc20CommitCustom `json:"commit_custom"`
 
@@ -35,13 +35,6 @@ func NewBrc20MintTransactionWithJsonString(jsonStr string) (*Brc20MintTransactio
 		return nil, err
 	}
 	return &res, nil
-}
-
-func (t *Brc20MintTransaction) RevealArray() *base.StringArray {
-	return &base.StringArray{Values: t.Reveal}
-}
-func (t *Brc20MintTransaction) InscriptionArray() *base.StringArray {
-	return &base.StringArray{Values: t.Inscription}
 }
 
 func (t *Brc20MintTransaction) IsSigned() bool {

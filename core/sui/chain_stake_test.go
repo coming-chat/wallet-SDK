@@ -16,9 +16,8 @@ func TestGetValidatorState(t *testing.T) {
 
 	state, err := chain.GetValidatorState()
 	require.Nil(t, err)
-	for idx, v := range state.Validators.Values {
-		vv := v.(*Validator)
-		t.Logf("%v, %-10v, APY = %v, totalStaked=%v", idx+1, vv.Name, vv.APY, vv.TotalStaked)
+	for idx, v := range state.Validators.AnyArray {
+		t.Logf("%v, %-10v, APY = %v, totalStaked=%v", idx+1, v.Name, v.APY, v.TotalStaked)
 	}
 }
 
@@ -46,9 +45,8 @@ func TestGetDelegatedStakes(t *testing.T) {
 
 	list, err := chain.GetDelegatedStakes(address)
 	require.Nil(t, err)
-	for _, v := range list.Values {
-		vv := v.(*DelegatedStake)
-		t.Log(vv)
+	for _, v := range list.AnyArray {
+		t.Log(v)
 	}
 }
 
@@ -76,7 +74,7 @@ func TestWithdrawDelegation(t *testing.T) {
 	require.Nil(t, err)
 	require.Greater(t, stakedArray.Count(), 0)
 
-	stake := stakedArray.Values[0].(*DelegatedStake)
+	stake := stakedArray.ValueAt(0)
 	stakeId := stake.StakeId
 	txn, err := chain.WithdrawDelegation(owner, stakeId)
 	require.Nil(t, err)

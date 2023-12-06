@@ -94,7 +94,7 @@ func ChainTypeOfWatchAddress(address string) *base.StringArray {
 
 func ChainTypeOfPrivateKey(prikey string) *base.StringArray {
 	res := &base.StringArray{}
-	isValid, length := inter.IsValidHexString(prikey)
+	isValid, length := inter.IsHexString(prikey)
 	if isValid {
 		if length == 64 {
 			res.Append(ChainTypeBitcoin)
@@ -117,6 +117,9 @@ func ChainTypeOfPrivateKey(prikey string) *base.StringArray {
 	} else {
 		if strings.HasPrefix(prikey, "0x") || strings.HasPrefix(prikey, "0X") {
 			prikey = prikey[2:] // remove 0x prefix
+		}
+		if !inter.IsASCII(prikey) {
+			return res
 		}
 		wif, err := btcutil.DecodeWIF(prikey)
 		if err == nil {

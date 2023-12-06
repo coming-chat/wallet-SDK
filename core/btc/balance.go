@@ -10,31 +10,22 @@ import (
 	"sync"
 
 	"github.com/coming-chat/wallet-SDK/core/base"
-	"github.com/coming-chat/wallet-SDK/core/base/inter"
 	"github.com/coming-chat/wallet-SDK/pkg/httpUtil"
 )
-
-type StringMap struct {
-	inter.AnyMap[string, string]
-}
-
-func NewStringMap() *StringMap {
-	return &StringMap{map[string]string{}}
-}
 
 // BatchQueryBalance
 // @return If any address is successfully queried, it will return normally, and the amount of failed request is 0
 // @throw error if all address query balance failed
-func BatchQueryBalance(addresses *base.StringArray, chainnet string) (*StringMap, error) {
+func BatchQueryBalance(addresses *base.StringArray, chainnet string) (*base.StringMap, error) {
 	if addresses == nil {
-		return NewStringMap(), nil
+		return base.NewStringMap(), nil
 	}
 	var (
 		balanceMap sync.Map
 		success    = false
 		anyErr     error
 	)
-	base.MapListConcurrentStringToString(addresses.Values, func(address string) (string, error) {
+	base.MapListConcurrentStringToString(addresses.AnyArray, func(address string) (string, error) {
 		balance, err := queryBalance(address, chainnet)
 		if err != nil {
 			anyErr = err
@@ -46,8 +37,8 @@ func BatchQueryBalance(addresses *base.StringArray, chainnet string) (*StringMap
 		return "", nil
 	})
 	if success {
-		res := NewStringMap()
-		for _, address := range addresses.Values {
+		res := base.NewStringMap()
+		for _, address := range addresses.AnyArray {
 			res.SetValue("0", address)
 			if balance, ok := balanceMap.Load(address); ok {
 				if balanceStr, ok := balance.(string); ok {

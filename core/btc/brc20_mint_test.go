@@ -57,7 +57,7 @@ func TestNewBrc20MintTransactionWithJsonString(t *testing.T) {
 	txn, err := NewBrc20MintTransactionWithJsonString(jsonStr)
 	require.Nil(t, err)
 	require.Equal(t, txn.Commit, "abc")
-	require.Equal(t, txn.Reveal[1], "22")
+	require.Equal(t, txn.Reveal.ValueAt(1), "22")
 }
 
 func Test_Marshal_Brc20MintTransaction(t *testing.T) {

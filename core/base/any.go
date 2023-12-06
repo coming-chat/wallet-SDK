@@ -3,6 +3,8 @@ package base
 import (
 	"encoding/json"
 	"math/big"
+
+	"github.com/coming-chat/wallet-SDK/core/base/inter"
 )
 
 // exchange `Aniable Object` & `Any`
@@ -71,142 +73,27 @@ func (a *Any) GetUInt32() *BigInt { return &BigInt{new(big.Int).SetUint64(uint64
 func (a *Any) GetUInt64() *BigInt { return &BigInt{new(big.Int).SetUint64(*a.Value.(*uint64))} }
 func (a *Any) GetBigInt() *BigInt { return a.Value.(*BigInt) }
 
+// MARK - AnyArray
+
 type AnyArray struct {
-	Values []any
+	inter.AnyArray[*Any]
 }
 
 func NewAnyArray() *AnyArray {
-	return &AnyArray{Values: make([]any, 0)}
+	return &AnyArray{[]*Any{}}
 }
 
-// `AnyArray` only support Marshal
-func (a AnyArray) MarshalJSON() ([]byte, error) {
-	return json.Marshal(a.Values)
-}
-
-func (a *AnyArray) JsonString() (*OptionalString, error) {
-	return JsonString(a)
-}
-
-func (a *AnyArray) Count() int {
-	return len(a.Values)
-}
-
-func (a *AnyArray) Append(any *Any) {
-	a.Values = append(a.Values, any.Value)
-}
-
-func (a *AnyArray) Remove(index int) {
-	a.Values = append(a.Values[:index], a.Values[index+1:]...)
-}
-
-func (a *AnyArray) SetValue(value *Any, index int) {
-	a.Values[index] = value.Value
-}
-
-func (a *AnyArray) Contains(any *Any) bool {
-	return a.IndexOf(any) != -1
-}
-
-// return -1 if not found
-func (a *AnyArray) IndexOf(any *Any) int {
-	for idx, item := range a.Values {
-		if item == any.Value {
-			return idx
-		}
-	}
-	return -1
-}
-
-func (a *AnyArray) ValueOf(index int) *Any {
-	return &Any{Value: a.Values[index]}
-}
-
-func (a *AnyArray) String() string {
-	data, err := json.Marshal(a.Values)
-	if err != nil {
-		return "[]"
-	}
-	return string(data)
-}
-
-func (a *AnyArray) AsAny() *Any {
-	return &Any{a.Values}
-}
-
-func AsAnyArray(a *Any) *AnyArray {
-	if res, ok := a.Value.([]any); ok {
-		return &AnyArray{res}
-	}
-	return nil
-}
+// MARK - AnyMap
 
 type AnyMap struct {
-	Values map[string]any
+	inter.AnyMap[string, *Any]
 }
 
 func NewAnyMap() *AnyMap {
-	return &AnyMap{Values: make(map[string]any)}
-}
-
-// `AnyMap` only support Marshal
-func (a AnyMap) MarshalJSON() ([]byte, error) {
-	return json.Marshal(a.Values)
-}
-
-func (a *AnyMap) JsonString() (*OptionalString, error) {
-	return JsonString(a)
-}
-
-func (a *AnyMap) ValueOf(key string) *Any {
-	if v, ok := a.Values[key]; ok {
-		return &Any{v}
-	}
-	return nil
-}
-
-func (a *AnyMap) SetValue(value *Any, key string) {
-	a.Values[key] = value.Value
-}
-
-func (a *AnyMap) Remove(key string) *Any {
-	if v, ok := a.Values[key]; ok {
-		delete(a.Values, key)
-		return &Any{v}
-	}
-	return nil
-}
-
-func (a *AnyMap) HasKey(key string) bool {
-	_, ok := a.Values[key]
-	return ok
+	return &AnyMap{map[string]*Any{}}
 }
 
 func (a *AnyMap) Keys() *StringArray {
-	keys := make([]string, len(a.Values))
-	i := 0
-	for k := range a.Values {
-		keys[i] = k
-		i++
-	}
-	return &StringArray{Values: keys}
-}
-
-func (a *AnyMap) String() string {
-	data, err := json.Marshal(a.Values)
-	if err != nil {
-		return "{}"
-	}
-	return string(data)
-}
-
-func (a *AnyMap) AsAny() *Any {
-	return &Any{a.Values}
-}
-
-func AsAnyMap(a *Any) *AnyMap {
-	if res, ok := a.Value.(map[string]any); ok {
-		return &AnyMap{res}
-	}
-	return nil
+	keys := inter.KeysOf(a.AnyMap)
+	return &StringArray{keys}
 }

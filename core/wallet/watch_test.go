@@ -10,7 +10,7 @@ func TestChainType(t *testing.T) {
 	address := "😁"
 
 	chains := ChainTypeOfWatchAddress(address)
-	t.Log(chains.String())
+	t.Log(chains.JsonString())
 	t.Log(chains.Count())
 }
 
@@ -44,8 +44,8 @@ func TestChainTypeOfPrivateKey(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := ChainTypeOfPrivateKey(tt.prikey)
-			t.Log(got.String())
-			require.Equal(t, got.String(), tt.want)
+			t.Log(got.JsonString())
+			require.Equal(t, got.JsonString(), tt.want)
 		})
 	}
 }
@@ -53,5 +53,5 @@ func TestChainTypeOfPrivateKey(t *testing.T) {
 func TestChainTypeOfPrivateKey_btc(t *testing.T) {
 	prikey := "cTkZaPpb1pDdor36V5VY4uu5LE6tgzrjRADvrEXimEqWqvwRbfXY"
 	typeArr := ChainTypeOfPrivateKey(prikey)
-	t.Log(typeArr.Values)
+	t.Log(typeArr)
 }

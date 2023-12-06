@@ -17,7 +17,8 @@ const TestnetRpcUrl = "https://fullnode.testnet.sui.io"
 
 // const TestnetRpcUrl = "https://sui-testnet-wave3.coming.chat"
 
-const MainnetRpcUrl = "https://sui-mainnet.coming.chat"
+// const MainnetRpcUrl = "https://sui-mainnet.coming.chat"
+const MainnetRpcUrl = "https://fullnode.mainnet.sui.io"
 
 func DevnetChain() *Chain {
 	return NewChainWithRpcUrl(DevnetRpcUrl)

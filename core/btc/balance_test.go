@@ -8,7 +8,7 @@ import (
 
 func TestBatchQueryBalance(t *testing.T) {
 	addresses := base.StringArray{
-		Values: []string{
+		AnyArray: []string{
 			"123", "456", // invalid address
 			"15MdAHnkxt9TMC2Rj595hsg8Hnv693pPBB", "bc1qa5wkzvf775vxddzaaru2hacd3mj0ehsh3g4anx",
 		},

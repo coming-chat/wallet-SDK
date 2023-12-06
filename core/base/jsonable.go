@@ -8,9 +8,6 @@ type Jsonable interface {
 	// You need to implement the following methods if your class name is Xxx
 	// func NewXxxWithJsonString(str string) (*Xxx, error)
 
-	// Maybe you can also implement this method
-	// func NewXxxArrayWithJsonString(str string) (*AnyArray, error)
-
 	// ====== template
 	// func (j *Xxx) JsonString() (*base.OptionalString, error) {
 	// 	return base.JsonString(j)
@@ -20,18 +17,6 @@ type Jsonable interface {
 	// 	err := base.FromJsonString(str, &o)
 	// 	return &o, err
 	// }
-	//	func NewXxxArrayWithJsonString(str string) (*base.AnyArray, error) {
-	//		var o []*Xxx
-	//		err := base.FromJsonString(str, &o)
-	//		if err != nil {
-	//			return nil, err
-	//		}
-	//		arr := make([]any, len(o))
-	//		for i, v := range o {
-	//			arr[i] = v
-	//		}
-	//		return &base.AnyArray{Values: arr}, err
-	//	}
 }
 
 func JsonString(o interface{}) (*OptionalString, error) {

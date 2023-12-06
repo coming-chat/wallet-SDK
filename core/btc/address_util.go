@@ -86,7 +86,7 @@ func IsValidPrivateKey(prikey string) bool {
 	if strings.HasPrefix(prikey, "0x") || strings.HasPrefix(prikey, "0X") {
 		prikey = prikey[2:] // remove 0x prefix
 	}
-	valid, length := inter.IsValidHexString(prikey)
+	valid, length := inter.IsHexString(prikey)
 	if valid && length == 64 {
 		return true
 	}

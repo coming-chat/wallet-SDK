@@ -15,7 +15,7 @@ func TestBuildTransferTransaction(t *testing.T) {
 	require.Nil(t, err)
 
 	idList := inscriptionIds(t, chain, sender, "txtx", 2)
-	idArray := base.StringArray{Values: idList}
+	idArray := base.StringArray{AnyArray: idList}
 
 	txn, err := chain.BuildBrc20TransferTransaction(sender, sender, &idArray, 1, "")
 	require.Nil(t, err)
@@ -35,7 +35,7 @@ func TestBrc20TransferTransaction_SignAndSend(t *testing.T) {
 	require.Nil(t, err)
 
 	idList := inscriptionIds(t, chain, user.Value, "txtx", 2)
-	idArray := base.StringArray{Values: idList}
+	idArray := base.StringArray{AnyArray: idList}
 
 	txn, err := chain.BuildBrc20TransferTransaction(user.Value, user.Value, &idArray, 2, "")
 	require.Nil(t, err)

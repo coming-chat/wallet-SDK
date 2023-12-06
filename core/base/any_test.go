@@ -44,13 +44,13 @@ func TestAnyArray(t *testing.T) {
 
 	a2 := &Any{int(123)}
 	arr.Append(a2)
-	require.Equal(t, arr.ValueOf(0), a1)
-	require.Equal(t, arr.ValueOf(1), a2)
+	require.Equal(t, arr.ValueAt(0), a1)
+	require.Equal(t, arr.ValueAt(1), a2)
 
 	a3 := &Any{"abc"}
 	arr.SetValue(a3, 1)
-	require.Equal(t, arr.ValueOf(1), a3)
-	require.Equal(t, arr.String(), `[true,"abc"]`)
+	require.Equal(t, arr.ValueAt(1), a3)
+	require.Equal(t, arr.JsonString(), `[true,"abc"]`)
 	require.Equal(t, arr.Count(), 2)
 
 	a4 := &Any{uint16(456)}
@@ -58,38 +58,38 @@ func TestAnyArray(t *testing.T) {
 	require.Equal(t, arr.Count(), 3)
 	arr.Remove(0)
 	require.Equal(t, arr.Count(), 2)
-	require.Equal(t, arr.String(), `["abc",456]`)
+	require.Equal(t, arr.JsonString(), `["abc",456]`)
 
 	ap := &AnyPerson{Name: "GGG", Age: 22}
 	arr.Append(ap.AsAny())
-	t.Log(arr.String())
-	require.NotNil(t, AsAnyPerson(arr.ValueOf(2)))
-	require.Nil(t, AsAnyPerson(arr.ValueOf(0)))
+	t.Log(arr.JsonString())
+	require.NotNil(t, AsAnyPerson(arr.ValueAt(2)))
+	require.Nil(t, AsAnyPerson(arr.ValueAt(0)))
 }
 
 func TestAnyMap(t *testing.T) {
 	mp := NewAnyMap()
 
-	require.Equal(t, mp.String(), "{}")
+	require.Equal(t, mp.JsonString(), "{}")
 
 	a1 := &Any{true}
 	mp.SetValue(a1, "bbb")
 	require.Equal(t, mp.Keys().Count(), 1)
-	require.Equal(t, mp.Keys().String(), `["bbb"]`)
+	require.Equal(t, mp.Keys().JsonString(), `["bbb"]`)
 	require.Equal(t, mp.ValueOf("bbb"), a1)
 
 	a2 := &Any{"abcd"}
 	mp.SetValue(a2, "alpha")
-	t.Log(mp.String())
-	require.Equal(t, mp.HasKey("alpha"), true)
-	require.Equal(t, mp.HasKey("beta"), false)
+	t.Log(mp.JsonString())
+	require.Equal(t, mp.Contains("alpha"), true)
+	require.Equal(t, mp.Contains("beta"), false)
 
 	require.Nil(t, mp.Remove("notkey"))
 	require.Equal(t, mp.Remove("bbb"), a1)
 
 	ap := &AnyPerson{Name: "GGG"}
 	mp.SetValue(ap.AsAny(), "person")
-	t.Log(mp.String())
+	t.Log(mp.JsonString())
 	p := AsAnyPerson(mp.ValueOf("person"))
 	require.Equal(t, p.Name, "GGG")
 }

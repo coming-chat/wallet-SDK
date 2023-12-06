@@ -13,6 +13,7 @@ import (
 	"github.com/coming-chat/go-sui/v2/sui_types"
 	"github.com/coming-chat/go-sui/v2/types"
 	"github.com/coming-chat/wallet-SDK/core/base"
+	"github.com/coming-chat/wallet-SDK/core/base/inter"
 	"github.com/shopspring/decimal"
 )
 
@@ -25,7 +26,7 @@ type ValidatorState struct {
 	// The current epoch in Sui. An epoch takes approximately 24 hours and runs in checkpoints.
 	Epoch int64 `json:"epoch"`
 	// Array of `Validator` elements
-	Validators *base.AnyArray `json:"validators"`
+	Validators *ValidatorArray `json:"validators"`
 
 	// The amount of all tokens staked in the Sui Network.
 	TotalStaked string `json:"totalStaked"`
@@ -80,6 +81,10 @@ type Validator struct {
 	PoolShare float64 `json:"poolShare"`
 }
 
+type ValidatorArray struct {
+	inter.AnyArray[*Validator]
+}
+
 func (v *Validator) isSpecified() bool {
 	if v == nil {
 		return false
@@ -103,19 +108,6 @@ func NewValidatorWithJsonString(str string) (*Validator, error) {
 	return &o, err
 }
 
-func (o *Validator) AsAny() *base.Any {
-	return &base.Any{Value: o}
-}
-func AsValidator(a *base.Any) *Validator {
-	if r, ok := a.Value.(*Validator); ok {
-		return r
-	}
-	if r, ok := a.Value.(Validator); ok {
-		return &r
-	}
-	return nil
-}
-
 type DelegationStatus = base.SDKEnumInt
 
 const (
@@ -133,6 +125,10 @@ type DelegatedStake struct {
 	DelegationId string           `json:"delegationId"`
 	EarnedAmount string           `json:"earnedAmount"`
 	Validator    *Validator       `json:"validator"`
+}
+
+type DelegatedStakeArray struct {
+	inter.AnyArray[*DelegatedStake]
 }
 
 // @return if time > 0 indicates how long it will take to get the reward;
@@ -164,27 +160,13 @@ func NewDelegatedStakeWithJsonString(str string) (*DelegatedStake, error) {
 	return &o, err
 }
 
-func NewDelegatedStakeArrayWithJsonString(str string) (*base.AnyArray, error) {
-	var o []*DelegatedStake
+func NewDelegatedStakeArrayWithJsonString(str string) (*DelegatedStakeArray, error) {
+	var o DelegatedStakeArray
 	err := base.FromJsonString(str, &o)
-	arr := make([]any, len(o))
-	for i, v := range o {
-		arr[i] = v
+	if err != nil {
+		return nil, err
 	}
-	return &base.AnyArray{Values: arr}, err
-}
-
-func (o *DelegatedStake) AsAny() *base.Any {
-	return &base.Any{Value: o}
-}
-func AsDelegatedStake(a *base.Any) *DelegatedStake {
-	if r, ok := a.Value.(*DelegatedStake); ok {
-		return r
-	}
-	if r, ok := a.Value.(DelegatedStake); ok {
-		return &r
-	}
-	return nil
+	return &o, nil
 }
 
 func (c *Chain) GetValidatorState() (s *ValidatorState, err error) {
@@ -203,20 +185,20 @@ func (c *Chain) GetValidatorState() (s *ValidatorState, err error) {
 	apys := c.getValidatorsApy(true)
 
 	totalRewards := decimal.Zero
-	var validators = &base.AnyArray{}
+	var validators = []*Validator{}
 	for _, v := range state.ActiveValidators {
 		validator := mapRawValidator(&v, apys)
 		if validator.isSpecified() {
-			validators.Values = append([]any{validator}, validators.Values...)
+			validators = append([]*Validator{validator}, validators...)
 		} else {
-			validators.Values = append(validators.Values, validator)
+			validators = append(validators, validator)
 		}
 		totalRewards.Add(v.RewardsPool.Decimal())
 	}
 	totalStake := state.TotalStake
 	res := &ValidatorState{
 		Epoch:      state.Epoch.Int64(),
-		Validators: validators,
+		Validators: &ValidatorArray{validators},
 
 		TotalStaked:           strconv.FormatUint(totalStake.Uint64(), 10),
 		TotalRewards:          totalRewards.String(),
@@ -276,7 +258,7 @@ func (c *Chain) getValidatorsApy(useCache bool) map[string]float64 {
 }
 
 // @return Array of `DelegatedStake` elements
-func (c *Chain) GetDelegatedStakes(owner string) (arr *base.AnyArray, err error) {
+func (c *Chain) GetDelegatedStakes(owner string) (arr *DelegatedStakeArray, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
 
 	addr, err := sui_types.NewAddressFromHex(owner)
@@ -296,24 +278,24 @@ func (c *Chain) GetDelegatedStakes(owner string) (arr *base.AnyArray, err error)
 	}
 	apys := c.getValidatorsApy(true)
 
-	var stakes = &base.AnyArray{}
+	var stakes = []*DelegatedStake{}
 	for _, s := range list {
 		stakeArray := mapRawStake(&s, apys)
 		for _, stake := range stakeArray {
-			stakes.Values = append(stakes.Values, stake)
+			stakes = append(stakes, stake)
 		}
 	}
 
 	cachedDelegatedStakesMap.Store(owner, stakes)
-	return stakes, nil
+	return &DelegatedStakeArray{stakes}, nil
 }
 
 // @useCache If true, when there is cached data, the result will be returned directly without requesting data on the chain.
 func (c *Chain) TotalStakedSuiAtValidator(validator, owner string, useCache bool) (sui *base.OptionalString, err error) {
-	var stakes *base.AnyArray
+	var stakes *DelegatedStakeArray
 	if useCache {
 		if cachedStakes, ok := cachedDelegatedStakesMap.Load(owner); ok {
-			if v, ok := cachedStakes.(*base.AnyArray); ok {
+			if v, ok := cachedStakes.(*DelegatedStakeArray); ok {
 				stakes = v
 			}
 		}
@@ -326,29 +308,25 @@ func (c *Chain) TotalStakedSuiAtValidator(validator, owner string, useCache bool
 	}
 
 	total := big.NewInt(0)
-	for _, val := range stakes.Values {
-		if stake, ok := val.(*DelegatedStake); ok {
-			if principalInt, ok := big.NewInt(0).SetString(stake.Principal, 10); ok {
-				total = total.Add(total, principalInt)
-			}
+	for _, stake := range stakes.AnyArray {
+		if principalInt, ok := big.NewInt(0).SetString(stake.Principal, 10); ok {
+			total = total.Add(total, principalInt)
 		}
 	}
 	return &base.OptionalString{Value: total.String()}, nil
 }
 
-func AverageApyOfDelegatedStakes(stakes *base.AnyArray) float64 {
+func AverageApyOfDelegatedStakes(stakes *DelegatedStakeArray) float64 {
 	if stakes == nil {
 		return 0
 	}
 	totalApy := float64(0)
 	added := map[string]bool{}
-	for _, val := range stakes.Values {
-		if stake, ok := val.(*DelegatedStake); ok {
-			if added[stake.ValidatorAddress] != true && stake.Validator != nil {
-				totalApy = totalApy + stake.Validator.APY
-				added[stake.ValidatorAddress] = true
-				continue
-			}
+	for _, stake := range stakes.AnyArray {
+		if added[stake.ValidatorAddress] != true && stake.Validator != nil {
+			totalApy = totalApy + stake.Validator.APY
+			added[stake.ValidatorAddress] = true
+			continue
 		}
 	}
 

@@ -1,9 +1,12 @@
 package inter
 
-import "strings"
+import (
+	"strings"
+	"unicode"
+)
 
-// IsValidHexString
-func IsValidHexString(str string) (valid bool, length int) {
+// IsHexString
+func IsHexString(str string) (valid bool, length int) {
 	if strings.HasPrefix(str, "0x") || strings.HasPrefix(str, "0X") {
 		str = str[2:] // remove 0x prefix
 	}
@@ -14,4 +17,13 @@ func IsValidHexString(str string) (valid bool, length int) {
 		}
 	}
 	return true, len(str)
+}
+
+func IsASCII(str string) bool {
+	for _, c := range str {
+		if c > unicode.MaxASCII {
+			return false
+		}
+	}
+	return true
 }

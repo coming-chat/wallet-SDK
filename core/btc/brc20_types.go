@@ -45,19 +45,6 @@ func NewBrc20TokenBalanceWithJsonString(str string) (*Brc20TokenBalance, error) 
 	return &o, err
 }
 
-func (a *Brc20TokenBalance) AsAny() *base.Any {
-	return &base.Any{Value: a}
-}
-func AsBrc20TokenBalance(a *base.Any) *Brc20TokenBalance {
-	if r, ok := a.Value.(*Brc20TokenBalance); ok {
-		return r
-	}
-	if r, ok := a.Value.(Brc20TokenBalance); ok {
-		return &r
-	}
-	return nil
-}
-
 type Brc20TokenBalancePage struct {
 	*inter.SdkPageable[*Brc20TokenBalance]
 }
@@ -101,19 +88,6 @@ func NewBrc20InscriptionWithJsonString(str string) (*Brc20Inscription, error) {
 	var o Brc20Inscription
 	err := base.FromJsonString(str, &o)
 	return &o, err
-}
-
-func (a *Brc20Inscription) AsAny() *base.Any {
-	return &base.Any{Value: a}
-}
-func AsBrc20Inscription(a *base.Any) *Brc20Inscription {
-	if r, ok := a.Value.(*Brc20Inscription); ok {
-		return r
-	}
-	if r, ok := a.Value.(Brc20Inscription); ok {
-		return &r
-	}
-	return nil
 }
 
 func (bi *Brc20Inscription) AsNFT() *base.NFT {
@@ -181,19 +155,6 @@ func NewBrc20TransferableInscriptionWithJsonString(str string) (*Brc20Transferab
 	var o Brc20TransferableInscription
 	err := base.FromJsonString(str, &o)
 	return &o, err
-}
-
-func (a *Brc20TransferableInscription) AsAny() *base.Any {
-	return &base.Any{Value: a}
-}
-func AsBrc20TransferableInscription(a *base.Any) *Brc20TransferableInscription {
-	if r, ok := a.Value.(*Brc20TransferableInscription); ok {
-		return r
-	}
-	if r, ok := a.Value.(Brc20TransferableInscription); ok {
-		return &r
-	}
-	return nil
 }
 
 type Brc20TransferableInscriptionPage struct {

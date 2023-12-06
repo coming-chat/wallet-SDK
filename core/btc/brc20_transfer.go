@@ -48,7 +48,7 @@ func (c *Chain) BuildBrc20TransferTransaction(
 	if inscriptionIds == nil || inscriptionIds.Count() <= 0 {
 		return nil, errors.New("no inscriptions")
 	}
-	insIds := inscriptionIds.Values
+	insIds := inscriptionIds.AnyArray
 
 	host, err := comingOrdHost(c.Chainnet)
 	if err != nil {

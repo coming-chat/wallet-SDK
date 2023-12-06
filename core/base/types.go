@@ -1,8 +1,9 @@
 package base
 
 import (
-	"encoding/json"
 	"sync"
+
+	"github.com/coming-chat/wallet-SDK/core/base/inter"
 )
 
 type SDKEnumInt = int
@@ -48,48 +49,36 @@ func (l *safeMap) writeMap(key interface{}, value interface{}) {
 	l.Unlock()
 }
 
+// MARK - StringArray
+
 type StringArray struct {
-	Values []string
+	inter.AnyArray[string]
 }
 
-func (a *StringArray) Count() int {
-	return len(a.Values)
+func NewStringArray() *StringArray {
+	return &StringArray{[]string{}}
 }
 
-func (a *StringArray) Append(value string) {
-	a.Values = append(a.Values, value)
+func NewStringArrayWithItem(elem string) *StringArray {
+	return &StringArray{[]string{elem}}
 }
 
-func (a *StringArray) Remove(index int) {
-	a.Values = append(a.Values[:index], a.Values[index+1:]...)
+func (a StringArray) Contains(value string) bool {
+	idx := inter.FirstIndexOf(a.AnyArray, func(elem string) bool { return elem == value })
+	return idx != -1
 }
 
-func (a *StringArray) SetValue(value string, index int) {
-	a.Values[index] = value
+// MARK - StringMap
+
+type StringMap struct {
+	inter.AnyMap[string, string]
 }
 
-func (a *StringArray) Contains(value string) bool {
-	return a.IndexOf(value) != -1
+func NewStringMap() *StringMap {
+	return &StringMap{map[string]string{}}
 }
 
-// return -1 if not found
-func (a *StringArray) IndexOf(value string) int {
-	for idx, item := range a.Values {
-		if item == value {
-			return idx
-		}
-	}
-	return -1
-}
-
-func (a *StringArray) ValueOf(index int) string {
-	return a.Values[index]
-}
-
-func (a *StringArray) String() string {
-	data, err := json.Marshal(a.Values)
-	if err != nil {
-		return "[]"
-	}
-	return string(data)
+func (m *StringMap) Keys() *StringArray {
+	keys := inter.KeysOf(m.AnyMap)
+	return &StringArray{keys}
 }
