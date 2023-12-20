@@ -197,10 +197,13 @@ func DecodeByTypeID(metadata *types.Metadata, arg *ArgDecoder, typeId types.Si1L
 		}
 		return values, nil
 	case si1Type.Def.IsTuple:
-		var filed types.Si1TypeDefTuple
-		err := arg.Decode(&filed)
-		if err != nil {
-			return nil, err
+		var filed []any
+		for _, tupleTypeId := range si1Type.Def.Tuple {
+			singleData, err := DecodeByTypeID(metadata, arg, tupleTypeId)
+			if err != nil {
+				return nil, err
+			}
+			filed = append(filed, singleData)
 		}
 		return filed, nil
 	case si1Type.Def.IsHistoricMetaCompat:
