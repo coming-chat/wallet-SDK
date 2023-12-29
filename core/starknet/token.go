@@ -6,11 +6,11 @@ import (
 	"math/big"
 
 	"github.com/NethermindEth/juno/core/felt"
-	"github.com/NethermindEth/starknet.go/rpc"
-	"github.com/NethermindEth/starknet.go/utils"
 	hexTypes "github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/dontpanicdao/caigo/types"
+	"github.com/xiang-xx/starknet.go/rpc"
+	"github.com/xiang-xx/starknet.go/utils"
 )
 
 const (

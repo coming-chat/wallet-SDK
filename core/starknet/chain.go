@@ -11,15 +11,15 @@ import (
 	"time"
 
 	"github.com/NethermindEth/juno/core/felt"
-	"github.com/NethermindEth/starknet.go/account"
-	"github.com/NethermindEth/starknet.go/rpc"
-	"github.com/NethermindEth/starknet.go/utils"
 	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/coming-chat/wallet-SDK/pkg/httpUtil"
 	"github.com/dontpanicdao/caigo"
 	"github.com/dontpanicdao/caigo/gateway"
 	"github.com/dontpanicdao/caigo/types"
 	ethrpc "github.com/ethereum/go-ethereum/rpc"
+	"github.com/xiang-xx/starknet.go/account"
+	"github.com/xiang-xx/starknet.go/rpc"
+	"github.com/xiang-xx/starknet.go/utils"
 )
 
 const (
@@ -63,7 +63,7 @@ func NewChainWithRpc(baseRpc string, network Network) (*Chain, error) {
 		return nil, err
 	}
 	provider := rpc.NewProvider(cli)
-	rpc, err := account.NewAccount(provider, nil, "", nil)
+	rpc, err := account.NewAccount(provider, nil, "", nil, 1)
 	if err != nil {
 		return nil, err
 	}

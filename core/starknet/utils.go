@@ -2,7 +2,7 @@ package starknet
 
 import (
 	"github.com/NethermindEth/juno/core/felt"
-	"github.com/NethermindEth/starknet.go/rpc"
+	"github.com/xiang-xx/starknet.go/rpc"
 )
 
 var latestBlockId = rpc.BlockID{Tag: "latest"}

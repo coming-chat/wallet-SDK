@@ -1,9 +1,9 @@
 package starknet
 
 import (
-	"github.com/NethermindEth/starknet.go/rpc"
 	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/dontpanicdao/caigo/types"
+	"github.com/xiang-xx/starknet.go/rpc"
 )
 
 type Transaction struct {

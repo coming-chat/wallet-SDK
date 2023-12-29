@@ -6,8 +6,6 @@ import (
 	"math/big"
 
 	"github.com/NethermindEth/juno/core/felt"
-	"github.com/NethermindEth/starknet.go/curve"
-	"github.com/NethermindEth/starknet.go/utils"
 	"github.com/btcsuite/btcd/btcutil/hdkeychain"
 	"github.com/btcsuite/btcd/chaincfg"
 	hexTypes "github.com/centrifuge/go-substrate-rpc-client/v4/types"
@@ -16,6 +14,8 @@ import (
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/tyler-smith/go-bip39"
+	"github.com/xiang-xx/starknet.go/curve"
+	"github.com/xiang-xx/starknet.go/utils"
 )
 
 type Account struct {

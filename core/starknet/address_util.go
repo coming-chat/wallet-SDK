@@ -4,9 +4,9 @@ import (
 	"regexp"
 
 	"github.com/NethermindEth/juno/core/felt"
-	"github.com/NethermindEth/starknet.go/account"
-	"github.com/NethermindEth/starknet.go/utils"
 	"github.com/coming-chat/wallet-SDK/core/base"
+	"github.com/xiang-xx/starknet.go/account"
+	"github.com/xiang-xx/starknet.go/utils"
 )
 
 type Util struct {

@@ -5,7 +5,6 @@ go 1.21
 require (
 	github.com/ChainSafe/go-schnorrkel v0.0.0-20210318173838-ccb5cd955283
 	github.com/NethermindEth/juno v0.3.1
-	github.com/NethermindEth/starknet.go v0.6.0
 	github.com/blocto/solana-go-sdk v1.26.0
 	github.com/btcsuite/btcd v0.23.4
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2
@@ -33,6 +32,7 @@ require (
 	github.com/stretchr/testify v1.8.2
 	github.com/tyler-smith/go-bip39 v1.1.0
 	github.com/vedhavyas/go-subkey v1.0.2
+	github.com/xiang-xx/starknet.go v0.0.0-20231228033833-af9632cdf6d6
 	golang.org/x/crypto v0.15.0
 )
 
