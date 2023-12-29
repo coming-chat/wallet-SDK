@@ -204,3 +204,10 @@ func ParseNumberToDecimal(num string) string {
 	}
 	return "0"
 }
+
+func BigIntMultiply(b *big.Int, ratio float64) *big.Int {
+	f1 := new(big.Float).SetInt(b)
+	product := f1.Mul(f1, big.NewFloat(ratio))
+	res, _ := product.Int(big.NewInt(0))
+	return res
+}

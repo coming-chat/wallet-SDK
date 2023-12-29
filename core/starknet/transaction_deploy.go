@@ -31,7 +31,6 @@ func (txn *DeployAccountTransaction) SignedTransactionWithAccount(account base.A
 	txn.DeployAccountTxn.Signature = []*felt.Felt{s1, s2}
 
 	return &SignedTransaction{
-		Account:   starknetAccount,
 		depolyTxn: txn.DeployAccountTxn,
 	}, nil
 }

@@ -31,7 +31,7 @@ const (
 )
 
 var (
-	MaxFee = caigo.MAX_FEE.String()
+	InvokeMaxFee = 2e13 // 0.00002 ETH
 
 	erc20TransferSelectorHash = types.BigToHex(types.GetSelectorFromName("transfer"))
 )
@@ -63,7 +63,7 @@ func NewChainWithRpc(baseRpc string, network Network) (*Chain, error) {
 		return nil, err
 	}
 	provider := rpc.NewProvider(cli)
-	rpc, err := account.NewAccount(provider, nil, "", nil, 1)
+	rpc, err := account.NewAccount(provider, nil, "", nil, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -157,12 +157,8 @@ func (c *Chain) SendSignedTransaction(signedTxn base.SignedTransaction) (hash *b
 		}
 		return &base.OptionalString{Value: resp.TransactionHash.String()}, nil
 	}
-	if txn.invokeTxn != nil && txn.Account != nil {
-		caigoAccount, err := caigoAccount(c, txn.Account)
-		if err != nil {
-			return nil, err
-		}
-		resp, err := caigoAccount.Execute(context.Background(), txn.invokeTxn.calls, txn.invokeTxn.details)
+	if txn.invokeTxn != nil {
+		resp, err := c.rpc.AddInvokeTransaction(context.Background(), txn.invokeTxn)
 		if err != nil {
 			needDeploy := txn.NeedAutoDeploy && IsNotDeployedError(err)
 			if !needDeploy {
@@ -182,17 +178,14 @@ func (c *Chain) SendSignedTransaction(signedTxn base.SignedTransaction) (hash *b
 			if err != nil {
 				return nil, err
 			}
-			// now resend the original txn
-			txn.invokeTxn.details = types.ExecuteDetails{
-				Nonce:  big.NewInt(1),
-				MaxFee: big.NewInt(0).SetUint64(1e14 + random(1e11)),
-			}
-			resp, err = caigoAccount.Execute(context.Background(), txn.invokeTxn.calls, txn.invokeTxn.details)
+			// now resend the original txn, the nonce is 1 now
+			txn.invokeTxn.Nonce = new(felt.Felt).SetUint64(1)
+			resp, err = c.rpc.AddInvokeTransaction(context.Background(), txn.invokeTxn)
 			if err != nil {
 				return nil, err
 			}
 		}
-		return &base.OptionalString{Value: resp.TransactionHash}, nil
+		return &base.OptionalString{Value: resp.TransactionHash.String()}, nil
 	}
 	return nil, base.ErrMissingTransaction
 }
@@ -358,23 +351,33 @@ func (c *Chain) EstimateTransactionFeeUsePublicKey(transaction base.Transaction,
 	return nil, base.ErrUnsupportedFunction
 }
 
-func (c *Chain) EstimateTransactionFeeUseAccount(transaction base.Transaction, acc *Account) (fee *base.OptionalString, err_ error) {
-	defer base.CatchPanicAndMapToBasicError(&err_)
+func (c *Chain) EstimateTransactionFeeUseAccount(transaction base.Transaction, acc *Account) (fee *base.OptionalString, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
 
 	if txn, ok := transaction.(*DeployAccountTransaction); ok {
-		return &base.OptionalString{Value: txn.MaxFee.String()}, nil
+		return base.NewOptionalString(txn.MaxFee.Text(10)), nil
 	}
 	if txn, ok := transaction.(*Transaction); ok {
-		caigoAcc, err := caigoAccount(c, acc)
+		err = txn.Sign(acc)
 		if err != nil {
 			return nil, err
 		}
-		res, err := caigoAcc.EstimateFee(context.Background(), txn.calls, txn.details)
-		if err != nil {
-			return nil, err
+		defer func() {
+			txn.txnV1.Signature = nil // clean when finished
+		}()
+
+		resp, err_ := c.rpc.SimulateTransactions(context.Background(), latestBlockId,
+			[]rpc.Transaction{txn.txnV1}, []rpc.SimulationFlag{rpc.SKIP_FEE_CHARGE})
+		if err_ != nil {
+			return nil, err_
 		}
-		b := hexToBigInt(string(res.OverallFee))
-		return &base.OptionalString{Value: b.String()}, nil
+		if len(resp) <= 0 {
+			return nil, errors.New("estimate fee failed")
+		}
+		fee := utils.FeltToBigInt(resp[0].OverallFee)
+		result := base.BigIntMultiply(fee, 1.2)
+		txn.txnV1.MaxFee = utils.BigIntToFelt(result) // update maxfee
+		return base.NewOptionalString(result.String()), nil
 	}
 	return nil, base.ErrInvalidTransactionType
 }

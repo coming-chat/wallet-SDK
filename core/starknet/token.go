@@ -6,9 +6,7 @@ import (
 	"math/big"
 
 	"github.com/NethermindEth/juno/core/felt"
-	hexTypes "github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/coming-chat/wallet-SDK/core/base"
-	"github.com/dontpanicdao/caigo/types"
 	"github.com/xiang-xx/starknet.go/rpc"
 	"github.com/xiang-xx/starknet.go/utils"
 )
@@ -103,31 +101,57 @@ func (t *Token) BalanceOfAccount(account base.Account) (*base.Balance, error) {
 }
 
 func (t *Token) BuildTransfer(sender, receiver, amount string) (txn base.Transaction, err error) {
-	if _, err = hexTypes.HexDecodeString(sender); err != nil {
+	defer base.CatchPanicAndMapToBasicError(&err)
+
+	senderFelt, err := utils.HexToFelt(sender)
+	if err != nil {
 		return nil, base.ErrInvalidAccountAddress
 	}
-	if _, err = hexTypes.HexDecodeString(receiver); err != nil {
+	receiverFelt, err := utils.HexToFelt(receiver)
+	if err != nil {
 		return nil, base.ErrInvalidAccountAddress
 	}
-	if _, ok := big.NewInt(0).SetString(amount, 10); !ok {
+	amountInt, ok := big.NewInt(0).SetString(amount, 10)
+	if !ok {
 		return nil, base.ErrInvalidAmount
 	}
-	// Transaction that will be executed by the account contract.
-	tx := []types.FunctionCall{
-		{
-			ContractAddress:    types.HexToHash(t.TokenAddress),
-			EntryPointSelector: "transfer",
-			Calldata: []string{
-				// sender,
-				receiver,
-				amount, // amount to transfer
-				"0",    // UInt256 additional parameter
-			},
+	transferCall := rpc.FunctionCall{
+		ContractAddress:    t.felt,
+		EntryPointSelector: utils.GetSelectorFromNameFelt("transfer"),
+		Calldata: []*felt.Felt{
+			receiverFelt,
+			utils.BigIntToFelt(amountInt),
+			&felt.Zero,
 		},
 	}
+
+	cli := t.chain.rpc
+	cli.CairoVersion = 2
+	callData, err := cli.FmtCalldata([]rpc.FunctionCall{transferCall})
+	if err != nil {
+		return
+	}
+	nonce, err := cli.Nonce(context.Background(), latestBlockId, senderFelt)
+	if err != nil {
+		return
+	}
+	invokeTx := rpc.InvokeTxnV1{
+		MaxFee:        new(felt.Felt).SetUint64(uint64(InvokeMaxFee)),
+		Version:       rpc.TransactionV1,
+		Type:          rpc.TransactionType_Invoke,
+		Nonce:         nonce,
+		SenderAddress: senderFelt,
+
+		Calldata: callData,
+	}
+	txHash, err := cli.TransactionHashInvoke(invokeTx)
+	if err != nil {
+		return
+	}
+
 	return &Transaction{
-		calls:   tx,
-		details: types.ExecuteDetails{},
+		txnV1:   invokeTx,
+		txnHash: txHash,
 	}, nil
 }
 
