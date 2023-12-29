@@ -5,6 +5,9 @@ import (
 	"errors"
 	"math/big"
 
+	"github.com/NethermindEth/juno/core/felt"
+	"github.com/NethermindEth/starknet.go/curve"
+	"github.com/NethermindEth/starknet.go/utils"
 	"github.com/btcsuite/btcd/btcutil/hdkeychain"
 	"github.com/btcsuite/btcd/chaincfg"
 	hexTypes "github.com/centrifuge/go-substrate-rpc-client/v4/types"
@@ -151,6 +154,7 @@ func AsStarknetAccount(account base.Account) *Account {
 	}
 }
 
-func (a *Account) SignHash(msgHash *big.Int) (*big.Int, *big.Int, error) {
-	return caigo.Curve.Sign(msgHash, a.privateKey)
+func (a *Account) SignHash(msgHash *felt.Felt) (*felt.Felt, *felt.Felt, error) {
+	privateKeyFelt := utils.BigIntToFelt(a.privateKey)
+	return curve.Curve.SignFelt(msgHash, privateKeyFelt)
 }

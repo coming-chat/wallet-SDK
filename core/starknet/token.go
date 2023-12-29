@@ -5,6 +5,9 @@ import (
 	"errors"
 	"math/big"
 
+	"github.com/NethermindEth/juno/core/felt"
+	"github.com/NethermindEth/starknet.go/rpc"
+	"github.com/NethermindEth/starknet.go/utils"
 	hexTypes "github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/dontpanicdao/caigo/types"
@@ -17,16 +20,18 @@ const (
 type Token struct {
 	chain        *Chain
 	TokenAddress string
+	felt         *felt.Felt
 }
 
 func NewToken(chain *Chain, tokenAddress string) (*Token, error) {
-	_, err := hexTypes.HexDecodeString(tokenAddress)
+	felt, err := utils.HexToFelt(tokenAddress)
 	if err != nil {
 		return nil, err
 	}
 	return &Token{
 		chain:        chain,
 		TokenAddress: tokenAddress,
+		felt:         felt,
 	}, nil
 }
 
@@ -45,23 +50,23 @@ func (t *Token) TokenInfo() (info *base.TokenInfo, err error) {
 	}
 	ctx := context.Background()
 
-	nameHex, err := t.callContract(ctx, "name")
+	nameFelt, err := t.callContract(ctx, "name")
 	if err != nil {
 		return
 	}
-	nameBytes, _ := types.HexToBytes(nameHex)
+	nameBytes := utils.FeltToBigInt(nameFelt).Bytes()
 
-	symbolHex, err := t.callContract(ctx, "symbol")
+	symbolFelt, err := t.callContract(ctx, "symbol")
 	if err != nil {
 		return
 	}
-	symbolBytes, _ := types.HexToBytes(symbolHex)
+	symbolBytes := utils.FeltToBigInt(symbolFelt).Bytes()
 
-	decimalHex, err := t.callContract(ctx, "decimals")
+	decimalFelt, err := t.callContract(ctx, "decimals")
 	if err != nil {
 		return
 	}
-	decimal := types.HexToBN(decimalHex).Int64()
+	decimal := utils.FeltToBigInt(decimalFelt).Int64()
 
 	return &base.TokenInfo{
 		Name:    string(nameBytes),
@@ -70,13 +75,13 @@ func (t *Token) TokenInfo() (info *base.TokenInfo, err error) {
 	}, nil
 }
 
-func (t *Token) callContract(ctx context.Context, funcName string) (string, error) {
-	res, err := t.chain.gw.Call(ctx, types.FunctionCall{
-		ContractAddress:    types.HexToHash(t.TokenAddress),
-		EntryPointSelector: funcName,
-	}, "")
+func (t *Token) callContract(ctx context.Context, funcName string) (*felt.Felt, error) {
+	res, err := t.chain.rpc.Call(ctx, rpc.FunctionCall{
+		ContractAddress:    t.felt,
+		EntryPointSelector: utils.GetSelectorFromNameFelt(funcName),
+	}, latestBlockId)
 	if err != nil || len(res) <= 0 {
-		return "", err
+		return nil, err
 	}
 	return res[0], nil
 }

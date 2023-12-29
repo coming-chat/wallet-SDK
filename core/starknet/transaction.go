@@ -1,6 +1,7 @@
 package starknet
 
 import (
+	"github.com/NethermindEth/starknet.go/rpc"
 	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/dontpanicdao/caigo/types"
 )
@@ -17,7 +18,7 @@ type SignedTransaction struct {
 	NeedAutoDeploy bool
 
 	// depoly Txn
-	depolyTxn *DeployAccountTransaction
+	depolyTxn *rpc.DeployAccountTxn
 
 	// invoke Txn
 	invokeTxn *Transaction

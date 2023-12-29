@@ -10,11 +10,16 @@ import (
 	"strings"
 	"time"
 
+	"github.com/NethermindEth/juno/core/felt"
+	"github.com/NethermindEth/starknet.go/account"
+	"github.com/NethermindEth/starknet.go/rpc"
+	"github.com/NethermindEth/starknet.go/utils"
 	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/coming-chat/wallet-SDK/pkg/httpUtil"
 	"github.com/dontpanicdao/caigo"
 	"github.com/dontpanicdao/caigo/gateway"
 	"github.com/dontpanicdao/caigo/types"
+	ethrpc "github.com/ethereum/go-ethereum/rpc"
 )
 
 const (
@@ -35,6 +40,8 @@ type Chain struct {
 	gw      *gateway.Gateway
 	network Network
 	graphql string
+
+	rpc *account.Account
 }
 
 func NewChainWithRpc(baseRpc string, network Network) (*Chain, error) {
@@ -51,10 +58,21 @@ func NewChainWithRpc(baseRpc string, network Network) (*Chain, error) {
 		return nil, errors.New("invalid starknet network")
 	}
 	gw := gateway.NewClient(gateway.WithBaseURL(baseRpc), chainIdOpt)
+	cli, err := ethrpc.DialContext(context.Background(), baseRpc)
+	if err != nil {
+		return nil, err
+	}
+	provider := rpc.NewProvider(cli)
+	rpc, err := account.NewAccount(provider, nil, "", nil)
+	if err != nil {
+		return nil, err
+	}
 	return &Chain{
 		gw:      gw,
 		network: network,
 		graphql: graphql,
+
+		rpc: rpc,
 	}, nil
 }
 
@@ -86,26 +104,30 @@ func (c *Chain) BalanceOfAccount(account base.Account) (*base.Balance, error) {
 func (c *Chain) BalanceOf(ownerAddress, erc20Address string) (b *base.Balance, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
 
-	res, err := c.gw.Call(context.Background(), types.FunctionCall{
-		ContractAddress:    types.HexToHash(erc20Address),
-		EntryPointSelector: "balanceOf",
-		Calldata: []string{
-			types.HexToBN(ownerAddress).String(),
-		},
-	}, "")
+	ownerFelt, err := utils.HexToFelt(ownerAddress)
 	if err != nil {
 		return
 	}
-	low := types.StrToFelt(res[0])
-	hi := types.StrToFelt(res[1])
-	if low == nil || hi == nil {
-		return nil, errors.New("balance response error")
+	erc20Felt, err := utils.HexToFelt(erc20Address)
+	if err != nil {
+		return
+	}
+	tx := rpc.FunctionCall{
+		ContractAddress:    erc20Felt,
+		EntryPointSelector: utils.GetSelectorFromNameFelt("balanceOf"),
+		Calldata:           []*felt.Felt{ownerFelt},
 	}
 
-	balance, err := types.NewUint256(low, hi)
+	resp, err := c.rpc.Call(context.Background(), tx, latestBlockId)
 	if err != nil {
 		return
 	}
+	if len(resp) != 2 {
+		return nil, errors.New("balance response error")
+	}
+	low := utils.FeltToBigInt(resp[0])
+	high := utils.FeltToBigInt(resp[1])
+	balance := new(big.Int).Add(new(big.Int).Lsh(high, 128), low)
 	return &base.Balance{
 		Total:  balance.String(),
 		Usable: balance.String(),
@@ -127,12 +149,13 @@ func (c *Chain) SendSignedTransaction(signedTxn base.SignedTransaction) (hash *b
 	}
 
 	if txn.depolyTxn != nil {
-		request := txn.depolyTxn.CaigoDeployAccountRequest()
-		resp, err := c.gw.DeployAccount(context.Background(), *request)
+		resp, err := c.rpc.AddDeployAccountTransaction(context.Background(), rpc.BroadcastDeployAccountTxn{
+			DeployAccountTxn: *txn.depolyTxn,
+		})
 		if err != nil {
 			return nil, err
 		}
-		return &base.OptionalString{Value: resp.TransactionHash}, nil
+		return &base.OptionalString{Value: resp.TransactionHash.String()}, nil
 	}
 	if txn.invokeTxn != nil && txn.Account != nil {
 		caigoAccount, err := caigoAccount(c, txn.Account)
@@ -362,19 +385,13 @@ func (c *Chain) BuildDeployAccountTransaction(publicKey string, maxFee string) (
 	var feeInt *big.Int
 	var ok bool
 	if maxFee == "" {
-		feeInt = big.NewInt(0).SetUint64(1e15 + random(1e12))
+		feeInt = big.NewInt(0).SetUint64(2e14 + random(1e12)) // 0.000200xx
 	} else {
 		if feeInt, ok = big.NewInt(0).SetString(maxFee, 10); !ok {
 			return nil, base.ErrInvalidAmount
 		}
 	}
-
-	txn, err := newDeployAccountTransaction(publicKey, c.network)
-	if err != nil {
-		return nil, err
-	}
-	txn.MaxFee = feeInt
-	return txn, nil
+	return NewDeployAccountTransaction(publicKey, feeInt, c.rpc)
 }
 
 func (c *Chain) IsContractAddressDeployed(contractAddress string) (b *base.OptionalBool, err error) {

@@ -14,7 +14,11 @@ func TestTokenInfo(t *testing.T) {
 
 	info, err := token.TokenInfo()
 	require.Nil(t, err)
-	t.Log(info)
+	require.Equal(t, *info, base.TokenInfo{
+		Name:    "Ether",
+		Symbol:  "ETH",
+		Decimal: 18,
+	})
 }
 
 func TestTokenBalance_Mainnet(t *testing.T) {
@@ -23,15 +27,18 @@ func TestTokenBalance_Mainnet(t *testing.T) {
 	USDTTokenAddress := "0x068f5c6a61780768455de69077e07e89787839bf8166decfbf92b645209c0fb8"
 	token, err := NewToken(chain, USDTTokenAddress)
 	require.Nil(t, err)
+	info, err := token.TokenInfo()
+	require.Nil(t, err)
+	require.Equal(t, *info, base.TokenInfo{
+		Name:    "Tether USD",
+		Symbol:  "USDT",
+		Decimal: 6,
+	})
 
-	owner := "0x06f163a072ee7e3894d973c6fd05ada06b1669174ba2aecefbb8b578f4e14003"
+	owner := "0x0360fb3a51bd291e5db0892b6249918a5689bc61760adcb350fe39cd725e1d22"
 	balance, err := token.BalanceOfAddress(owner)
 	require.Nil(t, err)
 	t.Log(balance.Total)
-
-	info, err := token.TokenInfo()
-	require.Nil(t, err)
-	t.Log(base.JsonString(info))
 }
 
 func TestTokenBalance_Goerli(t *testing.T) {

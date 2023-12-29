@@ -32,6 +32,27 @@ func M1Account(t *testing.T) *Account {
 	return acc
 }
 
+func TestEncodeAddress(t *testing.T) {
+	{
+		// ArgentX
+		// see https://testnet.starkscan.co/tx/0x04001e02d0397ebd0821f7c6865f0914e293955417a33505f99e0e1ec1182ea3
+		pub := "0x28081ae2bc3668241b1303df98a61e229ee760eb554f9c7fb21cd968a1b74b1"
+		param := deployParamForArgentX(*mustFelt(pub))
+		addr, err := param.ComputeContractAddress()
+		require.Nil(t, err)
+		require.Equal(t, addr.String(), "0x7384b9770dce88ee83a62a8a0ab0fac476e513a9e4b611b80fa08e844ce1f2")
+	}
+	{
+		// Braavos
+		// see https://testnet.starkscan.co/tx/0x2d72531b049bcf72dbaa4730161e082798e10fa849763f12b3788f7c275b682
+		pub := "0x28081ae2bc3668241b1303df98a61e229ee760eb554f9c7fb21cd968a1b74b1"
+		param := deployParamForBraavos(*mustFelt(pub))
+		addr, err := param.ComputeContractAddress()
+		require.Nil(t, err)
+		require.Equal(t, addr.String(), "0x8debaf4740ac184b2e879d4d3fd773f2c7f5d453b795212d4098899a73fc19")
+	}
+}
+
 func TestAccount(t *testing.T) {
 	mnemonic := testcase.M1
 	account, err := NewAccountWithMnemonic(mnemonic)
