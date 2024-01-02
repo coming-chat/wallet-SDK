@@ -376,7 +376,11 @@ func (c *Chain) EstimateTransactionFeeUseAccount(transaction base.Transaction, a
 		}
 		fee := utils.FeltToBigInt(resp[0].OverallFee)
 		result := base.BigIntMultiply(fee, 1.2)
-		txn.txnV1.MaxFee = utils.BigIntToFelt(result) // update maxfee
+		txn.txnV1.MaxFee = utils.BigIntToFelt(result)             // update maxfee
+		txn.txnHash, err = c.rpc.TransactionHashInvoke(txn.txnV1) // update txn hash
+		if err != nil {
+			return nil, err
+		}
 		return base.NewOptionalString(result.String()), nil
 	}
 	return nil, base.ErrInvalidTransactionType

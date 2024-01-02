@@ -10,7 +10,6 @@ import (
 	"github.com/btcsuite/btcd/chaincfg"
 	hexTypes "github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/coming-chat/wallet-SDK/core/base"
-	"github.com/dontpanicdao/caigo"
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/tyler-smith/go-bip39"
@@ -23,7 +22,7 @@ type Account struct {
 }
 
 func grindKey(keySeed []byte) (*big.Int, error) {
-	keyValueLimit := caigo.Curve.N
+	keyValueLimit := curve.Curve.N
 	sha256EcMaxDigest := big.NewInt(0).Exp(big.NewInt(2), big.NewInt(256), nil)
 	maxAllowedVal := big.NewInt(0).Sub(sha256EcMaxDigest, big.NewInt(0).Mod(sha256EcMaxDigest, keyValueLimit))
 
@@ -91,7 +90,7 @@ func AccountWithPrivateKey(privatekey string) (*Account, error) {
 		return nil, base.ErrInvalidPrivateKey
 	}
 
-	_, _, err = caigo.Curve.PrivateToPoint(priKey)
+	_, _, err = curve.Curve.PrivateToPoint(priKey)
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +114,7 @@ func (a *Account) PrivateKeyHex() (string, error) {
 // Is deocde from address
 // @return publicKey data
 func (a *Account) PublicKey() []byte {
-	pub, _, err := caigo.Curve.PrivateToPoint(a.privateKey)
+	pub, _, err := curve.Curve.PrivateToPoint(a.privateKey)
 	if err != nil {
 		return nil
 	}
@@ -125,7 +124,7 @@ func (a *Account) PublicKey() []byte {
 // The ethereum public key is same as address in coming
 // @return publicKey string that will start with 0x.
 func (a *Account) PublicKeyHex() string {
-	pub, _, err := caigo.Curve.PrivateToPoint(a.privateKey)
+	pub, _, err := curve.Curve.PrivateToPoint(a.privateKey)
 	if err != nil {
 		return ""
 	}
