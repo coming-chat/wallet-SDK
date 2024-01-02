@@ -14,6 +14,7 @@ jobs:
       WalletSdkTestM1: ${{ secrets.WALLETSDKTESTM1 }}
       WalletSdkTestM2: ${{ secrets.WALLETSDKTESTM2 }}
       WalletSdkTestMterra: ${{ secrets.WALLETSDKTESTMTERRA }}
+      InfuraKey: ${{ secrets.INFURAKEY }}
     steps:
     - uses: actions/checkout@v3
 
