@@ -141,8 +141,7 @@ func (t *Token) BuildTransfer(sender, receiver, amount string) (txn base.Transac
 		Type:          rpc.TransactionType_Invoke,
 		Nonce:         nonce,
 		SenderAddress: senderFelt,
-
-		Calldata: callData,
+		Calldata:      callData,
 	}
 	txHash, err := cli.TransactionHashInvoke(invokeTx)
 	if err != nil {

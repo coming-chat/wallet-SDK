@@ -12,6 +12,7 @@ var (
 	ErrInvalidChainType       = errors.New("invalid chain type")
 	ErrInvalidAccountType     = errors.New("invalid account type")
 	ErrInvalidTransactionType = errors.New("invalid transaction type")
+	ErrInvalidTransactionData = errors.New("invalid transaction data")
 
 	ErrInvalidAccountAddress = errors.New("invalid account address")
 	ErrInvalidAmount         = errors.New("invalid amount")

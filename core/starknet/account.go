@@ -154,7 +154,14 @@ func AsStarknetAccount(account base.Account) *Account {
 	}
 }
 
-func (a *Account) SignHash(msgHash *felt.Felt) (*felt.Felt, *felt.Felt, error) {
+func (a *Account) SignHash(msgHash *felt.Felt) ([]*felt.Felt, error) {
+	if msgHash == nil {
+		return nil, base.ErrInvalidTransactionData
+	}
 	privateKeyFelt := utils.BigIntToFelt(a.privateKey)
-	return curve.Curve.SignFelt(msgHash, privateKeyFelt)
+	s1, s2, err := curve.Curve.SignFelt(msgHash, privateKeyFelt)
+	if err != nil {
+		return nil, err
+	}
+	return []*felt.Felt{s1, s2}, nil
 }

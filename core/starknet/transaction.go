@@ -35,7 +35,7 @@ func (t *Transaction) SignedTransactionWithAccount(account base.Account) (signed
 	if starknetAccount == nil {
 		return nil, base.ErrInvalidAccountType
 	}
-	err = t.Sign(starknetAccount)
+	t.txnV1.Signature, err = starknetAccount.SignHash(t.txnHash)
 	if err != nil {
 		return
 	}
@@ -43,18 +43,6 @@ func (t *Transaction) SignedTransactionWithAccount(account base.Account) (signed
 		Account:   starknetAccount,
 		invokeTxn: &t.txnV1,
 	}, nil
-}
-
-func (t *Transaction) Sign(acc *Account) error {
-	if t.txnHash == nil {
-		return base.ErrInvalidTransactionType
-	}
-	s1, s2, err := acc.SignHash(t.txnHash)
-	if err != nil {
-		return err
-	}
-	t.txnV1.Signature = []*felt.Felt{s1, s2}
-	return nil
 }
 
 func (txn *SignedTransaction) HexString() (res *base.OptionalString, err error) {

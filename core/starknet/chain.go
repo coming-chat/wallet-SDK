@@ -31,7 +31,7 @@ const (
 )
 
 var (
-	InvokeMaxFee = 2e13 // 0.00002 ETH
+	InvokeMaxFee = 2e14 // 0.0002 ETH
 
 	erc20TransferSelectorHash = types.BigToHex(types.GetSelectorFromName("transfer"))
 )
@@ -358,7 +358,7 @@ func (c *Chain) EstimateTransactionFeeUseAccount(transaction base.Transaction, a
 		return base.NewOptionalString(txn.MaxFee.Text(10)), nil
 	}
 	if txn, ok := transaction.(*Transaction); ok {
-		err = txn.Sign(acc)
+		txn.txnV1.Signature, err = acc.SignHash(txn.txnHash)
 		if err != nil {
 			return nil, err
 		}

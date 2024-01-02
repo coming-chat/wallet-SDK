@@ -24,11 +24,10 @@ func (txn *DeployAccountTransaction) SignedTransactionWithAccount(account base.A
 	if starknetAccount == nil {
 		return nil, base.ErrInvalidAccountType
 	}
-	s1, s2, err := starknetAccount.SignHash(txn.TransactionHash)
+	txn.DeployAccountTxn.Signature, err = starknetAccount.SignHash(txn.TransactionHash)
 	if err != nil {
 		return nil, err
 	}
-	txn.DeployAccountTxn.Signature = []*felt.Felt{s1, s2}
 
 	return &SignedTransaction{
 		depolyTxn: txn.DeployAccountTxn,
