@@ -126,7 +126,7 @@ func (t *Token) BuildTransfer(sender, receiver, amount string) (txn base.Transac
 	}
 
 	cli := t.chain.rpc
-	cli.CairoVersion = 2
+	cli.CairoVersion = cairoVersionOf(*senderFelt, cli)
 	callData, err := cli.FmtCalldata([]rpc.FunctionCall{transferCall})
 	if err != nil {
 		return
@@ -160,4 +160,22 @@ func (t *Token) CanTransferAll() bool {
 }
 func (t *Token) BuildTransferAll(sender, receiver string) (txn base.Transaction, err error) {
 	return nil, base.ErrUnsupportedFunction
+}
+
+func cairoVersionOf(contractAddress felt.Felt, cli rpc.RpcProvider) int {
+	classInfo, err := cli.ClassAt(context.Background(), latestBlockId, &contractAddress)
+	if err != nil {
+		return 2 // default
+	}
+	switch info := classInfo.(type) {
+	case rpc.DeprecatedContractClass:
+		return 0
+	case rpc.ContractClass:
+		if info.ContractClassVersion == "0.0.0" {
+			return 0
+		}
+		return 2
+	default:
+		return 2
+	}
 }
