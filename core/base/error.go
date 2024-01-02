@@ -13,6 +13,7 @@ var (
 	ErrInvalidAccountType     = errors.New("invalid account type")
 	ErrInvalidTransactionType = errors.New("invalid transaction type")
 	ErrInvalidTransactionData = errors.New("invalid transaction data")
+	ErrInvalidTransactionHash = errors.New("invalid transaction hash")
 
 	ErrInvalidAccountAddress = errors.New("invalid account address")
 	ErrInvalidAmount         = errors.New("invalid amount")

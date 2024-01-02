@@ -4,18 +4,9 @@ import (
 	"math/big"
 	"testing"
 
+	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/coming-chat/wallet-SDK/core/testcase"
-	"github.com/dontpanicdao/caigo/types"
 	"github.com/stretchr/testify/require"
-)
-
-const (
-	env = "testnet"
-	// compiledOZAccount     = "./contracts/account/OZAccount_compiled.json"
-	// compiledERC20Contract = "./contracts/erc20/erc20_custom_compiled.json"
-	// predeployedContract = "0x0024e9f35c5d6a14dcbb3f08be5fb7703e76611767266068c521fe8cba27983c"
-	maxPoll      = 15
-	pollInterval = 5
 )
 
 func M1Account(t *testing.T) *Account {
@@ -69,7 +60,7 @@ func TestAccount(t *testing.T) {
 func TestAccount_ImportPrivateKey(t *testing.T) {
 	priHex := "0x1234567890"
 	priDecimal := "78187493520"
-	require.Equal(t, types.HexToBN(priHex), types.StrToBig(priDecimal))
+	require.Equal(t, parseNumber(t, priHex), parseNumber(t, priDecimal))
 
 	accountHex, err := AccountWithPrivateKey(priHex)
 	require.Nil(t, err)
@@ -88,4 +79,10 @@ func TestGrindKey(t *testing.T) {
 	res, err := grindKey(seed.Bytes())
 	require.Nil(t, err)
 	require.Equal(t, res.Text(16), "5c8c8683596c732541a59e03007b2d30dbbbb873556fe65b5fb63c16688f941")
+}
+
+func parseNumber(t *testing.T, num string) *big.Int {
+	bn, err := base.ParseNumber(num)
+	require.Nil(t, err)
+	return bn
 }

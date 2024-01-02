@@ -43,7 +43,7 @@ func (t *Token) Chain() base.Chain {
 func (t *Token) TokenInfo() (info *base.TokenInfo, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
 
-	if t == nil || t.chain == nil || t.chain.gw == nil {
+	if t == nil || t.chain == nil || t.chain.rpc == nil {
 		return nil, errors.New("nil params")
 	}
 	ctx := context.Background()
@@ -117,7 +117,7 @@ func (t *Token) BuildTransfer(sender, receiver, amount string) (txn base.Transac
 	}
 	transferCall := rpc.FunctionCall{
 		ContractAddress:    t.felt,
-		EntryPointSelector: utils.GetSelectorFromNameFelt("transfer"),
+		EntryPointSelector: erc20TransferSelectorFelt,
 		Calldata: []*felt.Felt{
 			receiverFelt,
 			utils.BigIntToFelt(amountInt),

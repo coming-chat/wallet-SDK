@@ -11,7 +11,7 @@ import (
 )
 
 type DeployAccountTransaction struct {
-	*rpc.DeployAccountTxn
+	rpc.DeployAccountTxn
 	TransactionHash *felt.Felt
 }
 
@@ -30,7 +30,7 @@ func (txn *DeployAccountTransaction) SignedTransactionWithAccount(account base.A
 	}
 
 	return &SignedTransaction{
-		depolyTxn: txn.DeployAccountTxn,
+		depolyTxn: &txn.DeployAccountTxn,
 	}, nil
 }
 
@@ -61,7 +61,7 @@ func NewDeployAccountTransaction(pubkey string, maxFee *big.Int, acc *account.Ac
 		return nil, err
 	}
 	return &DeployAccountTransaction{
-		DeployAccountTxn: &deployTxn,
+		DeployAccountTxn: deployTxn,
 		TransactionHash:  txnHash,
 	}, nil
 }

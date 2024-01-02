@@ -3,14 +3,10 @@ package starknet
 import (
 	"github.com/NethermindEth/juno/core/felt"
 	"github.com/coming-chat/wallet-SDK/core/base"
-	"github.com/dontpanicdao/caigo/types"
 	"github.com/xiang-xx/starknet.go/rpc"
 )
 
 type Transaction struct {
-	calls   []types.FunctionCall
-	details types.ExecuteDetails
-
 	txnV1   rpc.InvokeTxnV1
 	txnHash *felt.Felt
 }
