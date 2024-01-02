@@ -19,7 +19,6 @@ require (
 	github.com/coming-chat/merlin v0.1.2-0.20211216101619-d46ce5719651
 	github.com/cosmos/cosmos-sdk v0.47.2
 	github.com/decred/base58 v1.0.3
-	github.com/dontpanicdao/caigo v0.4.1
 	github.com/ethereum/go-ethereum v1.12.0
 	github.com/fardream/go-bcs v0.2.1
 	github.com/gtank/ristretto255 v0.1.2
@@ -94,7 +93,6 @@ require (
 	github.com/golang/snappy v0.0.5-0.20220116011046-fa5810519dcb // indirect
 	github.com/google/btree v1.1.2 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
-	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0 // indirect

@@ -77,10 +77,11 @@ func TestToken_Transfer(t *testing.T) {
 	require.Nil(t, err)
 	t.Log(balance.Total)
 	if len(balance.Total) < 3 {
+		t.Log("Warning: token transfer failed. not enough balance")
 		return // balance not enough.
 	}
 
-	transferAmount := balance.Total[0 : len(balance.Total)-1]
+	transferAmount := balance.Total
 	txn, err := token.BuildTransfer(acc.Address(), acc.Address(), transferAmount)
 	require.Nil(t, err)
 	signedTxn, err := txn.SignedTransactionWithAccount(acc)
