@@ -129,9 +129,12 @@ func (c *Chain) SendSignedTransaction(signedTxn base.SignedTransaction) (hash *b
 	if txn.invokeTxn != nil {
 		resp, err := c.rpc.AddInvokeTransaction(context.Background(), txn.invokeTxn)
 		if err != nil {
-			needDeploy := txn.NeedAutoDeploy && IsNotDeployedError(err)
-			if !needDeploy {
+			if !txn.NeedAutoDeploy {
 				return nil, err
+			}
+			deployed, err_ := c.IsContractAddressDeployed(txn.invokeTxn.SenderAddress.String())
+			if err_ != nil || deployed.Value == true {
+				return nil, err // if query failed, return the previous error.
 			}
 
 			// we need deploy the account firstly, and resend the original txn with fixed Nonce 1
@@ -320,6 +323,6 @@ func (c *Chain) IsContractAddressDeployed(contractAddress string) (b *base.Optio
 		}
 		return nil, err
 	}
-	deployed := !nonce.IsZero()
+	deployed := nonce != nil
 	return base.NewOptionalBool(deployed), nil
 }

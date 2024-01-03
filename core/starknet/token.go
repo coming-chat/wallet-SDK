@@ -133,7 +133,11 @@ func (t *Token) BuildTransfer(sender, receiver, amount string) (txn base.Transac
 	}
 	nonce, err := cli.Nonce(context.Background(), latestBlockId, senderFelt)
 	if err != nil {
-		return
+		if err.Error() == rpc.ErrContractNotFound.Error() {
+			nonce = &felt.Zero
+		} else {
+			return nil, err
+		}
 	}
 	invokeTx := rpc.InvokeTxnV1{
 		MaxFee:        new(felt.Felt).SetUint64(uint64(InvokeMaxFee)),

@@ -124,8 +124,7 @@ func TestNotdeployedAccount(t *testing.T) {
 	token := chain.MainToken()
 
 	txn, err := token.BuildTransfer(acc.Address(), acc.Address(), "100000000")
-	require.Error(t, err)
-	return
+	require.Nil(t, err)
 
 	_, err = chain.EstimateTransactionFeeUseAccount(txn, acc)
 	t.Log(IsNotDeployedError(err))
