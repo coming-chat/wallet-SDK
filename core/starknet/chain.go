@@ -191,7 +191,7 @@ func (c *Chain) FetchTransactionDetail(hash string) (detail *base.TransactionDet
 		ToAddress:    calldata[dataLen-3].String(),
 		Amount:       calldata[dataLen-2].Text(10),
 		EstimateFees: txn.MaxFee.Text(10),
-		Status:       base.TransactionStatusNone,
+		Status:       base.TransactionStatusPending,
 	}
 
 	receipt, err := c.rpc.TransactionReceipt(ctx, hashFelt)
