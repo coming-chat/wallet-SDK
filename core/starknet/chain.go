@@ -345,7 +345,3 @@ func (c *Chain) IsContractAddressDeployed(contractAddress string) (b *base.Optio
 	deployed := nonce != nil
 	return base.NewOptionalBool(deployed), nil
 }
-
-func (c *Chain) IsContractAddressUpgraded(contractAddress string) (b *base.OptionalBool, err error) {
-	return
-}
