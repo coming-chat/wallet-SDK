@@ -3,6 +3,7 @@ package starknet
 import (
 	"testing"
 
+	"github.com/NethermindEth/juno/core/felt"
 	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/coming-chat/wallet-SDK/core/testcase"
 	"github.com/stretchr/testify/require"
@@ -89,4 +90,33 @@ func TestToken_Transfer(t *testing.T) {
 	hash, err := chain.SendSignedTransaction(signedTxn)
 	require.Nil(t, err)
 	t.Log(hash.Value)
+}
+
+func TestChain_queryCairoVersionForFormatCalldata(t *testing.T) {
+	tests := []struct {
+		name    string
+		address *felt.Felt
+		want    int
+	}{
+		{
+			address: mustFelt("0x03d6b3da9cfaf00482fbecd18312e5a1918744bfe6f0dd2650c4221284efce09"),
+			want:    0},
+		{
+			address: mustFelt("0x7384b9770dce88ee83a62a8a0ab0fac476e513a9e4b611b80fa08e844ce1f2"),
+			want:    2},
+		{
+			address: mustFelt("0x3d6b3da9cfaf00482fbecd18312e5a1918744bfe6f0dd2650c4221284efce09"),
+			want:    0},
+		{
+			address: mustFelt("0x7384b9770dce88ee83a62a8a0ab0fac476e513a9e4b611b80fa08e844ce1f2"),
+			want:    2},
+	}
+	chain := GoerliChain()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := chain.queryCairoVersionForFormatCalldata(*tt.address); got != tt.want {
+				t.Errorf("Chain.queryCairoVersionForFormatCalldata() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }

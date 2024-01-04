@@ -34,12 +34,12 @@ func (txn *DeployAccountTransaction) SignedTransactionWithAccount(account base.A
 	}, nil
 }
 
-func NewDeployAccountTransaction(pubkey string, maxFee *big.Int, acc *account.Account) (*DeployAccountTransaction, error) {
+func NewDeployAccountTransaction(pubkey string, maxFee *big.Int, cli *account.Account, isCairo0 bool) (*DeployAccountTransaction, error) {
 	pubFelt, err := utils.HexToFelt(pubkey)
 	if err != nil {
 		return nil, err
 	}
-	param := defaultDeployParam(*pubFelt)
+	param := deployParamForArgentXWithVersion(*pubFelt, isCairo0)
 	deployTxn := rpc.DeployAccountTxn{
 		ContractAddressSalt: &param.Pubkey,
 		ClassHash:           param.ClassHash,
@@ -56,7 +56,7 @@ func NewDeployAccountTransaction(pubkey string, maxFee *big.Int, acc *account.Ac
 	if err != nil {
 		return nil, err
 	}
-	txnHash, err := acc.TransactionHashDeployAccount(deployTxn, contractAddress)
+	txnHash, err := cli.TransactionHashDeployAccount(deployTxn, contractAddress)
 	if err != nil {
 		return nil, err
 	}

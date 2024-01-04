@@ -27,6 +27,14 @@ func NewOptionalBool(b bool) *OptionalBool {
 	return &OptionalBool{Value: b}
 }
 
+type OptionalInt struct {
+	Value int
+}
+
+func NewOptionalInt(i int) *OptionalInt {
+	return &OptionalInt{Value: i}
+}
+
 type safeMap struct {
 	sync.RWMutex
 	Map map[interface{}]interface{}

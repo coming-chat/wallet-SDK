@@ -19,6 +19,9 @@ import (
 
 type Account struct {
 	privateKey *big.Int
+
+	// default false
+	Cairo0 bool
 }
 
 func grindKey(keySeed []byte) (*big.Int, error) {
@@ -133,7 +136,17 @@ func (a *Account) PublicKeyHex() string {
 
 // The ethereum address is same as public key in coming
 func (a *Account) Address() string {
-	addr, _ := EncodePublicKeyToAddress(a.PublicKeyHex())
+	addr, _ := encodePublicKeyToAddressArgentX(a.PublicKeyHex(), a.Cairo0)
+	return addr
+}
+
+func (a *Account) AddressCairo1() string {
+	addr, _ := encodePublicKeyToAddressArgentX(a.PublicKeyHex(), false)
+	return addr
+}
+
+func (a *Account) AddressCairo0() string {
+	addr, _ := encodePublicKeyToAddressArgentX(a.PublicKeyHex(), true)
 	return addr
 }
 

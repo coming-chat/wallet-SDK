@@ -60,7 +60,7 @@ func (c *Chain) BalanceOfAddress(address string) (b *base.Balance, err error) {
 	return c.BalanceOf(address, ETHTokenAddress)
 }
 func (c *Chain) BalanceOfPublicKey(publicKey string) (*base.Balance, error) {
-	address, err := encodePublicKeyToAddressArgentX(publicKey)
+	address, err := EncodePublicKeyToAddress(publicKey)
 	if err != nil {
 		return nil, err
 	}
@@ -138,7 +138,16 @@ func (c *Chain) SendSignedTransaction(signedTxn base.SignedTransaction) (hash *b
 			}
 
 			// we need deploy the account firstly, and resend the original txn with fixed Nonce 1
-			deployTxn, err := c.BuildDeployAccountTransaction(txn.Account.PublicKeyHex(), "")
+			pubHex := txn.Account.PublicKeyHex()
+			pubFelt, err := utils.HexToFelt(pubHex)
+			if err != nil {
+				return nil, err
+			}
+			version, err := CheckCairoVersionFelt(txn.invokeTxn.SenderAddress, pubFelt)
+			if err != nil {
+				return nil, err
+			}
+			deployTxn, err := c.deployAccountTxnWithVersion(pubHex, "", version == 0)
 			if err != nil {
 				return nil, err
 			}
@@ -297,6 +306,16 @@ func (c *Chain) EstimateTransactionFeeUseAccount(transaction base.Transaction, a
 // BuildDeployAccountTransaction
 // @param maxFee default is 0.0002
 func (c *Chain) BuildDeployAccountTransaction(publicKey string, maxFee string) (*DeployAccountTransaction, error) {
+	return c.deployAccountTxnWithVersion(publicKey, maxFee, false)
+}
+
+// BuildDeployAccountTransaction
+// @param maxFee default is 0.0002
+func (c *Chain) BuildDeployAccountTransactionCairo0(publicKey string, maxFee string) (*DeployAccountTransaction, error) {
+	return c.deployAccountTxnWithVersion(publicKey, maxFee, true)
+}
+
+func (c *Chain) deployAccountTxnWithVersion(publicKey string, maxFee string, isCairo0 bool) (*DeployAccountTransaction, error) {
 	var feeInt *big.Int
 	var ok bool
 	if maxFee == "" {
@@ -306,7 +325,7 @@ func (c *Chain) BuildDeployAccountTransaction(publicKey string, maxFee string) (
 			return nil, base.ErrInvalidAmount
 		}
 	}
-	return NewDeployAccountTransaction(publicKey, feeInt, c.rpc)
+	return NewDeployAccountTransaction(publicKey, feeInt, c.rpc, isCairo0)
 }
 
 func (c *Chain) IsContractAddressDeployed(contractAddress string) (b *base.OptionalBool, err error) {
@@ -325,4 +344,8 @@ func (c *Chain) IsContractAddressDeployed(contractAddress string) (b *base.Optio
 	}
 	deployed := nonce != nil
 	return base.NewOptionalBool(deployed), nil
+}
+
+func (c *Chain) IsContractAddressUpgraded(contractAddress string) (b *base.OptionalBool, err error) {
+	return
 }

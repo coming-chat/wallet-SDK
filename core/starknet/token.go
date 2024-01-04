@@ -89,7 +89,7 @@ func (t *Token) BalanceOfAddress(address string) (*base.Balance, error) {
 }
 
 func (t *Token) BalanceOfPublicKey(publicKey string) (*base.Balance, error) {
-	address, err := encodePublicKeyToAddressArgentX(publicKey)
+	address, err := EncodePublicKeyToAddress(publicKey)
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +126,7 @@ func (t *Token) BuildTransfer(sender, receiver, amount string) (txn base.Transac
 	}
 
 	cli := t.chain.rpc
-	cli.CairoVersion = cairoVersionOf(*senderFelt, cli)
+	cli.CairoVersion = t.chain.queryCairoVersionForFormatCalldata(*senderFelt)
 	callData, err := cli.FmtCalldata([]rpc.FunctionCall{transferCall})
 	if err != nil {
 		return
@@ -166,15 +166,24 @@ func (t *Token) BuildTransferAll(sender, receiver string) (txn base.Transaction,
 	return nil, base.ErrUnsupportedFunction
 }
 
-func cairoVersionOf(contractAddress felt.Felt, cli rpc.RpcProvider) int {
-	classInfo, err := cli.ClassAt(context.Background(), latestBlockId, &contractAddress)
+func (c *Chain) queryCairoVersionForFormatCalldata(contractAddress felt.Felt) int {
+	classInfo, err := c.rpc.ClassAt(context.Background(), latestBlockId, &contractAddress)
 	if err != nil {
+		if err.Error() == rpc.ErrContractNotFound.Error() {
+			return 0
+		}
 		return 2 // default
 	}
 	switch info := classInfo.(type) {
-	case rpc.DeprecatedContractClass:
+	case rpc.DeprecatedContractClass,
+		*rpc.DeprecatedContractClass:
 		return 0
 	case rpc.ContractClass:
+		if info.ContractClassVersion == "0.0.0" {
+			return 0
+		}
+		return 2
+	case *rpc.ContractClass:
 		if info.ContractClassVersion == "0.0.0" {
 			return 0
 		}
