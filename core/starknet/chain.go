@@ -250,8 +250,17 @@ func (c *Chain) FetchTransactionStatus(hash string) base.TransactionStatus {
 	}
 	if receipt.GetExecutionStatus() == rpc.TxnExecutionStatusREVERTED {
 		return base.TransactionStatusFailure
-	} else {
+	}
+	switch receipt.(type) {
+	case rpc.InvokeTransactionReceipt,
+		rpc.DeclareTransactionReceipt,
+		rpc.DeployTransactionReceipt,
+		rpc.DeployAccountTransactionReceipt,
+		rpc.L1HandlerTransactionReceipt:
+		// all subclass of CommonTransactionReceipt
 		return base.TransactionStatusSuccess
+	default:
+		return base.TransactionStatusPending
 	}
 }
 
