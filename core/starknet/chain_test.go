@@ -4,6 +4,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/stretchr/testify/require"
 	"github.com/xiang-xx/starknet.go/rpc"
 )
@@ -97,6 +98,18 @@ func TestFetchTransactionDetail(t *testing.T) {
 	detail, err := chain.FetchTransactionDetail(hash)
 	require.Nil(t, err)
 	t.Log(detail)
+}
+
+func TestFetchTransactionDetail_NotFound(t *testing.T) {
+	chain := GoerliChain()
+	hash := "0x2bc37bf8dbb89c02af579f6d45b3a6786f5d3f9a21e6f8dd386a3fd765af709"
+
+	detail, err := chain.FetchTransactionDetail(hash)
+	require.Nil(t, err)
+	require.Equal(t, detail.Status, base.TransactionStatusFailure)
+
+	status := chain.FetchTransactionStatus(hash)
+	require.Equal(t, status, base.TransactionStatusFailure)
 }
 
 func TestFetchTransactionDetail_Mainnet(t *testing.T) {
