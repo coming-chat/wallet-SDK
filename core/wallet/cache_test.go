@@ -168,5 +168,5 @@ func TestDecimalPrivatekey(t *testing.T) {
 	t.Log(wallet.AptosAccountInfo().Address())
 	t.Log(wallet.SuiAccountInfo().Address())
 	t.Log(wallet.StarcoinAccountInfo().Address())
-	t.Log(wallet.StarknetAccountInfo().Address())
+	t.Log(wallet.StarknetAccountInfo(false).Address())
 }

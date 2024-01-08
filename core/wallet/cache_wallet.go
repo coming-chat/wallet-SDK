@@ -271,10 +271,10 @@ func (w *CacheWallet) StarcoinAccountInfo() *AccountInfo {
 	}
 }
 
-func (w *CacheWallet) StarknetAccountInfo() *AccountInfo {
+func (w *CacheWallet) StarknetAccountInfo(isCairo0 bool) *AccountInfo {
 	return &AccountInfo{
 		Wallet:   w,
-		cacheKey: "starknet",
+		cacheKey: fmt.Sprintf("starknet-%v", isCairo0),
 		mnemonicCreator: func(val string) (base.Account, error) {
 			return starknet.NewAccountWithMnemonic(val)
 		},
