@@ -140,7 +140,7 @@ func (t *Token) BuildTransfer(sender, receiver, amount string) (txn base.Transac
 		}
 	}
 	invokeTx := rpc.InvokeTxnV1{
-		MaxFee:        new(felt.Felt).SetUint64(uint64(InvokeMaxFee)),
+		MaxFee:        new(felt.Felt).SetUint64(uint64(InvokeMaxFee) + random(2e11)),
 		Version:       rpc.TransactionV1,
 		Type:          rpc.TransactionType_Invoke,
 		Nonce:         nonce,
