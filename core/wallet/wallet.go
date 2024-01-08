@@ -270,9 +270,10 @@ func (w *Wallet) GetOrCreateStarcoinAccount() (*starcoin.Account, error) {
 }
 
 // Get or create the starknet account.
-func (w *Wallet) GetOrCreateStarknetAccount() (*starknet.Account, error) {
+func (w *Wallet) GetOrCreateStarknetAccount(isCairo0 bool) (*starknet.Account, error) {
 	cache := w.starknetAccount
 	if cache != nil {
+		cache.Cairo0 = isCairo0
 		return cache, nil
 	}
 	if len(w.Mnemonic) <= 0 {
@@ -283,6 +284,7 @@ func (w *Wallet) GetOrCreateStarknetAccount() (*starknet.Account, error) {
 	if err != nil {
 		return nil, err
 	}
+	account.Cairo0 = isCairo0
 	// save to cache
 	w.starknetAccount = account
 	return account, nil

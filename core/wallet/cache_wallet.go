@@ -276,10 +276,20 @@ func (w *CacheWallet) StarknetAccountInfo(isCairo0 bool) *AccountInfo {
 		Wallet:   w,
 		cacheKey: fmt.Sprintf("starknet-%v", isCairo0),
 		mnemonicCreator: func(val string) (base.Account, error) {
-			return starknet.NewAccountWithMnemonic(val)
+			acc, err := starknet.NewAccountWithMnemonic(val)
+			if err != nil {
+				return nil, err
+			}
+			acc.Cairo0 = isCairo0
+			return acc, nil
 		},
 		privkeyCreator: func(val string) (base.Account, error) {
-			return starknet.AccountWithPrivateKey(val)
+			acc, err := starknet.AccountWithPrivateKey(val)
+			if err != nil {
+				return nil, err
+			}
+			acc.Cairo0 = isCairo0
+			return acc, nil
 		},
 	}
 }
