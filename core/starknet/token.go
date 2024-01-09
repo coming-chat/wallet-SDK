@@ -169,9 +169,6 @@ func (t *Token) BuildTransferAll(sender, receiver string) (txn base.Transaction,
 func (c *Chain) queryCairoVersionForFormatCalldata(contractAddress felt.Felt) int {
 	classInfo, err := c.rpc.ClassAt(context.Background(), latestBlockId, &contractAddress)
 	if err != nil {
-		if err.Error() == rpc.ErrContractNotFound.Error() {
-			return 0
-		}
 		return 2 // default
 	}
 	switch info := classInfo.(type) {

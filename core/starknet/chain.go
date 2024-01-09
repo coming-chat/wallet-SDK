@@ -29,7 +29,9 @@ type Chain struct {
 	rpc *account.Account
 }
 
-func NewChainWithRpc(baseRpc string) (*Chain, error) {
+func NewChainWithRpc(baseRpc string) (c *Chain, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
+
 	cli, err := ethrpc.DialContext(context.Background(), baseRpc)
 	if err != nil {
 		return nil, err
@@ -117,6 +119,9 @@ func (c *Chain) SendSignedTransaction(signedTxn base.SignedTransaction) (hash *b
 	}
 
 	if txn.depolyTxn != nil {
+		var err error
+		defer base.CatchPanicAndMapToBasicError(&err)
+
 		resp, err := c.rpc.AddDeployAccountTransaction(context.Background(), rpc.BroadcastDeployAccountTxn{
 			DeployAccountTxn: *txn.depolyTxn,
 		})
@@ -125,49 +130,58 @@ func (c *Chain) SendSignedTransaction(signedTxn base.SignedTransaction) (hash *b
 		}
 		return &base.OptionalString{Value: fullString(*resp.TransactionHash)}, nil
 	}
-	if txn.invokeTxn != nil {
-		resp, err := c.rpc.AddInvokeTransaction(context.Background(), txn.invokeTxn)
-		if err != nil {
-			if !txn.NeedAutoDeploy {
-				return nil, err
-			}
-			deployed, err_ := c.IsContractAddressDeployed(txn.invokeTxn.SenderAddress.String())
-			if err_ != nil || deployed.Value == true {
-				return nil, err // if query failed, return the previous error.
-			}
 
-			// we need deploy the account firstly, and resend the original txn with fixed Nonce 1
-			pubHex := txn.Account.PublicKeyHex()
-			pubFelt, err := utils.HexToFelt(pubHex)
-			if err != nil {
-				return nil, err
-			}
-			version, err := CheckCairoVersionFelt(txn.invokeTxn.SenderAddress, pubFelt)
-			if err != nil {
-				return nil, err
-			}
-			deployTxn, err := c.deployAccountTxnWithVersion(pubHex, "", version == 0)
-			if err != nil {
-				return nil, err
-			}
-			signedDeployTxn, err := deployTxn.SignedTransactionWithAccount(txn.Account)
-			if err != nil {
-				return nil, err
-			}
-			_, err = c.SendSignedTransaction(signedDeployTxn)
-			if err != nil {
-				return nil, err
-			}
-			// now resend the original txn, the nonce is 1 now
-			txn.invokeTxn.Nonce = new(felt.Felt).SetUint64(1)
-			resp, err = c.rpc.AddInvokeTransaction(context.Background(), txn.invokeTxn)
-			if err != nil {
-				return nil, err
-			}
-		}
-		return &base.OptionalString{Value: fullString(*resp.TransactionHash)}, nil
+	if txn.invokeTxn == nil {
+		return nil, base.ErrMissingTransaction
 	}
-	return nil, base.ErrMissingTransaction
+	// send invoke txn
+	resp, err := c.rpc.AddInvokeTransaction(context.Background(), txn.invokeTxn)
+	if err != nil {
+		var err error
+		defer base.CatchPanicAndMapToBasicError(&err)
+
+		if !txn.NeedAutoDeploy {
+			return nil, err
+		}
+		deployed, err := c.IsContractAddressDeployed(txn.invokeTxn.SenderAddress.String())
+		if err != nil || deployed.Value == true {
+			return nil, err // if query failed, return the previous error.
+		}
+
+		// we need deploy the account firstly, and resend the original txn with fixed Nonce 1
+		pubHex := txn.Account.PublicKeyHex()
+		pubFelt, err := utils.HexToFelt(pubHex)
+		if err != nil {
+			return nil, err
+		}
+		version, err := CheckCairoVersionFelt(txn.invokeTxn.SenderAddress, pubFelt)
+		if err != nil {
+			return nil, err
+		}
+		deployTxn, err := c.deployAccountTxnWithVersion(pubHex, "", version == 0)
+		if err != nil {
+			return nil, err
+		}
+		signedDeployTxn, err := deployTxn.SignedTransactionWithAccount(txn.Account)
+		if err != nil {
+			return nil, err
+		}
+		_, err = c.SendSignedTransaction(signedDeployTxn)
+		if err != nil {
+			return nil, err
+		}
+		// now resend the original txn, the nonce is 1 now
+		txn.invokeTxn.Nonce = new(felt.Felt).SetUint64(1)
+		err = txn.ResignInvokeTransaction(c, txn.Account)
+		if err != nil {
+			return nil, err
+		}
+		resp, err = c.rpc.AddInvokeTransaction(context.Background(), txn.invokeTxn)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return &base.OptionalString{Value: fullString(*resp.TransactionHash)}, nil
 }
 
 // Fetch transaction details through transaction hash

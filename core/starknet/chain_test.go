@@ -5,9 +5,24 @@ import (
 	"testing"
 
 	"github.com/coming-chat/wallet-SDK/core/base"
+	"github.com/coming-chat/wallet-SDK/core/testcase"
 	"github.com/stretchr/testify/require"
 	"github.com/xiang-xx/starknet.go/rpc"
 )
+
+func ETH(e float64) testcase.Amount {
+	return testcase.Amount{
+		Amount:   e,
+		Multiple: 1e18,
+	}
+}
+
+func Gwei(e float64) testcase.Amount {
+	return testcase.Amount{
+		Amount:   e,
+		Multiple: 1e9,
+	}
+}
 
 func MainnetChain() *Chain {
 	c, _ := NewChainWithRpc(BaseRpcUrlMainnet)
@@ -71,7 +86,7 @@ func TestTransfer(t *testing.T) {
 	token, err := chain.NewToken(ETHTokenAddress)
 	require.Nil(t, err)
 
-	txn, err := token.BuildTransfer(acc.Address(), acc.Address(), "10000000")
+	txn, err := token.BuildTransfer(acc.Address(), acc.Address(), Gwei(3).String())
 	require.Nil(t, err)
 
 	gasFee, err := chain.EstimateTransactionFeeUseAccount(txn, acc)

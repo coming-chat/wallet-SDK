@@ -45,6 +45,15 @@ func (txn *SignedTransaction) HexString() (res *base.OptionalString, err error) 
 	return nil, base.ErrUnsupportedFunction
 }
 
+func (txn *SignedTransaction) ResignInvokeTransaction(chain *Chain, acc *Account) error {
+	txnHash, err := chain.rpc.TransactionHashInvoke(*txn.invokeTxn)
+	if err != nil {
+		return err
+	}
+	txn.invokeTxn.Signature, err = acc.SignHash(txnHash)
+	return err
+}
+
 func AsSignedTransaction(txn base.SignedTransaction) *SignedTransaction {
 	if res, ok := txn.(*SignedTransaction); ok {
 		return res
