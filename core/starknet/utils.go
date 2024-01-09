@@ -1,6 +1,7 @@
 package starknet
 
 import (
+	"encoding/hex"
 	"math/rand"
 	"time"
 
@@ -17,4 +18,10 @@ func mustFelt(str string) *felt.Felt {
 
 func random(max uint64) uint64 {
 	return rand.New(rand.NewSource(time.Now().UnixNano())).Uint64() % max
+}
+
+// fullString
+func fullString(felt felt.Felt) string {
+	bytes := felt.Bytes()
+	return "0x" + hex.EncodeToString(bytes[:])
 }

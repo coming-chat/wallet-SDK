@@ -23,7 +23,6 @@ const (
 
 var (
 	erc20TransferSelectorFelt = utils.GetSelectorFromNameFelt("transfer")
-	erc20TransferSelectorHash = erc20TransferSelectorFelt.String()
 )
 
 type Chain struct {
@@ -124,7 +123,7 @@ func (c *Chain) SendSignedTransaction(signedTxn base.SignedTransaction) (hash *b
 		if err != nil {
 			return nil, err
 		}
-		return &base.OptionalString{Value: resp.TransactionHash.String()}, nil
+		return &base.OptionalString{Value: fullString(*resp.TransactionHash)}, nil
 	}
 	if txn.invokeTxn != nil {
 		resp, err := c.rpc.AddInvokeTransaction(context.Background(), txn.invokeTxn)
@@ -166,7 +165,7 @@ func (c *Chain) SendSignedTransaction(signedTxn base.SignedTransaction) (hash *b
 				return nil, err
 			}
 		}
-		return &base.OptionalString{Value: resp.TransactionHash.String()}, nil
+		return &base.OptionalString{Value: fullString(*resp.TransactionHash)}, nil
 	}
 	return nil, base.ErrMissingTransaction
 }
@@ -202,8 +201,8 @@ func (c *Chain) FetchTransactionDetail(hash string) (detail *base.TransactionDet
 	}
 	detail = &base.TransactionDetail{
 		HashString:   hash,
-		FromAddress:  txn.SenderAddress.String(),
-		ToAddress:    calldata[dataLen-3].String(),
+		FromAddress:  fullString(*txn.SenderAddress),
+		ToAddress:    fullString(*calldata[dataLen-3]),
 		Amount:       calldata[dataLen-2].Text(10),
 		EstimateFees: txn.MaxFee.Text(10),
 		Status:       base.TransactionStatusPending,

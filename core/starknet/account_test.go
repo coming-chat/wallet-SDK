@@ -24,8 +24,8 @@ func TestEncodeAddress(t *testing.T) {
 		param := deployParamForArgentX(*mustFelt(pub))
 		addr, err := param.ComputeContractAddress()
 		require.Nil(t, err)
-		require.Equal(t, addr.String(),
-			"0x7384b9770dce88ee83a62a8a0ab0fac476e513a9e4b611b80fa08e844ce1f2")
+		require.Equal(t, fullString(*addr),
+			"0x007384b9770dce88ee83a62a8a0ab0fac476e513a9e4b611b80fa08e844ce1f2")
 	}
 	{
 		// Braavos
@@ -34,8 +34,8 @@ func TestEncodeAddress(t *testing.T) {
 		param := deployParamForBraavos(*mustFelt(pub))
 		addr, err := param.ComputeContractAddress()
 		require.Nil(t, err)
-		require.Equal(t, addr.String(),
-			"0x8debaf4740ac184b2e879d4d3fd773f2c7f5d453b795212d4098899a73fc19")
+		require.Equal(t, fullString(*addr),
+			"0x008debaf4740ac184b2e879d4d3fd773f2c7f5d453b795212d4098899a73fc19")
 	}
 	{
 		// ArgentX cairo0
@@ -44,8 +44,8 @@ func TestEncodeAddress(t *testing.T) {
 		param := deployParamForArgentXCairo0(*mustFelt(pub))
 		addr, err := param.ComputeContractAddress()
 		require.Nil(t, err)
-		require.Equal(t, addr.String(),
-			"0x3d6b3da9cfaf00482fbecd18312e5a1918744bfe6f0dd2650c4221284efce09")
+		require.Equal(t, fullString(*addr),
+			"0x03d6b3da9cfaf00482fbecd18312e5a1918744bfe6f0dd2650c4221284efce09")
 	}
 }
 
@@ -66,7 +66,7 @@ func TestAccount(t *testing.T) {
 	t.Log(account.PublicKeyHex())
 	t.Log(account.Address())
 
-	require.Equal(t, account.Address(), "0x7384b9770dce88ee83a62a8a0ab0fac476e513a9e4b611b80fa08e844ce1f2")
+	require.Equal(t, account.Address(), "0x007384b9770dce88ee83a62a8a0ab0fac476e513a9e4b611b80fa08e844ce1f2")
 }
 
 func TestAccount_ImportPrivateKey(t *testing.T) {
@@ -81,7 +81,7 @@ func TestAccount_ImportPrivateKey(t *testing.T) {
 
 	require.Equal(t, accountHex.PublicKey(), accountDecimal.PublicKey())
 	require.Equal(t, accountHex.Address(), accountDecimal.Address())
-	require.Equal(t, accountHex.Address(), "0x320d810722501737687ac57ad932e21b1b19d603d131522d5984dd6ca452226")
+	require.Equal(t, accountHex.Address(), "0x0320d810722501737687ac57ad932e21b1b19d603d131522d5984dd6ca452226")
 }
 
 func TestGrindKey(t *testing.T) {

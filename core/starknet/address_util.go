@@ -55,7 +55,7 @@ func encodePublicKeyToAddressArgentX(publicKey string, isCairo0 bool) (string, e
 	if err != nil {
 		return "", err
 	}
-	return addr.String(), nil
+	return fullString(*addr), nil
 }
 
 // Warning: starknet cannot support decode address to public key
@@ -64,7 +64,7 @@ func DecodeAddressToPublicKey(address string) (string, error) {
 }
 
 func IsValidAddress(address string) bool {
-	reg := regexp.MustCompile(`^(0x|0X)?[0-9a-fA-F]{1,64}$`)
+	reg := regexp.MustCompile(`^(0x|0X)?[0-9a-fA-F]{40,64}$`)
 	return reg.MatchString(address)
 }
 
