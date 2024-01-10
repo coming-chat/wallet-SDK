@@ -196,12 +196,6 @@ func (c *Chain) FetchTransactionDetail(hash string) (detail *base.TransactionDet
 	ctx := context.Background()
 	rawTxn, err := c.rpc.TransactionByHash(ctx, hashFelt)
 	if err != nil {
-		if err.Error() == rpc.ErrHashNotFound.Error() {
-			return &base.TransactionDetail{
-				HashString: hash,
-				Status:     base.TransactionStatusFailure,
-			}, nil
-		}
 		return nil, err
 	}
 	txn, ok := rawTxn.(rpc.InvokeTxnV1)
@@ -256,9 +250,6 @@ func (c *Chain) FetchTransactionStatus(hash string) base.TransactionStatus {
 	}
 	receipt, err := c.rpc.TransactionReceipt(context.Background(), hashFelt)
 	if err != nil {
-		if err.Error() == rpc.ErrHashNotFound.Error() {
-			return base.TransactionStatusFailure
-		}
 		return base.TransactionStatusNone
 	}
 	if receipt.GetExecutionStatus() == rpc.TxnExecutionStatusREVERTED {
