@@ -1,9 +1,12 @@
 package eth
 
 import (
+	"encoding/json"
+	"strconv"
 	"testing"
 
 	"github.com/coming-chat/wallet-SDK/core/base"
+	"github.com/coming-chat/wallet-SDK/pkg/httpUtil"
 	"github.com/stretchr/testify/require"
 )
 
@@ -48,4 +51,46 @@ func TestRSS3Notes(t *testing.T) {
 		t.Log(jsonString)
 		run = false
 	}
+}
+
+func TestBEVMjosjo(t *testing.T) {
+	url := "https://eth.blockscout.com/api/v2/addresses/0x30b31174e5FEd4598aA0dF3191EbAA5AAb48d43E/tokens"
+	datas, err := httpUtil.Get(url, map[string]string{
+		"type":       "ERC-721",
+		"fiat_value": "",
+		"id":         "4674005429",
+		"value":      "3",
+		// "items_count": "550",
+	})
+	require.Nil(t, err)
+
+	var resp struct {
+		Items []struct {
+			Token struct {
+				Address string `json:"address"`
+			} `json:"token"`
+			Value string `json:"value"`
+		} `json:"items"`
+		Next_page_params struct {
+			FiatValue  any    `json:"fiat_value"`
+			Id         int64  `json:"id"`
+			ItemsCount int    `json:"items_count"`
+			Value      string `json:"value"`
+		} `json:"next_page_params"`
+	}
+
+	err = json.Unmarshal(datas, &resp)
+	require.Nil(t, err)
+
+	total := int64(0)
+	for _, item := range resp.Items {
+		v, _ := strconv.ParseInt(item.Value, 10, 64)
+		total += v
+		println(item.Token.Address)
+	}
+	println("total:", total)
+	println("fiat:", resp.Next_page_params.FiatValue)
+	println("id:", resp.Next_page_params.Id)
+	println("item_count:", resp.Next_page_params.ItemsCount)
+	println("value:", resp.Next_page_params.Value)
 }
