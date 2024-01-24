@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/coming-chat/wallet-SDK/core/base/inter"
 	"github.com/coming-chat/wallet-SDK/pkg/httpUtil"
 )
 
@@ -43,6 +44,40 @@ func (n *NFT) ExtractedImageUrl() string {
 	} else {
 		return url.Value
 	}
+}
+
+type NFTArray struct {
+	inter.AnyArray[*NFT]
+}
+
+type NFTGroupedMap struct {
+	inter.AnyMap[string, *NFTArray]
+}
+
+func (g *NFTGroupedMap) Keys() *StringArray {
+	keys := inter.KeysOf(g.AnyMap)
+	return &StringArray{keys}
+}
+
+func (g *NFTGroupedMap) ToNFTGroupArray() *NFTGroupArray {
+	arr := make([]*NFTGroup, 0, len(g.AnyMap))
+	for k, v := range g.AnyMap {
+		collection := NFTGroup{
+			Collection: k,
+			Items:      v,
+		}
+		arr = append(arr, &collection)
+	}
+	return &NFTGroupArray{AnyArray: arr}
+}
+
+type NFTGroup struct {
+	Collection string    `json:"collection"`
+	Items      *NFTArray `json:"items"`
+}
+
+type NFTGroupArray struct {
+	inter.AnyArray[*NFTGroup]
 }
 
 type NFTFetcher interface {

@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"sync"
@@ -54,7 +53,7 @@ func Get(baseUrl string, param map[string]string) (body []byte, err error) {
 	if resp.StatusCode != 200 {
 		return nil, errors.New("get " + baseUrl + " response code = " + resp.Status)
 	}
-	return ioutil.ReadAll(resp.Body)
+	return io.ReadAll(resp.Body)
 }
 
 func Post(url string, params RequestParams) ([]byte, error) {
