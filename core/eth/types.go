@@ -140,6 +140,28 @@ func NewTransaction(nonce, gasPrice, gasLimit, to, value, data string) *Transact
 	return &Transaction{nonce, gasPrice, gasLimit, to, value, data, ""}
 }
 
+func NewTransactionNftTransfer(sender, receiver, gasPrice, gasLimit string, nft *base.NFT) *Transaction {
+	return NewTransactionNftTransferParams(sender, receiver, gasPrice, gasLimit, nft.Id, nft.ContractAddress, nft.Standard)
+}
+
+func NewTransactionNftTransferParams(sender, receiver, gasPrice, gasLimit, nftId, nftContractAddress, nftStandard string) *Transaction {
+	if strings.ToLower(nftStandard) != "erc-721" {
+		return nil
+	}
+	data, err := EncodeErc721TransferFrom(sender, receiver, nftId)
+	if err != nil {
+		return nil
+	}
+	return &Transaction{
+		Nonce:    "",
+		GasPrice: gasPrice,
+		GasLimit: gasLimit,
+		To:       nftContractAddress,
+		Value:    "0",
+		Data:     common.Bytes2Hex(data),
+	}
+}
+
 func NewTransactionFromHex(hexData string) (*Transaction, error) {
 	rawBytes, err := hex.DecodeString(hexData)
 	if err != nil {

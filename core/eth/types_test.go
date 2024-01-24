@@ -1,9 +1,25 @@
 package eth
 
 import (
+	"encoding/hex"
 	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
+
+func TestUtils_EncodeErc721TransferFrom(t *testing.T) {
+	sender := "0x151e446ca01b57e495a31d53bc622ac33bd7a0be"
+	receiver := "0x2c32bd5f7d3eab4bc9d968c90c82debb1bdcced9"
+	nftId := "1"
+
+	// Reference: https://scan-canary-testnet.bevm.io/tx/0x2c763fc26b1021340edc5614c7411a8f4d2220d22fecd805557fef4536268ef8
+	data, err := EncodeErc721TransferFrom(sender, receiver, nftId)
+	require.Nil(t, err)
+	dataHex := hex.EncodeToString(data)
+	require.Equal(t, dataHex,
+		"23b872dd000000000000000000000000151e446ca01b57e495a31d53bc622ac33bd7a0be0000000000000000000000002c32bd5f7d3eab4bc9d968c90c82debb1bdcced90000000000000000000000000000000000000000000000000000000000000001")
+}
 
 func TestNewTransactionFromHex(t *testing.T) {
 	type args struct {

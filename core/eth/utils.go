@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -55,6 +56,20 @@ func EncodeErc20Approve(spender string, amount *big.Int) ([]byte, error) {
 		return nil, errors.New("Invalid receiver address")
 	}
 	return EncodeContractData(Erc20AbiStr, ERC20_METHOD_APPROVE, common.HexToAddress(spender), amount)
+}
+
+func EncodeErc721TransferFrom(sender, receiver, nftId string) ([]byte, error) {
+	if !common.IsHexAddress(sender) || !common.IsHexAddress(receiver) {
+		return nil, base.ErrInvalidAddress
+	}
+	amtInt, ok := big.NewInt(0).SetString(nftId, 10)
+	if !ok {
+		return nil, base.ErrInvalidAmount
+	}
+	return EncodeContractData(Erc721Abi_TransferOnly, "transferFrom",
+		common.HexToAddress(sender),
+		common.HexToAddress(receiver),
+		amtInt)
 }
 
 func EncodeContractData(abiString, method string, params ...interface{}) ([]byte, error) {
