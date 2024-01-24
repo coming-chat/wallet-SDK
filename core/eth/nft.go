@@ -250,3 +250,39 @@ func (f *RSS3Fetcher) FetchNFTsJsonString(owner string) (*base.OptionalString, e
 	}
 	return &base.OptionalString{Value: string(bytes)}, nil
 }
+
+type BKSNFTFetcher struct {
+	ApiUrl string
+	Owner  string
+
+	nextPage *BKSPageParams
+	quired   bool // 用来区分, 没有 nextPage 时, 是第一页还是最后一页
+}
+
+func NewBKSNFTFetcher(url string, owner string) *BKSNFTFetcher {
+	return &BKSNFTFetcher{
+		ApiUrl: url,
+		Owner:  owner,
+	}
+}
+
+func (f *BKSNFTFetcher) HasNextPage() bool {
+	return !f.quired || (f.nextPage != nil && f.nextPage.Raw != nil)
+}
+
+func (f *BKSNFTFetcher) ResetPage() {
+	f.nextPage = nil
+	f.quired = false
+}
+
+func (f *BKSNFTFetcher) FetchNextPage() (*BKSNFTPage, error) {
+	if !f.HasNextPage() {
+		return nil, nil
+	}
+	p, err := NewBlockScout(f.ApiUrl).Nft(f.Owner, f.nextPage)
+	if err != nil {
+		return nil, err
+	}
+	f.nextPage = p.NextPage_
+	return p, err
+}

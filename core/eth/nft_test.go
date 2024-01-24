@@ -2,6 +2,7 @@ package eth
 
 import (
 	"encoding/json"
+	"reflect"
 	"strconv"
 	"testing"
 
@@ -93,4 +94,24 @@ func TestBEVMjosjo(t *testing.T) {
 	println("id:", resp.Next_page_params.Id)
 	println("item_count:", resp.Next_page_params.ItemsCount)
 	println("value:", resp.Next_page_params.Value)
+}
+
+func TestBKSNFTFetcher_FetchNextPage(t *testing.T) {
+	owner := "0x30b31174e5FEd4598aA0dF3191EbAA5AAb48d43E" // nft very much
+	// owner := "0x9dE416AB881b322eE0b4c189C2dE624090280cF2" // nft few
+	fetcher := NewBKSNFTFetcher(BlockScoutURLEth, owner)
+
+	page1, err := fetcher.FetchNextPage()
+	require.Nil(t, err)
+	showPage(page1)
+
+	page2, err := fetcher.FetchNextPage()
+	require.Nil(t, err)
+	showPage(page2)
+
+	fetcher.ResetPage()
+	page1re, err := fetcher.FetchNextPage()
+	require.Nil(t, err)
+	showPage(page1re)
+	require.True(t, reflect.DeepEqual(page1, page1re))
 }
