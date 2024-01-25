@@ -284,5 +284,6 @@ func (f *BKSNFTFetcher) FetchNextPage() (*BKSNFTPage, error) {
 		return nil, err
 	}
 	f.nextPage = p.NextPage_
+	f.quired = true
 	return p, err
 }

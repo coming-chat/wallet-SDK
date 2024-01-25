@@ -22,6 +22,10 @@ func TestBlockScout_NFT(t *testing.T) {
 }
 
 func showPage(p *BKSNFTPage) {
+	if p == nil {
+		println("!!! page is empty")
+		return
+	}
 	println("item count: ", p.Count())
 	f := p.ValueAt(0).ToBaseNFT()
 	println("first item: ", f.Id, f.Name, f.Image)

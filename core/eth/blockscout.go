@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	BlockScoutURLBevm = "https://scan-canary.bevm.io/api/v2"
+	BlockScoutURLBevm = "https://scan-canary-api.bevm.io/api/v2"
 	BlockScoutURLEth  = "https://eth.blockscout.com/api/v2"
 )
 
