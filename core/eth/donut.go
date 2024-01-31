@@ -11,6 +11,97 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
+// MARK - Src20Token
+
+type Src20Token struct {
+	chain *Chain
+	Tick  string
+	// current support bevm donut token, Default is "0xf414dF7d8260A8e1e007F72892Cf5F0A7955cf04"
+	ContractAddress string
+}
+
+func NewSrc20Token(chain *Chain, tick string) *Src20Token {
+	return &Src20Token{
+		chain: chain,
+		Tick:  tick,
+
+		ContractAddress: "0xf414dF7d8260A8e1e007F72892Cf5F0A7955cf04",
+	}
+}
+
+func (t *Src20Token) Chain() base.Chain {
+	return t.chain
+}
+
+func (t *Src20Token) TokenInfo() (*base.TokenInfo, error) {
+	return &base.TokenInfo{
+		Name:    t.Tick,
+		Symbol:  t.Tick,
+		Decimal: 0,
+	}, nil
+}
+
+func (t *Src20Token) BalanceOfAddress(address string) (*base.Balance, error) {
+	tokens, err := fetchDonutInscriptions(address, t.Tick, "")
+	if err != nil {
+		return nil, err
+	}
+	if len(tokens) <= 0 {
+		return base.NewBalance("0"), nil
+	}
+	return base.NewBalance(tokens[0].Amount), nil
+}
+func (t *Src20Token) BalanceOfPublicKey(publicKey string) (*base.Balance, error) {
+	return t.BalanceOfAddress(publicKey)
+}
+func (t *Src20Token) BalanceOfAccount(account base.Account) (*base.Balance, error) {
+	return t.BalanceOfAddress(account.Address())
+}
+
+func (t *Src20Token) BuildTransfer(sender, receiver, amount string) (txn base.Transaction, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
+
+	if !common.IsHexAddress(sender) || !common.IsHexAddress(receiver) ||
+		!common.IsHexAddress(t.ContractAddress) {
+		return nil, base.ErrInvalidAddress
+	}
+	amountInt, ok := big.NewInt(0).SetString(amount, 10)
+	if !ok {
+		return nil, base.ErrInvalidAmount
+	}
+	data, err := encodeSrc20OpData(common.HexToAddress(receiver), "transfer", t.Tick, amountInt)
+	if err != nil {
+		return nil, err
+	}
+	gasPrice, err := t.chain.SuggestGasPrice()
+	if err != nil {
+		return nil, err
+	}
+
+	msg := NewCallMsg()
+	msg.SetFrom(sender)
+	msg.SetTo(t.ContractAddress)
+	msg.SetValue("0")
+	msg.SetGasPrice(gasPrice.Value)
+	msg.SetData(data)
+
+	gasLimit, err := t.chain.EstimateGasLimit(msg)
+	if err != nil {
+		return nil, err
+	}
+	msg.SetGasLimit(gasLimit.Value)
+
+	return msg.TransferToTransaction(), nil
+}
+
+// Before invoking this method, it is best to check `CanTransferAll()`
+func (t *Src20Token) CanTransferAll() bool {
+	return false
+}
+func (t *Src20Token) BuildTransferAll(sender, receiver string) (txn base.Transaction, err error) {
+	return nil, base.ErrUnsupportedFunction
+}
+
 type donutGraphResp struct {
 	Data struct {
 		Type  string `json:"@type"`
@@ -37,15 +128,32 @@ type DonutInscriptionArray struct {
 }
 
 // FetchDonutInscriptions
-// - param graphURL Default "https://bc.dnt.social/v1/common/search"
-func FetchDonutInscriptions(owner string, graphURL string) (arr *DonutInscriptionArray, err error) {
+// - param graphURL: Default "https://bc.dnt.social/v1/common/search"
+func FetchDonutInscriptions(owner string, graphURL string) (*DonutInscriptionArray, error) {
+	arr, err := fetchDonutInscriptions(owner, "", graphURL)
+	if err != nil {
+		return nil, err
+	}
+	return &DonutInscriptionArray{AnyArray: arr}, nil
+}
+
+// fetchDonutInscriptions
+// - param tick: if is empty, will query all of owner's ticks
+// - param graphURL: Default "https://bc.dnt.social/v1/common/search"
+func fetchDonutInscriptions(owner, tick, graphURL string) (arr []*DonutInscription, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
 
 	if graphURL == "" {
 		graphURL = "https://bc.dnt.social/v1/common/search"
 	}
+	funcStr := ""
+	if tick == "" {
+		funcStr = fmt.Sprintf(`src20Balances(holder: "%v", first: 100)`, owner)
+	} else {
+		funcStr = fmt.Sprintf(`src20Balances(holder: "%v", tick: "%v")`, owner, tick)
+	}
 	query := fmt.Sprintf(`{
-		src20Balances(holder: "%v", first: 100) {
+		%v {
 			edges{
 				node{
 					tick
@@ -53,7 +161,7 @@ func FetchDonutInscriptions(owner string, graphURL string) (arr *DonutInscriptio
 				}
 			}
 		}
-	}`, owner)
+	}`, funcStr)
 
 	var out struct {
 		Src20Balances struct {
@@ -66,51 +174,13 @@ func FetchDonutInscriptions(owner string, graphURL string) (arr *DonutInscriptio
 	if err != nil {
 		return
 	}
-	inscriptions := make([]*DonutInscription, len(out.Src20Balances.Edges))
-	for idx, node := range out.Src20Balances.Edges {
-		inscriptions[idx] = node.Node
+	inscriptions := make([]*DonutInscription, 0, len(out.Src20Balances.Edges))
+	for _, node := range out.Src20Balances.Edges {
+		if node.Node.Amount != "" && node.Node.Amount != "0" {
+			inscriptions = append(inscriptions, node.Node)
+		}
 	}
-	return &DonutInscriptionArray{AnyArray: inscriptions}, nil
-}
-
-func (c *Chain) BuildDonutTransfer(sender, receiver, tick, amount string) (*Transaction, error) {
-	return c.BuildSrc20Transfer(sender, receiver, "0xf414dF7d8260A8e1e007F72892Cf5F0A7955cf04", tick, amount)
-}
-
-func (c *Chain) BuildSrc20Transfer(sender, receiver string, src20ContractAddress string, tick string, amount string) (txn *Transaction, err error) {
-	defer base.CatchPanicAndMapToBasicError(&err)
-
-	if !common.IsHexAddress(sender) || !common.IsHexAddress(receiver) ||
-		!common.IsHexAddress(src20ContractAddress) {
-		return nil, base.ErrInvalidAddress
-	}
-	amountInt, ok := big.NewInt(0).SetString(amount, 10)
-	if !ok {
-		return nil, base.ErrInvalidAmount
-	}
-	data, err := encodeSrc20OpData(common.HexToAddress(receiver), "transfer", tick, amountInt)
-	if err != nil {
-		return nil, err
-	}
-	gasPrice, err := c.SuggestGasPrice()
-	if err != nil {
-		return nil, err
-	}
-
-	msg := NewCallMsg()
-	msg.SetFrom(sender)
-	msg.SetTo(src20ContractAddress)
-	msg.SetValue("0")
-	msg.SetGasPrice(gasPrice.Value)
-	msg.SetData(data)
-
-	gasLimit, err := c.EstimateGasLimit(msg)
-	if err != nil {
-		return nil, err
-	}
-	msg.SetGasLimit(gasLimit.Value)
-
-	return msg.TransferToTransaction(), nil
+	return inscriptions, nil
 }
 
 func encodeSrc20OpData(receiver common.Address, op, tick string, amount *big.Int) ([]byte, error) {

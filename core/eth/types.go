@@ -305,3 +305,7 @@ func (t *Transaction) SignWithAccount(account base.Account) (signedTx *base.Opti
 func (t *Transaction) SignedTransactionWithAccount(account base.Account) (signedTx base.SignedTransaction, err error) {
 	return nil, base.ErrUnsupportedFunction
 }
+
+func AsEthTransaction(txn base.Transaction) *Transaction {
+	return txn.(*Transaction)
+}

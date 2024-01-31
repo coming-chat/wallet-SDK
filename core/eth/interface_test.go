@@ -10,4 +10,6 @@ var (
 	_ base.Token       = (*Token)(nil)
 	_ base.Token       = (*Erc20Token)(nil)
 	_ base.Transaction = (*Transaction)(nil)
+
+	_ base.Token = (*Src20Token)(nil)
 )
