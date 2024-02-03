@@ -46,7 +46,7 @@ func (c *Chain) Erc20Token(contractAddress string) TokenProtocol {
 }
 
 func (c *Chain) BalanceOfAddress(address string) (*base.Balance, error) {
-	b := base.EmptyBalance()
+	b := base.NewBalance("0")
 
 	if !IsValidAddress(address) {
 		return b, errors.New("Invalid hex address")

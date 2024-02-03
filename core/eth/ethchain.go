@@ -12,7 +12,6 @@ import (
 
 type EthChain struct {
 	RemoteRpcClient *ethclient.Client
-	RpcClient       *rpc.Client
 	timeout         time.Duration
 	chainId         *big.Int
 	rpcUrl          string
@@ -52,7 +51,6 @@ func (e *EthChain) CreateRemoteWithTimeout(rpcUrl string, timeout int64) (chain 
 		return
 	}
 	e.chainId = chainId
-	e.RpcClient = rpcClient
 	e.RemoteRpcClient = remoteRpcClient
 	e.rpcUrl = rpcUrl
 	return e, nil
@@ -66,8 +64,5 @@ func (e *EthChain) ConnectRemote(rpcUrl string) error {
 func (e *EthChain) Close() {
 	if e.RemoteRpcClient != nil {
 		e.RemoteRpcClient.Close()
-	}
-	if e.RpcClient != nil {
-		e.RpcClient.Close()
 	}
 }

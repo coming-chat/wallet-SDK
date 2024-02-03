@@ -214,7 +214,7 @@ func (e *EthChain) TransactionReceiptByHash(txHash string) (*Receipt, error) {
 	defer cancel()
 
 	var r *Receipt
-	err := e.RpcClient.CallContext(ctx, &r, "eth_getTransactionReceipt", txHash)
+	err := e.RemoteRpcClient.Client().CallContext(ctx, &r, "eth_getTransactionReceipt", txHash)
 	if err == nil {
 		if r == nil {
 			return nil, ethereum.NotFound

@@ -43,7 +43,7 @@ func (e *EthChain) zksync_FetchTransactionDetail(hashString string) (detail *bas
 	ctx, cancel := context.WithTimeout(context.Background(), e.timeout)
 	defer cancel()
 	var tx *zksync_Transaction
-	err = e.RpcClient.CallContext(ctx, &tx, "eth_getTransactionByHash", hashString)
+	err = e.RemoteRpcClient.Client().CallContext(ctx, &tx, "eth_getTransactionByHash", hashString)
 	if err != nil {
 		return
 	} else if tx == nil {
