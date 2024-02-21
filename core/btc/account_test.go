@@ -31,6 +31,13 @@ var errorCase = &TestAccountCase{
 	mnemonic: "unaware oxygen allow method allow property predict various slice travel please check",
 }
 
+func TestAccount(t *testing.T) {
+	mn := testcase.M1
+	acc, err := NewAccountWithMnemonic(mn, ChainMainnet)
+	require.Nil(t, err)
+	t.Log(acc.Address())
+}
+
 func TestNewAccountWithMnemonic(t *testing.T) {
 	type args struct {
 		mnemonic string
@@ -75,9 +82,9 @@ func TestNewAccountWithMnemonic(t *testing.T) {
 				t.Errorf("NewAccountWithMnemonic() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			address, err := got.TaprootAddress()
+			address, err := got.ComingTaprootAddress()
 			if (err == nil) && address.Value != tt.wantAddress {
-				t.Errorf("NewAccountWithMnemonic() got = %v, want %v", got.address, tt.wantAddress)
+				t.Errorf("NewAccountWithMnemonic() got = %v, want %v", address.Value, tt.wantAddress)
 			}
 		})
 	}
