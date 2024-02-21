@@ -19,7 +19,7 @@ require (
 	github.com/coming-chat/merlin v0.1.2-0.20211216101619-d46ce5719651
 	github.com/cosmos/cosmos-sdk v0.47.2
 	github.com/decred/base58 v1.0.3
-	github.com/ethereum/go-ethereum v1.13.10
+	github.com/ethereum/go-ethereum v1.13.12
 	github.com/fardream/go-bcs v0.2.1
 	github.com/gtank/ristretto255 v0.1.2
 	github.com/itering/subscan v0.1.0

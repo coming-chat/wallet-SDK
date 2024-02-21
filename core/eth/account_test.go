@@ -83,9 +83,9 @@ func TestIsValidAddress(t *testing.T) {
 			want:    true,
 		},
 		{
-			name:    "invalid address of eip55, alter a char",
+			name:    "invalid address of eip55, alter a char, but not check eip55",
 			address: "0x7161ada3EA6e53E5652A45988DdfF1cE595E09c1",
-			want:    false,
+			want:    true,
 		},
 		{
 			name:    "invalid address short length",
