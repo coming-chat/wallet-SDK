@@ -58,8 +58,5 @@ func DecodeOrdFromWitness(witness []byte) (*Ord, error) {
 			Content:     content,
 		}, nil
 	}
-	if tokenizer.Err() != nil {
-		return nil, tokenizer.Err()
-	}
 	return nil, errors.New("not found ord")
 }
