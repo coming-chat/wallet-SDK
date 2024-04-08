@@ -2,6 +2,7 @@ package btc
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -132,4 +133,17 @@ func SuggestFeeRate() (rates *FeeRate, err error) {
 		Average: int64(feeRates.HalfHourFee),
 		High:    int64(feeRates.FastestFee),
 	}, nil
+}
+
+func (c *Chain) PushPsbt(psbtHex string) (hash *base.OptionalString, err error) {
+	packet, err := DecodePsbtTxToPacket(psbtHex)
+	if err != nil {
+		return nil, err
+	}
+	err = EnsurePsbtFinalize(packet)
+	if err != nil {
+		return nil, errors.New("transaction signature error")
+	}
+	signedTxn := SignedPsbtTransaction{*packet}
+	return c.SendSignedTransaction(&signedTxn)
 }

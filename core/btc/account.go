@@ -301,6 +301,18 @@ func messageHash(msg string) []byte {
 	return chainhash.DoubleHashB(buf.Bytes())
 }
 
+func (a *Account) SignPsbt(psbtHex string) (*SignedPsbtTransaction, error) {
+	psbt, err := NewPsbtTransaction(psbtHex)
+	if err != nil {
+		return nil, err
+	}
+	signedTxn, err := psbt.SignedTransactionWithAccount(a)
+	if err != nil {
+		return nil, err
+	}
+	return signedTxn.(*SignedPsbtTransaction), nil
+}
+
 // MARK - Implement the protocol AddressUtil
 
 // @param publicKey can start with 0x or not.

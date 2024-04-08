@@ -342,3 +342,23 @@ func TestAccount_SignMessage(t *testing.T) {
 	valid := VerifySignature(acc.PublicKeyHex(), message, signature.Value)
 	t.Log("signature is valid: ", valid)
 }
+
+func TestAccount_SignPsbt(t *testing.T) {
+	acc, err := NewAccountWithMnemonic(testcase.M1, ChainMainnet)
+	require.NoError(t, err)
+
+	psbtHex := "010203"
+	txn, err := acc.SignPsbt(psbtHex)
+	require.NoError(t, err)
+	require.True(t, txn.Packet.IsComplete())
+}
+
+func TestChain_PushPsbt(t *testing.T) {
+	chain, err := NewChainWithChainnet(ChainTestnet)
+	require.NoError(t, err)
+
+	psbtHex := "010203"
+	hash, err := chain.PushPsbt(psbtHex)
+	require.NoError(t, err)
+	t.Log("txn hash = ", hash.Value)
+}

@@ -44,7 +44,9 @@ func (t *SignedPsbtTransaction) HexString() (res *base.OptionalString, err error
 	return nil, base.ErrUnsupportedFunction
 }
 
-func (t *SignedPsbtTransaction) PublishWithChain(c *Chain) (*base.OptionalString, error) {
+func (t *SignedPsbtTransaction) PublishWithChain(c *Chain) (hashs *base.OptionalString, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
+
 	msgTx, err := PsbtPacketToMsgTx(&t.Packet)
 	if err != nil {
 		return nil, err
