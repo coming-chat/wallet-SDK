@@ -1,13 +1,18 @@
 package btc
 
 import (
+	"bytes"
+	"encoding/base64"
 	"fmt"
 
 	"github.com/btcsuite/btcd/btcec/v2"
+	"github.com/btcsuite/btcd/btcec/v2/ecdsa"
 	"github.com/btcsuite/btcd/btcec/v2/schnorr"
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
+	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/txscript"
+	"github.com/btcsuite/btcd/wire"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/tyler-smith/go-bip39"
@@ -249,6 +254,51 @@ func (a *Account) Sign(message []byte, password string) ([]byte, error) {
 // TODO: function not implement yet.
 func (a *Account) SignHex(messageHex string, password string) (*base.OptionalString, error) {
 	return nil, base.ErrUnsupportedFunction
+}
+
+// SignMessage
+// https://developer.bitcoin.org/reference/rpc/signmessage.html
+// @param msg The message to create a signature of.
+// @return The signature of the message encoded in base64.
+func (a *Account) SignMessage(msg string) (*base.OptionalString, error) {
+	msgHash := messageHash(msg)
+
+	signbytes, err := ecdsa.SignCompact(a.privateKey, msgHash, true)
+	if err != nil {
+		return nil, err
+	}
+	signature := base64.StdEncoding.EncodeToString(signbytes)
+	return base.NewOptionalString(signature), nil
+}
+
+func VerifySignature(pubkey, message, signature string) bool {
+	signBytes, err := base64.StdEncoding.DecodeString(signature)
+	if err != nil {
+		return false
+	}
+	pubBytes, err := types.HexDecodeString(pubkey)
+	if err != nil {
+		return false
+	}
+	pub, err := btcec.ParsePubKey(pubBytes)
+	if err != nil {
+		return false
+	}
+
+	msgHash := messageHash(message)
+	recoverPub, ok, err := ecdsa.RecoverCompact(signBytes, msgHash)
+	if err != nil || ok == false {
+		return false
+	}
+
+	return pub.IsEqual(recoverPub)
+}
+
+func messageHash(msg string) []byte {
+	var buf bytes.Buffer
+	_ = wire.WriteVarString(&buf, 0, "Bitcoin Signed Message:\n")
+	_ = wire.WriteVarString(&buf, 0, msg)
+	return chainhash.DoubleHashB(buf.Bytes())
 }
 
 // MARK - Implement the protocol AddressUtil

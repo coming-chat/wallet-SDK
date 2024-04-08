@@ -325,3 +325,20 @@ func TestIsValidPrivateKey(t *testing.T) {
 	valid := IsValidPrivateKey("cTkZaPpb1pDdor36V5VY4uu5LE6tgzrjRADvrEXimEqWqvwRbfXY")
 	t.Log(valid)
 }
+
+func TestAccount_SignMessage(t *testing.T) {
+	acc, err := NewAccountWithMnemonic(testcase.M1, ChainMainnet)
+	require.Nil(t, err)
+	acc.AddressType = AddressTypeTaproot
+	t.Log(acc.Address())
+
+	// sign message
+	message := "hello world~"
+	signature, err := acc.SignMessage(message)
+	require.Nil(t, err)
+	t.Log("sign message result: ", signature.Value)
+
+	// check signature
+	valid := VerifySignature(acc.PublicKeyHex(), message, signature.Value)
+	t.Log("signature is valid: ", valid)
+}
