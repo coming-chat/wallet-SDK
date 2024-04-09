@@ -351,6 +351,10 @@ func TestAccount_SignPsbt(t *testing.T) {
 	txn, err := acc.SignPsbt(psbtHex)
 	require.NoError(t, err)
 	require.True(t, txn.Packet.IsComplete())
+
+	res, err := txn.PsbtHexString()
+	require.NoError(t, err)
+	t.Log("signed result: ", res.Value)
 }
 
 func TestChain_PushPsbt(t *testing.T) {

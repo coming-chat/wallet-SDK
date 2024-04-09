@@ -1,6 +1,9 @@
 package btc
 
 import (
+	"bytes"
+	"encoding/hex"
+
 	"github.com/btcsuite/btcd/btcutil/psbt"
 	"github.com/coming-chat/wallet-SDK/core/base"
 )
@@ -42,6 +45,19 @@ type SignedPsbtTransaction struct {
 
 func (t *SignedPsbtTransaction) HexString() (res *base.OptionalString, err error) {
 	return nil, base.ErrUnsupportedFunction
+}
+
+func (t *SignedPsbtTransaction) PsbtHexString() (*base.OptionalString, error) {
+	packet := t.Packet
+	if err := EnsurePsbtFinalize(&packet); err != nil {
+		return nil, err
+	}
+	var buff bytes.Buffer
+	if err := packet.Serialize(&buff); err != nil {
+		return nil, err
+	}
+	hexString := hex.EncodeToString(buff.Bytes())
+	return &base.OptionalString{Value: hexString}, nil
 }
 
 func (t *SignedPsbtTransaction) PublishWithChain(c *Chain) (hashs *base.OptionalString, err error) {
