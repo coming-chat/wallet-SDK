@@ -167,7 +167,7 @@ func Decipher(transaction *wire.MsgTx) (Artifact, error) {
 		if len(b) != 2 || b[0].BitLen() > 64 || b[1].BitLen() > 32 {
 			return nil
 		}
-		return &RuneId{Block: b[0].Uint64(), Tx: uint32(b[0].Uint64())}
+		return &RuneId{Block: b[0].Uint64(), Tx: uint32(b[1].Uint64())}
 	})
 
 	pointer := runestone.Take[uint32](runestone.Pointer, message.Fields, 1, func(b ...big.Int) *uint32 {
