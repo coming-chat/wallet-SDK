@@ -6,9 +6,9 @@ import (
 )
 
 type Edict struct {
-	Id     RuneId
-	Amount big.Int
-	Output uint32
+	Id     RuneId  `json:"id"`
+	Amount big.Int `json:"amount"`
+	Output uint32  `json:"output"`
 }
 
 func NewEdictFromIntegers(tx *wire.MsgTx, id RuneId, amount big.Int, output big.Int) *Edict {
