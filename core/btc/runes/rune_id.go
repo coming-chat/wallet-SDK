@@ -13,8 +13,8 @@ var (
 )
 
 type RuneId struct {
-	Block uint64
-	Tx    uint32
+	Block uint64 `json:"block"`
+	Tx    uint32 `json:"tx"`
 }
 
 func (r *RuneId) Next(block big.Int, tx big.Int) *RuneId {

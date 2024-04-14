@@ -25,10 +25,10 @@ type Artifact interface {
 }
 
 type Runestone struct {
-	Edicts  []Edict
-	Etching *Etching
-	Mint    *RuneId
-	Pointer *uint32
+	Edicts  []Edict  `json:"edicts"`
+	Etching *Etching `json:"etching"`
+	Mint    *RuneId  `json:"mint"`
+	Pointer *uint32  `json:"pointer"`
 }
 
 func (r Runestone) artifact() {

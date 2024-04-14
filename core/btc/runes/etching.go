@@ -3,13 +3,13 @@ package runes
 import "math/big"
 
 type Etching struct {
-	Divisibility *byte
-	Premine      *big.Int
-	Rune         *Rune
-	Spacers      *uint32
-	Symbol       *rune
-	Terms        *Terms
-	Turbo        bool
+	Divisibility *uint8   `json:"divisibility"`
+	Premine      *big.Int `json:"premine"`
+	Rune         *Rune    `json:"rune"`
+	Spacers      *uint32  `json:"spacers"`
+	Symbol       *rune    `json:"symbol"`
+	Terms        *Terms   `json:"terms"`
+	Turbo        bool     `json:"turbo"`
 }
 
 const (
