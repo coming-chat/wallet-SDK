@@ -117,6 +117,22 @@ func (a *Account) DerivePath() string {
 	return AddressTypeDerivePath(a.addressType)
 }
 
+func (a *Account) AddressWithType(addrType AddressType) (*base.OptionalString, error) {
+	addr, err := EncodePubKeyToAddress(a.privateKey.PubKey(), a.chain, addrType)
+	if err != nil {
+		return nil, err
+	}
+	return base.NewOptionalString(addr), nil
+}
+
+func (a *Account) WIFPrivateKeyString() (*base.OptionalString, error) {
+	str, err := PrivateKeyToWIF(a.privateKey, a.chain)
+	if err != nil {
+		return nil, err
+	}
+	return base.NewOptionalString(str), nil
+}
+
 // MARK - Implement the protocol Account
 
 // @return privateKey data
@@ -191,7 +207,7 @@ func VerifySignature(pubkey, message, signature string) bool {
 
 	msgHash := messageHash(message)
 	recoverPub, ok, err := ecdsa.RecoverCompact(signBytes, msgHash)
-	if err != nil || ok == false {
+	if err != nil || !ok {
 		return false
 	}
 
@@ -221,7 +237,7 @@ func (a *Account) SignPsbt(psbtHex string) (*SignedPsbtTransaction, error) {
 
 // @param publicKey can start with 0x or not.
 func (a *Account) EncodePublicKeyToAddress(publicKey string) (string, error) {
-	return EncodePublicKeyToAddress(publicKey, a.chain.Name)
+	return EncodePublicKeyToAddress(publicKey, a.chain.Name, AddressTypeComingTaproot)
 }
 
 // @return publicKey that will start with 0x.

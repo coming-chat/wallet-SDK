@@ -3,6 +3,7 @@ package btc
 import (
 	"strings"
 
+	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/coming-chat/wallet-SDK/core/base/inter"
@@ -24,11 +25,11 @@ func NewUtilWithChainnet(chainnet string) (*Util, error) {
 
 // @param publicKey can start with 0x or not.
 func (u *Util) EncodePublicKeyToAddress(publicKey string) (string, error) {
-	return EncodePublicKeyToAddress(publicKey, u.Chainnet)
+	return EncodePublicKeyToAddress(publicKey, u.Chainnet, AddressTypeComingTaproot)
 }
 
 func (u *Util) EncodePublicDataToAddress(public []byte) (string, error) {
-	return EncodePublicDataToAddress(public, u.Chainnet)
+	return EncodePublicDataToAddress(public, u.Chainnet, AddressTypeComingTaproot)
 }
 
 // Warning: Btc cannot support decode address to public key
@@ -43,24 +44,24 @@ func (u *Util) IsValidAddress(address string) bool {
 // MARK - like Util
 
 // @param publicKey can start with 0x or not.
-func EncodePublicKeyToAddress(publicKey, chainnet string) (string, error) {
+func EncodePublicKeyToAddress(publicKey, chainnet string, addressType AddressType) (string, error) {
 	pubData, err := types.HexDecodeString(publicKey)
 	if err != nil {
 		return "", err
 	}
-	return EncodePublicDataToAddress(pubData, chainnet)
+	return EncodePublicDataToAddress(pubData, chainnet, addressType)
 }
 
-func EncodePublicDataToAddress(public []byte, chainnet string) (string, error) {
+func EncodePublicDataToAddress(pubKey []byte, chainnet string, addressType AddressType) (string, error) {
 	params, err := netParamsOf(chainnet)
 	if err != nil {
 		return "", err
 	}
-	segwitAddress, err := btcutil.NewAddressTaproot(public[1:33], params)
+	pub, err := btcec.ParsePubKey(pubKey)
 	if err != nil {
 		return "", err
 	}
-	return segwitAddress.EncodeAddress(), nil
+	return EncodePubKeyToAddress(pub, params, addressType)
 }
 
 // @param chainnet chain name
@@ -76,10 +77,7 @@ func IsValidAddress(address, chainnet string) bool {
 		return false
 	}
 	_, err = btcutil.DecodeAddress(address, params)
-	if err != nil {
-		return false
-	}
-	return true
+	return err == nil
 }
 
 func IsValidPrivateKey(prikey string) bool {

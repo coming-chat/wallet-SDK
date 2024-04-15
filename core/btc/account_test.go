@@ -305,6 +305,7 @@ func TestPublicKeyTransform(t *testing.T) {
 	pubkeyErr := "0x02cfb7f626025d6826253f8fc5858e7a5c4b853350b4385ae909cf66138b71ec71"
 	pubkey, err = PublicKeyTransform(pubkeyErr, true)
 	require.Error(t, err)
+	t.Log(pubkey)
 }
 
 func TestIsValidPrivateKey(t *testing.T) {
