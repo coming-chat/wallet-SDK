@@ -18,30 +18,30 @@ func TestCache(t *testing.T) {
 
 		polkaAddress, err := wallet.PolkaAccountInfo(44).Address()
 		require.Nil(t, err)
-		require.Equal(t, polkaAddress.Value, testcase.Accounts.Polka44.Address)
+		require.Equal(t, polkaAddress.Value, "5Rdo22BWmvxoFRgLcny1unddon7VErbF1NMhXG1ukskgvnix")
 
 		aptosAddress, err := wallet.AptosAccountInfo().Address()
 		require.Nil(t, err)
-		require.Equal(t, aptosAddress.Value, testcase.Accounts.Aptos.Address)
+		require.Equal(t, aptosAddress.Value, "0x11dd2037a613716fdc7cdbd96390b6450bce6754e46b9251cd3c8cd7733683bd")
 
 		ethereumAddress, err := wallet.EthereumAccountInfo().Address()
 		require.Nil(t, err)
-		require.Equal(t, ethereumAddress.Value, testcase.Accounts.Ethereum.Address)
+		require.Equal(t, ethereumAddress.Value, "0x8687B640546744b5338AA292fBbE881162dd5bAe")
 
 		bitcoinAddress, err := wallet.BitcoinAccountInfo("mainnet", 0).Address()
 		require.Nil(t, err)
-		require.Equal(t, bitcoinAddress.Value, testcase.Accounts.BtcMainnet.Address)
+		require.Equal(t, bitcoinAddress.Value, "bc1pn8rv6lqakzlz7yvflc24qjv0pjx8w0plcfq34jl6scs7pqcac2wqjymurp")
 
 		dogecoinAddress, err := wallet.DogecoinAccountInfo("mainnet").Address()
 		require.Nil(t, err)
-		require.Equal(t, dogecoinAddress.Value, testcase.Accounts.DogeMainnet.Address)
+		require.Equal(t, dogecoinAddress.Value, "DNEJHtF6qjTsWH9muEH5BoQbAmUkyvvDC9")
 
 		timeStart := time.Now()
 		times := 10000
 		for i := 0; i < times; i++ {
 			ethereumAddress, err := wallet.EthereumAccountInfo().Address()
 			require.Nil(t, err)
-			require.Equal(t, ethereumAddress.Value, testcase.Accounts.Ethereum.Address)
+			require.Equal(t, ethereumAddress.Value, "0x8687B640546744b5338AA292fBbE881162dd5bAe")
 		}
 		timeSpent := time.Since(timeStart)
 		t.Logf("%v times get address spent = %v", times, timeSpent)
@@ -95,7 +95,7 @@ func TestCache(t *testing.T) {
 
 		polkaAddress, err := wallet.PolkaAccountInfo(44).Address()
 		require.Nil(t, err)
-		require.Equal(t, polkaAddress.Value, testcase.Accounts.Polka44.Address)
+		require.Equal(t, polkaAddress.Value, "5Rdo22BWmvxoFRgLcny1unddon7VErbF1NMhXG1ukskgvnix")
 	}
 
 }

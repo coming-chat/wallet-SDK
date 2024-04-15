@@ -8,22 +8,22 @@ import (
 )
 
 func TestBrc20MintTransaction_SignAndSend(t *testing.T) {
-	account, err := NewAccountWithMnemonic(testcase.M1, ChainTestnet)
+	account, err := NewAccountWithMnemonic(testcase.M1, ChainTestnet, AddressTypeTaproot)
 	require.Nil(t, err)
 	tick := "ovvo"
 	amount := "1000"
 
-	user, err := account.TaprootAddress()
+	user := account.Address()
 	require.Nil(t, err)
-	println("address: ", user.Value)
+	t.Log("address: ", user)
 
 	chain, err := NewChainWithChainnet(ChainTestnet)
 	require.Nil(t, err)
-	balance, err := chain.BalanceOfAddress(user.Value)
+	balance, err := chain.BalanceOfAddress(user)
 	require.Nil(t, err)
 	println("balance: ", balance.Total)
 
-	txn, err := chain.BuildBrc20MintTransaction(user.Value, user.Value, "mint", tick, amount, 1)
+	txn, err := chain.BuildBrc20MintTransaction(user, user, "mint", tick, amount, 1)
 	require.Nil(t, err)
 
 	signedTxn, err := txn.SignedTransactionWithAccount(account)
@@ -37,14 +37,13 @@ func TestBrc20MintTransaction_SignAndSend(t *testing.T) {
 }
 
 func TestFetchBrc20InscriptionList(t *testing.T) {
-	account, err := NewAccountWithMnemonic(testcase.M1, ChainTestnet)
+	account, err := NewAccountWithMnemonic(testcase.M1, ChainTestnet, AddressTypeTaproot)
 	require.Nil(t, err)
 	chain, err := NewChainWithChainnet(ChainTestnet)
 	require.Nil(t, err)
-	addr, err := account.TaprootAddress()
-	require.Nil(t, err)
+	addr := account.Address()
 
-	list, err := chain.FetchBrc20Inscription(addr.Value, "", 10)
+	list, err := chain.FetchBrc20Inscription(addr, "", 10)
 	require.Nil(t, err)
 	t.Log(list.Items)
 }

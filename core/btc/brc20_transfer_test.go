@@ -27,17 +27,16 @@ func TestBuildTransferTransaction(t *testing.T) {
 }
 
 func TestBrc20TransferTransaction_SignAndSend(t *testing.T) {
-	account, err := NewAccountWithMnemonic(testcase.M1, ChainTestnet)
+	account, err := NewAccountWithMnemonic(testcase.M1, ChainTestnet, AddressTypeTaproot)
 	require.Nil(t, err)
 	chain, err := NewChainWithChainnet(ChainTestnet)
 	require.Nil(t, err)
-	user, err := account.TaprootAddress()
-	require.Nil(t, err)
+	user := account.Address()
 
-	idList := inscriptionIds(t, chain, user.Value, "txtx", 2)
+	idList := inscriptionIds(t, chain, user, "txtx", 2)
 	idArray := base.StringArray{AnyArray: idList}
 
-	txn, err := chain.BuildBrc20TransferTransaction(user.Value, user.Value, &idArray, 2, "")
+	txn, err := chain.BuildBrc20TransferTransaction(user, user, &idArray, 2, "")
 	require.Nil(t, err)
 	psbtTxn, err := txn.ToPsbtTransaction()
 	require.Nil(t, err)

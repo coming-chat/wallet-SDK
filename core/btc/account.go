@@ -7,135 +7,90 @@ import (
 
 	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/btcec/v2/ecdsa"
-	"github.com/btcsuite/btcd/btcec/v2/schnorr"
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
-	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 	"github.com/coming-chat/wallet-SDK/core/base"
-	"github.com/tyler-smith/go-bip39"
 )
 
 type Account struct {
 	privateKey *btcec.PrivateKey
-	address    *btcutil.AddressPubKey
+	address    string
 	chain      *chaincfg.Params
 
 	// Default is `AddressTypeComingTaproot`
-	AddressType AddressType
+	addressType AddressType
 }
 
-func NewAccountWithMnemonic(mnemonic, chainnet string) (*Account, error) {
-	seed, err := bip39.NewSeedWithErrorChecking(mnemonic, "")
-	if err != nil {
-		return nil, err
-	}
-
-	pri, pub := btcec.PrivKeyFromBytes(seed)
+func NewAccountWithMnemonic(mnemonic, chainnet string, addressType AddressType) (*Account, error) {
 	chain, err := netParamsOf(chainnet)
 	if err != nil {
 		return nil, err
 	}
-	address, err := btcutil.NewAddressPubKey(pub.SerializeCompressed(), chain)
+
+	var privateKey *btcec.PrivateKey
+	path := AddressTypeDerivePath(addressType)
+	if path == "--" {
+		addressType = AddressTypeComingTaproot
+		privateKey, err = ComingPrivateKey(mnemonic)
+	} else {
+		privateKey, err = Derivation(mnemonic, path)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	address, err := EncodePubKeyToAddress(privateKey.PubKey(), chain, addressType)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Account{
-		privateKey: pri,
-		address:    address,
-		chain:      chain,
+		privateKey:  privateKey,
+		address:     address,
+		chain:       chain,
+		addressType: addressType,
 	}, nil
 }
 
-func AccountWithPrivateKey(prikey string, chainnet string) (*Account, error) {
-	var (
-		pri     *btcec.PrivateKey
-		pubData []byte
-	)
+func AccountWithPrivateKey(prikey string, chainnet string, addressType AddressType) (*Account, error) {
 	chain, err := netParamsOf(chainnet)
 	if err != nil {
 		return nil, err
 	}
+
+	var privateKey *btcec.PrivateKey
 	wif, err := btcutil.DecodeWIF(prikey)
 	if err != nil {
 		seed, err := types.HexDecodeString(prikey)
 		if err != nil {
 			return nil, err
 		}
-		var pub *btcec.PublicKey
-		pri, pub = btcec.PrivKeyFromBytes(seed)
-		pubData = pub.SerializeCompressed()
+		privateKey, _ = btcec.PrivKeyFromBytes(seed)
 	} else {
 		if !wif.IsForNet(chain) {
 			return nil, fmt.Errorf("the specified chainnet does not match the wif private key")
 		}
-		pri = wif.PrivKey
-		pubData = wif.SerializePubKey()
+		privateKey = wif.PrivKey
 	}
 
-	address, err := btcutil.NewAddressPubKey(pubData, chain)
+	address, err := EncodePubKeyToAddress(privateKey.PubKey(), chain, addressType)
 	if err != nil {
 		return nil, err
 	}
+
 	return &Account{
-		privateKey: pri,
-		address:    address,
-		chain:      chain,
+		privateKey:  privateKey,
+		address:     address,
+		chain:       chain,
+		addressType: addressType,
 	}, nil
 }
 
-// NativeSegwitAddress P2WPKH just for m/84'/
-func (a *Account) NativeSegwitAddress() (*base.OptionalString, error) {
-	address, err := btcutil.NewAddressWitnessPubKeyHash(a.address.AddressPubKeyHash().ScriptAddress(), a.chain)
-	if err != nil {
-		return nil, err
-	}
-	return &base.OptionalString{Value: address.EncodeAddress()}, nil
-}
-
-// NestedSegwitAddress P2SH-P2WPKH just for m/49'/
-func (a *Account) NestedSegwitAddress() (*base.OptionalString, error) {
-	witAddr, err := btcutil.NewAddressWitnessPubKeyHash(a.address.AddressPubKeyHash().ScriptAddress(), a.chain)
-	if err != nil {
-		return nil, err
-	}
-	witnessProgram, err := txscript.PayToAddrScript(witAddr)
-	if err != nil {
-		return nil, err
-	}
-	address, err := btcutil.NewAddressScriptHash(witnessProgram, a.chain)
-	if err != nil {
-		return nil, err
-	}
-	return &base.OptionalString{Value: address.EncodeAddress()}, nil
-}
-
-// TaprootAddress P2TR just for m/86'/
-func (a *Account) TaprootAddress() (*base.OptionalString, error) {
-	tapKey := txscript.ComputeTaprootKeyNoScript(a.address.PubKey())
-	address, err := btcutil.NewAddressTaproot(
-		schnorr.SerializePubKey(tapKey), a.chain,
-	)
-	if err != nil {
-		return nil, err
-	}
-	return &base.OptionalString{Value: address.EncodeAddress()}, nil
-}
-
-func (a *Account) ComingTaprootAddress() (*base.OptionalString, error) {
-	taproot, err := btcutil.NewAddressTaproot(a.address.ScriptAddress()[1:33], a.chain)
-	if err != nil {
-		return nil, err
-	}
-	return &base.OptionalString{Value: taproot.EncodeAddress()}, nil
-}
-
-// LegacyAddress P2PKH just for m/44'/
-func (a *Account) LegacyAddress() (*base.OptionalString, error) {
-	return &base.OptionalString{Value: a.address.AddressPubKeyHash().EncodeAddress()}, nil
+func (a *Account) AddressType() AddressType {
+	return a.addressType
 }
 
 func (a *Account) DeriveAccountAt(chainnet string) (*Account, error) {
@@ -143,38 +98,23 @@ func (a *Account) DeriveAccountAt(chainnet string) (*Account, error) {
 	if err != nil {
 		return nil, err
 	}
-	address, err := btcutil.NewAddressPubKey(a.address.ScriptAddress(), chain)
+	address, err := EncodePubKeyToAddress(a.privateKey.PubKey(), chain, a.addressType)
 	if err != nil {
 		return nil, err
 	}
 	return &Account{
-		privateKey: a.privateKey,
-		address:    address,
-		chain:      chain,
+		privateKey:  a.privateKey,
+		address:     address,
+		chain:       chain,
+		addressType: a.addressType,
 	}, nil
 }
 
 func (a *Account) AddressTypeString() string {
-	return AddressTypeDescription(a.AddressType)
+	return AddressTypeDescription(a.addressType)
 }
 func (a *Account) DerivePath() string {
-	return AddressTypeDerivePath(a.AddressType)
-}
-
-func (a *Account) AddressWithType(addrType AddressType) (*base.OptionalString, error) {
-	switch addrType {
-	case AddressTypeComingTaproot:
-		return a.ComingTaprootAddress()
-	case AddressTypeNativeSegwit:
-		return a.NativeSegwitAddress()
-	case AddressTypeNestedSegwit:
-		return a.NestedSegwitAddress()
-	case AddressTypeTaproot:
-		return a.TaprootAddress()
-	case AddressTypeLegacy:
-		return a.LegacyAddress()
-	}
-	return nil, fmt.Errorf("unknow address type `%v`", addrType)
+	return AddressTypeDerivePath(a.addressType)
 }
 
 // MARK - Implement the protocol Account
@@ -191,25 +131,23 @@ func (a *Account) PrivateKeyHex() (string, error) {
 
 // @return publicKey data
 func (a *Account) PublicKey() []byte {
-	return a.address.ScriptAddress()
+	return a.privateKey.PubKey().SerializeCompressed()
 }
 
 // @return publicKey string that will start with 0x.
 func (a *Account) PublicKeyHex() string {
-	return types.HexEncodeToString(a.address.ScriptAddress())
+	pub := a.privateKey.PubKey().SerializeCompressed()
+	return types.HexEncodeToString(pub)
 }
 
 func (a *Account) MultiSignaturePubKey() string {
-	return types.HexEncodeToString(a.address.PubKey().SerializeUncompressed())
+	pub := a.privateKey.PubKey().SerializeUncompressed()
+	return types.HexEncodeToString(pub)
 }
 
 // @return default is the mainnet address
 func (a *Account) Address() string {
-	addr, err := a.AddressWithType(a.AddressType)
-	if err != nil {
-		return "--"
-	}
-	return addr.Value
+	return a.address
 }
 
 // TODO: function not implement yet.

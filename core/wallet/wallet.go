@@ -117,11 +117,10 @@ func (w *Wallet) GetOrCreateBitcoinAccount(chainnet string, addressType btc.Addr
 	if len(w.Mnemonic) <= 0 {
 		return nil, ErrInvalidMnemonic
 	}
-	account, err := btc.NewAccountWithMnemonic(w.Mnemonic, chainnet)
+	account, err := btc.NewAccountWithMnemonic(w.Mnemonic, chainnet, addressType)
 	if err != nil {
 		return nil, err
 	}
-	account.AddressType = addressType
 
 	// save to cache
 	w.multiAccounts.Store(key, account)

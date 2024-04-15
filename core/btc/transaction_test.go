@@ -83,13 +83,13 @@ func TestSignPSBTTx(t *testing.T) {
 }
 
 func testAccount(t *testing.T) *Account {
-	account, err := NewAccountWithMnemonic(testcase.M1, "testnet")
+	old, err := NewAccountWithMnemonic(testcase.M1, "testnet", AddressTypeComingTaproot)
 	require.NoError(t, err)
-	address, err := account.TaprootAddress()
-	t.Log(address.Value)
-	segwitAddress, err := account.NativeSegwitAddress()
+	priHex, _ := old.PrivateKeyHex()
+	account, err := AccountWithPrivateKey(priHex, ChainTestnet, AddressTypeTaproot)
 	require.NoError(t, err)
-	t.Log(segwitAddress.Value)
+	address := account.Address()
+	t.Log(address)
 	return account
 }
 

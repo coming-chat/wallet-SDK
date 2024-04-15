@@ -162,20 +162,10 @@ func (w *CacheWallet) BitcoinAccountInfo(chainnet string, addressType btc.Addres
 		Wallet:   w,
 		cacheKey: fmt.Sprintf("bitcoin-%v", chainnet),
 		mnemonicCreator: func(val string) (base.Account, error) {
-			acc, err := btc.NewAccountWithMnemonic(val, chainnet)
-			if err != nil {
-				return nil, err
-			}
-			acc.AddressType = addressType
-			return acc, nil
+			return btc.NewAccountWithMnemonic(val, chainnet, addressType)
 		},
 		privkeyCreator: func(val string) (base.Account, error) {
-			acc, err := btc.AccountWithPrivateKey(val, chainnet)
-			if err != nil {
-				return nil, err
-			}
-			acc.AddressType = addressType
-			return acc, nil
+			return btc.AccountWithPrivateKey(val, chainnet, addressType)
 		},
 	}
 }

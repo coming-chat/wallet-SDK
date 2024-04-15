@@ -33,7 +33,7 @@ var errorCase = &TestAccountCase{
 
 func TestAccount(t *testing.T) {
 	mn := testcase.M1
-	acc, err := NewAccountWithMnemonic(mn, ChainMainnet)
+	acc, err := NewAccountWithMnemonic(mn, ChainMainnet, AddressTypeComingTaproot)
 	require.Nil(t, err)
 	t.Log(acc.Address())
 }
@@ -77,21 +77,20 @@ func TestNewAccountWithMnemonic(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := NewAccountWithMnemonic(tt.args.mnemonic, tt.args.chainnet)
+			got, err := NewAccountWithMnemonic(tt.args.mnemonic, tt.args.chainnet, AddressTypeComingTaproot)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewAccountWithMnemonic() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			address, err := got.ComingTaprootAddress()
-			if (err == nil) && address.Value != tt.wantAddress {
-				t.Errorf("NewAccountWithMnemonic() got = %v, want %v", address.Value, tt.wantAddress)
+			if (err == nil) && got.Address() != tt.wantAddress {
+				t.Errorf("NewAccountWithMnemonic() got = %v, want %v", got.Address(), tt.wantAddress)
 			}
 		})
 	}
 }
 
 func TestAccount_DeriveAccountAt(t *testing.T) {
-	baseAccount, err := NewAccountWithMnemonic(accountCase.mnemonic, ChainMainnet)
+	baseAccount, err := NewAccountWithMnemonic(accountCase.mnemonic, ChainMainnet, AddressTypeComingTaproot)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -112,52 +111,20 @@ func TestAccount_DeriveAccountAt(t *testing.T) {
 				t.Errorf("DeriveAccountAt() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			address, err := got.TaprootAddress()
-			if (err == nil) && address.Value != tt.wantAddress {
-				t.Errorf("DeriveAccountAt() got = %v, want %v", got.address, tt.wantAddress)
+			if (err == nil) && got.Address() != tt.wantAddress {
+				t.Errorf("DeriveAccountAt() got = %v, want %v", got.Address(), tt.wantAddress)
 			}
 		})
 	}
 }
 
-func TestAccount_PrivateKey(t *testing.T) {
-	tests := []struct {
-		name     string
-		mnemonic string
-		want     string
-		wantErr  bool
-	}{
-		{name: "normal test", mnemonic: accountCase.mnemonic, want: accountCase.privateKey},
-		{name: "invalid mnemonic", mnemonic: errorCase.mnemonic, wantErr: true},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			account, err := NewAccountWithMnemonic(tt.mnemonic, ChainMainnet)
-			if err != nil {
-				if !tt.wantErr {
-					t.Errorf("PrivateKey() error = %v, wantErr %v", err, tt.wantErr)
-				}
-				return
-			}
-			got, err := account.PrivateKeyHex()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("PrivateKey() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if (err == nil) && got != tt.want {
-				t.Errorf("PrivateKey() got = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestAccountWithPrivateKey(t *testing.T) {
-	acc, err := NewAccountWithMnemonic(testcase.M1, ChainMainnet)
+func TestAccountWithPrivateKey2(t *testing.T) {
+	acc, err := NewAccountWithMnemonic(testcase.M1, ChainMainnet, AddressTypeComingTaproot)
 	require.Nil(t, err)
 	privateKey, err := acc.PrivateKeyHex()
 	require.Nil(t, err)
 
-	acc2, err := AccountWithPrivateKey(privateKey, ChainMainnet)
+	acc2, err := AccountWithPrivateKey(privateKey, ChainMainnet, AddressTypeComingTaproot)
 	require.Nil(t, err)
 	require.Equal(t, acc.privateKey, acc2.privateKey)
 	require.Equal(t, acc.address, acc2.address)
@@ -243,57 +210,76 @@ func TestBTCWallet_Privatekey_Publickey_Address(t *testing.T) {
 	t.Log("signet address = ", addressHash.EncodeAddress())
 }
 
-func TestAccountWithPrivatekey(t *testing.T) {
-	mnemonic := testcase.M1
-	accountFromMnemonic, err := NewAccountWithMnemonic(mnemonic, ChainMainnet)
-	require.Nil(t, err)
-	privateKey, err := accountFromMnemonic.PrivateKeyHex()
-	require.Nil(t, err)
-
-	accountFromPrikey, err := AccountWithPrivateKey(privateKey, ChainMainnet)
-	require.Nil(t, err)
-
-	require.Equal(t, accountFromMnemonic.Address(), accountFromPrikey.Address())
-}
-
-func TestAccountP2WPKHAddress(t *testing.T) {
-	//Native Segwit(P2WPKH)
-	account, err := AccountWithPrivateKey("cPLpgDV8njCYGWCrXtvfSXo8fBkiCuoDjXfYbawNNaQkF3RyT2Km", ChainSignet)
-	require.NoError(t, err)
-	wantAddress := "tb1qcal96xxt64xtl0hp55erejn4awnmyx9c88nnmh"
-	address, err := account.NativeSegwitAddress()
-	require.NoError(t, err)
-	require.Equal(t, wantAddress, address.Value)
-}
-
-func TestAddressP2SH_P2WPKH(t *testing.T) {
-	//Nested Segwit(P2SH-P2WPKH)
-	account, err := AccountWithPrivateKey("cMkXm38MtiLpeorUNtmMt5rrvfUZXkmyYtEtirEFsLFGVmWRThWq", ChainSignet)
-	require.NoError(t, err)
-	wantAddress := "2N489AZCJpazr2xLEygsGwUKbxixvUZaV6P"
-	address, err := account.NestedSegwitAddress()
-	require.NoError(t, err)
-	require.Equal(t, wantAddress, address.Value)
-}
-
-func TestAddressP2TR(t *testing.T) {
-	//Taproot (P2TR)
-	account, err := AccountWithPrivateKey("cSyGeGDKpaw6Y6vqJMDzVaN73YYZT64koA2JBuiifckAnhGS6SHZ", ChainSignet)
-	require.NoError(t, err)
-	wantAddress := "tb1pdq423fm5dv00sl2uckmcve8y3w7guev8ka6qfweljlu23mmsw63qk6w2v3"
-	address, err := account.TaprootAddress()
-	require.NoError(t, err)
-	require.Equal(t, wantAddress, address.Value)
-}
-
-func TestP2PKH(t *testing.T) {
-	//Legacy (P2PKH)
-	account, err := AccountWithPrivateKey("cTkZaPpb1pDdor36V5VY4uu5LE6tgzrjRADvrEXimEqWqvwRbfXY", ChainSignet)
-	require.NoError(t, err)
-	wantAddress := "mxZX45K9oFMdJBpJXSVieMT3Wof3sCWUB6"
-	address, err := account.LegacyAddress()
-	require.NoError(t, err)
-	require.Equal(t, wantAddress, address.Value)
+func TestAccountWithPrivateKey(t *testing.T) {
+	type args struct {
+		prikey  string
+		chain   string
+		addType AddressType
+	}
+	tests := []struct {
+		name     string
+		args     args
+		wantAddr string
+		wantErr  bool
+	}{
+		{
+			name: "Native Segwit(P2WPKH)",
+			args: args{
+				prikey:  "cPLpgDV8njCYGWCrXtvfSXo8fBkiCuoDjXfYbawNNaQkF3RyT2Km",
+				chain:   ChainSignet,
+				addType: AddressTypeNativeSegwit,
+			},
+			wantAddr: "tb1qcal96xxt64xtl0hp55erejn4awnmyx9c88nnmh",
+		},
+		{
+			name: "Nested Segwit(P2SH-P2WPKH)",
+			args: args{
+				prikey:  "cMkXm38MtiLpeorUNtmMt5rrvfUZXkmyYtEtirEFsLFGVmWRThWq",
+				chain:   ChainSignet,
+				addType: AddressTypeNestedSegwit,
+			},
+			wantAddr: "2N489AZCJpazr2xLEygsGwUKbxixvUZaV6P",
+		},
+		{
+			name: "Taproot (P2TR)",
+			args: args{
+				prikey:  "cSyGeGDKpaw6Y6vqJMDzVaN73YYZT64koA2JBuiifckAnhGS6SHZ",
+				chain:   ChainSignet,
+				addType: AddressTypeTaproot,
+			},
+			wantAddr: "tb1pdq423fm5dv00sl2uckmcve8y3w7guev8ka6qfweljlu23mmsw63qk6w2v3",
+		},
+		{
+			name: "Legacy (P2PKH)",
+			args: args{
+				prikey:  "cTkZaPpb1pDdor36V5VY4uu5LE6tgzrjRADvrEXimEqWqvwRbfXY",
+				chain:   ChainSignet,
+				addType: AddressTypeLegacy,
+			},
+			wantAddr: "mxZX45K9oFMdJBpJXSVieMT3Wof3sCWUB6",
+		},
+		{
+			name: "Taproot (P2TR) 2 use legacy pri",
+			args: args{
+				prikey:  "cTkZaPpb1pDdor36V5VY4uu5LE6tgzrjRADvrEXimEqWqvwRbfXY",
+				chain:   ChainSignet,
+				addType: AddressTypeTaproot,
+			},
+			wantAddr: "tb1p4re2ndazkwe7dmmpz3jhfk0rf9gv3y5z4kf3392d889ytqg5q67s3yuh2u",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			acc, err := AccountWithPrivateKey(tt.args.prikey, tt.args.chain, tt.args.addType)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("AccountWithPrivateKey() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if (err == nil) && acc.Address() != tt.wantAddr {
+				t.Errorf("AccountWithPrivateKey() got = %v, want %v", acc.Address(), tt.wantAddr)
+			}
+		})
+	}
 }
 
 func TestPublicKeyTransform(t *testing.T) {
@@ -327,9 +313,8 @@ func TestIsValidPrivateKey(t *testing.T) {
 }
 
 func TestAccount_SignMessage(t *testing.T) {
-	acc, err := NewAccountWithMnemonic(testcase.M1, ChainMainnet)
+	acc, err := NewAccountWithMnemonic(testcase.M1, ChainMainnet, AddressTypeTaproot)
 	require.Nil(t, err)
-	acc.AddressType = AddressTypeTaproot
 	t.Log(acc.Address())
 
 	// sign message
@@ -344,8 +329,12 @@ func TestAccount_SignMessage(t *testing.T) {
 }
 
 func TestAccount_SignPsbt(t *testing.T) {
-	acc, err := NewAccountWithMnemonic(testcase.M1, ChainMainnet)
+	old, err := NewAccountWithMnemonic(testcase.M1, ChainMainnet, AddressTypeComingTaproot)
 	require.NoError(t, err)
+	priHex, _ := old.PrivateKeyHex()
+	acc, err := AccountWithPrivateKey(priHex, ChainMainnet, AddressTypeTaproot)
+	require.NoError(t, err)
+	t.Log(acc.Address())
 
 	psbtHex := "70736274ff01007d010000000158d38c41272f90e01d8dd3c5f9f6c4d37892ddcbaee155ecd826113c163003700000000000fdffffff02ea0500000000000022512073c9f2168a01fb0f0caa8a3fb7889ce4ab2cec67bfb16d272af4eea91fbd83e011cc240000000000160014f23a59a174bf387281535e2c0f6a395b77eb04a3000000000001011f2dd3240000000000160014f23a59a174bf387281535e2c0f6a395b77eb04a3000000"
 	txn, err := acc.SignPsbt(psbtHex)
