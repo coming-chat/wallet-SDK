@@ -359,3 +359,11 @@ func PublicKeyTransform(pubkey string, compress bool) (string, error) {
 		return types.HexEncodeToString(btcPubkey.PubKey().SerializeUncompressed()), nil
 	}
 }
+
+func PrivateKeyToWIF(pri *btcec.PrivateKey, network *chaincfg.Params) (string, error) {
+	wif, err := btcutil.NewWIF(pri, network, true)
+	if err != nil {
+		return "", err
+	}
+	return wif.String(), nil
+}
