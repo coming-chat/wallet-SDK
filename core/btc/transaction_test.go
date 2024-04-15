@@ -104,3 +104,25 @@ func getPsbtPacketWithSegwitV1(t *testing.T) *psbt.Packet {
 	require.NoError(t, err)
 	return packet
 }
+
+func TestDecodePsbtHex_DecodeTxHex(t *testing.T) {
+	psbtHex := "70736274ff01007d010000000158d38c41272f90e01d8dd3c5f9f6c4d37892ddcbaee155ecd826113c163003700000000000fdffffff02ea0500000000000022512073c9f2168a01fb0f0caa8a3fb7889ce4ab2cec67bfb16d272af4eea91fbd83e011cc240000000000160014f23a59a174bf387281535e2c0f6a395b77eb04a3000000000001011f2dd3240000000000160014f23a59a174bf387281535e2c0f6a395b77eb04a3000000"
+	dd, err := DecodePsbtTransactionDetail(psbtHex, ChainMainnet)
+	require.NoError(t, err)
+	json, _ := dd.JsonString()
+	t.Logf("Json:\n%v", json.Value)
+	t.Logf("Desc:\n%v", dd.Desc())
+
+	packet, err := DecodePsbtTxToPacket(psbtHex)
+	require.NoError(t, err)
+
+	buf := bytes.Buffer{}
+	err = packet.UnsignedTx.Serialize(&buf)
+	require.NoError(t, err)
+	txHex := hex.EncodeToString(buf.Bytes())
+	dd2, err := DecodeTxHexTransactionDetail(txHex, ChainMainnet)
+	require.NoError(t, err)
+	json, _ = dd2.JsonString()
+	t.Logf("Json:\n%v", json.Value)
+	t.Logf("Desc:\n%v", dd2.Desc())
+}

@@ -347,7 +347,7 @@ func TestAccount_SignPsbt(t *testing.T) {
 	acc, err := NewAccountWithMnemonic(testcase.M1, ChainMainnet)
 	require.NoError(t, err)
 
-	psbtHex := "010203"
+	psbtHex := "70736274ff01007d010000000158d38c41272f90e01d8dd3c5f9f6c4d37892ddcbaee155ecd826113c163003700000000000fdffffff02ea0500000000000022512073c9f2168a01fb0f0caa8a3fb7889ce4ab2cec67bfb16d272af4eea91fbd83e011cc240000000000160014f23a59a174bf387281535e2c0f6a395b77eb04a3000000000001011f2dd3240000000000160014f23a59a174bf387281535e2c0f6a395b77eb04a3000000"
 	txn, err := acc.SignPsbt(psbtHex)
 	require.NoError(t, err)
 	require.True(t, txn.Packet.IsComplete())
@@ -361,7 +361,7 @@ func TestChain_PushPsbt(t *testing.T) {
 	chain, err := NewChainWithChainnet(ChainTestnet)
 	require.NoError(t, err)
 
-	psbtHex := "010203"
+	psbtHex := "70736274ff01007d010000000158d38c41272f90e01d8dd3c5f9f6c4d37892ddcbaee155ecd826113c163003700000000000fdffffff02ea0500000000000022512073c9f2168a01fb0f0caa8a3fb7889ce4ab2cec67bfb16d272af4eea91fbd83e011cc240000000000160014f23a59a174bf387281535e2c0f6a395b77eb04a3000000000001011f2dd3240000000000160014f23a59a174bf387281535e2c0f6a395b77eb04a3000000"
 	hash, err := chain.PushPsbt(psbtHex)
 	require.NoError(t, err)
 	t.Log("txn hash = ", hash.Value)
