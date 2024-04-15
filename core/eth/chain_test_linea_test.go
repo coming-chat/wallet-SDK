@@ -1,9 +1,9 @@
 package eth
 
 import (
+	"github.com/coming-chat/wallet-SDK/core/testcase"
 	"testing"
 
-	"github.com/coming-chat/wallet-SDK/core/testcase"
 	"github.com/stretchr/testify/require"
 )
 
