@@ -18,16 +18,6 @@ import (
 	"github.com/tyler-smith/go-bip39"
 )
 
-type AddressType = base.SDKEnumInt
-
-const (
-	AddressTypeComingTaproot AddressType = 0
-	AddressTypeNativeSegwit  AddressType = 1
-	AddressTypeNestedSegwit  AddressType = 2
-	AddressTypeTaproot       AddressType = 3
-	AddressTypeLegacy        AddressType = 4
-)
-
 type Account struct {
 	privateKey *btcec.PrivateKey
 	address    *btcutil.AddressPubKey
@@ -165,34 +155,10 @@ func (a *Account) DeriveAccountAt(chainnet string) (*Account, error) {
 }
 
 func (a *Account) AddressTypeString() string {
-	switch a.AddressType {
-	case AddressTypeComingTaproot:
-		return "Coming Taproot"
-	case AddressTypeNativeSegwit:
-		return "Native Segwit (P2WPKH)"
-	case AddressTypeNestedSegwit:
-		return "Nested Segwit (P2SH-P2WPKH)"
-	case AddressTypeTaproot:
-		return "Taproot (P2TR)"
-	case AddressTypeLegacy:
-		return "Legacy (P2PKH)"
-	}
-	return "--"
+	return AddressTypeDescription(a.AddressType)
 }
 func (a *Account) DerivePath() string {
-	switch a.AddressType {
-	case AddressTypeComingTaproot:
-		return "--"
-	case AddressTypeNativeSegwit:
-		return "m/84'/0'/0/0"
-	case AddressTypeNestedSegwit:
-		return "m/49'/0'/0/0"
-	case AddressTypeTaproot:
-		return "m/86'/0'/0/0"
-	case AddressTypeLegacy:
-		return "m/44'/0'/0/0"
-	}
-	return "--"
+	return AddressTypeDerivePath(a.AddressType)
 }
 
 func (a *Account) AddressWithType(addrType AddressType) (*base.OptionalString, error) {

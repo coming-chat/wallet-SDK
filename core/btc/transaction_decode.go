@@ -28,23 +28,18 @@ type TxOutArray struct {
 func (ta *TxOutArray) detailDesc() string {
 	desc := ""
 	for idx, out := range ta.AnyArray {
+		if idx != 0 {
+			desc += "\n"
+		}
 		if out.Address != "" {
 			addr := out.Address
 			if len(addr) > 13 {
 				addr = addr[:5] + "..." + addr[len(addr)-5:]
 			}
 			valueBTC := btcutil.Amount(out.Value).String()
-			if idx == 0 {
-				desc += "\t" + addr + "\t" + valueBTC
-			} else {
-				desc += "\n\t" + addr + "\t" + valueBTC
-			}
+			desc += "\t" + addr + "\t" + valueBTC
 		} else {
-			if idx == 0 {
-				desc += "\thash: " + out.Hash + "\n" + "\tindex: " + strconv.FormatInt(out.Index, 10)
-			} else {
-				desc += "\n\thash: " + out.Hash + "\n" + "\tindex: " + strconv.FormatInt(out.Index, 10)
-			}
+			desc += "\thash: " + out.Hash + "\n" + "\tindex: " + strconv.FormatInt(out.Index, 10)
 		}
 	}
 	return desc

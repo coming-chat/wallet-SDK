@@ -30,3 +30,12 @@ func Derivation(mnemonic string, path string) (*btcec.PrivateKey, error) {
 	}
 	return key.ECPrivKey()
 }
+
+func ComingPrivateKey(mnemonic string) (*btcec.PrivateKey, error) {
+	seed, err := bip39.NewSeedWithErrorChecking(mnemonic, "")
+	if err != nil {
+		return nil, err
+	}
+	pri, _ := btcec.PrivKeyFromBytes(seed)
+	return pri, nil
+}
