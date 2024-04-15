@@ -3,6 +3,7 @@ package runes
 import (
 	"bytes"
 	"encoding/hex"
+	"encoding/json"
 	"github.com/btcsuite/btcd/wire"
 	"math/big"
 	"reflect"
@@ -22,7 +23,7 @@ func TestDecipher(t *testing.T) {
 		{
 			name: "mint",
 			args: args{
-				transaction: "0200000000010193ca17b01a5256b8fdd28d387e1c32f9809312b3c7e8a3aeaab3f205fd53e8590000000000fdffffff021027000000000000225120bc3b91cde00e0200b157d637cd251dcd48ff90ca582fb06d0c67b0575d29dc4600000000000000000b6a5d0814a6e09d01148f010140178ebcc522b406817b6b6d76d1f5f66a75e90f15207adc1d54398c916fcf6b87c2b2e82bd7623502544ecfc23db39a836ff851e05d9f3f05ed8bc375fbd0f7ce00000000",
+				transaction: "02000000000101b9f7ce308b96e917f5337461069960f876bb50b641027ebe66e7bbe09c240eb40000000000fdffffff021027000000000000160014c77e5d18cbd54cbfbee1a5323cca75eba7b218b800000000000000000b6a5d0814a6e09d01148f010140e55ccace7732812d3082f8e8c48e233d378bc45bf5395e7677abd72dd81854e028affc95e77bbf96afaa5047e31d1ec6f776c653113a69ab0a1ad930fd7efd0300000000",
 			},
 		},
 		{
@@ -47,7 +48,11 @@ func TestDecipher(t *testing.T) {
 				t.Errorf("Decipher() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			t.Log(got.(Runestone).Etching.Rune.String())
+			data, err := json.Marshal(got)
+			if err != nil {
+				return
+			}
+			t.Log(data)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Decipher() got = %v, want %v", got, tt.want)
 			}
