@@ -46,6 +46,7 @@ func (ta *TxOutArray) detailDesc() string {
 }
 
 type TransactionDetail struct {
+	TotalCost  int64       `json:"totalCost"`
 	NetworkFee int64       `json:"networkFee"`
 	FeeRate    float64     `json:"feeRate"`
 	Inputs     *TxOutArray `json:"inputs"`
@@ -57,24 +58,25 @@ func (td *TransactionDetail) JsonString() (*base.OptionalString, error) {
 }
 
 func (td *TransactionDetail) Desc() string {
-	feeBTC := ""
-	feeRate := ""
-	if td.NetworkFee == 0 {
-		feeBTC = "Unknow"
-		feeRate = "Unknow"
-	} else {
+	totalBTC := "Unknow"
+	feeBTC := "Unknow"
+	feeRate := "Unknow"
+	if td.NetworkFee != 0 {
+		totalBTC = btcutil.Amount(td.TotalCost).String()
 		feeBTC = btcutil.Amount(td.NetworkFee).String()
 		feeRate = fmt.Sprintf("%.2f sat/vB", td.FeeRate)
 	}
 
-	return fmt.Sprintf(`Network Fee:
+	return fmt.Sprintf(`Total Cost:
+	%v
+Network Fee:
 	%v
 Network FeeRate:
 	%v
 Inputs:
 %v
 Outputs:
-%v`, feeBTC, feeRate, td.Inputs.detailDesc(), td.Outputs.detailDesc())
+%v`, totalBTC, feeBTC, feeRate, td.Inputs.detailDesc(), td.Outputs.detailDesc())
 }
 
 func DecodePsbtTransactionDetail(psbtHex string, chainnet string) (d *TransactionDetail, err error) {
@@ -125,7 +127,18 @@ func DecodePsbtTransactionDetail(psbtHex string, chainnet string) (d *Transactio
 		}
 	}
 
+	totalCost := int64(0)
+	for _, input := range inputs {
+		totalCost += input.Value
+	}
+	for _, output := range outputs {
+		if output.Address == inputs[0].Address {
+			totalCost -= output.Value
+		}
+	}
+
 	return &TransactionDetail{
+		TotalCost:  totalCost,
 		NetworkFee: int64(feeFloat),
 		FeeRate:    float64(feeRate),
 		Inputs:     &TxOutArray{inputs},
@@ -160,6 +173,7 @@ func DecodeTxHexTransactionDetail(txHex string, chainnet string) (detail *Transa
 	}
 
 	return &TransactionDetail{
+		TotalCost:  0,
 		NetworkFee: 0,
 		FeeRate:    0,
 		Inputs:     &TxOutArray{inputs},
