@@ -164,12 +164,16 @@ func TestChain_SuggestFeeRate(t *testing.T) {
 	}
 	for _, chainnet := range chains {
 		t.Run(chainnet, func(t *testing.T) {
-			t.Logf("===== %v =====", chainnet)
 			chain, err := NewChainWithChainnet(chainnet)
 			require.Nil(t, err)
 			rate, err := chain.SuggestFeeRate()
 			require.Nil(t, err)
-			t.Logf("\n high: %v\n average: %v\n low: %v\n", rate.High, rate.Average, rate.Low)
+			t.Logf(`
+	===== %v =====
+	high: %v
+	average: %v
+	low: %v
+			`, chainnet, rate.High, rate.Average, rate.Low)
 		})
 	}
 }

@@ -98,18 +98,19 @@ type FeeRate struct {
 }
 
 func (c *Chain) SuggestFeeRate() (rates *FeeRate, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
+
+	url := ""
 	switch c.Chainnet {
 	case ChainBitcoin, ChainMainnet:
-		return SuggestFeeRate()
+		url = "https://mempool.space/api/v1/fees/recommended"
+	case ChainTestnet:
+		url = "https://mempool.space/testnet/api/v1/fees/recommended"
+	case ChainSignet:
+		url = "https://mempool.space/signet/api/v1/fees/recommended"
 	default:
 		return &FeeRate{1, 1, 1}, nil
 	}
-}
-
-func SuggestFeeRate() (rates *FeeRate, err error) {
-	defer base.CatchPanicAndMapToBasicError(&err)
-
-	url := "https://mempool.space/api/v1/fees/recommended"
 	response, err := httpUtil.Request(http.MethodGet, url, nil, nil)
 	if err != nil {
 		return
