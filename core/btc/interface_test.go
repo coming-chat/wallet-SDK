@@ -14,4 +14,6 @@ var (
 	_ base.SignedTransaction = (*Brc20MintTransaction)(nil)
 	_ base.Transaction       = (*PsbtTransaction)(nil)
 	_ base.SignedTransaction = (*SignedPsbtTransaction)(nil)
+	_ base.Transaction       = (*Transaction)(nil)
+	_ base.SignedTransaction = (*SignedTransaction)(nil)
 )

@@ -1,6 +1,7 @@
 package hexutil
 
 import (
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"math"
@@ -159,4 +160,24 @@ func Reverse(s string) string {
 		out = append(out, v)
 	}
 	return strings.Join(out, "")
+}
+
+// HexDecodeString decodes bytes from a hex string. Contrary to hex.DecodeString, this function does not error if "0x"
+// is prefixed, and adds an extra 0 if the hex string has an odd length.
+func HexDecodeString(s string) ([]byte, error) {
+	if strings.HasPrefix(s, "0x") || strings.HasPrefix(s, "0X") {
+		s = s[2:]
+	}
+
+	if len(s)%2 != 0 {
+		s = "0" + s
+	}
+
+	return hex.DecodeString(s)
+}
+
+// HexEncode encodes bytes to a hex string. Contrary to hex.EncodeToString, this function prefixes the hex string
+// with "0x"
+func HexEncodeToString(b []byte) string {
+	return "0x" + hex.EncodeToString(b)
 }
