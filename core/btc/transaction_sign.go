@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/btcsuite/btcd/btcec/v2"
+	"github.com/btcsuite/btcd/btcec/v2/schnorr"
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
@@ -33,7 +34,6 @@ func (t *Transaction) SignedTransactionWithAccount(account base.Account) (signed
 	if !ok {
 		return nil, base.ErrInvalidAccountType
 	}
-	privateKey := btcAcc.privateKey
 
 	tx := wire.NewMsgTx(wire.TxVersion)
 	prevOutFetcher := txscript.NewMultiPrevOutFetcher(nil)
@@ -46,7 +46,9 @@ func (t *Transaction) SignedTransactionWithAccount(account base.Account) (signed
 		tx.TxOut = append(tx.TxOut, output)
 	}
 
-	err = Sign(tx, privateKey, prevOutFetcher)
+	privateKey := btcAcc.privateKey
+	isComing := btcAcc.addressType == AddressTypeComingTaproot
+	err = Sign(tx, privateKey, prevOutFetcher, isComing)
 	if err != nil {
 		return nil, err
 	}
@@ -64,11 +66,17 @@ func (t *SignedTransaction) HexString() (res *base.OptionalString, err error) {
 	return base.NewOptionalString(str), nil
 }
 
-func Sign(tx *wire.MsgTx, privKey *btcec.PrivateKey, prevOutFetcher *txscript.MultiPrevOutFetcher) error {
+func Sign(tx *wire.MsgTx, privKey *btcec.PrivateKey, prevOutFetcher *txscript.MultiPrevOutFetcher, isComing bool) error {
 	for i, in := range tx.TxIn {
 		prevOut := prevOutFetcher.FetchPrevOutput(in.PreviousOutPoint)
 		txSigHashes := txscript.NewTxSigHashes(tx, prevOutFetcher)
-		if txscript.IsPayToTaproot(prevOut.PkScript) {
+		if isComing {
+			witness, err := coming_TaprootWitnessSignature(tx, txSigHashes, i, prevOut.Value, prevOut.PkScript, txscript.SigHashDefault, privKey)
+			if err != nil {
+				return err
+			}
+			in.Witness = witness
+		} else if txscript.IsPayToTaproot(prevOut.PkScript) {
 			witness, err := txscript.TaprootWitnessSignature(tx, txSigHashes, i, prevOut.Value, prevOut.PkScript, txscript.SigHashDefault, privKey)
 			if err != nil {
 				return err
@@ -114,4 +122,64 @@ func PayToPubKeyHashScript(pubKeyHash []byte) ([]byte, error) {
 
 func PayToWitnessPubKeyHashScript(pubKeyHash []byte) ([]byte, error) {
 	return txscript.NewScriptBuilder().AddOp(txscript.OP_0).AddData(pubKeyHash).Script()
+}
+
+// custom from txscript.TaprootWitnessSignature(...)
+func coming_TaprootWitnessSignature(tx *wire.MsgTx, sigHashes *txscript.TxSigHashes, idx int,
+	amt int64, pkScript []byte, hashType txscript.SigHashType,
+	key *btcec.PrivateKey) (wire.TxWitness, error) {
+
+	// As we're assuming this was a BIP 86 key, we use an empty root hash
+	// which means output key commits to just the public key.
+	fakeTapscriptRootHash := []byte{}
+
+	sig, err := coming_RawTxInTaprootSignature(
+		tx, sigHashes, idx, amt, pkScript, fakeTapscriptRootHash,
+		hashType, key,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// The witness script to spend a taproot input using the key-spend path
+	// is just the signature itself, given the public key is
+	// embedded in the previous output script.
+	return wire.TxWitness{sig}, nil
+}
+
+// custom from txscript.RawTxInTaprootSignature(...)
+func coming_RawTxInTaprootSignature(tx *wire.MsgTx, sigHashes *txscript.TxSigHashes, idx int,
+	amt int64, pkScript []byte, tapScriptRootHash []byte, hashType txscript.SigHashType,
+	key *btcec.PrivateKey) ([]byte, error) {
+
+	// First, we'll start by compute the top-level taproot sighash.
+	sigHash, err := txscript.CalcTaprootSignatureHash(
+		sigHashes, hashType, tx, idx,
+		txscript.NewCannedPrevOutputFetcher(pkScript, amt),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// Before we sign the sighash, we'll need to apply the taptweak to the
+	// private key based on the tapScriptRootHash.
+	privKeyTweak := key
+
+	// With the sighash constructed, we can sign it with the specified
+	// private key.
+	signature, err := schnorr.Sign(privKeyTweak, sigHash)
+	if err != nil {
+		return nil, err
+	}
+
+	sig := signature.Serialize()
+
+	// If this is sighash default, then we can just return the signature
+	// directly.
+	if hashType == txscript.SigHashDefault {
+		return sig, nil
+	}
+
+	// Otherwise, append the sighash type to the final sig.
+	return append(sig, byte(hashType)), nil
 }
