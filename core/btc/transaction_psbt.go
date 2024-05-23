@@ -61,19 +61,5 @@ func (t *SignedPsbtTransaction) PsbtHexString() (*base.OptionalString, error) {
 }
 
 func (t *SignedPsbtTransaction) PublishWithChain(c *Chain) (hashs *base.OptionalString, err error) {
-	defer base.CatchPanicAndMapToBasicError(&err)
-
-	msgTx, err := PsbtPacketToMsgTx(&t.Packet)
-	if err != nil {
-		return nil, err
-	}
-	cli, err := rpcClientOf(c.Chainnet)
-	if err != nil {
-		return nil, err
-	}
-	hash, err := cli.SendRawTransaction(msgTx, false)
-	if err != nil {
-		return nil, err
-	}
-	return &base.OptionalString{Value: hash.String()}, nil
+	return c.SendSignedTransaction(t)
 }

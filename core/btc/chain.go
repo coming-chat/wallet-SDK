@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/btcsuite/btcd/wire"
 	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/coming-chat/wallet-SDK/pkg/httpUtil"
 )
@@ -56,7 +57,15 @@ func (c *Chain) BalanceOfAccount(account base.Account) (*base.Balance, error) {
 // Send the raw transaction on-chain
 // @return the hex hash string
 func (c *Chain) SendRawTransaction(signedTx string) (string, error) {
-	return sendRawTransaction(signedTx, c.Chainnet)
+	tx, err := DecodeTx(signedTx)
+	if err != nil {
+		return "", err
+	}
+	hash, err := c.sendWireMsgTx(tx)
+	if err != nil {
+		return "", err
+	}
+	return hash.Value, nil
 }
 
 func (c *Chain) SendSignedTransaction(signedTxn base.SignedTransaction) (hash *base.OptionalString, err error) {
@@ -64,9 +73,30 @@ func (c *Chain) SendSignedTransaction(signedTxn base.SignedTransaction) (hash *b
 		return brc20MintTxn.PublishWithChain(c)
 	}
 	if psbtTxn, ok := signedTxn.(*SignedPsbtTransaction); ok {
-		return psbtTxn.PublishWithChain(c)
+		msgTx, err := PsbtPacketToMsgTx(&psbtTxn.Packet)
+		if err != nil {
+			return nil, base.MapAnyToBasicError(err)
+		}
+		return c.sendWireMsgTx(msgTx)
+	}
+	if txn, ok := signedTxn.(*SignedTransaction); ok {
+		return c.sendWireMsgTx(txn.msgTx)
 	}
 	return nil, base.ErrInvalidTransactionType
+}
+
+func (c *Chain) sendWireMsgTx(tx *wire.MsgTx) (hash *base.OptionalString, err error) {
+	defer base.CatchPanicAndMapToBasicError(&err)
+
+	client, err := rpcClientOf(c.Chainnet)
+	if err != nil {
+		return
+	}
+	hashv, err := client.SendRawTransaction(tx, false)
+	if err != nil {
+		return
+	}
+	return base.NewOptionalString(hashv.String()), nil
 }
 
 // Fetch transaction details through transaction hash

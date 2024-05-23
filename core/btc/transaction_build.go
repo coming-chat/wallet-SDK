@@ -2,6 +2,7 @@ package btc
 
 import (
 	"errors"
+	"strconv"
 	"strings"
 
 	"github.com/btcsuite/btcd/btcutil"
@@ -10,6 +11,10 @@ import (
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/coming-chat/wallet-SDK/util/hexutil"
+)
+
+const (
+	MaxOpReturnLength = 75
 )
 
 type Transaction struct {
@@ -83,7 +88,11 @@ func (t *Transaction) AddInput2(txId string, index int64, prevTx string) error {
 	return nil
 }
 
+// If the value is 0, `AddOpReturn` will be called.
 func (t *Transaction) AddOutput(address string, value int64) error {
+	if value == 0 {
+		return t.AddOpReturn(address)
+	}
 	pkScript, err := addrToPkScript(address, t.netParams)
 	if err != nil {
 		return err
@@ -140,5 +149,8 @@ func addrToPkScript(addr string, network *chaincfg.Params) ([]byte, error) {
 }
 
 func buildOpReturnScript(data []byte) ([]byte, error) {
+	if len(data) > MaxOpReturnLength {
+		return nil, errors.New("op return length cannot be greater than " + strconv.FormatInt(MaxOpReturnLength, 10))
+	}
 	return txscript.NewScriptBuilder().AddOp(txscript.OP_RETURN).AddData(data).Script()
 }

@@ -3,13 +3,14 @@ package btc
 import (
 	"bytes"
 	"encoding/hex"
+	"regexp"
+
 	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/btcec/v2/schnorr"
 	"github.com/btcsuite/btcd/btcutil/psbt"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
-	"github.com/coming-chat/wallet-SDK/core/base"
-	"regexp"
+	"github.com/coming-chat/wallet-SDK/util/hexutil"
 )
 
 func ExtractPsbtToMsgTx(psbtTx string) (*wire.MsgTx, error) {
@@ -116,30 +117,9 @@ func SignPSBTTx(tx *psbt.Packet, account *Account) error {
 	return nil
 }
 
-// Broadcast transactions to the chain
-// @return transaction hash
-func sendRawTransaction(signedTx, chainnet string) (string, error) {
-	client, err := rpcClientOf(chainnet)
-	if err != nil {
-		return "", err
-	}
-
-	tx, err := DecodeTx(signedTx)
-	if err != nil {
-		return "", err
-	}
-
-	hash, err := client.SendRawTransaction(tx, false)
-	if err != nil {
-		return "", base.MapAnyToBasicError(err)
-	}
-
-	return hash.String(), nil
-}
-
 func DecodeTx(txHex string) (*wire.MsgTx, error) {
 	tx := wire.NewMsgTx(wire.TxVersion)
-	raw, err := hex.DecodeString(txHex)
+	raw, err := hexutil.HexDecodeString(txHex)
 	if err != nil {
 		return nil, err
 	}
@@ -147,9 +127,4 @@ func DecodeTx(txHex string) (*wire.MsgTx, error) {
 		return nil, err
 	}
 	return tx, nil
-}
-
-// Deprecated: SendRawTransaction is deprecated. Please Use Chain.SendRawTransaction() instead.
-func SendRawTransaction(signedTx string, chainnet string) (string, error) {
-	return sendRawTransaction(signedTx, chainnet)
 }
