@@ -103,6 +103,7 @@ func (t *Transaction) AddOutput(address string, value int64) error {
 	return nil
 }
 
+// Add op_return to the outputs.
 func (t *Transaction) AddOpReturn(opReturn string) error {
 	data := []byte(opReturn)
 	script, err := buildOpReturnScript(data)
@@ -112,6 +113,14 @@ func (t *Transaction) AddOpReturn(opReturn string) error {
 	output := wire.NewTxOut(0, script)
 	t.msgTx.TxOut = append(t.msgTx.TxOut, output)
 	return nil
+}
+
+// Nothing will happen if the index is invalid.
+func (t *Transaction) RemoveOuput(index int) {
+	if index < 0 || index >= len(t.msgTx.TxOut) {
+		return
+	}
+	t.msgTx.TxOut = append(t.msgTx.TxOut[:index], t.msgTx.TxOut[index+1:]...)
 }
 
 func outPoint(txId string, index uint32) (*wire.OutPoint, error) {

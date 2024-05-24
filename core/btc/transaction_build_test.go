@@ -4,8 +4,22 @@ import (
 	"encoding/hex"
 	"testing"
 
+	"github.com/btcsuite/btcd/txscript"
 	"github.com/stretchr/testify/require"
 )
+
+func TestTransaction_RemoveOutput(t *testing.T) {
+	txn, err := NewTransaction(ChainSignet)
+	require.NoError(t, err)
+	txn.AddOpReturn("aa") // op_return also is output
+	txn.AddOpReturn("bbb")
+	txn.AddOpReturn("cccc")
+	txn.RemoveOuput(-1)  // noting hanpped
+	txn.RemoveOuput(100) // noting hanpped
+	txn.RemoveOuput(1)
+	require.Equal(t, txn.msgTx.TxOut[0].PkScript, []byte{txscript.OP_RETURN, 2, 'a', 'a'})
+	require.Equal(t, txn.msgTx.TxOut[1].PkScript, []byte{txscript.OP_RETURN, 4, 'c', 'c', 'c', 'c'})
+}
 
 func TestTransaction_AddOpReturn(t *testing.T) {
 	txn, err := NewTransaction(ChainSignet)
