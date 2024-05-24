@@ -123,6 +123,14 @@ func (t *Transaction) RemoveOuput(index int) {
 	t.msgTx.TxOut = append(t.msgTx.TxOut[:index], t.msgTx.TxOut[index+1:]...)
 }
 
+// Nothing will happen if the index is invalid.
+func (t *Transaction) SetOutputValue(value int64, index int) {
+	if index < 0 || index >= len(t.msgTx.TxOut) {
+		return
+	}
+	t.msgTx.TxOut[index].Value = value
+}
+
 func outPoint(txId string, index uint32) (*wire.OutPoint, error) {
 	txId = strings.TrimPrefix(txId, "0x")
 	txHash, err := chainhash.NewHashFromStr(txId)
