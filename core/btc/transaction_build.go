@@ -18,40 +18,44 @@ const (
 )
 
 type Transaction struct {
-	inputs    []input
-	outputs   []output
-	netParams *chaincfg.Params
+	netParams      *chaincfg.Params
+	msgTx          *wire.MsgTx
+	prevOutFetcher *txscript.MultiPrevOutFetcher
 }
-
-type input struct {
-	outPoint *wire.OutPoint
-	prevOut  *wire.TxOut
-}
-
-type output *wire.TxOut
 
 func NewTransaction(chainnet string) (*Transaction, error) {
 	net, err := netParamsOf(chainnet)
 	if err != nil {
 		return nil, err
 	}
-	return &Transaction{netParams: net}, nil
+	tx := wire.NewMsgTx(wire.TxVersion)
+	prevOutFetcher := txscript.NewMultiPrevOutFetcher(nil)
+	return &Transaction{
+		netParams:      net,
+		msgTx:          tx,
+		prevOutFetcher: prevOutFetcher,
+	}, nil
 }
 
 func (t *Transaction) TotalInputValue() int64 {
 	total := int64(0)
-	for _, v := range t.inputs {
-		total += v.prevOut.Value
+	for _, v := range t.msgTx.TxIn {
+		out := t.prevOutFetcher.FetchPrevOutput(v.PreviousOutPoint)
+		total += out.Value
 	}
 	return total
 }
 
 func (t *Transaction) TotalOutputValue() int64 {
 	total := int64(0)
-	for _, v := range t.outputs {
+	for _, v := range t.msgTx.TxOut {
 		total += v.Value
 	}
 	return total
+}
+
+func (t *Transaction) EstimateTransactionSize() int64 {
+	return virtualSize(ensureSignOrFakeSign(t.msgTx, t.prevOutFetcher))
 }
 
 func (t *Transaction) AddInput(txId string, index int64, address string, value int64) error {
@@ -59,15 +63,14 @@ func (t *Transaction) AddInput(txId string, index int64, address string, value i
 	if err != nil {
 		return err
 	}
-	pkScript, err := addrToPkScript(address, t.netParams)
+	pkScript, err := addressToPkScript(address, t.netParams)
 	if err != nil {
 		return err
 	}
-	input := input{
-		outPoint: outPoint,
-		prevOut:  wire.NewTxOut(value, pkScript),
-	}
-	t.inputs = append(t.inputs, input)
+	txIn := wire.NewTxIn(outPoint, nil, nil)
+	prevOut := wire.NewTxOut(value, pkScript)
+	t.msgTx.TxIn = append(t.msgTx.TxIn, txIn)
+	t.prevOutFetcher.AddPrevOut(*outPoint, prevOut)
 	return nil
 }
 
@@ -80,11 +83,9 @@ func (t *Transaction) AddInput2(txId string, index int64, prevTx string) error {
 	if err != nil {
 		return err
 	}
-	input := input{
-		outPoint: outPoint,
-		prevOut:  prevOut,
-	}
-	t.inputs = append(t.inputs, input)
+	txIn := wire.NewTxIn(outPoint, nil, nil)
+	t.msgTx.TxIn = append(t.msgTx.TxIn, txIn)
+	t.prevOutFetcher.AddPrevOut(*outPoint, prevOut)
 	return nil
 }
 
@@ -93,12 +94,12 @@ func (t *Transaction) AddOutput(address string, value int64) error {
 	if value == 0 {
 		return t.AddOpReturn(address)
 	}
-	pkScript, err := addrToPkScript(address, t.netParams)
+	pkScript, err := addressToPkScript(address, t.netParams)
 	if err != nil {
 		return err
 	}
 	output := wire.NewTxOut(value, pkScript)
-	t.outputs = append(t.outputs, output)
+	t.msgTx.TxOut = append(t.msgTx.TxOut, output)
 	return nil
 }
 
@@ -109,7 +110,7 @@ func (t *Transaction) AddOpReturn(opReturn string) error {
 		return err
 	}
 	output := wire.NewTxOut(0, script)
-	t.outputs = append(t.outputs, output)
+	t.msgTx.TxOut = append(t.msgTx.TxOut, output)
 	return nil
 }
 
@@ -139,7 +140,7 @@ func prevTxOut(preTx string, index uint32) (*wire.TxOut, error) {
 	}
 }
 
-func addrToPkScript(addr string, network *chaincfg.Params) ([]byte, error) {
+func addressToPkScript(addr string, network *chaincfg.Params) ([]byte, error) {
 	address, err := btcutil.DecodeAddress(addr, network)
 	if err != nil {
 		return nil, err

@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/btcsuite/btcd/blockchain"
+	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/txscript"
@@ -93,7 +94,8 @@ func DecodePsbtTransactionDetail(psbtHex string, chainnet string) (d *Transactio
 		return
 	}
 	feeFloat := txFee.ToUnit(btcutil.AmountSatoshi)
-	vSize := virtualSize(packet.UnsignedTx)
+	copyedTx := packet.UnsignedTx.Copy()
+	vSize := virtualSize(ensureSignOrFakeSign(copyedTx, nil))
 	feeRate := feeFloat / float64(vSize)
 
 	inputs := make([]*TxOut, len(packet.Inputs))
@@ -204,4 +206,28 @@ func virtualSize(tx *wire.MsgTx) int64 {
 	totalSize := int64(tx.SerializeSize())
 	weight := (baseSize * (blockchain.WitnessScaleFactor - 1)) + totalSize
 	return (weight + blockchain.WitnessScaleFactor - 1) / blockchain.WitnessScaleFactor
+}
+
+var _fakePrivatekey *btcec.PrivateKey
+
+func ensureSignOrFakeSign(tx *wire.MsgTx, fetcher txscript.PrevOutputFetcher) *wire.MsgTx {
+	if len(tx.TxIn) == 0 || len(tx.TxOut) == 0 {
+		return tx // cannot sign
+	}
+	if len(tx.TxIn[0].SignatureScript) != 0 || len(tx.TxIn[0].Witness) != 0 {
+		return tx // no need sign
+	}
+
+	var err error
+	if _fakePrivatekey == nil {
+		if _fakePrivatekey, err = btcec.NewPrivateKey(); err != nil {
+			return tx // sign failed
+		}
+	}
+	if fetcher == nil {
+		fetcher = txscript.NewCannedPrevOutputFetcher(tx.TxOut[0].PkScript, 100000000)
+	}
+	// fake sign
+	_ = Sign(tx, _fakePrivatekey, fetcher, false)
+	return tx
 }

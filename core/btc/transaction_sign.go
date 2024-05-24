@@ -26,34 +26,20 @@ func (t *Transaction) SignWithAccount(account base.Account) (signedTxn *base.Opt
 }
 
 func (t *Transaction) SignedTransactionWithAccount(account base.Account) (signedTxn base.SignedTransaction, err error) {
-	if len(t.inputs) == 0 || len(t.outputs) == 0 {
-		return nil, errors.New("invalid inputs or outputs")
-	}
-
 	btcAcc, ok := account.(*Account)
 	if !ok {
 		return nil, base.ErrInvalidAccountType
 	}
 
-	tx := wire.NewMsgTx(wire.TxVersion)
-	prevOutFetcher := txscript.NewMultiPrevOutFetcher(nil)
-	for _, input := range t.inputs {
-		txIn := wire.NewTxIn(input.outPoint, nil, nil)
-		tx.TxIn = append(tx.TxIn, txIn)
-		prevOutFetcher.AddPrevOut(*input.outPoint, input.prevOut)
-	}
-	for _, output := range t.outputs {
-		tx.TxOut = append(tx.TxOut, output)
-	}
-
+	copyedTx := t.msgTx.Copy()
 	privateKey := btcAcc.privateKey
 	isComing := btcAcc.addressType == AddressTypeComingTaproot
-	err = Sign(tx, privateKey, prevOutFetcher, isComing)
+	err = Sign(copyedTx, privateKey, t.prevOutFetcher, isComing)
 	if err != nil {
 		return nil, err
 	}
 	return &SignedTransaction{
-		msgTx: tx,
+		msgTx: copyedTx,
 	}, nil
 }
 
@@ -66,7 +52,10 @@ func (t *SignedTransaction) HexString() (res *base.OptionalString, err error) {
 	return base.NewOptionalString(str), nil
 }
 
-func Sign(tx *wire.MsgTx, privKey *btcec.PrivateKey, prevOutFetcher *txscript.MultiPrevOutFetcher, isComing bool) error {
+func Sign(tx *wire.MsgTx, privKey *btcec.PrivateKey, prevOutFetcher txscript.PrevOutputFetcher, isComing bool) error {
+	if len(tx.TxIn) == 0 || len(tx.TxOut) == 0 {
+		return errors.New("invalid inputs or outputs")
+	}
 	for i, in := range tx.TxIn {
 		prevOut := prevOutFetcher.FetchPrevOutput(in.PreviousOutPoint)
 		txSigHashes := txscript.NewTxSigHashes(tx, prevOutFetcher)

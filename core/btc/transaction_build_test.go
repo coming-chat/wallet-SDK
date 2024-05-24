@@ -12,7 +12,7 @@ func TestTransaction_AddOpReturn(t *testing.T) {
 	require.NoError(t, err)
 	err = txn.AddOpReturn("ComingChat")
 	require.NoError(t, err)
-	require.Equal(t, hex.EncodeToString(txn.outputs[0].PkScript), "6a0a436f6d696e6743686174")
+	require.Equal(t, hex.EncodeToString(txn.msgTx.TxOut[0].PkScript), "6a0a436f6d696e6743686174")
 
 	err = txn.AddOpReturn("len75hellohellohellohellohellohellohellohellohellohellohellohellohellohello")
 	require.NoError(t, err)
