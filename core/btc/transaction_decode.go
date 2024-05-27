@@ -196,10 +196,6 @@ func txOutFromWireTxOut(txout *wire.TxOut, params *chaincfg.Params) (*TxOut, err
 	}, nil
 }
 
-func virtualSize(tx *wire.MsgTx) int64 {
-	return mempool.GetTxVirtualSize(btcutil.NewTx(tx))
-}
-
 // This is a pure function; it does not change the tx parameter.
 func EstimateTxSizePkScript(tx *wire.MsgTx, pkScript []byte) int64 {
 	witnessSize := 0
@@ -243,7 +239,7 @@ func EstimateTxSize(tx *wire.MsgTx, sendAddr btcutil.Address) int64 {
 
 // This is a pure function; it does not change the tx parameter.
 func estimateTxSize(tx *wire.MsgTx, witnessSize int, signatureSize int) int64 {
-	signatureBackup := make([]*wire.TxIn, len(tx.TxIn))
+	signatureBackup := make([]wire.TxIn, len(tx.TxIn))
 	copySignature := func(from, to *wire.TxIn) {
 		to.Witness = from.Witness
 		to.Sequence = from.Sequence
@@ -251,13 +247,12 @@ func estimateTxSize(tx *wire.MsgTx, witnessSize int, signatureSize int) int64 {
 	}
 	defer func() {
 		for idx, in := range tx.TxIn { // restore signature
-			copySignature(signatureBackup[idx], in)
+			copySignature(&signatureBackup[idx], in)
 		}
 	}()
 
 	for idx, in := range tx.TxIn {
-		signatureBackup[idx] = &wire.TxIn{}
-		copySignature(in, signatureBackup[idx]) // backup signature
+		copySignature(in, &signatureBackup[idx]) // backup signature
 		in.Witness = [][]byte{make([]byte, witnessSize)}
 		in.Sequence = wire.MaxTxInSequenceNum - 1
 		in.SignatureScript = make([]byte, signatureSize)

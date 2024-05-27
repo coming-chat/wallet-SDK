@@ -70,6 +70,7 @@ func TestTransaction_Sign(t *testing.T) {
 		err = txn.AddOutput(to.Address(), 1006300)
 		require.NoError(t, err)
 
+		require.Equal(t, txn.EstimateTransactionSize(), int64(169))
 		txHex, err := txn.SignWithAccount(from)
 		require.NoError(t, err)
 		require.Equal(t, txHex.Value, "0x010000000001023fb7a23c3b9070a01e586b9aa97a0179b2e49a44575bc653e1f3ae12303bd37a0100000000ffffffff13677517ca008dd58611522b9c9d672c6e14778a0c5c4e41cdcf740cf5409be60900000000ffffffff01dc5a0f0000000000225120f78430ddf1178c9c04bd32e3e51d0aa72760756934f95173cb7926083e115062014095001ab2628b184b396fa6daf0d17cee878dddca7822c7b2d69c540ed8572ef82c11fc4daa6d51c8afdb436a1413f081015107d798ec2f4fe62ea6fcc5f3bd9401400b602a8a4d9c979e18b15f202fc7d4eb4c1ff410005a38cbc48dd6a7ef363eeb0d1833fdbbf949d01aa83f6b6873b81f021a9b02126d0b375b512df604bb105700000000")
@@ -89,6 +90,7 @@ func TestTransaction_Sign(t *testing.T) {
 		err = txn.AddOpReturn("ComingChat Wallet SDK Test") // add op_return
 		require.NoError(t, err)
 
+		require.Equal(t, txn.EstimateTransactionSize(), int64(136))
 		txHex, err := txn.SignWithAccount(from)
 		require.NoError(t, err)
 		require.Equal(t, txHex.Value, "0x010000000001017eb6d9f5b89d085d974ebe07e199caf73a6ceb07cbe432a2f87b1ab21e6e846f0000000000ffffffff0258570f0000000000160014b2f9ed398433cd438d5e88d62b2e28b440901cc500000000000000001c6a1a436f6d696e67436861742057616c6c65742053444b20546573740140767a1c1b1ea639b92c59f9b49a38e794526c2f301cf9000ad0e58ebe2ea832d448d3711a494f933a95ed72bfa1642418eaa1dcc092c0530b6351a80c5ea995b600000000")
@@ -109,6 +111,7 @@ func TestTransaction_Sign(t *testing.T) {
 		err = txn.AddOutput("ComingChat Wallet SDK Test2", 0) // value 0 is op_return
 		require.NoError(t, err)
 
+		require.Equal(t, txn.EstimateTransactionSize(), int64(149))
 		txHex, err := txn.SignWithAccount(from)
 		require.NoError(t, err)
 		require.Equal(t, txHex.Value, nativeSg_TxnHex)
@@ -129,6 +132,7 @@ func TestTransaction_Sign(t *testing.T) {
 		err = txn.AddOutput(to.Address(), 4900)
 		require.NoError(t, err)
 
+		require.Equal(t, txn.EstimateTransactionSize(), int64(170))
 		txHex, err := txn.SignWithAccount(from)
 		require.NoError(t, err)
 		require.Equal(t, txHex.Value, "0x0100000000010181532907f67f42997524b0cc9db4c5197dcf7990805ca12241ddea1db4c2a4c0000000001716001441d432f2b3d3daa1df08e21fbdbbcdfb0908001bffffffff0240420f00000000001976a9147a494419776de8f4cb846882a15df3cc836299cf88ac24130000000000001976a9147a494419776de8f4cb846882a15df3cc836299cf88ac024730440220731dfff44876d17a9b9cbf08a33a238e61f79f09fb73bd3a7541a93a9df4b450022040ec119a288c042077e2dd219e94e23def37bb93fc4f932fd1a6805e7b6681440121026612352433fe00fed2c41213b79be357daeac671f51812918d057e35a7a36cc000000000")
@@ -148,6 +152,7 @@ func TestTransaction_Sign(t *testing.T) {
 		err = txn.AddOutput(to, 1004500)
 		require.NoError(t, err)
 
+		require.Equal(t, txn.EstimateTransactionSize(), int64(349))
 		txHex, err := txn.SignWithAccount(from)
 		require.NoError(t, err)
 		require.Equal(t, txHex.Value, "0x01000000029c95cfb65acb6ea918645e4a9ee024be334bb916a5f6fe964dc788d8a32cdb87000000006a47304402201d252ee0e20f82e0c13ee3294ad6cfd0ab6021c276724c41fec1a80f56ee1a1802202f65a9c4108c10fe5f481b63f1e464dfd14f5041fe617c37777c6ecf975e147d0121029b740120a2a4af5d751d5e3d67f6d2aa9f92792af6bc0df37d30584b6d65bb54ffffffff9c95cfb65acb6ea918645e4a9ee024be334bb916a5f6fe964dc788d8a32cdb87010000006a47304402200d6aabb1ff6eef5aa2b01fcd0e00bdbd0c1dda63a6842c0ad4b06b1e91ba46450220428bee9060569844b9d19206576ee648924817c1f2d42a379f22f7f2115122de0121029b740120a2a4af5d751d5e3d67f6d2aa9f92792af6bc0df37d30584b6d65bb54ffffffff01d4530f0000000000225120682aa8a7746b1ef87d5cc5b78664e48bbc8e6587b77404bb3f97f8a8ef7076a200000000")
