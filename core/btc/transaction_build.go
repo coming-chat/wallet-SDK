@@ -55,7 +55,12 @@ func (t *Transaction) TotalOutputValue() int64 {
 }
 
 func (t *Transaction) EstimateTransactionSize() int64 {
-	return virtualSize(ensureSignOrFakeSign(t.msgTx, t.prevOutFetcher))
+	if len(t.msgTx.TxIn) == 0 {
+		return virtualSize(t.msgTx)
+	} else {
+		out := t.prevOutFetcher.FetchPrevOutput(t.msgTx.TxIn[0].PreviousOutPoint)
+		return EstimateTxSizePkScript(t.msgTx, out.PkScript)
+	}
 }
 
 func (t *Transaction) AddInput(txId string, index int64, address string, value int64) error {

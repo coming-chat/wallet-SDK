@@ -4,10 +4,9 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/btcsuite/btcd/blockchain"
-	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
+	"github.com/btcsuite/btcd/mempool"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/coming-chat/wallet-SDK/core/base"
@@ -94,8 +93,7 @@ func DecodePsbtTransactionDetail(psbtHex string, chainnet string) (d *Transactio
 		return
 	}
 	feeFloat := txFee.ToUnit(btcutil.AmountSatoshi)
-	copyedTx := packet.UnsignedTx.Copy()
-	vSize := virtualSize(ensureSignOrFakeSign(copyedTx, nil))
+	vSize := EstimateTxSize(packet.UnsignedTx, nil)
 	feeRate := feeFloat / float64(vSize)
 
 	inputs := make([]*TxOut, len(packet.Inputs))
@@ -198,36 +196,72 @@ func txOutFromWireTxOut(txout *wire.TxOut, params *chaincfg.Params) (*TxOut, err
 	}, nil
 }
 
-// calculation reference:
-// https://github.com/btcsuite/btcd/blob/569155bc6a502f45b4a514bc6b9d5f814a980b6c/mempool/policy.go#L382
 func virtualSize(tx *wire.MsgTx) int64 {
-	// vSize := (((baseSize * 3) + totalSize) + 3) / 4
-	baseSize := int64(tx.SerializeSizeStripped())
-	totalSize := int64(tx.SerializeSize())
-	weight := (baseSize * (blockchain.WitnessScaleFactor - 1)) + totalSize
-	return (weight + blockchain.WitnessScaleFactor - 1) / blockchain.WitnessScaleFactor
+	return mempool.GetTxVirtualSize(btcutil.NewTx(tx))
 }
 
-var _fakePrivatekey *btcec.PrivateKey
-
-func ensureSignOrFakeSign(tx *wire.MsgTx, fetcher txscript.PrevOutputFetcher) *wire.MsgTx {
-	if len(tx.TxIn) == 0 || len(tx.TxOut) == 0 {
-		return tx // cannot sign
-	}
-	if len(tx.TxIn[0].SignatureScript) != 0 || len(tx.TxIn[0].Witness) != 0 {
-		return tx // no need sign
-	}
-
-	var err error
-	if _fakePrivatekey == nil {
-		if _fakePrivatekey, err = btcec.NewPrivateKey(); err != nil {
-			return tx // sign failed
+// This is a pure function; it does not change the tx parameter.
+func EstimateTxSizePkScript(tx *wire.MsgTx, pkScript []byte) int64 {
+	witnessSize := 0
+	signatureSize := 0
+	if pkScript == nil { // average: NestedSegwit
+		witnessSize = 108
+		signatureSize = 23
+	} else if txscript.IsPayToTaproot(pkScript) { // Taproot
+		witnessSize = 64
+	} else if txscript.IsPayToPubKeyHash(pkScript) {
+		signatureSize = 106 // Legacy
+	} else {
+		witnessSize = 108                         // NativeSegwit
+		if txscript.IsPayToScriptHash(pkScript) { // NestedSegwit
+			signatureSize = 23
 		}
 	}
-	if fetcher == nil {
-		fetcher = txscript.NewCannedPrevOutputFetcher(tx.TxOut[0].PkScript, 100000000)
+	return estimateTxSize(tx, witnessSize, signatureSize)
+}
+
+// This is a pure function; it does not change the tx parameter.
+func EstimateTxSize(tx *wire.MsgTx, sendAddr btcutil.Address) int64 {
+	witnessSize := 0
+	signatureSize := 0
+	switch sendAddr.(type) {
+	case *btcutil.AddressWitnessPubKeyHash:
+		witnessSize = 108 // P2WPKH_WINETSS_SIZE
+	case *btcutil.AddressTaproot:
+		witnessSize = 64 // SCHNORR_SIGNATURE_SIZE
+	case *btcutil.AddressScriptHash:
+		witnessSize = 108
+		signatureSize = 23
+	case *btcutil.AddressPubKeyHash:
+		signatureSize = 106
+	default: // average: AddressScriptHash
+		witnessSize = 108
+		signatureSize = 23
 	}
-	// fake sign
-	_ = Sign(tx, _fakePrivatekey, fetcher, false)
-	return tx
+	return estimateTxSize(tx, witnessSize, signatureSize)
+}
+
+// This is a pure function; it does not change the tx parameter.
+func estimateTxSize(tx *wire.MsgTx, witnessSize int, signatureSize int) int64 {
+	signatureBackup := make([]*wire.TxIn, len(tx.TxIn))
+	copySignature := func(from, to *wire.TxIn) {
+		to.Witness = from.Witness
+		to.Sequence = from.Sequence
+		to.SignatureScript = from.SignatureScript
+	}
+	defer func() {
+		for idx, in := range tx.TxIn { // restore signature
+			copySignature(signatureBackup[idx], in)
+		}
+	}()
+
+	for idx, in := range tx.TxIn {
+		signatureBackup[idx] = &wire.TxIn{}
+		copySignature(in, signatureBackup[idx]) // backup signature
+		in.Witness = [][]byte{make([]byte, witnessSize)}
+		in.Sequence = wire.MaxTxInSequenceNum - 1
+		in.SignatureScript = make([]byte, signatureSize)
+	}
+	txSize := mempool.GetTxVirtualSize(btcutil.NewTx(tx))
+	return txSize
 }
