@@ -160,7 +160,7 @@ func (w *CacheWallet) PolkaAccountInfo(network int) *AccountInfo {
 func (w *CacheWallet) BitcoinAccountInfo(chainnet string, addressType btc.AddressType) *AccountInfo {
 	return &AccountInfo{
 		Wallet:   w,
-		cacheKey: fmt.Sprintf("bitcoin-%v", chainnet),
+		cacheKey: fmt.Sprintf("bitcoin-%v-%v", chainnet, addressType),
 		mnemonicCreator: func(val string) (base.Account, error) {
 			return btc.NewAccountWithMnemonic(val, chainnet, addressType)
 		},

@@ -32,6 +32,10 @@ func TestCache(t *testing.T) {
 		require.Nil(t, err)
 		require.Equal(t, bitcoinAddress.Value, "bc1pn8rv6lqakzlz7yvflc24qjv0pjx8w0plcfq34jl6scs7pqcac2wqjymurp")
 
+		bitcoinAddress2, err := wallet.BitcoinAccountInfo("mainnet", 2).Address()
+		require.Nil(t, err)
+		require.Equal(t, bitcoinAddress2.Value, "3CZw6pGHD8VVqAhhJZFQKXLLkNkkhqTRHS")
+
 		dogecoinAddress, err := wallet.DogecoinAccountInfo("mainnet").Address()
 		require.Nil(t, err)
 		require.Equal(t, dogecoinAddress.Value, "DNEJHtF6qjTsWH9muEH5BoQbAmUkyvvDC9")
