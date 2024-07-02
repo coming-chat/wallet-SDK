@@ -92,9 +92,9 @@ func zeroWalletHost(chainnet string) (string, error) {
 func comingOrdHost(chainnet string) (string, error) {
 	switch chainnet {
 	case ChainMainnet, ChainBitcoin:
-		return "https://bitcoin.coming.chat/ord", nil
+		return "https://ord.bevm.io/mainnet", nil
 	case ChainTestnet:
-		return "https://bitcoin.coming.chat/ord_testnet", nil
+		return "https://ord.bevm.io/testnet", nil
 	}
 	return "", ErrUnsupportedChain
 }

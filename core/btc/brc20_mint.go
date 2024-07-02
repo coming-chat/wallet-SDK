@@ -6,12 +6,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/coming-chat/wallet-SDK/core/base"
 	"github.com/coming-chat/wallet-SDK/pkg/httpUtil"
 )
 
 type Brc20MintTransaction struct {
+	CommitId    string            `json:"commit_id"`
 	Commit      string            `json:"commit"`
 	Reveal      *base.StringArray `json:"reveal"`
 	Inscription *base.StringArray `json:"inscription"`
@@ -132,22 +134,20 @@ func (c *Chain) BuildBrc20MintWithPostage(sender, receiver string, op, ticker, a
 	if err != nil {
 		return
 	}
-	url := fmt.Sprintf("%v/mintWithPostage", host)
+	url := fmt.Sprintf("%v/MintInscription", host)
 	header := map[string]string{"Content-Type": "application/json"}
 	requestBody := map[string]any{
-		"jsonrpc": "2.0",
-		"id":      1,
-		"method":  "mintWithPostage",
-		"params": map[string]any{
-			"source":      sender,
-			"fee_rate":    feeRate,
-			"content":     fmt.Sprintf(`{"p":"brc-20","op":"%v","tick":"%v","amt":"%v"}`, op, ticker, amount),
-			"destination": receiver,
-			"extension":   ".txt",
-			"repeat":      1,
-
-			"target_postage": postage,
+		"commit_fee_rate": strconv.FormatInt(feeRate, 10),
+		"reveal_fee_rate": strconv.FormatInt(feeRate, 10),
+		"source":          sender,
+		"destination":     receiver,
+		"inscriptions": []string{
+			fmt.Sprintf(`{"p":"brc-20","op":"%v","tick":"%v","amt":"%v"}`, op, ticker, amount),
 		},
+		"repeats": []int{
+			1,
+		},
+		"postage": postage,
 	}
 	requestBytes, _ := json.Marshal(requestBody)
 	resp, err := httpUtil.Request(http.MethodPost, url, header, requestBytes)
@@ -158,9 +158,36 @@ func (c *Chain) BuildBrc20MintWithPostage(sender, receiver string, op, ticker, a
 		return nil, fmt.Errorf("code: %d, body: %s", resp.Code, string(resp.Body))
 	}
 
-	err = json.Unmarshal(resp.Body, &txn)
+	var r struct {
+		CommitId   string            `json:"commit_id"`
+		CommitPsbt string            `json:"commit_psbt"`
+		RevealTxs  *base.StringArray `json:"reveal_txs"`
+		RevealIds  *base.StringArray `json:"reveal_ids"`
+
+		CommitCustom *Brc20CommitCustom `json:"commit_custom"`
+
+		NetworkFee  int64 `json:"network_fee"`
+		SatpointFee int64 `json:"satpoint_fee"`
+		ServiceFee  int64 `json:"service_fee"`
+		CommitFee   int64 `json:"commit_fee"`
+		CommitVsize int64 `json:"commit_vsize"`
+	}
+	err = json.Unmarshal(resp.Body, &r)
 	if err != nil {
 		return nil, err
 	}
-	return txn, nil
+	return &Brc20MintTransaction{
+		CommitId:    r.CommitId,
+		Commit:      r.CommitPsbt,
+		Reveal:      r.RevealTxs,
+		Inscription: r.RevealIds,
+
+		CommitCustom: r.CommitCustom,
+
+		NetworkFee:  r.NetworkFee,
+		SatpointFee: r.SatpointFee,
+		ServiceFee:  r.ServiceFee,
+		CommitFee:   r.CommitFee,
+		CommitVsize: r.CommitVsize,
+	}, nil
 }
