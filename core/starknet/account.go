@@ -114,7 +114,7 @@ func (a *Account) PrivateKeyHex() (string, error) {
 	return hexTypes.HexEncodeToString(a.privateKey.Bytes()), nil
 }
 
-// Is deocde from address
+// Is decode from address
 // @return publicKey data
 func (a *Account) PublicKey() []byte {
 	pub, _, err := curve.Curve.PrivateToPoint(a.privateKey)

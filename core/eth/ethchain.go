@@ -28,7 +28,7 @@ func (e *EthChain) CreateRemote(rpcUrl string) (chain *EthChain, err error) {
 	return e.CreateRemoteWithTimeout(rpcUrl, 0)
 }
 
-// @param timeout time unit millsecond. 0 means use chain's default: 60000ms.
+// @param timeout time unit millisecond. 0 means use chain's default: 60000ms.
 func (e *EthChain) CreateRemoteWithTimeout(rpcUrl string, timeout int64) (chain *EthChain, err error) {
 	defer base.CatchPanicAndMapToBasicError(&err)
 

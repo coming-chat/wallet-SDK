@@ -12,7 +12,7 @@ func GetConnection(rpcUrl string) (*EthChain, error) {
 	return getConnectionWithTimeout(rpcUrl, 0)
 }
 
-// @param timeout time unit millsecond, zero instead use default.
+// @param timeout time unit millisecond, zero instead use default.
 func getConnectionWithTimeout(rpcUrl string, timeout int64) (*EthChain, error) {
 	chain, ok := chainConnections[rpcUrl]
 	if ok {

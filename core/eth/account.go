@@ -105,7 +105,7 @@ func (a *Account) PrivateKeyHex() (string, error) {
 	return types.HexEncodeToString(bytes), nil
 }
 
-// Is deocde from address
+// Is decode from address
 // @return publicKey data
 func (a *Account) PublicKey() []byte {
 	return crypto.FromECDSAPub(&a.privateKeyECDSA.PublicKey)
