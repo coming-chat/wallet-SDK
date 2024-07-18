@@ -8,7 +8,7 @@ var state = chain.GetValidatorState()
 print(state.Epoch/TotalStaked/TotalRewards)
 print("validator list = ", state.Validators)
 
-// show validator infomation.
+// show validator information.
 var validator = state.Validators[idx]
 print(validator.Name/Address/ImageUrl/APY ....)
 ```

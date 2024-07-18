@@ -67,7 +67,7 @@ func (a *Account) PrivateKeyHex() (string, error) {
 	return hexTypes.HexEncodeToString(a.privKey.Bytes()), nil
 }
 
-// Is deocde from address
+// Is decode from address
 // @return publicKey data
 func (a *Account) PublicKey() []byte {
 	return a.privKey.PubKey().Bytes()

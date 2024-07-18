@@ -78,7 +78,7 @@ func TestPrivatePublicKeyDataAndStringTransform(t *testing.T) {
 	if priKey.Equals(account.privKey) {
 		t.Log("private key restore success!!")
 	} else {
-		t.Fatal("private key resotre failured.")
+		t.Fatal("private key restore failured.")
 	}
 
 	t.Log("============================")
@@ -90,7 +90,7 @@ func TestPrivatePublicKeyDataAndStringTransform(t *testing.T) {
 	if pubKey.Equals(account.privKey.PubKey()) {
 		t.Log("public key restore success!!")
 	} else {
-		t.Fatal("public key resotre failured.")
+		t.Fatal("public key restore failured.")
 	}
 
 	t.Log("============================")
@@ -99,6 +99,6 @@ func TestPrivatePublicKeyDataAndStringTransform(t *testing.T) {
 	if accAddress.Equals(originAddress) {
 		t.Log("address key restore success!!")
 	} else {
-		t.Fatal("address key resotre failured.")
+		t.Fatal("address key restore failured.")
 	}
 }
