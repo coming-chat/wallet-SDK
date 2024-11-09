@@ -33,7 +33,7 @@ buildAllSDKIOS:
 
 # If you want to quickly verify some features of the gomobile, you can just package a little file test.
 buildIOSBase:
-	GOOS=ios gomobile bind -ldflags "-s -w" -v -target=ios/arm64  -o=${outdir}/${iosPackageName} ${pkgBase} ${pkgBtc}
+	GOOS=ios gomobile bind -ldflags "-s -w" -v -target=ios/arm64  -o=${outdir}/${iosPackageName} ${pkgBase} ${pkgBtc} ${pkgWallet}
 
 # 使用: make packageAll v=1.4
 # 结果: out 目录下将产生两个压缩包 wallet-SDK-ios.1.4.zip 和 wallet-SDK-android.1.4.zip 

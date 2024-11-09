@@ -1,9 +1,11 @@
 package wallet
 
 import (
-	"github.com/ChainSafe/go-schnorrkel"
-	"github.com/tyler-smith/go-bip39"
 	"testing"
+
+	"github.com/ChainSafe/go-schnorrkel"
+	"github.com/stretchr/testify/require"
+	"github.com/tyler-smith/go-bip39"
 )
 
 // const (
@@ -36,4 +38,12 @@ func TestSeed(t *testing.T) {
 	}
 	t.Log(seed)
 	t.Log(fromMnemonic)
+}
+
+func TestExtendMasterKey(t *testing.T) {
+	mn := "unaware oxygen allow method allow property predict various slice travel please priority"
+	extendedMasterKey, err := ExtendMasterKey(mn)
+	require.NoError(t, err)
+	want := "xprv9s21ZrQH143K2gM869SUAeSEGDM81UnyWG2tM7ZygYwN3PkveZmY799G6q7zkQYSQCMn7M7AMpP8Z6etKUoZo8x4hH1WVcKBCMZnVTNM8AD"
+	require.Equal(t, want, extendedMasterKey)
 }
