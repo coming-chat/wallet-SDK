@@ -1,6 +1,8 @@
 package wallet
 
 import (
+	"errors"
+
 	"github.com/btcsuite/btcd/btcutil/hdkeychain"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/tyler-smith/go-bip39"
@@ -20,12 +22,33 @@ func IsValidMnemonic(mnemonic string) bool {
 	return err == nil
 }
 
-func ExtendMasterKey(mnemonic string) (string, error) {
+// ExtendMasterKey derives a master key from the given mnemonic and chain network identifier.
+//
+// Parameters:
+//   - mnemonic: A string representing the mnemonic phrase used to generate the seed.
+//   - chainnet: The blockchain network, which must be either
+//     "mainnet", "testnet", "signet", "simnet" or "regtest".
+func ExtendMasterKey(mnemonic string, chainnet string) (string, error) {
+	var net chaincfg.Params
+	switch chainnet {
+	case "mainnet", "bitcoin":
+		net = chaincfg.MainNetParams
+	case "testnet", "testnet3":
+		net = chaincfg.TestNet3Params
+	case "signet":
+		net = chaincfg.SigNetParams
+	case "simnet":
+		net = chaincfg.SimNetParams
+	case "regtest":
+		net = chaincfg.RegressionNetParams
+	default:
+		return "", errors.New("invalid chainnet")
+	}
 	seed, err := bip39.NewSeedWithErrorChecking(mnemonic, "")
 	if err != nil {
 		return "", err
 	}
-	masterKey, err := hdkeychain.NewMaster(seed, &chaincfg.MainNetParams)
+	masterKey, err := hdkeychain.NewMaster(seed, &net)
 	if err != nil {
 		return "", err
 	}

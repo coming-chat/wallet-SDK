@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/ChainSafe/go-schnorrkel"
-	"github.com/stretchr/testify/require"
 	"github.com/tyler-smith/go-bip39"
 )
 
@@ -42,8 +41,42 @@ func TestSeed(t *testing.T) {
 
 func TestExtendMasterKey(t *testing.T) {
 	mn := "unaware oxygen allow method allow property predict various slice travel please priority"
-	extendedMasterKey, err := ExtendMasterKey(mn)
-	require.NoError(t, err)
-	want := "xprv9s21ZrQH143K2gM869SUAeSEGDM81UnyWG2tM7ZygYwN3PkveZmY799G6q7zkQYSQCMn7M7AMpP8Z6etKUoZo8x4hH1WVcKBCMZnVTNM8AD"
-	require.Equal(t, want, extendedMasterKey)
+	tests := []struct {
+		chainnet string
+		want     string
+		wantErr  bool
+	}{
+		{
+			chainnet: "mainnet",
+			want:     "xprv9s21ZrQH143K2gM869SUAeSEGDM81UnyWG2tM7ZygYwN3PkveZmY799G6q7zkQYSQCMn7M7AMpP8Z6etKUoZo8x4hH1WVcKBCMZnVTNM8AD",
+		},
+		{
+			chainnet: "testnet",
+			want:     "tprv8ZgxMBicQKsPdVaekiHyLJ4DaLmLEzpyqox1DXzSAXRqpzW1dw7HctWi21HekmvkmdtZ7SivXAxw1xCdSh9WcCDfDvDp9y3E7TKCw7HgLYY",
+		},
+		{
+			chainnet: "signet",
+			want:     "tprv8ZgxMBicQKsPdVaekiHyLJ4DaLmLEzpyqox1DXzSAXRqpzW1dw7HctWi21HekmvkmdtZ7SivXAxw1xCdSh9WcCDfDvDp9y3E7TKCw7HgLYY",
+		},
+		{
+			chainnet: "simnet",
+			want:     "sprv8Erh3X3hFeKunCPXvMWM8CxiQNctJNqUvhRnS96YnX3xmtgnPGwizprZzoL4ksGqMzmkMy8N4WcP8fb4izjVoxY4MaXPa4DjqjFZYXFdKru",
+		},
+		{
+			chainnet: "regtest",
+			want:     "tprv8ZgxMBicQKsPdVaekiHyLJ4DaLmLEzpyqox1DXzSAXRqpzW1dw7HctWi21HekmvkmdtZ7SivXAxw1xCdSh9WcCDfDvDp9y3E7TKCw7HgLYY",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.chainnet, func(t *testing.T) {
+			got, err := ExtendMasterKey(mn, tt.chainnet)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ExtendMasterKey() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("ExtendMasterKey() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }
