@@ -297,9 +297,9 @@ const (
 )
 
 type TokenAccount struct {
+	Amount  uint64
 	Address string
 	Owner   string
-	Amount  uint64
 
 	AccountType string // "Random" or "Associated"
 }

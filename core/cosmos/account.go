@@ -10,8 +10,8 @@ import (
 )
 
 type Account struct {
-	privKey       types.PrivKey
 	Cointype      int64
+	privKey       types.PrivKey
 	AddressPrefix string
 }
 

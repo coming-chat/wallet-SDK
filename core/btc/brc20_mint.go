@@ -13,18 +13,18 @@ import (
 )
 
 type Brc20MintTransaction struct {
+	NetworkFee  int64 `json:"network_fee"`
+	SatpointFee int64 `json:"satpoint_fee"`
+	ServiceFee  int64 `json:"service_fee"`
+	CommitFee   int64 `json:"commit_fee"`
+	CommitVsize int64 `json:"commit_vsize"`
+
 	CommitId    string            `json:"commit_id"`
 	Commit      string            `json:"commit"`
 	Reveal      *base.StringArray `json:"reveal"`
 	Inscription *base.StringArray `json:"inscription"`
 
 	CommitCustom *Brc20CommitCustom `json:"commit_custom"`
-
-	NetworkFee  int64 `json:"network_fee"`
-	SatpointFee int64 `json:"satpoint_fee"`
-	ServiceFee  int64 `json:"service_fee"`
-	CommitFee   int64 `json:"commit_fee"`
-	CommitVsize int64 `json:"commit_vsize"`
 
 	signedTxn *SignedPsbtTransaction
 }
@@ -159,18 +159,18 @@ func (c *Chain) BuildBrc20MintWithPostage(sender, receiver string, op, ticker, a
 	}
 
 	var r struct {
+		NetworkFee  int64 `json:"network_fee"`
+		SatpointFee int64 `json:"satpoint_fee"`
+		ServiceFee  int64 `json:"service_fee"`
+		CommitFee   int64 `json:"commit_fee"`
+		CommitVsize int64 `json:"commit_vsize"`
+
 		CommitId   string            `json:"commit_id"`
 		CommitPsbt string            `json:"commit_psbt"`
 		RevealTxs  *base.StringArray `json:"reveal_txs"`
 		RevealIds  *base.StringArray `json:"reveal_ids"`
 
 		CommitCustom *Brc20CommitCustom `json:"commit_custom"`
-
-		NetworkFee  int64 `json:"network_fee"`
-		SatpointFee int64 `json:"satpoint_fee"`
-		ServiceFee  int64 `json:"service_fee"`
-		CommitFee   int64 `json:"commit_fee"`
-		CommitVsize int64 `json:"commit_vsize"`
 	}
 	err = json.Unmarshal(resp.Body, &r)
 	if err != nil {

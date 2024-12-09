@@ -30,10 +30,9 @@ const (
 )
 
 type Chain struct {
+	gasPrice  uint64
 	rpcClient *client.Client
 	RpcUrl    string
-
-	gasPrice uint64
 }
 
 func NewChainWithRpcUrl(rpcUrl string) *Chain {

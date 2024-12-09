@@ -35,6 +35,8 @@ type RSS3Metadata struct {
 }
 
 type RSS3NoteAction struct {
+	Timestamp int64
+
 	From string `json:"address_from"`
 	To   string `json:"address_to"`
 	Tag  string `json:"tag"`
@@ -43,16 +45,15 @@ type RSS3NoteAction struct {
 	Metadata    *RSS3Metadata `json:"metadata"`
 	RelatedUrls []string      `json:"related_urls"`
 
-	Timestamp  int64
 	HashString string
 }
 
 type RSS3Note struct {
 	Timestamp  time.Time         `json:"timestamp"`
 	HashString string            `json:"hash"`
-	Success    bool              `json:"success"`
 	Network    string            `json:"network"`
 	Actions    []*RSS3NoteAction `json:"actions"`
+	Success    bool              `json:"success"`
 }
 
 func (a *RSS3NoteAction) IsNftAction() bool {

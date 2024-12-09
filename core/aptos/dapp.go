@@ -13,24 +13,24 @@ import (
 )
 
 type SignMessagePayload struct {
+	// A nonce the dApp should generate
+	Nonce int64 `json:"nonce"`
+	// The message to be signed and displayed to the user
+	Message string `json:"message"`
 	// Should we include the address of the account in the message
 	Address bool `json:"address,omitempty"`
 	// Should we include the domain of the dApp
 	Application bool `json:"application,omitempty"`
 	// Should we include the current chain id the wallet is connected to
 	ChainId bool `json:"chainId,omitempty"`
-	// The message to be signed and displayed to the user
-	Message string `json:"message"`
-	// A nonce the dApp should generate
-	Nonce int64 `json:"nonce"`
 }
 
 type SignMessageResponse struct {
+	ChainId     int64  `json:"chainId,omitempty"`
+	Nonce       int64  `json:"nonce"`
 	Address     string `json:"address,omitempty"`
 	Application string `json:"application,omitempty"`
-	ChainId     int64  `json:"chainId,omitempty"`
-	Message     string `json:"message"` // The message passed in by the user
-	Nonce       int64  `json:"nonce"`
+	Message     string `json:"message"`          // The message passed in by the user
 	Prefix      string `json:"prefix"`           // Should always be APTOS
 	FullMessage string `json:"fullMessage"`      // The message that was generated to sign
 	Signature   string `json:"signature"`        // The signed full message

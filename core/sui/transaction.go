@@ -10,11 +10,11 @@ import (
 )
 
 type Transaction struct {
+	EstimateGasFee int64
+
 	Txn types.TransactionBytes
 
 	TxnBytes lib.Base64Data
-
-	EstimateGasFee int64
 }
 
 func (t *Transaction) TransactionBytes() []byte {

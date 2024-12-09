@@ -10,7 +10,13 @@ import (
 )
 
 type NFT struct {
-	Timestamp  int64  `json:"timestamp"`
+	Timestamp int64 `json:"timestamp"`
+
+	// Aptos token's largest_property_version
+	AptTokenVersion int64 `json:"apt_token_version"`
+	// Aptos token's amount
+	AptAmount int64 `json:"apt_amount"`
+
 	HashString string `json:"hashString"`
 
 	Id              string `json:"id"`
@@ -22,11 +28,6 @@ type NFT struct {
 	ContractAddress string `json:"contract_address"`
 
 	RelatedUrl string `json:"related_url"`
-
-	// Aptos token's largest_property_version
-	AptTokenVersion int64 `json:"apt_token_version"`
-	// Aptos token's amount
-	AptAmount int64 `json:"apt_amount"`
 }
 
 func (n *NFT) GroupName() string {

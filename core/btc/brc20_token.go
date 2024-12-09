@@ -98,30 +98,30 @@ func (t *Brc20Token) FullTokenInfo() (info *Brc20TokenInfo, err error) {
 }
 
 type Brc20TokenInfo struct {
-	Ticker                 string `json:"ticker"`
-	HoldersCount           int64  `json:"holdersCount"`
-	HistoryCount           int64  `json:"historyCount"`
-	InscriptionNumber      int64  `json:"inscriptionNumber"`
-	InscriptionId          string `json:"inscriptionId"`
-	Max                    string `json:"max"`
-	Limit                  string `json:"limit"`
-	Minted                 string `json:"minted"`
-	TotalMinted            string `json:"totalMinted"`
-	ConfirmedMinted        string `json:"confirmedMinted"`
-	ConfirmedMinted1h      string `json:"confirmedMinted1H"`
-	ConfirmedMinted24h     string `json:"confirmedMinted24H"`
-	MintTimes              int64  `json:"mintTimes"`
-	Decimal                int16  `json:"decimal"`
-	Creator                string `json:"creator"`
-	Txid                   string `json:"txid"`
-	DeployHeight           int64  `json:"deployHeight"`
-	DeployBlocktime        int64  `json:"deployBlocktime"`
-	CompleteHeight         int64  `json:"completeHeight"`
-	CompleteBlocktime      int64  `json:"completeBlocktime"`
-	InscriptionNumberStart int64  `json:"inscriptionNumberStart"`
-	InscriptionNumberEnd   int64  `json:"inscriptionNumberEnd"`
+	Price                  float64 `json:"price"`
+	HoldersCount           int64   `json:"holdersCount"`
+	HistoryCount           int64   `json:"historyCount"`
+	InscriptionNumber      int64   `json:"inscriptionNumber"`
+	MintTimes              int64   `json:"mintTimes"`
+	DeployHeight           int64   `json:"deployHeight"`
+	DeployBlocktime        int64   `json:"deployBlocktime"`
+	CompleteHeight         int64   `json:"completeHeight"`
+	CompleteBlocktime      int64   `json:"completeBlocktime"`
+	InscriptionNumberStart int64   `json:"inscriptionNumberStart"`
+	InscriptionNumberEnd   int64   `json:"inscriptionNumberEnd"`
 
-	Price float64 `json:"price"`
+	Ticker             string `json:"ticker"`
+	InscriptionId      string `json:"inscriptionId"`
+	Max                string `json:"max"`
+	Limit              string `json:"limit"`
+	Minted             string `json:"minted"`
+	TotalMinted        string `json:"totalMinted"`
+	ConfirmedMinted    string `json:"confirmedMinted"`
+	ConfirmedMinted1h  string `json:"confirmedMinted1H"`
+	ConfirmedMinted24h string `json:"confirmedMinted24H"`
+	Decimal            int16  `json:"decimal"`
+	Creator            string `json:"creator"`
+	Txid               string `json:"txid"`
 }
 
 func (j *Brc20TokenInfo) JsonString() (*base.OptionalString, error) {

@@ -14,10 +14,9 @@ import (
 )
 
 type TxOut struct {
-	Hash  string `json:"hash,omitempty"`
-	Index int64  `json:"index,omitempty"`
-
 	Value   int64  `json:"value,omitempty"`
+	Index   int64  `json:"index,omitempty"`
+	Hash    string `json:"hash,omitempty"`
 	Address string `json:"address,omitempty"`
 }
 

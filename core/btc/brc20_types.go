@@ -62,16 +62,16 @@ type rawBrc20TokenBalancePage struct {
 // - MARK -
 
 type Brc20Inscription struct {
-	InscriptionId      string `json:"inscriptionId"`
 	InscriptionNumber  int64  `json:"inscriptionNumber"`
-	Address            string `json:"address"`
 	OutputValue        int64  `json:"outputValue"`
+	ContentLength      int64  `json:"contentLength"`
+	Timestamp          int64  `json:"timestamp"`
+	InscriptionId      string `json:"inscriptionId"`
+	Address            string `json:"address"`
 	Preview            string `json:"preview"`
 	Content            string `json:"content"`
-	ContentLength      int64  `json:"contentLength"`
 	ContentType        string `json:"contentType"`
 	ContentBody        string `json:"contentBody"`
-	Timestamp          int64  `json:"timestamp"`
 	GenesisTransaction string `json:"genesisTransaction"`
 	Location           string `json:"location"`
 	Output             string `json:"output"`
@@ -141,8 +141,8 @@ func (bp *Brc20InscriptionPage) AsNFTPage() *NFTPage {
 }
 
 type Brc20TransferableInscription struct {
-	InscriptionId     string `json:"inscriptionId"`
 	InscriptionNumber int64  `json:"inscriptionNumber"`
+	InscriptionId     string `json:"inscriptionId"`
 	Amount            string `json:"amount"`
 	Ticker            string `json:"ticker"`
 	Unconfirmed       bool   `json:"unconfirmed,omitempty"`
@@ -174,8 +174,8 @@ type unisatTokenSummary struct {
 }
 
 type Brc20UTXO struct {
-	Txid  string `json:"txid"`
 	Index int64  `json:"index"`
+	Txid  string `json:"txid"`
 }
 
 func NewBrc20UTXO(txid string, index int64) *Brc20UTXO {

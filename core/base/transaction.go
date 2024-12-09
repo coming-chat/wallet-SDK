@@ -27,6 +27,10 @@ const (
 
 // Transaction details that can be fetched from the chain
 type TransactionDetail struct {
+	// transaction completion timestamp (s), 0 if Status is in Pending
+	FinishTimestamp int64
+	Status          TransactionStatus
+
 	// hash string on chain
 	HashString string
 
@@ -40,9 +44,6 @@ type TransactionDetail struct {
 	// receiver's address
 	ToAddress string
 
-	Status TransactionStatus
-	// transaction completion timestamp (s), 0 if Status is in Pending
-	FinishTimestamp int64
 	// failure message
 	FailureMessage string
 

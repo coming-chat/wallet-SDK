@@ -24,7 +24,10 @@ const maxGasBudgetForStake = 12000000
 
 type ValidatorState struct {
 	// The current epoch in Sui. An epoch takes approximately 24 hours and runs in checkpoints.
-	Epoch int64 `json:"epoch"`
+	Epoch                 int64 `json:"epoch"`
+	EpochStartTimestampMs int64 `json:"epochStartTimestampMs"`
+	EpochDurationMs       int64 `json:"epochDurationMs"`
+
 	// Array of `Validator` elements
 	Validators *ValidatorArray `json:"validators"`
 
@@ -32,9 +35,6 @@ type ValidatorState struct {
 	TotalStaked string `json:"totalStaked"`
 	// The amount of rewards won by all Sui validators in the last epoch.
 	TotalRewards string `json:"lastEpochReward"`
-
-	EpochStartTimestampMs int64 `json:"epochStartTimestampMs"`
-	EpochDurationMs       int64 `json:"epochDurationMs"`
 }
 
 func (s *ValidatorState) JsonString() (*base.OptionalString, error) {
@@ -64,21 +64,21 @@ func NewValidatorStateWithJsonString(str string) (*ValidatorState, error) {
 }
 
 type Validator struct {
-	Address    string  `json:"address"`
-	Name       string  `json:"name"`
-	Desc       string  `json:"desc"`
-	ImageUrl   string  `json:"imageUrl"`
-	ProjectUrl string  `json:"projectUrl"`
 	APY        float64 `json:"apy"`
+	PoolShare  float64 `json:"poolShare"`
+	Commission int64   `json:"commission"`
+	GasPrice   int64   `json:"gasPrice"`
 
-	Commission      int64  `json:"commission"`
+	Address    string `json:"address"`
+	Name       string `json:"name"`
+	Desc       string `json:"desc"`
+	ImageUrl   string `json:"imageUrl"`
+	ProjectUrl string `json:"projectUrl"`
+
 	TotalStaked     string `json:"totalStaked"`
 	DelegatedStaked string `json:"delegatedStaked"`
 	SelfStaked      string `json:"selfStaked"`
 	TotalRewards    string `json:"totalRewards"`
-	GasPrice        int64  `json:"gasPrice"`
-
-	PoolShare float64 `json:"poolShare"`
 }
 
 type ValidatorArray struct {
@@ -116,10 +116,10 @@ const (
 )
 
 type DelegatedStake struct {
+	RequestEpoch     int64  `json:"requestEpoch"`
 	StakeId          string `json:"stakeId"`
 	ValidatorAddress string `json:"validatorAddress"`
 	Principal        string `json:"principal"`
-	RequestEpoch     int64  `json:"requestEpoch"`
 
 	Status       DelegationStatus `json:"status"`
 	DelegationId string           `json:"delegationId"`

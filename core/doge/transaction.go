@@ -19,12 +19,12 @@ type TransactionOutput struct {
 
 type Transaction struct {
 	// Demo: https://api.blockcypher.com/v1/doge/main/txs/7bc313903372776e1eb81d321e3fe27c9721ce8e71a9bcfee1bde6baea31b5c2
+	Confirmations int64                `json:"confirmations"`
 	HashString    string               `json:"hash"`
 	Total         *big.Int             `json:"total"`
 	Fees          *big.Int             `json:"fees"`
 	Received      *time.Time           `json:"received"`
 	Confirmed     *time.Time           `json:"confirmed"`
-	Confirmations int64                `json:"confirmations"`
 	Inputs        []*TransactionInput  `json:"inputs"`
 	Outputs       []*TransactionOutput `json:"outputs"`
 	OpReturn      string               `json:"data_protocol"`

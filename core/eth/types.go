@@ -24,8 +24,8 @@ type CallMethodOpts struct {
 	Value                string
 	GasPrice             string // MaxFeePerGas
 	GasLimit             string
-	IsPredictError       bool
 	MaxPriorityFeePerGas string
+	IsPredictError       bool
 }
 
 type CallMethodOptsBigInt struct {

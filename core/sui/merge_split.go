@@ -26,17 +26,18 @@ type MergeCoinRequest struct {
 }
 
 type MergeCoinPreview struct {
+	EstimateGasFee int64
+
 	// The original request
 	Request *MergeCoinRequest
 
 	// The merge coins transaction
 	Transaction *Transaction
-	// Did the simulated transaction execute successfully?
-	SimulateSuccess bool
-	EstimateGasFee  int64
 
 	// If the transaction is executed, owner will receive a coin amount that is not less than this.
 	EstimateAmount string
+	// Did the simulated transaction execute successfully?
+	SimulateSuccess bool
 	// Due to the results obtained through simulated execution, we may know that the balance may increase and the value of this state may be inconsistent with the value in the request.
 	WillBeAchieved bool
 }

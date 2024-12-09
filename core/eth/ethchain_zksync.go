@@ -15,11 +15,13 @@ const zksync_chainid = 324
 const zksync_chainid_testnet = 280
 
 type zksync_Transaction struct {
+	Gas                  hexutil.Uint64 `json:"gas"`
+	Nonce                hexutil.Uint64 `json:"nonce"`
+	TxType               hexutil.Uint64 `json:"type"`
 	BlockHash            common.Hash    `json:"blockHash"`
 	BlockNumber          *hexutil.Big   `json:"blockNumber"`
 	ChainID              hexutil.Big    `json:"chainId"`
 	From                 common.Address `json:"from"`
-	Gas                  hexutil.Uint64 `json:"gas"`
 	GasPrice             hexutil.Big    `json:"gasPrice"`
 	Hash                 common.Hash    `json:"hash"`
 	Data                 hexutil.Bytes  `json:"input"`
@@ -27,10 +29,8 @@ type zksync_Transaction struct {
 	L1BatchTxIndex       hexutil.Big    `json:"l1BatchTxIndex"`
 	MaxFeePerGas         hexutil.Big    `json:"maxFeePerGas"`
 	MaxPriorityFeePerGas hexutil.Big    `json:"maxPriorityFeePerGas"`
-	Nonce                hexutil.Uint64 `json:"nonce"`
 	To                   common.Address `json:"to"`
 	TransactionIndex     hexutil.Uint   `json:"transactionIndex"`
-	TxType               hexutil.Uint64 `json:"type"`
 	Value                hexutil.Big    `json:"value"`
 	V                    hexutil.Big    `json:"v"`
 	R                    hexutil.Big    `json:"r"`

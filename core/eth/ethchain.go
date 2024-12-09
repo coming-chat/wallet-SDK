@@ -11,8 +11,8 @@ import (
 )
 
 type EthChain struct {
-	RemoteRpcClient *ethclient.Client
 	timeout         time.Duration
+	RemoteRpcClient *ethclient.Client
 	chainId         *big.Int
 	rpcUrl          string
 }

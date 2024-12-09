@@ -25,9 +25,9 @@ type Res struct {
 }
 
 type RequestParams struct {
+	Timeout time.Duration
 	Header  map[string]string
 	Body    []byte
-	Timeout time.Duration
 }
 
 func Get(baseUrl string, param map[string]string) (body []byte, err error) {

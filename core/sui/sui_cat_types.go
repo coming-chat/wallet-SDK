@@ -27,10 +27,10 @@ const (
 type SuiCatGlobalData struct {
 	TotalMinted    int64  `json:"total_minted"`
 	Supply         int64  `json:"supply"`
-	PricePublic    string `json:"price_public"`
-	PriceWhitelist string `json:"price_whitelist"`
 	StartTimeMs    int64  `json:"start_time"`
 	DurationMs     int64  `json:"duration"`
+	PricePublic    string `json:"price_public"`
+	PriceWhitelist string `json:"price_whitelist"`
 }
 
 func (j *SuiCatGlobalData) JsonString() (*base.OptionalString, error) {
@@ -43,17 +43,17 @@ func NewSuiCatGlobalDataWithJsonString(str string) (*SuiCatGlobalData, error) {
 }
 
 type rawSuiCatGlobalData struct {
-	Creator         string `json:"creator"`
-	Duration        string `json:"duration"`
 	MintedPublic    uint64 `json:"minted_public"`
 	MintedWhitelist uint64 `json:"minted_whitelist"`
 	Supply          uint64 `json:"supply"`
+	TeamReserve     uint64 `json:"team_reserve"`
+	Creator         string `json:"creator"`
+	Duration        string `json:"duration"`
 	Balance         string `json:"balance"`
 	Beneficiary     string `json:"beneficiary"`
 	PricePublic     string `json:"price_public"`
 	PriceWhitelist  string `json:"price_whitelist"`
 	StartTime       string `json:"start_time"`
-	TeamReserve     uint64 `json:"team_reserve"`
 
 	Whitelist struct {
 		Fields struct {

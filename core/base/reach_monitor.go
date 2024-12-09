@@ -10,9 +10,9 @@ import (
 const reachFailedTime int64 = -1
 
 type RpcLatency struct {
-	RpcUrl  string `json:"rpcUrl"`
 	Latency int64  `json:"latency"`
 	Height  int64  `json:"height"`
+	RpcUrl  string `json:"rpcUrl"`
 }
 
 // You can customize the test latency method of rpc
@@ -31,12 +31,12 @@ type ReachMonitorDelegate interface {
 }
 
 type ReachMonitor struct {
-	// The number of network connectivity tests to be performed per rpc. 0 means infinite, default is 1
-	ReachCount int
 	// Timeout for each connectivity test (ms). default 20000ms
 	Timeout int64
 	// Time interval between two network connectivity tests (ms). default 1500ms
 	Delay int64
+	// The number of network connectivity tests to be performed per rpc. 0 means infinite, default is 1
+	ReachCount int
 
 	reachability RpcReachability
 

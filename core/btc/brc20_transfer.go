@@ -13,11 +13,11 @@ import (
 )
 
 type Brc20TransferTransaction struct {
-	Transaction string `json:"transaction"`
 	NetworkFee  int64  `json:"network_fee"`
-	CommitId    string `json:"commit_id"`
 	CommitFee   int64  `json:"commit_fee"`
 	CommitVsize int64  `json:"commit_vsize"`
+	Transaction string `json:"transaction"`
+	CommitId    string `json:"commit_id"`
 
 	CommitCustom *Brc20CommitCustom `json:"commit_custom"`
 }
@@ -82,12 +82,12 @@ func (c *Chain) BuildBrc20TransferTransaction(
 	}
 
 	var r struct {
-		Commit_id     string             `json:"commit_id"`
-		Commit_psbt   string             `json:"commit_psbt"`
 		Commit_fee    int64              `json:"commit_fee"`
 		Commit_vsize  int64              `json:"commit_vsize"`
-		Commit_custom *Brc20CommitCustom `json:"commit_custom"`
 		Network_fee   int64              `json:"network_fee"`
+		Commit_id     string             `json:"commit_id"`
+		Commit_psbt   string             `json:"commit_psbt"`
+		Commit_custom *Brc20CommitCustom `json:"commit_custom"`
 	}
 	err = json.Unmarshal(resp.Body, &r)
 	if err != nil {

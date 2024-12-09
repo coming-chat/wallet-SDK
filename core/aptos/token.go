@@ -18,9 +18,8 @@ const (
 )
 
 type Token struct {
-	chain *Chain
-
 	token txbuilder.TypeTagStruct
+	chain *Chain
 }
 
 func NewMainToken(chain *Chain) *Token {
@@ -34,7 +33,7 @@ func NewToken(chain *Chain, tag string) (*Token, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Token{chain, *token}, nil
+	return &Token{*token, chain}, nil
 }
 
 // MARK - Implement the protocol Token
@@ -59,9 +58,9 @@ func (t *Token) TokenInfo() (*base.TokenInfo, error) {
 		return nil, err
 	}
 	info := struct {
-		Decimals int16  `json:"decimals"`
 		Name     string `json:"name"`
 		Symbol   string `json:"symbol"`
+		Decimals int16  `json:"decimals"`
 	}{}
 	err = json.Unmarshal(jsonData, &info)
 	if err != nil {
