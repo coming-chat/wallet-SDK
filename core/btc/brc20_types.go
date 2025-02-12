@@ -30,10 +30,14 @@ func (p *unisatRawPage[T]) MapToSdkPage(offset, size int) *inter.SdkPageable[T] 
 // - MARK -
 
 type Brc20TokenBalance struct {
-	Ticker              string `json:"ticker"`              //: "zbit",
-	OverallBalance      string `json:"overallBalance"`      //: "0",
-	TransferableBalance string `json:"transferableBalance"` //: "0",
-	AvailableBalance    string `json:"availableBalance"`    //: "0"
+	Ticker               string `json:"ticker"`               //: "zbit",
+	OverallBalance       string `json:"overallBalance"`       //: "0",
+	TransferableBalance  string `json:"transferableBalance"`  //: "0",
+	AvailableBalanceSafe string `json:"availableBalanceSafe"` //: "0"
+}
+
+func (j *Brc20TokenBalance) AvailableBalance() string {
+	return j.AvailableBalanceSafe
 }
 
 func (j *Brc20TokenBalance) JsonString() (*base.OptionalString, error) {
@@ -141,11 +145,15 @@ func (bp *Brc20InscriptionPage) AsNFTPage() *NFTPage {
 }
 
 type Brc20TransferableInscription struct {
+	Confirmations     int64  `json:"confirmations"`
 	InscriptionNumber int64  `json:"inscriptionNumber"`
 	InscriptionId     string `json:"inscriptionId"`
 	Amount            string `json:"amount"`
 	Ticker            string `json:"ticker"`
-	Unconfirmed       bool   `json:"unconfirmed,omitempty"`
+}
+
+func (j *Brc20TransferableInscription) Unconfirmed() bool {
+	return j.Confirmations <= 0
 }
 
 func (j *Brc20TransferableInscription) JsonString() (*base.OptionalString, error) {

@@ -44,5 +44,5 @@ func TestBrc20TokenBalances(t *testing.T) {
 	require.Nil(t, err)
 	balancePage, err := chain.FetchBrc20TokenBalance(owner, "0", 10)
 	require.Nil(t, err)
-	t.Log(balancePage.Items)
+	t.Log(balancePage.JsonString())
 }

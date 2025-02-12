@@ -30,13 +30,13 @@ func (c *Chain) FetchBrc20Inscription(owner string, cursor string, pageSize int)
 	}
 
 	header := unisatRequestHeader(owner)
-	url := fmt.Sprintf("%v/wallet-v4/address/inscriptions?address=%v&cursor=%v&size=%v", host, owner, offset, pageSize)
+	url := fmt.Sprintf("%v/v5/ordinals/inscriptions?address=%v&cursor=%v&size=%v", host, owner, offset, pageSize)
 	resp, err := httpUtil.Request(http.MethodGet, url, header, nil)
 	if err != nil {
 		return
 	}
 	var rawPage rawBrc20InscriptionPage
-	if err = decodeUnisatResponseV4(*resp, &rawPage); err != nil {
+	if err = decodeUnisatResponseV5(*resp, &rawPage); err != nil {
 		return
 	}
 
@@ -109,13 +109,13 @@ func (c *Chain) fetchBrc20UnconfirmedTransferableInscription(owner string, ticke
 	}
 
 	header := unisatRequestHeader(owner)
-	url := fmt.Sprintf("%v/wallet-v4/address/inscriptions?address=%v&cursor=%v&size=%v", host, owner, 0, 50)
+	url := fmt.Sprintf("%v/v5/ordinals/inscriptions?address=%v&cursor=%v&size=%v", host, owner, 0, 50)
 	resp, err := httpUtil.Request(http.MethodGet, url, header, nil)
 	if err != nil {
 		return
 	}
 	var rawPage rawBrc20InscriptionPage
-	if err = decodeUnisatResponseV4(*resp, &rawPage); err != nil {
+	if err = decodeUnisatResponseV5(*resp, &rawPage); err != nil {
 		return
 	}
 
@@ -149,7 +149,7 @@ func (c *Chain) fetchBrc20UnconfirmedTransferableInscription(owner string, ticke
 			InscriptionNumber: inscription.InscriptionNumber,
 			Amount:            obj.Amt,
 			Ticker:            obj.Tick,
-			Unconfirmed:       true,
+			Confirmations:     0,
 		}, nil
 	})
 	if err != nil {

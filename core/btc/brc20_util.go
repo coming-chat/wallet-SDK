@@ -10,8 +10,8 @@ import (
 	"github.com/coming-chat/wallet-SDK/pkg/httpUtil"
 )
 
-// the v2 resp.Body should like `{code: *, msg: *, data: *}`
-func decodeUnisatResponseV2(resp httpUtil.Res, out interface{}) error {
+// the v5 resp.Body should like `{code: *, msg: *, data: *}`
+func decodeUnisatResponseV5(resp httpUtil.Res, out interface{}) error {
 	err := responseJsonCheck(resp)
 	if err != nil {
 		return err
@@ -76,9 +76,9 @@ func responseJsonCheck(resp httpUtil.Res) error {
 
 func unisatRequestHeader(address string) map[string]string {
 	return map[string]string{
-		"X-Client":   "UniSat Wallet",
-		"X-Version":  "1.1.33",
+		"x-client":   "UniSat Wallet",
+		"x-version":  "1.5.4",
 		"x-address":  address,
-		"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
+		"user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36",
 	}
 }

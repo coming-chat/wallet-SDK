@@ -7,7 +7,7 @@ import (
 )
 
 func TestFetchBrc20Inscription(t *testing.T) {
-	owner := "bc1pdq423fm5dv00sl2uckmcve8y3w7guev8ka6qfweljlu23mmsw63qpjc9k7"
+	owner := "bc1p65yz8hsm3antzdtjzlxd7e4z60ht5reuepk970mu8pgf2acthq5qtk8283"
 
 	chain, err := NewChainWithChainnet(ChainMainnet)
 	require.Nil(t, err)

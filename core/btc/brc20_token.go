@@ -148,13 +148,13 @@ func (c *Chain) FetchBrc20TokenBalance(owner string, cursor string, pageSize int
 	}
 
 	header := unisatRequestHeader(owner)
-	url := fmt.Sprintf("%v/wallet-v4/brc20/tokens?address=%v&cursor=%v&size=%v", host, owner, offset, pageSize)
+	url := fmt.Sprintf("%v/v5/brc20/list?address=%v&cursor=%v&size=%v", host, owner, offset, pageSize)
 	resp, err := httpUtil.Request(http.MethodGet, url, header, nil)
 	if err != nil {
 		return
 	}
 	var rawPage rawBrc20TokenBalancePage
-	if err = decodeUnisatResponseV4(*resp, &rawPage); err != nil {
+	if err = decodeUnisatResponseV5(*resp, &rawPage); err != nil {
 		return
 	}
 
@@ -178,12 +178,12 @@ func (c *Chain) fetchTokenSummary(owner, ticker string) (summary *unisatTokenSum
 	}
 
 	header := unisatRequestHeader(owner)
-	url := fmt.Sprintf("%v/wallet-v4/brc20/token-summary?address=%v&ticker=%v", host, owner, ticker)
+	url := fmt.Sprintf("%v/v5/brc20/token-summary?address=%v&ticker=%v", host, owner, ticker)
 	resp, err := httpUtil.Request(http.MethodGet, url, header, nil)
 	if err != nil {
 		return
 	}
-	if err = decodeUnisatResponseV4(*resp, &summary); err != nil {
+	if err = decodeUnisatResponseV5(*resp, &summary); err != nil {
 		return
 	}
 	return summary, nil
