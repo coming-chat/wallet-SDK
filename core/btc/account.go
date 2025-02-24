@@ -183,7 +183,10 @@ func (a *Account) SignHex(messageHex string, password string) (*base.OptionalStr
 func (a *Account) SignMessage(msg string) (*base.OptionalString, error) {
 	msgHash := messageHash(msg)
 
-	signbytes := ecdsa.SignCompact(a.privateKey, msgHash, true)
+	signbytes, err := ecdsa.SignCompact(a.privateKey, msgHash, true)
+	if err != nil {
+		return nil, err
+	}
 	signature := base64.StdEncoding.EncodeToString(signbytes)
 	return base.NewOptionalString(signature), nil
 }
